@@ -84,7 +84,7 @@ export function TransactionDialog({
     // Fetch accounts on open
     useEffect(() => {
         if (open) {
-            fetch("http://127.0.0.1:8001/api/accounts")
+            fetch("/api/accounts")
                 .then((res) => res.json())
                 .then((data) => setAccounts(data))
                 .catch((err) => console.error("Error fetching accounts:", err));
@@ -115,7 +115,7 @@ export function TransactionDialog({
         try {
             const finalAmount = values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount);
 
-            const response = await fetch("http://127.0.0.1:8001/api/transactions/manual", {
+            const response = await fetch("/api/transactions/manual", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

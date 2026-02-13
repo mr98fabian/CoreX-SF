@@ -78,7 +78,7 @@ export default function DebtBurndownChart() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8001/api/velocity/projections')
+        fetch('/api/velocity/projections')
             .then(res => res.json())
             .then((velocityData: VelocityData) => {
                 // Generate realistic projections based on actual debt

@@ -56,8 +56,8 @@ export default function DashboardPage() {
 
     useEffect(() => {
         Promise.all([
-            fetch('http://127.0.0.1:8001/api/dashboard').then(res => res.json()),
-            fetch('http://127.0.0.1:8001/api/velocity/projections').then(res => res.json())
+            fetch('/api/dashboard').then(res => res.json()),
+            fetch('/api/velocity/projections').then(res => res.json())
         ])
             .then(([dashboardData, velocityData]) => {
                 setData(dashboardData);

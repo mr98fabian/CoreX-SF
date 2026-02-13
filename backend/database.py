@@ -2,7 +2,14 @@ from sqlmodel import create_engine, SQLModel, Session, select
 from models import User, Account, Transaction, CashflowItem, MovementLog
 from decimal import Decimal
 
-sqlite_file_name = "corex.db"
+import os
+
+# Check if running on Vercel (read-only filesystem)
+if os.environ.get("VERCEL"):
+    sqlite_file_name = "/tmp/corex.db"
+else:
+    sqlite_file_name = "corex.db"
+
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})

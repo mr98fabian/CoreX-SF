@@ -18,7 +18,7 @@ export default function RecentTransactions() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8001/api/transactions/recent?limit=8')
+        fetch('/api/transactions/recent?limit=8')
             .then(res => res.json())
             .then(data => {
                 setTransactions(data);
