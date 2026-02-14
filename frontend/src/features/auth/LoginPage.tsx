@@ -3,30 +3,38 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 // ──────────────────────────────────────────────
-// Password Strength Logic
+// Password Requirements
 // ──────────────────────────────────────────────
+
+interface Requirement {
+    label: string;
+    met: boolean;
+}
+
+function getPasswordRequirements(password: string): Requirement[] {
+    return [
+        { label: 'At least 6 characters', met: password.length >= 6 },
+        { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+        { label: 'One lowercase letter', met: /[a-z]/.test(password) },
+        { label: 'One number', met: /\d/.test(password) },
+        { label: 'One special character (!@#$...)', met: /[^A-Za-z0-9]/.test(password) },
+    ];
+}
 
 type StrengthLevel = 'empty' | 'weak' | 'fair' | 'good' | 'strong';
 
 interface StrengthResult {
     level: StrengthLevel;
-    score: number;   // 0-4
+    score: number;
     label: string;
     color: string;
 }
 
 function getPasswordStrength(password: string): StrengthResult {
     if (!password) return { level: 'empty', score: 0, label: '', color: '' };
-
-    let score = 0;
-    if (password.length >= 6) score++;
-    if (password.length >= 10) score++;
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
-    if (/\d/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    // Clamp to 1-4
-    const clamped = Math.max(1, Math.min(4, score));
+    const reqs = getPasswordRequirements(password);
+    const metCount = reqs.filter(r => r.met).length;
+    const clamped = Math.max(1, Math.min(4, Math.ceil((metCount / reqs.length) * 4)));
 
     const map: Record<number, Omit<StrengthResult, 'score'>> = {
         1: { level: 'weak', label: 'Weak', color: '#ef4444' },
@@ -34,46 +42,66 @@ function getPasswordStrength(password: string): StrengthResult {
         3: { level: 'good', label: 'Good', color: '#eab308' },
         4: { level: 'strong', label: 'Strong', color: '#22c55e' },
     };
-
     return { ...map[clamped], score: clamped };
 }
 
 // ──────────────────────────────────────────────
-// Zod-like Validation (inline to avoid extra dep)
+// Validation
 // ──────────────────────────────────────────────
 
 interface ValidationErrors {
     email?: string;
+    confirmEmail?: string;
     password?: string;
+    confirmPassword?: string;
     fullName?: string;
+    terms?: string;
 }
 
 function validateForm(
     mode: 'signin' | 'signup',
-    email: string,
-    password: string,
-    fullName: string
+    fields: {
+        email: string; confirmEmail: string;
+        password: string; confirmPassword: string;
+        fullName: string; acceptedTerms: boolean;
+    }
 ): ValidationErrors {
     const errors: ValidationErrors = {};
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
+
+    if (!fields.email.trim()) {
         errors.email = 'Email is required';
-    } else if (!emailRegex.test(email)) {
+    } else if (!emailRegex.test(fields.email)) {
         errors.email = 'Invalid email format';
     }
 
-    if (!password) {
+    if (!fields.password) {
         errors.password = 'Password is required';
-    } else if (password.length < 6) {
+    } else if (fields.password.length < 6) {
         errors.password = 'Minimum 6 characters';
     }
 
     if (mode === 'signup') {
-        if (!fullName.trim()) {
+        if (!fields.fullName.trim()) {
             errors.fullName = 'Full name is required';
-        } else if (fullName.trim().length < 2) {
+        } else if (fields.fullName.trim().length < 2) {
             errors.fullName = 'At least 2 characters';
+        }
+
+        if (!fields.confirmEmail.trim()) {
+            errors.confirmEmail = 'Please confirm your email';
+        } else if (fields.confirmEmail !== fields.email) {
+            errors.confirmEmail = 'Emails do not match';
+        }
+
+        if (!fields.confirmPassword) {
+            errors.confirmPassword = 'Please confirm your password';
+        } else if (fields.confirmPassword !== fields.password) {
+            errors.confirmPassword = 'Passwords do not match';
+        }
+
+        if (!fields.acceptedTerms) {
+            errors.terms = 'You must accept the Terms & Conditions';
         }
     }
 
@@ -81,19 +109,62 @@ function validateForm(
 }
 
 // ──────────────────────────────────────────────
-// Login Page Component
+// Input Component
 // ──────────────────────────────────────────────
 
-type ViewState = 'signin' | 'signup' | 'forgot';
+function FormInput({
+    id, label, type = 'text', value, onChange, placeholder, error, autoComplete,
+    children,
+}: {
+    id: string; label: string; type?: string;
+    value: string; onChange: (v: string) => void;
+    placeholder?: string; error?: string; autoComplete?: string;
+    children?: React.ReactNode;
+}) {
+    return (
+        <div>
+            <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-1.5">
+                {label}
+            </label>
+            <div className="relative">
+                <input
+                    id={id}
+                    type={type}
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    autoComplete={autoComplete}
+                    className={`w-full px-4 py-3 bg-slate-800/60 border rounded-xl text-white placeholder:text-slate-500 outline-none transition-all
+                        ${error
+                            ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
+                            : 'border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
+                        } ${children ? 'pr-12' : ''}`}
+                />
+                {children}
+            </div>
+            {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+        </div>
+    );
+}
+
+// ──────────────────────────────────────────────
+// Login Page
+// ──────────────────────────────────────────────
+
+type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 
 export default function LoginPage() {
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword } = useAuth();
 
     const [view, setView] = useState<ViewState>('signin');
     const [email, setEmail] = useState('');
+    const [confirmEmail, setConfirmEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [error, setError] = useState('');
@@ -101,29 +172,29 @@ export default function LoginPage() {
     const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
 
     const strength = useMemo(() => getPasswordStrength(password), [password]);
+    const requirements = useMemo(() => getPasswordRequirements(password), [password]);
 
-    // Already authenticated → go to dashboard
     if (user && !loading) return <Navigate to="/" replace />;
 
     const clearForm = () => {
-        setEmail('');
-        setPassword('');
-        setFullName('');
-        setError('');
-        setSuccessMessage('');
+        setEmail(''); setConfirmEmail('');
+        setPassword(''); setConfirmPassword('');
+        setFullName(''); setAcceptedTerms(false);
+        setError(''); setSuccessMessage('');
         setFieldErrors({});
     };
 
-    const switchView = (v: ViewState) => {
-        clearForm();
-        setView(v);
-    };
+    const switchView = (v: ViewState) => { clearForm(); setView(v); };
+
+    const clearFieldError = (field: keyof ValidationErrors) =>
+        setFieldErrors(prev => ({ ...prev, [field]: undefined }));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSuccessMessage('');
 
+        // Forgot password flow
         if (view === 'forgot') {
             if (!email.trim()) {
                 setFieldErrors({ email: 'Email is required' });
@@ -141,9 +212,11 @@ export default function LoginPage() {
             return;
         }
 
-        // Validate sign in / sign up
+        // Validate
         const mode = view === 'signin' ? 'signin' : 'signup';
-        const errors = validateForm(mode, email, password, fullName);
+        const errors = validateForm(mode, {
+            email, confirmEmail, password, confirmPassword, fullName, acceptedTerms,
+        });
         if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
             return;
@@ -155,18 +228,13 @@ export default function LoginPage() {
             if (view === 'signin') {
                 await signInWithPassword(email, password);
             } else {
-                const { confirmEmail } = await signUp(email, password, fullName);
-                if (confirmEmail) {
-                    setSuccessMessage(
-                        '✅ Account created! Check your email to verify your account before signing in.'
-                    );
-                    setPassword('');
-                    setFullName('');
+                const { confirmEmail: needsConfirmation } = await signUp(email, password, fullName);
+                if (needsConfirmation) {
+                    setView('success');
                 }
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'An unexpected error occurred';
-            // Friendlier Supabase error messages
             if (message.includes('Invalid login credentials')) {
                 setError('Invalid email or password');
             } else if (message.includes('already registered')) {
@@ -198,54 +266,75 @@ export default function LoginPage() {
         );
     }
 
+    // ── Animated Success State ──
+    if (view === 'success') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-4">
+                <BackgroundOrbs />
+                <Styles />
+                <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
+                    <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-10">
+                        {/* Animated Checkmark */}
+                        <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6 animate-success-pop">
+                            <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-check-draw" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Account Created!</h2>
+                        <p className="text-slate-400 mb-2">
+                            We've sent a verification email to:
+                        </p>
+                        <p className="text-amber-400 font-mono text-sm mb-6 break-all">{email}</p>
+                        <p className="text-slate-500 text-sm mb-8">
+                            Click the link in your email to activate your account, then come back to sign in.
+                        </p>
+                        <button
+                            onClick={() => switchView('signin')}
+                            className="w-full py-3 rounded-xl font-semibold text-sm
+                                bg-gradient-to-r from-amber-500 to-amber-600 text-white
+                                hover:from-amber-400 hover:to-amber-500 hover:shadow-lg hover:shadow-amber-500/25
+                                active:scale-[0.98] transition-all duration-300"
+                        >
+                            Go to Sign In
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ── Eye Toggle Button ──
+    const EyeToggle = ({ show, onToggle }: { show: boolean; onToggle: () => void }) => (
+        <button
+            type="button"
+            onClick={onToggle}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+            tabIndex={-1}
+        >
+            {show ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+            ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+            )}
+        </button>
+    );
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-4">
-            {/* Animated Background Orbs */}
-            <div
-                className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-15"
-                style={{
-                    background: 'radial-gradient(circle, #f59e0b, transparent)',
-                    top: '-10%',
-                    left: '-10%',
-                    animation: 'float 8s ease-in-out infinite',
-                }}
-            />
-            <div
-                className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-10"
-                style={{
-                    background: 'radial-gradient(circle, #3b82f6, transparent)',
-                    bottom: '-10%',
-                    right: '-10%',
-                    animation: 'float 10s ease-in-out infinite reverse',
-                }}
-            />
-
-            <style>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0) scale(1); }
-                    50% { transform: translateY(-20px) scale(1.05); }
-                }
-                @keyframes slideIn {
-                    from { opacity: 0; transform: translateY(12px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-slide-in {
-                    animation: slideIn 0.3s ease-out;
-                }
-            `}</style>
+            <BackgroundOrbs />
+            <Styles />
 
             <div className="relative z-10 w-full max-w-md">
-                {/* Logo + Branding */}
+                {/* Logo */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/25 mb-4">
                         <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8 text-white">
-                            <path
-                                d="M12 2L3 7v10l9 5 9-5V7l-9-5zM12 22V12M3 7l9 5 9-5"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            />
+                            <path d="M12 2L3 7v10l9 5 9-5V7l-9-5zM12 22V12M3 7l9 5 9-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     </div>
                     <h1 className="text-2xl font-bold text-white">
@@ -256,33 +345,26 @@ export default function LoginPage() {
 
                 {/* Card */}
                 <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
-                    {/* Tab Toggle (Sign In / Create Account) — hidden on forgot */}
+                    {/* Tabs */}
                     {view !== 'forgot' && (
                         <div className="flex bg-slate-800/60 rounded-xl p-1 mb-6">
-                            <button
-                                type="button"
-                                onClick={() => switchView('signin')}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === 'signin'
-                                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-slate-400 hover:text-white'
-                                    }`}
-                            >
-                                Sign In
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => switchView('signup')}
-                                className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === 'signup'
-                                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-slate-400 hover:text-white'
-                                    }`}
-                            >
-                                Create Account
-                            </button>
+                            {(['signin', 'signup'] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    type="button"
+                                    onClick={() => switchView(tab)}
+                                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
+                                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                                            : 'text-slate-400 hover:text-white'
+                                        }`}
+                                >
+                                    {tab === 'signin' ? 'Sign In' : 'Create Account'}
+                                </button>
+                            ))}
                         </div>
                     )}
 
-                    {/* Forgot Password Header */}
+                    {/* Forgot Header */}
                     {view === 'forgot' && (
                         <div className="text-center mb-6 animate-slide-in">
                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 mb-3">
@@ -295,14 +377,12 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    {/* Success Message */}
+                    {/* Messages */}
                     {successMessage && (
                         <div className="mb-4 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm animate-slide-in">
                             {successMessage}
                         </div>
                     )}
-
-                    {/* Error Message */}
                     {error && (
                         <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-slide-in">
                             {error}
@@ -311,99 +391,52 @@ export default function LoginPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4 animate-slide-in" key={view}>
-                        {/* Full Name — sign up only */}
+                        {/* Full Name — sign up */}
                         {view === 'signup' && (
-                            <div>
-                                <label htmlFor="fullName" className="block text-sm font-medium text-slate-300 mb-1.5">
-                                    Full Name
-                                </label>
-                                <input
-                                    id="fullName"
-                                    type="text"
-                                    value={fullName}
-                                    onChange={(e) => { setFullName(e.target.value); setFieldErrors(prev => ({ ...prev, fullName: undefined })); }}
-                                    placeholder="Fabian Murillo"
-                                    className={`w-full px-4 py-3 bg-slate-800/60 border rounded-xl text-white placeholder:text-slate-500 outline-none transition-all
-                                        ${fieldErrors.fullName
-                                            ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                                            : 'border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
-                                        }`}
-                                />
-                                {fieldErrors.fullName && (
-                                    <p className="mt-1 text-xs text-red-400">{fieldErrors.fullName}</p>
-                                )}
-                            </div>
+                            <FormInput
+                                id="fullName" label="Full Name" value={fullName}
+                                onChange={(v) => { setFullName(v); clearFieldError('fullName'); }}
+                                placeholder="Fabian Murillo" error={fieldErrors.fullName}
+                            />
                         )}
 
                         {/* Email */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => { setEmail(e.target.value); setFieldErrors(prev => ({ ...prev, email: undefined })); }}
-                                placeholder="fabian@example.com"
-                                autoComplete="email"
-                                className={`w-full px-4 py-3 bg-slate-800/60 border rounded-xl text-white placeholder:text-slate-500 outline-none transition-all
-                                    ${fieldErrors.email
-                                        ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                                        : 'border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
-                                    }`}
+                        <FormInput
+                            id="email" label="Email" type="email" value={email}
+                            onChange={(v) => { setEmail(v); clearFieldError('email'); }}
+                            placeholder="fabian@example.com" error={fieldErrors.email}
+                            autoComplete="email"
+                        />
+
+                        {/* Confirm Email — sign up */}
+                        {view === 'signup' && (
+                            <FormInput
+                                id="confirmEmail" label="Confirm Email" type="email" value={confirmEmail}
+                                onChange={(v) => { setConfirmEmail(v); clearFieldError('confirmEmail'); }}
+                                placeholder="fabian@example.com" error={fieldErrors.confirmEmail}
+                                autoComplete="off"
                             />
-                            {fieldErrors.email && (
-                                <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>
-                            )}
-                        </div>
+                        )}
 
                         {/* Password (hidden on forgot) */}
                         {view !== 'forgot' && (
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        id="password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={password}
-                                        onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => ({ ...prev, password: undefined })); }}
-                                        placeholder="••••••••"
-                                        autoComplete={view === 'signup' ? 'new-password' : 'current-password'}
-                                        className={`w-full px-4 py-3 pr-12 bg-slate-800/60 border rounded-xl text-white placeholder:text-slate-500 outline-none transition-all
-                                            ${fieldErrors.password
-                                                ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                                                : 'border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
-                                            }`}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                                        tabIndex={-1}
-                                    >
-                                        {showPassword ? (
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                            </svg>
-                                        ) : (
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                </div>
-                                {fieldErrors.password && (
-                                    <p className="mt-1 text-xs text-red-400">{fieldErrors.password}</p>
-                                )}
+                            <>
+                                <FormInput
+                                    id="password" label="Password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={(v) => { setPassword(v); clearFieldError('password'); }}
+                                    placeholder="••••••••" error={fieldErrors.password}
+                                    autoComplete={view === 'signup' ? 'new-password' : 'current-password'}
+                                >
+                                    <EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                                </FormInput>
 
-                                {/* Password Strength — sign up only */}
-                                {view === 'signup' && strength.level !== 'empty' && (
-                                    <div className="mt-3 animate-slide-in">
-                                        <div className="flex gap-1.5 mb-1.5">
+                                {/* Password Requirements — sign up */}
+                                {view === 'signup' && password.length > 0 && (
+                                    <div className="animate-slide-in space-y-2">
+                                        {/* Strength Bar */}
+                                        <div className="flex gap-1.5">
                                             {[1, 2, 3, 4].map((i) => (
                                                 <div
                                                     key={i}
@@ -414,32 +447,108 @@ export default function LoginPage() {
                                                 />
                                             ))}
                                         </div>
-                                        <p className="text-xs font-medium" style={{ color: strength.color }}>
-                                            {strength.label}
-                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium" style={{ color: strength.color }}>
+                                                {strength.label}
+                                            </span>
+                                        </div>
+
+                                        {/* Requirements Checklist */}
+                                        <div className="grid grid-cols-1 gap-1 pt-1">
+                                            {requirements.map((req) => (
+                                                <div key={req.label} className="flex items-center gap-2 text-xs">
+                                                    {req.met ? (
+                                                        <svg className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                            <circle cx="12" cy="12" r="9" />
+                                                        </svg>
+                                                    )}
+                                                    <span className={req.met ? 'text-emerald-400' : 'text-slate-500'}>
+                                                        {req.label}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
-                            </div>
+
+                                {/* Confirm Password — sign up */}
+                                {view === 'signup' && (
+                                    <FormInput
+                                        id="confirmPassword" label="Confirm Password"
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        value={confirmPassword}
+                                        onChange={(v) => { setConfirmPassword(v); clearFieldError('confirmPassword'); }}
+                                        placeholder="••••••••" error={fieldErrors.confirmPassword}
+                                        autoComplete="new-password"
+                                    >
+                                        <EyeToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                                    </FormInput>
+                                )}
+                            </>
                         )}
 
-                        {/* Forgot Password link — sign in only */}
+                        {/* Forgot link — sign in */}
                         {view === 'signin' && (
                             <div className="text-right">
-                                <button
-                                    type="button"
-                                    onClick={() => switchView('forgot')}
-                                    className="text-sm text-amber-400/80 hover:text-amber-400 transition-colors"
-                                >
+                                <button type="button" onClick={() => switchView('forgot')}
+                                    className="text-sm text-amber-400/80 hover:text-amber-400 transition-colors">
                                     Forgot password?
                                 </button>
                             </div>
                         )}
 
-                        {/* Submit Button */}
+                        {/* Terms — sign up */}
+                        {view === 'signup' && (
+                            <div className="pt-1">
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <div className="relative mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={acceptedTerms}
+                                            onChange={(e) => { setAcceptedTerms(e.target.checked); clearFieldError('terms'); }}
+                                            className="sr-only peer"
+                                        />
+                                        <div className={`w-5 h-5 rounded-md border-2 transition-all duration-200
+                                            flex items-center justify-center
+                                            ${acceptedTerms
+                                                ? 'bg-amber-500 border-amber-500'
+                                                : fieldErrors.terms
+                                                    ? 'border-red-500/50 bg-transparent'
+                                                    : 'border-white/20 bg-transparent group-hover:border-white/40'
+                                            }`}>
+                                            {acceptedTerms && (
+                                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <span className="text-sm text-slate-400 leading-tight">
+                                        I agree to the{' '}
+                                        <span className="text-amber-400 hover:text-amber-300 underline underline-offset-2 cursor-pointer">
+                                            Terms of Service
+                                        </span>
+                                        {' '}and{' '}
+                                        <span className="text-amber-400 hover:text-amber-300 underline underline-offset-2 cursor-pointer">
+                                            Privacy Policy
+                                        </span>
+                                    </span>
+                                </label>
+                                {fieldErrors.terms && (
+                                    <p className="mt-1.5 text-xs text-red-400 ml-8">{fieldErrors.terms}</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300 
+                            className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300
                                 bg-gradient-to-r from-amber-500 to-amber-600 text-white
                                 hover:from-amber-400 hover:to-amber-500 hover:shadow-lg hover:shadow-amber-500/25
                                 active:scale-[0.98]
@@ -455,19 +564,16 @@ export default function LoginPage() {
                             )}
                         </button>
 
-                        {/* Back to Sign In — forgot only */}
+                        {/* Back — forgot */}
                         {view === 'forgot' && (
-                            <button
-                                type="button"
-                                onClick={() => switchView('signin')}
-                                className="w-full text-sm text-slate-400 hover:text-white transition-colors py-2"
-                            >
+                            <button type="button" onClick={() => switchView('signin')}
+                                className="w-full text-sm text-slate-400 hover:text-white transition-colors py-2">
                                 ← Back to Sign In
                             </button>
                         )}
                     </form>
 
-                    {/* Divider + Google — sign in / sign up only */}
+                    {/* Divider + Google */}
                     {view !== 'forgot' && (
                         <>
                             <div className="flex items-center gap-4 my-6">
@@ -475,12 +581,11 @@ export default function LoginPage() {
                                 <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
                                 <div className="flex-1 h-px bg-white/10" />
                             </div>
-
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={isGoogleLoading || isSubmitting}
-                                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl 
+                                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
                                     bg-slate-800/60 border border-white/10 text-white text-sm font-medium
                                     hover:bg-slate-700/60 hover:border-white/20 transition-all duration-300
                                     active:scale-[0.98]
@@ -517,5 +622,53 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+// ── Shared Components ──
+
+function BackgroundOrbs() {
+    return (
+        <>
+            <div
+                className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-15"
+                style={{ background: 'radial-gradient(circle, #f59e0b, transparent)', top: '-10%', left: '-10%', animation: 'float 8s ease-in-out infinite' }}
+            />
+            <div
+                className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-10"
+                style={{ background: 'radial-gradient(circle, #3b82f6, transparent)', bottom: '-10%', right: '-10%', animation: 'float 10s ease-in-out infinite reverse' }}
+            />
+        </>
+    );
+}
+
+function Styles() {
+    return (
+        <style>{`
+            @keyframes float {
+                0%, 100% { transform: translateY(0) scale(1); }
+                50% { transform: translateY(-20px) scale(1.05); }
+            }
+            @keyframes slideIn {
+                from { opacity: 0; transform: translateY(12px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes successPop {
+                0% { transform: scale(0); opacity: 0; }
+                50% { transform: scale(1.2); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            @keyframes checkDraw {
+                from { stroke-dashoffset: 24; }
+                to { stroke-dashoffset: 0; }
+            }
+            .animate-slide-in { animation: slideIn 0.3s ease-out; }
+            .animate-success-pop { animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+            .animate-check-draw {
+                stroke-dasharray: 24;
+                stroke-dashoffset: 24;
+                animation: checkDraw 0.4s ease-out 0.3s forwards;
+            }
+        `}</style>
     );
 }
