@@ -7,6 +7,9 @@ interface AuthContextType {
     session: Session | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
+    signInWithPassword: (email: string, password: string) => Promise<void>;
+    signUp: (email: string, password: string, fullName: string) => Promise<{ confirmEmail: boolean }>;
+    resetPassword: (email: string) => Promise<void>;
     signOut: () => Promise<void>;
 }
 
@@ -18,14 +21,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get initial session
         supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
             setSession(currentSession);
             setUser(currentSession?.user ?? null);
             setLoading(false);
         });
 
-        // Subscribe to auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, newSession) => {
                 setSession(newSession);
@@ -44,22 +45,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 redirectTo: window.location.origin,
             },
         });
-        if (error) {
-            console.error('[AuthContext] Google sign-in failed:', error.message);
-            throw error;
-        }
+        if (error) throw error;
+    }, []);
+
+    const signInWithPassword = useCallback(async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+    }, []);
+
+    const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { full_name: fullName },
+                emailRedirectTo: window.location.origin,
+            },
+        });
+        if (error) throw error;
+
+        // Supabase returns a user with identities = [] if email already exists
+        // but confirmation is required. Check if we need email confirmation.
+        const confirmEmail = !data.session;
+        return { confirmEmail };
+    }, []);
+
+    const resetPassword = useCallback(async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/login`,
+        });
+        if (error) throw error;
     }, []);
 
     const signOut = useCallback(async () => {
         const { error } = await supabase.auth.signOut();
-        if (error) {
-            console.error('[AuthContext] Sign-out failed:', error.message);
-            throw error;
-        }
+        if (error) throw error;
     }, []);
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signInWithGoogle, signOut }}>
+        <AuthContext.Provider value={{
+            user, session, loading,
+            signInWithGoogle, signInWithPassword, signUp, resetPassword, signOut,
+        }}>
             {children}
         </AuthContext.Provider>
     );
