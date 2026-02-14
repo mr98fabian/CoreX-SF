@@ -1,23 +1,20 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, SQLModel, Field
 from typing import List, Optional
-from database import create_db_and_tables, engine, seed_data
-from models import Account, CashflowItem, Transaction, TransactionCreate, User
-from decimal import Decimal
+from database import create_db_and_tables, engine, seed_data, get_session
+from models import Account, CashflowItem, Transaction, TransactionCreate, User, MovementLog
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import date, timedelta
 from velocity_engine import (
     get_projections, DebtAccount, generate_tactical_schedule, CashflowTactical,
     get_peace_shield_status, calculate_purchase_time_cost, DEFAULT_PEACE_SHIELD,
-    calculate_minimum_payment
+    calculate_minimum_payment, calculate_safe_attack_equity, Movement,
+    simulate_freedom_path
 )
-from transaction_classifier import classify_batch, get_cashflow_summary
+from transaction_classifier import classify_batch, get_cashflow_summary, classify_transaction
 import uuid
-from decimal import Decimal, ROUND_HALF_UP
-
-
-# --- APP ---
 
 
 # --- APP ---
@@ -100,7 +97,6 @@ def update_account_balance(id: int, data: BalanceUpdate):
         session.refresh(account)
         return account
 
-from models import Account, CashflowItem, Transaction, TransactionCreate, MovementLog
 
 @app.delete("/api/accounts/{id}")
 def delete_account(id: int):
@@ -209,7 +205,7 @@ def get_dashboard_metrics():
         ]
         
         # 2. Calculate Safe Attack Equity
-        from velocity_engine import calculate_safe_attack_equity
+        # calculate_safe_attack_equity imported at top
         safety_data = calculate_safe_attack_equity(chase_balance, shield_target, debt_objects)
         
         attack_equity = safety_data["safe_equity"]
@@ -533,15 +529,7 @@ def get_tactical_gps():
             })
         return results
 
-from models import User, Account, CashflowItem, Transaction, MovementLog, TransactionCreate
-# ... other imports ...
-from fastapi import Depends
-from database import get_session
-from datetime import date, timedelta
-from typing import List
-from pydantic import BaseModel
-from velocity_engine import DebtAccount, CashflowTactical, generate_tactical_schedule, get_projections, Movement, simulate_freedom_path, calculate_minimum_payment
-from fastapi import HTTPException
+# (All imports consolidated at top of file)
 
 
 class MovementExecute(BaseModel):
@@ -670,7 +658,6 @@ def get_account_transactions(account_id: int):
 
 # --- RUTAS PLAID ---
 from plaid_service import create_link_token, exchange_public_token, get_accounts as plaid_get_accounts, sync_transactions
-from pydantic import BaseModel
 
 class PlaidPublicToken(BaseModel):
     public_token: str
@@ -762,10 +749,6 @@ def api_import_plaid_accounts():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# ... imports ...
-from transaction_classifier import classify_transaction
-
-# ...
 
 @app.post("/api/plaid/sync_transactions")
 def api_sync_transactions(data: PlaidAccessToken):
@@ -902,38 +885,6 @@ def get_recent_transactions(limit: int = 10):
             select(Transaction).order_by(Transaction.date.desc()).limit(limit)
         ).all()
 
-
-# ================================================================
-# PEACE SHIELD — Emergency Fund Status
-# ================================================================
-
-@app.get("/api/peace-shield")
-def get_shield_status():
-    """Returns the current Peace Shield (Emergency Fund) status."""
-    with Session(engine) as session:
-        # Get User Settings
-        user = session.exec(select(User)).first()
-        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
-        
-        accounts = session.exec(select(Account)).all()
-        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
-        return get_peace_shield_status(Decimal(str(liquid_cash)), shield_target=shield_target)
-
-class ShieldUpdate(BaseModel):
-    target: float
-
-@app.put("/api/user/me/shield")
-def update_shield_target(data: ShieldUpdate):
-    """Update the user's Peace Shield target amount."""
-    with Session(engine) as session:
-        user = session.exec(select(User)).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        user.shield_target = Decimal(str(data.target))
-        session.add(user)
-        session.commit()
-        return {"ok": True, "new_target": data.target}
 
 
 # ================================================================

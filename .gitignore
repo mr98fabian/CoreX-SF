@@ -1,5 +1,42 @@
+# Environment & Secrets
 .env
-node_modules
-venv
-__pycache__
+backend/.env
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+backend/venv/
+
+# Database files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Frontend build
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Agent / AI folders
+.agent/
+.gemini/
+.testsprite/

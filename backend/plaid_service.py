@@ -125,8 +125,8 @@ def get_accounts(access_token: str) -> List[dict]:
             "official_name": acc.official_name,
             "type": acc.type.value,
             "subtype": acc.subtype.value if acc.subtype else None,
-            "balance": float(acc.balances.current) if acc.balances.current else 0,
-            "available": float(acc.balances.available) if acc.balances.available else 0,
+            "balance": str(acc.balances.current) if acc.balances.current else "0",
+            "available": str(acc.balances.available) if acc.balances.available else "0",
             "mask": acc.mask  # Last 4 digits
         })
     
@@ -188,7 +188,7 @@ def sync_transactions(access_token: str, cursor: Optional[str] = None) -> dict:
         added.append({
             "plaid_transaction_id": tx.transaction_id,
             "plaid_account_id": tx.account_id,
-            "amount": float(tx.amount),
+            "amount": str(tx.amount),
             "date": str(tx.date),
             "name": tx.name,
             "merchant_name": tx.merchant_name,
