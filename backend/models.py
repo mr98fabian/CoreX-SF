@@ -13,6 +13,7 @@ class User(SQLModel, table=True):
 class Account(SQLModel, table=True):
     __tablename__ = "accounts"
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True, description="Supabase Auth user UUID")
     name: str
     type: str = Field(description="debt, checking, savings")
     balance: Decimal = Field(default=0, max_digits=14, decimal_places=2)
@@ -29,6 +30,7 @@ class Account(SQLModel, table=True):
 class CashflowItem(SQLModel, table=True):
     __tablename__ = "cashflow_items"
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True, description="Supabase Auth user UUID")
     name: str
     amount: Decimal = Field(default=0, max_digits=14, decimal_places=2)
     category: str  # "income" or "expense"
@@ -45,6 +47,7 @@ class CashflowItem(SQLModel, table=True):
 class Transaction(SQLModel, table=True):
     __tablename__ = "transactions"
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True, description="Supabase Auth user UUID")
     account_id: Optional[int] = Field(default=None, foreign_key="accounts.id")
     date: str # ISO format YYYY-MM-DD
     amount: Decimal = Field(default=0, max_digits=14, decimal_places=2) # Positivo = Ingreso/Pago a Deuda, Negativo = Gasto
@@ -57,6 +60,7 @@ class Transaction(SQLModel, table=True):
 class MovementLog(SQLModel, table=True):
     __tablename__ = "movement_log"
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: str = Field(index=True, description="Supabase Auth user UUID")
     movement_key: str = Field(index=True) # Unique key for the movement (e.g., "pump-salary-2024-02-01")
     title: str
     amount: Decimal = Field(max_digits=14, decimal_places=2)
@@ -71,3 +75,4 @@ class TransactionCreate(SQLModel):
     description: str
     category: str
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+

@@ -25,10 +25,13 @@ export default function DashboardLayout() {
                 )}
             >
                 <div className="flex h-16 items-center px-6 min-w-max border-b border-white/5">
-                    <span className="text-xl font-bold tracking-tight text-white whitespace-nowrap flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-gold-400 animate-pulse-glow" />
-                        CoreX <span className="text-gold-400">System</span>
-                    </span>
+                    <div className="flex items-center gap-2 group cursor-default">
+                        <img
+                            src="/korex-logotipo.png"
+                            alt="KoreX"
+                            className="h-7 invert brightness-200 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                        />
+                    </div>
                 </div>
 
                 <nav className="flex-1 space-y-1.5 px-3 py-4 min-w-max">

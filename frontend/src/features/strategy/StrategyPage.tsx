@@ -1,5 +1,6 @@
 import { RefreshCw, Loader2, AlertTriangle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from "@/components/ui/use-toast";
 import { useStrategyData } from "./hooks/useStrategyData";
 import MorningBriefing from "./components/MorningBriefing";
@@ -13,6 +14,7 @@ import TacticalCashflowMap from "./components/TacticalCashflowMap";
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function StrategyPage() {
+    usePageTitle('Strategy');
     const { data, loading, error, refresh } = useStrategyData();
     const { toast } = useToast();
 

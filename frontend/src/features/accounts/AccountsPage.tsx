@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
@@ -73,6 +74,7 @@ interface Transaction {
 }
 
 export default function AccountsPage() {
+    usePageTitle('Accounts');
     const { toast } = useToast();
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [isLoading, setIsLoading] = useState(true);

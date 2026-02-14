@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Header
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, SQLModel, Field
@@ -15,6 +15,38 @@ from velocity_engine import (
 )
 from transaction_classifier import classify_batch, get_cashflow_summary, classify_transaction
 import uuid
+import os
+import httpx
+
+# --- AUTH MIDDLEWARE ---
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://stvjvmnlhknzyrbbntcp.supabase.co")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+
+async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
+    """Extract and validate user_id from Supabase JWT via /auth/v1/user."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    
+    token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"{SUPABASE_URL}/auth/v1/user",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "apikey": SUPABASE_SERVICE_KEY or token,
+                }
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid or expired token")
+            user_data = resp.json()
+            uid = user_data.get("id")
+            if not uid:
+                raise HTTPException(status_code=401, detail="No user id in token")
+            return uid
+    except httpx.HTTPError:
+        raise HTTPException(status_code=401, detail="Auth service unreachable")
 
 
 # --- APP ---
@@ -35,13 +67,14 @@ def on_startup():
 
 # --- RUTAS ACCOUNTS ---
 @app.get("/api/accounts", response_model=List[Account])
-def get_accounts():
+async def get_accounts(user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        return session.exec(select(Account)).all()
+        return session.exec(select(Account).where(Account.user_id == user_id)).all()
 
 @app.post("/api/accounts", response_model=Account)
-def create_account(account: Account):
+async def create_account(account: Account, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
+        account.user_id = user_id
         # Auto-calculate min_payment if it's a debt account AND user didn't provide one
         if account.type == "debt":
             if account.min_payment is None or account.min_payment == 0:
@@ -53,9 +86,9 @@ def create_account(account: Account):
         return account
 
 @app.put("/api/accounts/{id}", response_model=Account)
-def update_account(id: int, account_data: Account):
+async def update_account(id: int, account_data: Account, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        account = session.get(Account, id)
+        account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
         
@@ -80,9 +113,9 @@ class BalanceUpdate(BaseModel):
     balance: float
 
 @app.patch("/api/accounts/{id}/balance", response_model=Account)
-def update_account_balance(id: int, data: BalanceUpdate):
+async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        account = session.get(Account, id)
+        account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
         
@@ -99,20 +132,20 @@ def update_account_balance(id: int, data: BalanceUpdate):
 
 
 @app.delete("/api/accounts/{id}")
-def delete_account(id: int):
+async def delete_account(id: int, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        item = session.get(Account, id)
+        item = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if item:
             # 1. Get transactions for this account
-            transactions = session.exec(select(Transaction).where(Transaction.account_id == id)).all()
+            transactions = session.exec(select(Transaction).where(Transaction.account_id == id, Transaction.user_id == user_id)).all()
             tx_ids = [tx.id for tx in transactions]
             
             # 2. Unlink MovementLogs that reference these transactions
             if tx_ids:
-                logs = session.exec(select(MovementLog).where(MovementLog.verified_transaction_id.in_(tx_ids))).all()
+                logs = session.exec(select(MovementLog).where(MovementLog.verified_transaction_id.in_(tx_ids), MovementLog.user_id == user_id)).all()
                 for log in logs:
                     log.verified_transaction_id = None
-                    log.status = "executed" # Revert status? Or keep verified but unlinked? Let's keep status or revert.
+                    log.status = "executed"
                     session.add(log)
             
             # 3. Delete transactions
@@ -125,22 +158,22 @@ def delete_account(id: int):
         return {"ok": True}
 
 @app.delete("/api/accounts")
-def delete_all_accounts():
-    """HARD RESET: Wipe all accounts, transactions, and movement logs."""
+async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
+    """HARD RESET: Wipe all user's accounts, transactions, and movement logs."""
     try:
         with Session(engine) as session:
-            # 1. Delete ALL MovementLogs (Clean Slate)
-            logs = session.exec(select(MovementLog)).all()
+            # 1. Delete user's MovementLogs
+            logs = session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
             for log in logs:
                 session.delete(log)
             
-            # 2. Delete all transactions
-            transactions = session.exec(select(Transaction)).all()
+            # 2. Delete user's transactions
+            transactions = session.exec(select(Transaction).where(Transaction.user_id == user_id)).all()
             for tx in transactions:
                 session.delete(tx)
             
-            # 3. Delete all accounts
-            accounts = session.exec(select(Account)).all()
+            # 3. Delete user's accounts
+            accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
             for acc in accounts:
                 session.delete(acc)
                 
@@ -151,29 +184,30 @@ def delete_all_accounts():
 
 # --- RUTAS CASHFLOW ---
 @app.get("/api/cashflow", response_model=List[CashflowItem])
-def get_cashflow():
+async def get_cashflow(user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        return session.exec(select(CashflowItem)).all()
+        return session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
 
 @app.post("/api/cashflow", response_model=CashflowItem)
-def create_cashflow(item: CashflowItem):
+async def create_cashflow(item: CashflowItem, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
+        item.user_id = user_id
         session.add(item)
         session.commit()
         session.refresh(item)
         return item
 
 @app.delete("/api/cashflow/{id}")
-def delete_cashflow(id: int):
+async def delete_cashflow(id: int, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        item = session.get(CashflowItem, id)
+        item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if item:
             session.delete(item)
             session.commit()
         return {"ok": True}
 
 @app.get("/api/cashflow/projection")
-def get_cashflow_projection(months: int = 3):
+async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_current_user_id)):
     """
     Projects daily running balance using recurring CashflowItems.
     Walks day-by-day from start of current month for N months,
@@ -185,8 +219,8 @@ def get_cashflow_projection(months: int = 3):
         months = 12
 
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
-        items = session.exec(select(CashflowItem)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
 
         # Starting balance = sum of non-debt accounts
         liquid_cash = float(sum(acc.balance for acc in accounts if acc.type != "debt"))
@@ -324,9 +358,9 @@ def get_cashflow_projection(months: int = 3):
 
 # --- RUTAS DASHBOARD ---
 @app.get("/api/dashboard")
-def get_dashboard_metrics():
+async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
         
@@ -372,7 +406,7 @@ def get_dashboard_metrics():
             today = date.today()
             
             # 1. Find Next Payday (from Cashflow Items)
-            cashflow_items = session.exec(select(CashflowItem)).all()
+            cashflow_items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
             incomes = [cf for cf in cashflow_items if cf.amount > 0]
             next_payday = today + timedelta(days=30) # Default backup
             
@@ -457,7 +491,7 @@ def get_dashboard_metrics():
         }
 
 @app.get("/api/dashboard/cashflow_monitor")
-def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income"):
+async def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income", user_id: str = Depends(get_current_user_id)):
     """
     Calculate total cashflow (Income or Expense) for a specific timeframe.
     Timeframes: 'daily' (Today), 'weekly' (7d), 'monthly' (30d), 'annual' (365d).
@@ -475,8 +509,8 @@ def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income"):
             start_date = today - timedelta(days=365)
         # timeframe == "daily" uses start_date = today
 
-        # Base Query: Filter by date
-        query = select(Transaction).where(Transaction.date >= start_date)
+        # Base Query: Filter by date and user
+        query = select(Transaction).where(Transaction.date >= start_date, Transaction.user_id == user_id)
         
         # Filter by Type (Income vs Expense)
         # Income: Amount > 0. We currently don't strictly enforce "Category has Income" for flexibility,
@@ -506,11 +540,11 @@ def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income"):
 
 # --- RUTAS PEACE SHIELD ---
 @app.get("/api/peace-shield")
-def get_peace_shield_data():
+async def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         # Calculate liquid cash (Checking + Savings)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type in ["checking", "savings"])
         
@@ -534,10 +568,10 @@ def update_shield_target(data: ShieldUpdate):
         return {"ok": True}
 
 @app.get("/api/velocity/projections")
-def get_velocity_projections():
+async def get_velocity_projections(user_id: str = Depends(get_current_user_id)):
     """Calculate real velocity banking projections from account data."""
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         
         # Convert debt accounts to DebtAccount dataclass
         debts = [
@@ -560,10 +594,10 @@ def get_velocity_projections():
         return projections
 
 @app.get("/api/velocity/freedom-path")
-def get_freedom_path():
+async def get_freedom_path(user_id: str = Depends(get_current_user_id)):
     """Get the month-by-month freedom path simulation."""
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = [
             DebtAccount(
                 name=acc.name,
@@ -583,10 +617,10 @@ def get_freedom_path():
         return simulation
 
 @app.get("/api/velocity/simulate")
-def get_simulation(extra_cash: float):
+async def get_simulation(extra_cash: float, user_id: str = Depends(get_current_user_id)):
     """Simulate payoff with custom extra monthly cash."""
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = [
             DebtAccount(
                 name=acc.name,
@@ -608,11 +642,11 @@ def get_simulation(extra_cash: float):
         return simulation
 
 @app.get("/api/strategy/tactical-gps")
-def get_tactical_gps():
+async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
     """Generate the precise day-by-day movement schedule."""
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
-        cashflows = session.exec(select(CashflowItem)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
         
         debts = [
             DebtAccount(
@@ -691,120 +725,111 @@ class MovementExecute(BaseModel):
     destination: str
 
 @app.post("/api/strategy/execute")
-def execute_movement(data: MovementExecute, session: Session = Depends(get_session)):
+async def execute_movement(data: MovementExecute, user_id: str = Depends(get_current_user_id)):
     """
     Executes a tactical movement by creating a transaction and UPDATING BALANCES.
     """
-    amount = Decimal(str(data.amount))
-    
-    # 1. Find Source Account (e.g. Chase)
-    source_acc = session.exec(select(Account).where(Account.name == data.source)).first()
-    
-    # If source is explicit "External" or "Salary", we might not have an account for it.
-    # But if it's "Chase Checking", we must find it.
-    if source_acc:
-        source_acc.balance -= amount
-        session.add(source_acc)
+    with Session(engine) as session:
+        amount = Decimal(str(data.amount))
         
-    # 2. Find Destination Account (e.g. Credit Card)
-    dest_acc = session.exec(select(Account).where(Account.name == data.destination)).first()
-    if dest_acc:
-        # If destination is a Debt account, paying it reduces the balance.
-        # usually Debt is positive liabilities. Paying it reduces liability.
-        dest_acc.balance -= amount
+        # 1. Find Source Account (e.g. Chase) — scoped to user
+        source_acc = session.exec(select(Account).where(Account.name == data.source, Account.user_id == user_id)).first()
         
-        # Auto-update Min Payment
-        if dest_acc.type == "debt":
-            dest_acc.min_payment = calculate_minimum_payment(dest_acc.balance, dest_acc.interest_rate)
-             
-        session.add(dest_acc)
-    
-    # 3. Record Transaction
-    # If we found accounts, link them. If not, just record string names.
-    # FIX: SQLite enforces NOT NULL on account_id. 
-    # If source is external (Salary), use Destination ID (Credit Card).
-    primary_account_id = source_acc.id if source_acc else (dest_acc.id if dest_acc else None)
-    
-    if not primary_account_id:
-        print("EXECUTION ABORTED: No internal account linked.")
-        # If we return success here, the UI might be happy but no record created.
-        # But let's raise error for now to confirm connectivity.
-        raise HTTPException(status_code=400, detail="Execution Failed: Source nor Destination account found in DB.")
+        if source_acc:
+            source_acc.balance -= amount
+            session.add(source_acc)
+            
+        # 2. Find Destination Account (e.g. Credit Card) — scoped to user
+        dest_acc = session.exec(select(Account).where(Account.name == data.destination, Account.user_id == user_id)).first()
+        if dest_acc:
+            dest_acc.balance -= amount
+            
+            # Auto-update Min Payment
+            if dest_acc.type == "debt":
+                dest_acc.min_payment = calculate_minimum_payment(dest_acc.balance, dest_acc.interest_rate)
+                 
+            session.add(dest_acc)
+        
+        # 3. Record Transaction
+        primary_account_id = source_acc.id if source_acc else (dest_acc.id if dest_acc else None)
+        
+        if not primary_account_id:
+            raise HTTPException(status_code=400, detail="Execution Failed: Source nor Destination account found in DB.")
 
-    try:
-        tx = Transaction(
-            date=date.today().isoformat(), # Ensure string format
-            amount=amount,
-            description=f"Velocity Execution: {data.title}",
-            category="Debt Payment" if dest_acc else "Transfer",
-            account_id=primary_account_id,
-            is_manual=False
-        )
-        session.add(tx)
-        session.commit()
-        return {
-            "status": "executed", 
-            "new_balance_source": source_acc.balance if source_acc else "N/A",
-            "source_found": bool(source_acc),
-            "dest_found": bool(dest_acc)
-        }
-    except Exception as e:
-        print(f"EXECUTION ERROR: {e}")
-        raise HTTPException(status_code=400, detail=f"Execution Failed: {str(e)}")
+        try:
+            tx = Transaction(
+                date=date.today().isoformat(),
+                amount=amount,
+                description=f"Velocity Execution: {data.title}",
+                category="Debt Payment" if dest_acc else "Transfer",
+                account_id=primary_account_id,
+                user_id=user_id,
+                is_manual=False
+            )
+            session.add(tx)
+            session.commit()
+            return {
+                "status": "executed", 
+                "new_balance_source": source_acc.balance if source_acc else "N/A",
+                "source_found": bool(source_acc),
+                "dest_found": bool(dest_acc)
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Execution Failed: {str(e)}")
 
 @app.get("/api/debug/accounts")
-def debug_list_accounts(session: Session = Depends(get_session)):
-    return session.exec(select(Account)).all()
+async def debug_list_accounts(user_id: str = Depends(get_current_user_id)):
+    with Session(engine) as session:
+        return session.exec(select(Account).where(Account.user_id == user_id)).all()
 
 @app.get("/api/strategy/executed-logs")
-def get_executed_logs():
-    """Retrieve all logged strategic movements."""
+async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
+    """Retrieve all logged strategic movements for current user."""
     with Session(engine) as session:
-        return session.exec(select(MovementLog)).all()
+        return session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
 
 # --- RUTAS TRANSACCIONES ---
 @app.post("/api/transactions", response_model=Transaction)
-def create_transaction(tx: TransactionCreate):
+async def create_transaction(tx: TransactionCreate, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        # 1. Guardar Transacción
-        db_tx = Transaction.from_orm(tx)
+        # Verify account belongs to user
+        account = session.exec(select(Account).where(Account.id == tx.account_id, Account.user_id == user_id)).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found")
+        
+        # 1. Create Transaction
+        db_tx = Transaction(
+            account_id=tx.account_id,
+            amount=tx.amount,
+            description=tx.description,
+            category=tx.category,
+            date=tx.date,
+            user_id=user_id
+        )
         session.add(db_tx)
         
-        # 2. Actualizar Balance de la Cuenta automáticamente
-        account = session.get(Account, tx.account_id)
-        if account:
-            # Si es Checking: Ingreso (+) aumenta balance, Gasto (-) reduce.
-            # Si es Deuda: Pago (+) reduce deuda, Gasto (-) aumenta deuda.
-            # (Para simplificar este MVP, usaremos lógica bancaria estándar: + aumenta fondos, - reduce fondos)
-            # NOTA: Para DEUDA, un gasto AUMENTA el balance (la deuda crece), un pago DISMINUYE.
-            # Vamos a asumir que el usuario envía negativo para gastos y positivo para pagos/ingresos.
-            # Pero en DEUDA es al revés. Definamos esto claramente.
-            # Convención: 
-            #   - DEBT ACCOUNT: + Amount = Pago a la Deuda (Reduce Balance). - Amount = Gasto (Aumenta Balance).
-            #   - ASSET ACCOUNT: + Amount = Ingreso (Aumenta Balance). - Amount = Gasto (Reduce Balance).
-            
-            amount_decimal = Decimal(str(tx.amount))
-            
-            if account.type == "debt":
-                # En deuda, el balance es positivo (monto debido).
-                # Un pago positivo REDUCE la deuda.
-                # Un gasto negativo AUMENTA la deuda (se vuelve mas debida).
-                # Ejemplo: Deuda $1000. Pago $200 -> Balance $800. Gasto -$50 -> Balance $1050.
-                account.balance -= amount_decimal
-            else:
-                # En activos, normal.
-                account.balance += amount_decimal
+        # 2. Update Account Balance
+        amount_decimal = Decimal(str(tx.amount))
+        
+        if account.type == "debt":
+            account.balance -= amount_decimal
+        else:
+            account.balance += amount_decimal
                 
-            session.add(account)
+        session.add(account)
             
         session.commit()
         session.refresh(db_tx)
         return db_tx
 
 @app.get("/api/accounts/{account_id}/transactions", response_model=List[Transaction])
-def get_account_transactions(account_id: int):
+async def get_account_transactions(account_id: int, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        return session.exec(select(Transaction).where(Transaction.account_id == account_id).order_by(Transaction.date.desc())).all()
+        # Verify account belongs to user
+        account = session.exec(select(Account).where(Account.id == account_id, Account.user_id == user_id)).first()
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found")
+        return session.exec(select(Transaction).where(Transaction.account_id == account_id, Transaction.user_id == user_id).order_by(Transaction.date.desc())).all()
 
 # --- RUTAS PLAID ---
 from plaid_service import create_link_token, exchange_public_token, get_accounts as plaid_get_accounts, sync_transactions
@@ -852,8 +877,8 @@ def api_get_plaid_accounts():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/plaid/import_accounts")
-def api_import_plaid_accounts():
-    """Import Plaid accounts into CoreX database."""
+async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id)):
+    """Import Plaid accounts into database."""
     access_token = plaid_tokens.get("current")
     if not access_token:
         raise HTTPException(status_code=400, detail="No bank linked. Connect a bank first.")
@@ -865,30 +890,29 @@ def api_import_plaid_accounts():
         with Session(engine) as session:
             for acc in plaid_accounts:
                 # Check if account already exists by plaid_account_id
-                existing_account = session.exec(select(Account).where(Account.plaid_account_id == acc["plaid_account_id"])).first()
+                existing_account = session.exec(select(Account).where(Account.plaid_account_id == acc["plaid_account_id"], Account.user_id == user_id)).first()
                 
                 if existing_account:
-                    # Update balance and mask
                     existing_account.balance = Decimal(str(abs(acc["balance"])))
                     existing_account.name = f"{acc['name']} (...{acc['mask']})" if acc['mask'] else acc['name']
                     continue
 
-                # Map Plaid types to CoreX types
+                # Map Plaid types
                 corex_type = "checking"
                 if acc["type"] == "credit":
                     corex_type = "debt"
                 elif acc["type"] == "depository":
                     corex_type = "checking" if acc["subtype"] in ["checking", None] else "savings"
                 
-                # Create CoreX account
                 new_account = Account(
                     name=f"{acc['name']} (...{acc['mask']})" if acc['mask'] else acc['name'],
                     type=corex_type,
                     balance=Decimal(str(abs(acc["balance"]))),
-                    interest_rate=Decimal("0"),  # Plaid doesn't provide this
+                    interest_rate=Decimal("0"),
                     min_payment=Decimal("0"),
                     payment_frequency="monthly",
-                    plaid_account_id=acc["plaid_account_id"]
+                    plaid_account_id=acc["plaid_account_id"],
+                    user_id=user_id
                 )
                 session.add(new_account)
                 imported.append(new_account.name)
@@ -901,7 +925,7 @@ def api_import_plaid_accounts():
 
 
 @app.post("/api/plaid/sync_transactions")
-def api_sync_transactions(data: PlaidAccessToken):
+async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(get_current_user_id)):
     """Sync transactions from Plaid and persist to DB."""
     try:
         result = sync_transactions(data.access_token)
@@ -909,25 +933,21 @@ def api_sync_transactions(data: PlaidAccessToken):
         counts = {"added": 0, "skipped": 0}
         
         with Session(engine) as session:
-            # Get all accounts that have a plaid_account_id
-            accounts = session.exec(select(Account).where(Account.plaid_account_id != None)).all()
+            # Get all accounts that have a plaid_account_id for this user
+            accounts = session.exec(select(Account).where(Account.plaid_account_id != None, Account.user_id == user_id)).all()
             account_map = {acc.plaid_account_id: acc.id for acc in accounts}
             
             for tx in result.get("added", []):
-                # 1. Map to local account
                 local_account_id = account_map.get(tx["plaid_account_id"])
                 if not local_account_id:
                     counts["skipped"] += 1
                     continue
                 
-                # 2. Check if transaction already exists
                 existing = session.exec(select(Transaction).where(Transaction.plaid_transaction_id == tx["plaid_transaction_id"])).first()
                 if existing:
                     counts["skipped"] += 1
                     continue
                 
-                # 3. Classify Transaction (Radar)
-                # Plaid amounts: positive = spend, negative = income
                 plaid_amount = Decimal(str(tx["amount"]))
                 classification = classify_transaction(
                     amount=plaid_amount,
@@ -936,13 +956,7 @@ def api_sync_transactions(data: PlaidAccessToken):
                     category=tx.get("category"),
                 )
                 
-                # Format: "Tag: Original Category"
                 smart_category = f"{classification['tag'].title()}: {tx['category']}"
-                
-                # 4. Save new transaction
-                # CoreX standard: Positive = Income/Payment to Debt, Negative = Expense
-                # Plaid: Positive = Spend -> CoreX: Negative
-                # Plaid: Negative = Income -> CoreX: Positive
                 corex_amount = plaid_amount * Decimal("-1")
                 
                 new_tx = Transaction(
@@ -950,8 +964,9 @@ def api_sync_transactions(data: PlaidAccessToken):
                     date=tx["date"],
                     amount=corex_amount,
                     description=tx["name"],
-                    category=smart_category, # Use smart category
-                    plaid_transaction_id=tx["plaid_transaction_id"]
+                    category=smart_category,
+                    plaid_transaction_id=tx["plaid_transaction_id"],
+                    user_id=user_id
                 )
                 session.add(new_tx)
                 counts["added"] += 1
@@ -959,8 +974,7 @@ def api_sync_transactions(data: PlaidAccessToken):
             session.commit()
             
             # --- AUTO-VERIFICATION LOGIC ---
-            # After syncing, check if any 'executed' movements match new transactions
-            pending_logs = session.exec(select(MovementLog).where(MovementLog.status == "executed")).all()
+            pending_logs = session.exec(select(MovementLog).where(MovementLog.status == "executed", MovementLog.user_id == user_id)).all()
             for log in pending_logs:
                 # Search for a transaction with the same amount (within 1% or exact)
                 # and within +/- 3 days of execution
@@ -994,10 +1008,10 @@ def api_sync_transactions(data: PlaidAccessToken):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/transactions/manual")
-def create_manual_transaction(tx: TransactionCreate):
+async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(get_current_user_id)):
     """Manually create a transaction and update account balance."""
     with Session(engine) as session:
-        account = session.get(Account, tx.account_id)
+        account = session.exec(select(Account).where(Account.id == tx.account_id, Account.user_id == user_id)).first()
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
         
@@ -1008,16 +1022,14 @@ def create_manual_transaction(tx: TransactionCreate):
             description=tx.description,
             category=tx.category,
             date=tx.date,
-            plaid_transaction_id=f"manual-{uuid.uuid4()}" 
+            plaid_transaction_id=f"manual-{uuid.uuid4()}",
+            user_id=user_id
         )
         session.add(new_tx)
         
-        # Update Account Balance logic
-        # Assets: Positive = Income (Add), Negative = Expense (Subtract) -> balance += amount
-        # Debts: Positive = Payment (Subtract), Negative = Spend (Add) -> balance -= amount
+        # Update Account Balance
         if account.type == "debt":
             account.balance -= tx.amount
-            # Auto-update Min Payment
             account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
         else:
             account.balance += tx.amount
@@ -1028,11 +1040,11 @@ def create_manual_transaction(tx: TransactionCreate):
         return new_tx
 
 @app.get("/api/transactions/recent", response_model=List[Transaction])
-def get_recent_transactions(limit: int = 10):
-    """Fetch most recent transactions across all accounts."""
+async def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_current_user_id)):
+    """Fetch most recent transactions for current user."""
     with Session(engine) as session:
         return session.exec(
-            select(Transaction).order_by(Transaction.date.desc()).limit(limit)
+            select(Transaction).where(Transaction.user_id == user_id).order_by(Transaction.date.desc()).limit(limit)
         ).all()
 
 
@@ -1045,13 +1057,13 @@ class SimulatorRequest(BaseModel):
     amount: float
 
 @app.post("/api/simulator/time-cost")
-def simulate_purchase_cost(req: SimulatorRequest):
+async def simulate_purchase_cost(req: SimulatorRequest, user_id: str = Depends(get_current_user_id)):
     """Calculate how many days a purchase delays freedom."""
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive.")
 
     with Session(engine) as session:
-        accounts = session.exec(select(Account)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = [
             DebtAccount(
                 name=acc.name,
@@ -1076,11 +1088,11 @@ def simulate_purchase_cost(req: SimulatorRequest):
 # ================================================================
 
 @app.get("/api/transactions/classified")
-def get_classified_transactions(limit: int = 50):
-    """Return transactions with CoreX smart tags (income/debt/life)."""
+async def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_current_user_id)):
+    """Return transactions with smart tags (income/debt/life)."""
     with Session(engine) as session:
         txs = session.exec(
-            select(Transaction).order_by(Transaction.date.desc()).limit(limit)
+            select(Transaction).where(Transaction.user_id == user_id).order_by(Transaction.date.desc()).limit(limit)
         ).all()
         raw = [
             {
@@ -1097,11 +1109,11 @@ def get_classified_transactions(limit: int = 50):
 
 
 @app.get("/api/cashflow/summary")
-def get_cashflow_intelligence():
+async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
     """Return the AI-classified cashflow summary."""
     with Session(engine) as session:
         txs = session.exec(
-            select(Transaction).order_by(Transaction.date.desc()).limit(100)
+            select(Transaction).where(Transaction.user_id == user_id).order_by(Transaction.date.desc()).limit(100)
         ).all()
         raw = [
             {
@@ -1120,15 +1132,15 @@ def get_cashflow_intelligence():
 # ================================================================
 
 @app.get("/api/strategy/command-center")
-def get_strategy_command_center():
+async def get_strategy_command_center(user_id: str = Depends(get_current_user_id)):
     """
     Consolidated Strategy Intelligence endpoint.
     Returns morning briefing, confidence meter, freedom counter,
     and attack streak — all in one call.
     """
     with Session(engine) as session:
-        # --- 1. Load all accounts ---
-        accounts = session.exec(select(Account)).all()
+        # --- 1. Load all user accounts ---
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
@@ -1271,7 +1283,7 @@ def get_strategy_command_center():
         # --- 8. Attack Streak ---
         executed_logs = session.exec(
             select(MovementLog)
-            .where(MovementLog.status.in_(["executed", "verified"]))
+            .where(MovementLog.status.in_(["executed", "verified"]), MovementLog.user_id == user_id)
             .order_by(MovementLog.date_executed.desc())
         ).all()
 

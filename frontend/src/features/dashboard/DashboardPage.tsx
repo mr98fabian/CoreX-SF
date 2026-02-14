@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { TrendingDown, Wallet, PiggyBank, Calendar, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,7 @@ interface VelocityProjections {
 }
 
 export default function DashboardPage() {
+    usePageTitle('Dashboard');
     const { user } = useAuth();
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.name?.split(' ')[0] || 'there';
     const [data, setData] = useState<DashboardData | null>(null);
@@ -111,7 +113,7 @@ export default function DashboardPage() {
             <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
                 <div className="text-xl font-mono text-emerald-400 animate-pulse flex flex-col items-center gap-4">
                     <div className="h-12 w-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-                    Initializing CoreX Engine v2...
+                    Initializing KoreX Engine...
                 </div>
             </div>
         );

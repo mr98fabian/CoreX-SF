@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -154,6 +155,7 @@ function FormInput({
 type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 
 export default function LoginPage() {
+    usePageTitle('Sign In');
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword } = useAuth();
 
     const [view, setView] = useState<ViewState>('signin');
@@ -329,17 +331,23 @@ export default function LoginPage() {
             <BackgroundOrbs />
             <Styles />
 
+            {/* Raccoon Watermark — subtle brand presence */}
+            <img
+                src="/korex-icon.png"
+                alt=""
+                aria-hidden="true"
+                className="absolute opacity-[0.03] w-[500px] h-[500px] invert pointer-events-none select-none"
+                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+            />
+
             <div className="relative z-10 w-full max-w-md">
-                {/* Logo */}
+                {/* KoreX Brand Logo */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/25 mb-4">
-                        <svg viewBox="0 0 24 24" fill="none" className="w-8 h-8 text-white">
-                            <path d="M12 2L3 7v10l9 5 9-5V7l-9-5zM12 22V12M3 7l9 5 9-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white">
-                        CoreX <span className="text-amber-400">System</span>
-                    </h1>
+                    <img
+                        src="/korex-imagotipo.png"
+                        alt="KoreX"
+                        className="h-14 mx-auto mb-4 invert brightness-200 drop-shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+                    />
                     <p className="text-slate-400 text-sm mt-1">Velocity Banking Intelligence Platform</p>
                 </div>
 
@@ -617,7 +625,7 @@ export default function LoginPage() {
                         Secured by Supabase Auth • Google OAuth 2.0
                     </p>
                     <p className="text-xs text-slate-600 mt-2">
-                        CoreX Financial System v1.0 — Your data stays private.
+                        KoreX Financial System v1.0 — Your data stays private.
                     </p>
                 </div>
             </div>

@@ -8,8 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Shield, Cog, Bell, User, Flame, Lock } from "lucide-react";
 import { useState } from "react";
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function SettingsPage() {
+    usePageTitle('Settings');
     const [emergencyFund, setEmergencyFund] = useState([3000]);
 
     return (

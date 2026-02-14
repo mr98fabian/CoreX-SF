@@ -24,7 +24,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                     Bank: <span className="text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
                 </p>
                 <p className="text-blue-500 text-sm font-bold">
-                    CoreX: <span className="text-white ml-1">${payload[1].value.toLocaleString()}</span>
+                    KoreX: <span className="text-white ml-1">${payload[1].value.toLocaleString()}</span>
                 </p>
             </div>
         );
@@ -111,7 +111,7 @@ export default function DebtBurndownChart() {
             <CardHeader>
                 <CardTitle className="text-zinc-100">Debt Burndown Projection</CardTitle>
                 <CardDescription className="text-zinc-500">
-                    Comparing standard bank payments vs. CoreX Velocity Strategy
+                    Comparing standard bank payments vs. KoreX Velocity Strategy
                 </CardDescription>
             </CardHeader>
             <CardContent>

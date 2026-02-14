@@ -6,7 +6,7 @@ const sections = [
     {
         id: 'info-collect',
         title: '1. Information We Collect',
-        content: `We collect the following types of information when you use CoreX System:\n\n**Account Information**\n• Name and email address (provided during registration or via Google OAuth).\n• Authentication tokens managed by Supabase Auth.\n\n**Financial Data**\n• Account balances, interest rates, minimum payments, and closing dates that you manually enter.\n• Income and expense transactions you log.\n• Cashflow projections generated from your data.\n\n**Usage Data**\n• Pages visited, features used, and session duration.\n• Browser type and device information (collected automatically via standard web protocols).\n\nWe do NOT collect:\n• Bank login credentials.\n• Social Security numbers.\n• Credit card numbers (unless you voluntarily enter them as account data).`,
+        content: `We collect the following types of information when you use KoreX System:\n\n**Account Information**\n• Name and email address (provided during registration or via Google OAuth).\n• Authentication tokens managed by Supabase Auth.\n\n**Financial Data**\n• Account balances, interest rates, minimum payments, and closing dates that you manually enter.\n• Income and expense transactions you log.\n• Cashflow projections generated from your data.\n\n**Usage Data**\n• Pages visited, features used, and session duration.\n• Browser type and device information (collected automatically via standard web protocols).\n\nWe do NOT collect:\n• Bank login credentials.\n• Social Security numbers.\n• Credit card numbers (unless you voluntarily enter them as account data).`,
     },
     {
         id: 'how-we-use',
@@ -26,7 +26,7 @@ const sections = [
     {
         id: 'cookies',
         title: '5. Cookies & Local Storage',
-        content: `CoreX System uses minimal cookies and browser storage:\n\n• **Authentication cookies** — to maintain your login session (essential, cannot be disabled).\n• **Local storage** — to store non-sensitive UI preferences.\n\nWe do NOT use:\n• Tracking cookies.\n• Analytics cookies from third parties.\n• Advertising pixels or beacons.`,
+        content: `KoreX System uses minimal cookies and browser storage:\n\n• **Authentication cookies** — to maintain your login session (essential, cannot be disabled).\n• **Local storage** — to store non-sensitive UI preferences.\n\nWe do NOT use:\n• Tracking cookies.\n• Analytics cookies from third parties.\n• Advertising pixels or beacons.`,
     },
     {
         id: 'retention',
@@ -46,12 +46,12 @@ const sections = [
     {
         id: 'children',
         title: '9. Children\'s Privacy',
-        content: `CoreX System is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a user is under 18, we will take steps to delete their account and associated data immediately.`,
+        content: `KoreX System is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from minors. If we become aware that a user is under 18, we will take steps to delete their account and associated data immediately.`,
     },
     {
         id: 'international',
         title: '10. International Users',
-        content: `CoreX System is hosted in the United States. If you access the Service from outside the US, your data may be transferred to and processed in the United States. By using the Service, you consent to this transfer.\n\nFor users in the European Economic Area (EEA), we comply with applicable data protection regulations including GDPR where applicable.`,
+        content: `KoreX System is hosted in the United States. If you access the Service from outside the US, your data may be transferred to and processed in the United States. By using the Service, you consent to this transfer.\n\nFor users in the European Economic Area (EEA), we comply with applicable data protection regulations including GDPR where applicable.`,
     },
     {
         id: 'changes',
@@ -78,12 +78,8 @@ export default function PrivacyPolicyPage() {
                         Back to Login
                     </Link>
                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-white">
-                                <path d="M12 2L3 7v10l9 5 9-5V7l-9-5z" stroke="currentColor" strokeWidth="2" />
-                            </svg>
-                        </div>
-                        <span className="text-sm font-semibold text-white">CoreX</span>
+                        <img src="/korex-icon.png" alt="KoreX" className="w-6 h-6 invert brightness-200" />
+                        <span className="text-sm font-semibold text-white">KoreX</span>
                     </div>
                 </div>
             </div>
@@ -98,7 +94,7 @@ export default function PrivacyPolicyPage() {
                 {/* Intro */}
                 <div className="mb-10 p-5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                     <p className="text-sm text-emerald-400/80 leading-relaxed">
-                        Your privacy is important to us. This Privacy Policy explains what information CoreX System collects, how we use it, and your rights regarding your data. We are committed to protecting your financial information.
+                        Your privacy is important to us. This Privacy Policy explains what information KoreX System collects, how we use it, and your rights regarding your data. We are committed to protecting your financial information.
                     </p>
                 </div>
 
@@ -139,7 +135,7 @@ export default function PrivacyPolicyPage() {
                 {/* Footer */}
                 <div className="mt-16 pt-8 border-t border-white/5 text-center">
                     <p className="text-xs text-slate-600">
-                        CoreX Financial System — &copy; {new Date().getFullYear()} All rights reserved.
+                        KoreX Financial System — &copy; {new Date().getFullYear()} All rights reserved.
                     </p>
                     <div className="flex items-center justify-center gap-4 mt-3">
                         <Link to="/terms" className="text-xs text-amber-400/60 hover:text-amber-400 transition-colors">Terms of Service</Link>

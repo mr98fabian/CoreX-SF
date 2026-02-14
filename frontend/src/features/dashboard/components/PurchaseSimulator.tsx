@@ -55,7 +55,7 @@ export default function PurchaseSimulator() {
             const data: SimulationResult = await res.json();
             setResult(data);
         } catch {
-            setError('Could not connect to the CoreX engine.');
+            setError('Could not connect to the KoreX engine.');
         } finally {
             setLoading(false);
         }
