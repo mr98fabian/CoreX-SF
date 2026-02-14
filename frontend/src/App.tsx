@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import AccountsPage from "@/features/accounts/AccountsPage";
+import StrategyPage from "@/features/strategy/StrategyPage";
 
 import SettingsPage from "@/features/settings/SettingsPage";
 
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountsPage />} />
+          <Route path="strategy" element={<StrategyPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         {/* Catch-all redirect */}

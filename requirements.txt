@@ -6,3 +6,4 @@ python-dotenv
 plaid-python
 python-multipart
 requests
+psycopg2-binary

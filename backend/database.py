@@ -3,16 +3,31 @@ from models import User, Account, Transaction, CashflowItem, MovementLog
 from decimal import Decimal
 
 import os
+from dotenv import load_dotenv
 
-# Check if running on Vercel (read-only filesystem)
-if os.environ.get("VERCEL"):
-    sqlite_file_name = "/tmp/corex.db"
+load_dotenv()
+
+# ================================================================
+# DATABASE CONNECTION
+# Supabase PostgreSQL (Primary) | SQLite (Local Fallback)
+# ================================================================
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    # Supabase PostgreSQL — Production
+    engine = create_engine(DATABASE_URL, echo=False)
+    print("✅ Connected to Supabase PostgreSQL")
 else:
-    sqlite_file_name = "corex.db"
-
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+    # SQLite Fallback — Local Development
+    if os.environ.get("VERCEL"):
+        sqlite_file_name = "/tmp/corex.db"
+    else:
+        sqlite_file_name = "corex.db"
+    
+    sqlite_url = f"sqlite:///{sqlite_file_name}"
+    engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+    print("⚠️  Using SQLite fallback (no DATABASE_URL found)")
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)

@@ -12,7 +12,7 @@ import FreedomClock from './components/FreedomClock';
 import PeaceShield from './components/PeaceShield';
 import PurchaseSimulator from './components/PurchaseSimulator';
 import { TransactionDialog } from './components/TransactionDialog';
-import TacticalCalendar from './components/TacticalCalendar';
+import CashflowHeatCalendar from './components/CashflowHeatCalendar';
 import { FreedomPathCalendar } from "./components/FreedomPathCalendar";
 import { WhatIfSimulator } from "./components/WhatIfSimulator";
 
@@ -234,13 +234,11 @@ export default function DashboardPage() {
 
                 {/* D. Main Content Area (Row 3) */}
 
-                {/* Tactical Calendar - Full Width */}
+                {/* Cashflow Heat Calendar - Full Width */}
                 <div className="col-span-1 md:col-span-4 lg:col-span-12">
-                    {data?.calendar && (
-                        <div className="animate-in slide-in-from-bottom-5 duration-700">
-                            <TacticalCalendar days={data.calendar} shieldTarget={data.shield_target} />
-                        </div>
-                    )}
+                    <div className="animate-in slide-in-from-bottom-5 duration-700">
+                        <CashflowHeatCalendar />
+                    </div>
                 </div>
 
                 {/* Debt Burndown Chart - Full Width (12 Cols) */}

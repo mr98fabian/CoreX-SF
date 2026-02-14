@@ -11,7 +11,7 @@ from velocity_engine import (
     get_projections, DebtAccount, generate_tactical_schedule, CashflowTactical,
     get_peace_shield_status, calculate_purchase_time_cost, DEFAULT_PEACE_SHIELD,
     calculate_minimum_payment, calculate_safe_attack_equity, Movement,
-    simulate_freedom_path
+    simulate_freedom_path, get_velocity_target
 )
 from transaction_classifier import classify_batch, get_cashflow_summary, classify_transaction
 import uuid
@@ -171,6 +171,156 @@ def delete_cashflow(id: int):
             session.delete(item)
             session.commit()
         return {"ok": True}
+
+@app.get("/api/cashflow/projection")
+def get_cashflow_projection(months: int = 3):
+    """
+    Projects daily running balance using recurring CashflowItems.
+    Walks day-by-day from start of current month for N months,
+    applying income/expense rules to produce a cashflow map.
+    """
+    if months < 1:
+        months = 1
+    if months > 12:
+        months = 12
+
+    with Session(engine) as session:
+        accounts = session.exec(select(Account)).all()
+        items = session.exec(select(CashflowItem)).all()
+
+        # Starting balance = sum of non-debt accounts
+        liquid_cash = float(sum(acc.balance for acc in accounts if acc.type != "debt"))
+        today = date.today()
+
+        # Project from 1st of current month so we see the full picture
+        start_date = date(today.year, today.month, 1)
+
+        # Calculate end date
+        end_month = today.month + months
+        end_year = today.year + (end_month - 1) // 12
+        end_month = ((end_month - 1) % 12) + 1
+        end_date = date(end_year, end_month, 1)
+
+        total_days = (end_date - start_date).days
+
+        # --- Helper: check if a CashflowItem triggers on a given date ---
+        def item_triggers_on(item: CashflowItem, d: date) -> bool:
+            freq = item.frequency
+
+            if freq == "monthly":
+                dom = int(item.day_of_month) if item.day_of_month else 1
+                # Clamp to last day of month for months with fewer days
+                import calendar
+                last_day = calendar.monthrange(d.year, d.month)[1]
+                return d.day == min(dom, last_day)
+
+            elif freq == "semi_monthly":
+                d1 = int(item.date_specific_1) if item.date_specific_1 else 15
+                d2 = int(item.date_specific_2) if item.date_specific_2 else 30
+                import calendar
+                last_day = calendar.monthrange(d.year, d.month)[1]
+                return d.day == min(d1, last_day) or d.day == min(d2, last_day)
+
+            elif freq == "weekly":
+                dow = int(item.day_of_week) if item.day_of_week is not None else 0
+                return d.weekday() == dow
+
+            elif freq == "biweekly":
+                dow = int(item.day_of_week) if item.day_of_week is not None else 0
+                if d.weekday() != dow:
+                    return False
+                # Check if this is an even-numbered week from start_date
+                week_num = (d - start_date).days // 7
+                return week_num % 2 == 0
+
+            elif freq == "annually":
+                target_month = int(item.month_of_year) if item.month_of_year else 1
+                dom = int(item.day_of_month) if item.day_of_month else 1
+                return d.month == target_month and d.day == dom
+
+            return False
+
+        # --- Walk day-by-day ---
+        # We need to reconstruct what balance "was" on day 1 of the month
+        # by reverse-applying events between start_date and today.
+        # Simpler approach: start from liquid_cash as today's balance,
+        # then backfill past days and forward-fill future days.
+
+        # Step 1: Calculate events for each day
+        daily_events: dict[str, list] = {}
+        for day_offset in range(total_days):
+            d = start_date + timedelta(days=day_offset)
+            d_str = d.isoformat()
+            daily_events[d_str] = []
+            for item in items:
+                if item_triggers_on(item, d):
+                    amt = float(item.amount)
+                    signed_amt = amt if item.category == "income" else -amt
+                    daily_events[d_str].append({
+                        "name": item.name,
+                        "amount": signed_amt,
+                        "category": item.category,
+                    })
+
+        # Step 2: Build running balance
+        # Start from today's liquid_cash, walk backward to fill past,
+        # then walk forward for future.
+        today_str = today.isoformat()
+        today_offset = (today - start_date).days
+
+        # Forward pass from today
+        balances: dict[str, float] = {}
+        bal = liquid_cash
+        balances[today_str] = round(bal, 2)
+
+        for day_offset in range(today_offset + 1, total_days):
+            d = start_date + timedelta(days=day_offset)
+            d_str = d.isoformat()
+            day_delta = sum(ev["amount"] for ev in daily_events.get(d_str, []))
+            bal += day_delta
+            balances[d_str] = round(bal, 2)
+
+        # Backward pass from today
+        bal = liquid_cash
+        for day_offset in range(today_offset - 1, -1, -1):
+            d = start_date + timedelta(days=day_offset)
+            d_str = d.isoformat()
+            # Reverse: subtract today's events to get yesterday's balance
+            next_d = start_date + timedelta(days=day_offset + 1)
+            next_str = next_d.isoformat()
+            next_delta = sum(ev["amount"] for ev in daily_events.get(next_str, []))
+            bal -= next_delta
+            balances[d_str] = round(bal, 2)
+
+        # Step 3: Assemble response
+        days_list = []
+        for day_offset in range(total_days):
+            d = start_date + timedelta(days=day_offset)
+            d_str = d.isoformat()
+
+            if d < today:
+                zone = "past"
+            elif d == today:
+                zone = "today"
+            else:
+                zone = "future"
+
+            days_list.append({
+                "date": d_str,
+                "balance": balances.get(d_str, liquid_cash),
+                "events": daily_events.get(d_str, []),
+                "is_today": d == today,
+                "zone": zone,
+                "day_label": d.strftime("%a"),
+                "day_num": d.day,
+            })
+
+        return {
+            "start_balance": round(liquid_cash, 2),
+            "today": today_str,
+            "total_days": total_days,
+            "days": days_list,
+        }
 
 # --- RUTAS DASHBOARD ---
 @app.get("/api/dashboard")
@@ -964,3 +1114,265 @@ def get_cashflow_intelligence():
         classified = classify_batch(raw)
         return get_cashflow_summary(classified)
 
+
+# ================================================================
+# STRATEGY COMMAND CENTER — Attack Intelligence
+# ================================================================
+
+@app.get("/api/strategy/command-center")
+def get_strategy_command_center():
+    """
+    Consolidated Strategy Intelligence endpoint.
+    Returns morning briefing, confidence meter, freedom counter,
+    and attack streak — all in one call.
+    """
+    with Session(engine) as session:
+        # --- 1. Load all accounts ---
+        accounts = session.exec(select(Account)).all()
+        user = session.exec(select(User)).first()
+        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+
+        debt_accounts = [
+            DebtAccount(
+                name=acc.name,
+                balance=acc.balance,
+                interest_rate=acc.interest_rate,
+                min_payment=acc.min_payment if acc.min_payment else Decimal('50'),
+                due_day=acc.due_day if acc.due_day else 15
+            )
+            for acc in accounts if acc.type == "debt" and acc.balance > 0
+        ]
+
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        liquid_cash_dec = Decimal(str(liquid_cash))
+
+        # --- 2. Shield status ---
+        shield = get_peace_shield_status(liquid_cash_dec, shield_target)
+
+        # --- 3. Safe Attack Equity ---
+        safety_data = calculate_safe_attack_equity(
+            liquid_cash_dec, shield_target, debt_accounts
+        )
+        attack_amount = safety_data["safe_equity"]
+
+        # --- 4. Velocity Target (Avalanche) ---
+        target = get_velocity_target(debt_accounts)
+
+        # --- 5. Morning Briefing ---
+        morning_briefing = None
+        if target and attack_amount > 0:
+            # Daily interest cost of the target debt
+            daily_interest = (
+                target.balance * (target.interest_rate / Decimal('100'))
+            ) / Decimal('365')
+            daily_interest = daily_interest.quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+
+            # Monthly interest saved if we apply the attack now
+            interest_saved_monthly = (
+                attack_amount * (target.interest_rate / Decimal('100'))
+            ) / Decimal('12')
+            interest_saved_monthly = interest_saved_monthly.quantize(
+                Decimal('0.01'), rounding=ROUND_HALF_UP
+            )
+
+            # Days accelerated: approximate months shortened * 30
+            # Simple: (attack_amount / target.min_payment) * 30
+            days_accelerated = 0
+            if target.min_payment > 0:
+                months_saved = attack_amount / target.min_payment
+                days_accelerated = int(
+                    (months_saved * Decimal('30')).quantize(Decimal('1'))
+                )
+
+            # "Freedom Hours" = (interest_saved * 12) / hourly_equiv
+            # Approximate: assume user earns ~$25/hr net for translation
+            hourly_rate = Decimal('25')
+            annual_interest_saved = interest_saved_monthly * Decimal('12')
+            freedom_hours = (annual_interest_saved / hourly_rate).quantize(
+                Decimal('0.1'), rounding=ROUND_HALF_UP
+            )
+
+            morning_briefing = {
+                "available_cash": float(liquid_cash_dec),
+                "attack_amount": float(attack_amount),
+                "shield_status": {
+                    "percentage": shield.get("fill_percentage", 0),
+                    "is_active": shield.get("is_active", False),
+                    "health": shield.get("health", "unknown"),
+                },
+                "recommended_action": {
+                    "amount": float(attack_amount),
+                    "destination": target.name,
+                    "destination_apr": float(target.interest_rate),
+                    "destination_balance": float(target.balance),
+                    "daily_cost": float(daily_interest),
+                    "reason": (
+                        f"Highest APR at {float(target.interest_rate)}% — "
+                        f"costs ${float(daily_interest)}/day in interest"
+                    ),
+                },
+                "impact": {
+                    "days_accelerated": days_accelerated,
+                    "interest_saved_monthly": float(interest_saved_monthly),
+                    "freedom_hours_earned": float(freedom_hours),
+                },
+            }
+
+        # --- 6. Confidence Meter (all debts ranked) ---
+        confidence_meter = {
+            "debts_ranked": [],
+            "strategy": "avalanche",
+            "explanation": "",
+        }
+        if debt_accounts:
+            ranked = sorted(
+                debt_accounts, key=lambda d: d.interest_rate, reverse=True
+            )
+            confidence_meter["debts_ranked"] = [
+                {
+                    "name": d.name,
+                    "apr": float(d.interest_rate),
+                    "balance": float(d.balance),
+                    "daily_cost": float(
+                        (d.balance * (d.interest_rate / Decimal('100')))
+                        / Decimal('365')
+                    ),
+                    "is_target": (target and d.name == target.name),
+                }
+                for d in ranked
+            ]
+            if len(ranked) >= 2:
+                top = ranked[0]
+                second = ranked[1]
+                confidence_meter["explanation"] = (
+                    f"Every $100 to {top.name} saves "
+                    f"${float(top.interest_rate)}/yr vs "
+                    f"${float(second.interest_rate)}/yr to {second.name}"
+                )
+
+        # --- 7. Freedom Counter ---
+        projections = get_projections(debt_accounts, liquid_cash_dec)
+
+        freedom_counter = {
+            "current_freedom_date": projections.get(
+                "velocity_debt_free_date", "N/A"
+            ),
+            "standard_freedom_date": projections.get(
+                "standard_debt_free_date", "N/A"
+            ),
+            "months_saved": projections.get("months_saved", 0),
+            "interest_saved": projections.get("interest_saved", 0),
+            "total_days_recovered": projections.get("months_saved", 0) * 30,
+            "velocity_power": projections.get("velocity_power", 0),
+        }
+
+        # --- 8. Attack Streak ---
+        executed_logs = session.exec(
+            select(MovementLog)
+            .where(MovementLog.status.in_(["executed", "verified"]))
+            .order_by(MovementLog.date_executed.desc())
+        ).all()
+
+        total_attacks = len(executed_logs)
+
+        # Calculate streak (consecutive months with at least 1 execution)
+        current_streak = 0
+        if executed_logs:
+            # Group by month
+            months_with_attacks = set()
+            for log in executed_logs:
+                if log.date_executed:
+                    months_with_attacks.add(log.date_executed[:7])
+
+            # Count consecutive months backwards from current
+            check_date = date.today().replace(day=1)
+            for _ in range(24):  # Max 2 years
+                month_key = check_date.strftime("%Y-%m")
+                if month_key in months_with_attacks:
+                    current_streak += 1
+                    # Go to previous month
+                    if check_date.month == 1:
+                        check_date = date(check_date.year - 1, 12, 1)
+                    else:
+                        check_date = date(
+                            check_date.year, check_date.month - 1, 1
+                        )
+                else:
+                    break
+
+        streak = {
+            "current": current_streak,
+            "total_attacks": total_attacks,
+        }
+
+        # --- 9. Decision Helper Options ---
+        decision_options = None
+        if target and attack_amount > 0:
+            # Option A: Full attack
+            full_attack_savings = float(
+                (attack_amount * (target.interest_rate / Decimal('100')))
+                / Decimal('12')
+            )
+
+            # Option B: Boost shield
+            shield_gap = max(
+                Decimal('0'), shield_target - liquid_cash_dec
+            )
+            shield_boost_pct = min(
+                Decimal('100'),
+                ((liquid_cash_dec + attack_amount) / shield_target)
+                * Decimal('100'),
+            ) if shield_target > 0 else Decimal('100')
+
+            # Option C: Split 50/50
+            half = attack_amount / Decimal('2')
+            split_savings = float(
+                (half * (target.interest_rate / Decimal('100')))
+                / Decimal('12')
+            )
+
+            # Recommendation logic
+            shield_pct = shield.get("fill_percentage", 100)
+            if shield_pct < 50:
+                recommended = "shield"
+            elif shield_pct < 80:
+                recommended = "split"
+            else:
+                recommended = "attack"
+
+            decision_options = {
+                "options": [
+                    {
+                        "id": "attack",
+                        "label": "Full Attack",
+                        "amount": float(attack_amount),
+                        "impact": f"Save ${full_attack_savings:.2f}/mo in interest",
+                        "description": f"Apply all to {target.name}",
+                    },
+                    {
+                        "id": "shield",
+                        "label": "Boost Shield",
+                        "amount": float(attack_amount),
+                        "impact": f"Shield reaches {float(shield_boost_pct):.0f}%",
+                        "description": "Strengthen your emergency fund",
+                    },
+                    {
+                        "id": "split",
+                        "label": "Balanced Split",
+                        "amount": float(attack_amount),
+                        "impact": f"Save ${split_savings:.2f}/mo + boost shield",
+                        "description": "50% attack, 50% safety",
+                    },
+                ],
+                "recommended": recommended,
+            }
+
+        return {
+            "morning_briefing": morning_briefing,
+            "confidence_meter": confidence_meter,
+            "freedom_counter": freedom_counter,
+            "streak": streak,
+            "decision_options": decision_options,
+        }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft } from 'lucide-react';
+import { LayoutDashboard, Wallet, Zap, Settings, LogOut, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -40,8 +40,11 @@ export default function DashboardLayout() {
                             <Wallet size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">My Accounts</span>
                         </Button>
                     </Link>
-
-                    {/* Cashflow Engine Link Removed */}
+                    <Link to="/strategy">
+                        <Button variant={isActive('/strategy') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/strategy') ? "shadow-lg shadow-amber-900/20" : "text-slate-400 hover:text-white hover:bg-white/5")}>
+                            <Zap size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Strategy</span>
+                        </Button>
+                    </Link>
                     <Link to="/settings">
                         <Button variant={isActive('/settings') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/settings') ? "shadow-lg shadow-amber-900/20" : "text-slate-400 hover:text-white hover:bg-white/5")}>
                             <Settings size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Settings</span>
