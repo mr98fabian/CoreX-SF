@@ -69,6 +69,11 @@ def on_startup():
     create_db_and_tables()
     seed_data()
 
+@app.get("/health")
+async def health_check():
+    """Lightweight health endpoint for Railway / monitoring."""
+    return {"status": "ok"}
+
 # --- RUTAS ACCOUNTS ---
 @app.get("/api/accounts", response_model=List[Account])
 async def get_accounts(user_id: str = Depends(get_current_user_id)):
