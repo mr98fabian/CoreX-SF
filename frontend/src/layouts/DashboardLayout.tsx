@@ -3,10 +3,12 @@ import { LayoutDashboard, Wallet, Zap, Settings, LogOut, PanelLeft } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/features/auth/AuthContext';
 
 export default function DashboardLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const location = useLocation();
+    const { user, signOut } = useAuth();
 
     const isActive = (path: string) => {
         if (path === '/') return location.pathname === '/';
@@ -52,8 +54,35 @@ export default function DashboardLayout() {
                     </Link>
                 </nav>
 
-                <div className="border-t border-white/5 p-4 min-w-max">
-                    <Button variant="ghost" className="w-full justify-start gap-2 text-rose-500 hover:text-rose-400 hover:bg-rose-950/20">
+                <div className="border-t border-white/5 p-4 min-w-max space-y-3">
+                    {user && (
+                        <div className="flex items-center gap-3 px-2">
+                            {user.user_metadata?.avatar_url ? (
+                                <img
+                                    src={user.user_metadata.avatar_url}
+                                    alt="Avatar"
+                                    className="h-8 w-8 rounded-full ring-2 ring-gold-400/30"
+                                />
+                            ) : (
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-gold-400 ring-2 ring-gold-400/30">
+                                    {(user.email?.[0] || 'U').toUpperCase()}
+                                </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-white">
+                                    {user.user_metadata?.full_name || 'User'}
+                                </p>
+                                <p className="truncate text-[10px] text-slate-500">
+                                    {user.email}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-2 text-rose-500 hover:text-rose-400 hover:bg-rose-950/20"
+                        onClick={() => signOut()}
+                    >
                         <LogOut size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Sign Out</span>
                     </Button>
                 </div>
