@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { TransactionDialog } from "./TransactionDialog";
+import { apiFetch } from '@/lib/api';
 
 interface Account {
     id: number;
@@ -29,15 +30,15 @@ export default function DebtAttackTable() {
     const [velocityData, setVelocityData] = useState<VelocityProjections | null>(null);
 
     useEffect(() => {
-        // Fetch Accounts
-        fetch("/api/accounts")
-            .then((res) => res.json())
-            .then((data) => setAccounts(data));
+        // Fetch Accounts using centralized apiFetch (handles auth + base URL)
+        apiFetch<Account[]>("/api/accounts")
+            .then((data) => setAccounts(data))
+            .catch(() => setAccounts([]));
 
         // Fetch Velocity Data
-        fetch("/api/velocity/projections")
-            .then((res) => res.json())
-            .then((data) => setVelocityData(data));
+        apiFetch<VelocityProjections>("/api/velocity/projections")
+            .then((data) => setVelocityData(data))
+            .catch(() => setVelocityData(null));
     }, []);
 
     const totalMinPayments = accounts

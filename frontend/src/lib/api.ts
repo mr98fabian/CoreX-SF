@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
 
+// Backend base URL: uses VITE_API_URL in production (Railway), localhost in dev
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 /**
  * Authenticated fetch wrapper for KoreX backend API.
  * Automatically attaches the current Supabase session token
@@ -21,7 +24,10 @@ export async function apiFetch<T = unknown>(
     headers.set('Authorization', `Bearer ${session.access_token}`);
     headers.set('Content-Type', 'application/json');
 
-    const response = await fetch(url, {
+    // Prefix relative URLs with the backend base URL
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`;
+
+    const response = await fetch(fullUrl, {
         ...options,
         headers,
     });
