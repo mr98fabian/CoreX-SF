@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 // ──────────────────────────────────────────────
@@ -529,13 +529,13 @@ export default function LoginPage() {
                                     </div>
                                     <span className="text-sm text-slate-400 leading-tight">
                                         I agree to the{' '}
-                                        <span className="text-amber-400 hover:text-amber-300 underline underline-offset-2 cursor-pointer">
+                                        <Link to="/terms" target="_blank" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
                                             Terms of Service
-                                        </span>
+                                        </Link>
                                         {' '}and{' '}
-                                        <span className="text-amber-400 hover:text-amber-300 underline underline-offset-2 cursor-pointer">
+                                        <Link to="/privacy" target="_blank" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
                                             Privacy Policy
-                                        </span>
+                                        </Link>
                                     </span>
                                 </label>
                                 {fieldErrors.terms && (

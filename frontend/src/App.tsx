@@ -5,6 +5,8 @@ import AccountsPage from "@/features/accounts/AccountsPage";
 import StrategyPage from "@/features/strategy/StrategyPage";
 import SettingsPage from "@/features/settings/SettingsPage";
 import LoginPage from "@/features/auth/LoginPage";
+import TermsOfServicePage from "@/features/legal/TermsOfServicePage";
+import PrivacyPolicyPage from "@/features/legal/PrivacyPolicyPage";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
 
@@ -17,6 +19,8 @@ function App() {
         <Routes>
           {/* Public route */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
           {/* Protected routes */}
           <Route

@@ -42,7 +42,7 @@ export default function SettingsPage() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="email" className="text-slate-300">Email Address</Label>
-                                <Input id="email" defaultValue="fabian@corex.com" className="bg-slate-900 border-slate-700 text-white" />
+                                <Input id="email" defaultValue="" className="bg-slate-900 border-slate-700 text-white" />
                             </div>
                         </CardContent>
                     </Card>
