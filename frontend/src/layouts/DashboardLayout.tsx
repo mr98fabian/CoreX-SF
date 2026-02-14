@@ -14,56 +14,60 @@ export default function DashboardLayout() {
     };
 
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-slate-950">
-            {/* SIDEBAR ANIMADO */}
+        <div className="flex h-screen w-full overflow-hidden bg-transparent">
+            {/* SIDEBAR ANIMADO - Glassmorphism */}
             <aside
                 className={cn(
-                    "flex flex-col border-r border-slate-800 bg-slate-950 transition-all duration-300 ease-in-out relative overflow-hidden",
+                    "flex flex-col border-r border-white/5 bg-slate-950/50 backdrop-blur-xl transition-all duration-300 ease-in-out relative overflow-hidden z-20",
                     isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0 border-none"
                 )}
             >
-                <div className="flex h-16 items-center px-6 min-w-max">
-                    <span className="text-xl font-bold tracking-tight text-slate-50 whitespace-nowrap">
-                        CoreX <span className="text-blue-500">System</span>
+                <div className="flex h-16 items-center px-6 min-w-max border-b border-white/5">
+                    <span className="text-xl font-bold tracking-tight text-white whitespace-nowrap flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-gold-400 animate-pulse-glow" />
+                        CoreX <span className="text-gold-400">System</span>
                     </span>
                 </div>
 
                 <nav className="flex-1 space-y-1.5 px-3 py-4 min-w-max">
                     <Link to="/">
-                        <Button variant={isActive('/') ? "secondary" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-colors", isActive('/') ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-400 hover:text-white hover:bg-slate-800")}>
+                        <Button variant={isActive('/') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/') ? "shadow-lg shadow-amber-900/20" : "text-slate-400 hover:text-white hover:bg-white/5")}>
                             <LayoutDashboard size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Dashboard</span>
                         </Button>
                     </Link>
                     <Link to="/accounts">
-                        <Button variant={isActive('/accounts') ? "secondary" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-colors", isActive('/accounts') ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-400 hover:text-white hover:bg-slate-800")}>
+                        <Button variant={isActive('/accounts') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/accounts') ? "shadow-lg shadow-amber-900/20" : "text-slate-400 hover:text-white hover:bg-white/5")}>
                             <Wallet size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">My Accounts</span>
                         </Button>
                     </Link>
 
                     {/* Cashflow Engine Link Removed */}
                     <Link to="/settings">
-                        <Button variant={isActive('/settings') ? "secondary" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-colors", isActive('/settings') ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-400 hover:text-white hover:bg-slate-800")}>
+                        <Button variant={isActive('/settings') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/settings') ? "shadow-lg shadow-amber-900/20" : "text-slate-400 hover:text-white hover:bg-white/5")}>
                             <Settings size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Settings</span>
                         </Button>
                     </Link>
                 </nav>
 
-                <div className="border-t border-slate-800 p-4 min-w-max">
+                <div className="border-t border-white/5 p-4 min-w-max">
                     <Button variant="ghost" className="w-full justify-start gap-2 text-rose-500 hover:text-rose-400 hover:bg-rose-950/20">
                         <LogOut size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">Sign Out</span>
                     </Button>
                 </div>
             </aside>
 
-            {/* ÁREA PRINCIPAL */}
-            <main className="flex-1 flex flex-col min-w-0 bg-slate-900">
+            {/* ÁREA PRINCIPAL - Transparent to show body gradient */}
+            <main className="flex-1 flex flex-col min-w-0 bg-transparent relative">
+                {/* GLOBAL GLOBAL GLOW (Ambient Light) */}
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
+
                 {/* TOP BAR / HEADER */}
-                <header className="flex h-14 items-center gap-4 border-b border-slate-800 bg-slate-950/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60 sticky top-0 z-10">
+                <header className="flex h-14 items-center gap-4 border-b border-white/5 bg-slate-950/30 px-4 backdrop-blur-md sticky top-0 z-10">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="text-slate-400 hover:text-white"
+                        className="text-slate-400 hover:text-white hover:bg-white/5"
                     >
                         <PanelLeft size={20} strokeWidth={1.5} className={cn("transition-transform", !isSidebarOpen && "rotate-180")} />
                     </Button>
@@ -73,7 +77,7 @@ export default function DashboardLayout() {
                 </header>
 
                 {/* CONTENIDO SCROLLABLE */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0">
                     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>

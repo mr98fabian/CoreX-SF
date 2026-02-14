@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useCashflowStats } from '../../accounts/hooks/useCashflowStats';
 
 interface ShieldData {
     shield_target: number;
@@ -27,18 +28,27 @@ interface ShieldData {
 export default function PeaceShield() {
     const [data, setData] = useState<ShieldData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [newTarget, setNewTarget] = useState("");
 
+    // NEW: Hook for financial intelligence
+    const { calculateStats } = useCashflowStats();
+    const stats = calculateStats('monthly');
+    const recommendedShield = stats.monthlyExpenses * 3;
+
     const fetchShield = () => {
-        fetch('http://127.0.0.1:8001/api/peace-shield')
+        fetch('/api/peace-shield')
             .then(res => res.json())
             .then(d => {
                 setData(d);
                 setNewTarget(d.shield_target.toString());
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(() => {
+                setLoading(false);
+                setError(true);
+            });
     };
 
     useEffect(() => {
@@ -47,7 +57,7 @@ export default function PeaceShield() {
 
     const updateTarget = async () => {
         try {
-            const res = await fetch('http://127.0.0.1:8001/api/user/me/shield', {
+            const res = await fetch('/api/user/me/shield', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ target: parseFloat(newTarget) })
@@ -77,13 +87,26 @@ export default function PeaceShield() {
         );
     }
 
+
+    if (error) {
+        return (
+            <Card className="border-red-900/40 bg-red-950/10">
+                <CardContent className="h-32 flex flex-col items-center justify-center text-red-500">
+                    <ShieldAlert size={24} className="mb-2 opacity-50" />
+                    <span className="text-xs font-mono">Shield System Offline</span>
+                    <Button variant="link" size="sm" onClick={fetchShield} className="text-red-400 mt-1 h-auto p-0 text-xs">Retry Connection</Button>
+                </CardContent>
+            </Card>
+        );
+    }
+
     if (!data) return null;
 
     const isCharged = data.is_active;
     const fillPct = Math.min(100, data.fill_percentage);
 
     return (
-        <Card className={`relative overflow-hidden border transition-all duration-500 group ${isCharged
+        <Card className={`relative overflow-hidden border transition-all duration-500 group h-full flex flex-col justify-center ${isCharged
             ? 'border-emerald-900/40 bg-gradient-to-r from-zinc-950 to-emerald-950/10 shadow-[0_0_20px_rgba(16,185,129,0.08)]'
             : 'border-amber-900/40 bg-gradient-to-r from-zinc-950 to-amber-950/10 shadow-[0_0_20px_rgba(245,158,11,0.08)]'
             }`}>
@@ -113,6 +136,31 @@ export default function PeaceShield() {
                                         Usually 3-6 months of expenses, or a fixed amount like $1,000.
                                     </p>
                                 </div>
+
+                                {/* RECOMMENDATION ENGINE */}
+                                {stats.monthlyExpenses > 0 && (
+                                    <div className="bg-emerald-900/10 border border-emerald-500/20 p-3 rounded-lg">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <ShieldCheck size={14} className="text-emerald-400" />
+                                            <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">AI Recommendation</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <div>
+                                                <div className="text-lg font-bold text-white">{formatMoney(recommendedShield)}</div>
+                                                <div className="text-[10px] text-emerald-500/70">3 Months of Living Expenses</div>
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                                onClick={() => setNewTarget(recommendedShield.toFixed(2))}
+                                            >
+                                                Apply
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <Button onClick={updateTarget} className="w-full bg-emerald-600 hover:bg-emerald-700">
                                     Update Shield
                                 </Button>

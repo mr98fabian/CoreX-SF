@@ -8,14 +8,14 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_10px_rgba(255,255,255,0.1)] transition-all duration-300",
-                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+                default: "bg-primary text-primary-foreground hover:bg-gold-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all duration-300 font-bold tracking-wide",
+                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-rose-900/20",
+                outline: "border border-input bg-background/50 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground",
                 secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
                 ghost: "hover:bg-accent hover:text-accent-foreground",
                 link: "text-primary underline-offset-4 hover:underline",
-                premium: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-0 hover:opacity-90 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-500",
-                glow: "bg-primary text-primary-foreground shadow-[0_0_20px_theme('colors.primary.DEFAULT')] hover:shadow-[0_0_30px_theme('colors.primary.DEFAULT')]"
+                premium: "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 text-white border-0 hover:brightness-110 shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] transition-all duration-500 animate-pulse-glow",
+                glow: "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:bg-emerald-400"
             },
             size: {
                 default: "h-10 px-4 py-2",

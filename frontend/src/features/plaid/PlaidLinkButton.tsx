@@ -17,7 +17,7 @@ interface PlaidLinkButtonProps {
     onSuccess?: () => void;
 }
 
-const API_BASE = 'http://127.0.0.1:8001';
+const API_BASE = '';
 
 export function PlaidLinkButton({ onSuccess }: PlaidLinkButtonProps) {
     const [linkToken, setLinkToken] = useState<string | null>(null);

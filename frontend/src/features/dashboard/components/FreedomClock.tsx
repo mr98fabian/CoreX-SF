@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Zap, Clock, Flame } from 'lucide-react';
+import { Clock, Flame, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import TacticalActionBanner from './TacticalActionBanner';
+import { motion } from "framer-motion";
 
 interface FreedomData {
     velocity_debt_free_date: string;
@@ -10,125 +13,196 @@ interface FreedomData {
     years_saved: number;
     interest_saved: number;
     total_debt: number;
+    velocity_power: number; // Added for Calculations
 }
 
 /**
  * FreedomClock — The heartbeat of CoreX.
- * A dynamic countdown showing the projected date of financial freedom.
+ * Now featuring Velocity Intelligence: Score, Time Saved, and Simulation.
  */
 export default function FreedomClock() {
     const [data, setData] = useState<FreedomData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [extraPayment, setExtraPayment] = useState(0);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8001/api/velocity/projections')
+        fetch('/api/velocity/projections')
             .then(res => res.json())
             .then(d => {
                 setData(d);
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
+            .catch(() => {
+                setLoading(false);
+                setError(true);
+            });
     }, []);
+
+    const formatMoney = (n: number) =>
+        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
     if (loading) {
         return (
-            <Card className="border-blue-900/30 bg-gradient-to-br from-zinc-950 to-blue-950/20 animate-pulse">
-                <CardContent className="h-48 flex items-center justify-center">
-                    <div className="text-blue-500 font-mono text-sm">Calculating Freedom Date...</div>
+            <Card className="border-blue-900/30 bg-gradient-to-br from-zinc-950 to-blue-950/20 animate-pulse h-full">
+                <CardContent className="h-full flex items-center justify-center">
+                    <div className="text-blue-500 font-mono text-sm">Calculating Velocity Metrics...</div>
                 </CardContent>
             </Card>
         );
     }
 
-    if (!data) return null;
+    if (error || !data) {
+        return (
+            <Card className="border-red-900/40 bg-red-950/10 h-full">
+                <CardContent className="h-full flex flex-col items-center justify-center text-red-500">
+                    <Clock size={32} className="mb-2 opacity-50" />
+                    <span className="text-xs font-mono">Projection System Offline</span>
+                    <Button variant="link" size="sm" onClick={() => window.location.reload()} className="text-red-400 mt-1 h-auto p-0 text-xs">Retry</Button>
+                </CardContent>
+            </Card>
+        );
+    }
 
-    const freedomDate = new Date(data.velocity_debt_free_date);
+    // --- CALCULATIONS ---
     const now = new Date();
-    const totalDays = Math.max(0, Math.ceil((freedomDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    const standardDate = new Date(data.standard_debt_free_date);
+    const velocityDate = new Date(data.velocity_debt_free_date);
+
+    // Calculate Months for Score
+    const getMonthsDifference = (d1: Date, d2: Date) => {
+        return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    };
+
+    const standardMonths = Math.max(1, getMonthsDifference(now, standardDate));
+    const velocityMonths = Math.max(1, getMonthsDifference(now, velocityDate));
+
+    // Velocity Score (Speed Multiplier)
+    const velocityScore = (standardMonths / velocityMonths).toFixed(1);
+
+    // --- SIMULATOR LOGIC ---
+    // Approximation: New Time = TotalDebt / (Implied Monthly Pay + Extra)
+    // Implied Monthly Pay = TotalDebt / VelocityMonths
+    const impliedMonthlyPay = data.total_debt / velocityMonths;
+    const simulatedNewPay = impliedMonthlyPay + extraPayment;
+    const simulatedMonths = data.total_debt / simulatedNewPay;
+    const simulatedSavingsMonths = Math.max(0, velocityMonths - simulatedMonths);
+
+    // Simulated Date
+    const simulatedDate = new Date(now);
+    simulatedDate.setMonth(now.getMonth() + simulatedMonths);
+
+    // Visualization Vars
+    const displayDate = extraPayment > 0 ? simulatedDate : velocityDate;
+    const totalDays = Math.max(0, Math.ceil((displayDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     const years = Math.floor(totalDays / 365);
     const months = Math.floor((totalDays % 365) / 30);
     const days = totalDays % 30;
 
-    const standardDate = new Date(data.standard_debt_free_date);
-    const standardDays = Math.max(0, Math.ceil((standardDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-    const daysAccelerated = standardDays - totalDays;
-
-    const formatMoney = (n: number) =>
-        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
-
     return (
-        <Card className="relative overflow-hidden border-blue-900/40 bg-gradient-to-br from-zinc-950 via-blue-950/10 to-zinc-950 shadow-[0_0_60px_rgba(30,58,138,0.15)]">
+        <Card className="relative overflow-hidden border-blue-900/40 bg-gradient-to-br from-zinc-950 via-blue-950/10 to-zinc-950 shadow-[0_0_60px_rgba(30,58,138,0.15)] h-full flex flex-col justify-between group">
             {/* Subtle pulsing glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl animate-pulse" />
+            <div className={`absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl transition-all duration-1000 ${extraPayment > 0 ? 'bg-emerald-500/10 scale-110' : 'animate-pulse'}`} />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
 
             <CardContent className="relative p-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-900/30">
-                            <Flame size={18} className="text-blue-400" />
+                {/* Header: Velocity Score & Label */}
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-900/30 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                            <Flame size={20} className="text-blue-400 fill-blue-500/20" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-zinc-200 tracking-wide uppercase">Freedom Date</h3>
-                            <p className="text-[10px] text-slate-500 font-mono">CoreX Velocity Projection</p>
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-zinc-100 tracking-wide uppercase">Velocity Engine</h3>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                                    {velocityScore}x SPEED
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 font-medium">
+                                Paying off debt {velocityScore}x faster than the bank
+                            </p>
                         </div>
                     </div>
-                    {daysAccelerated > 0 && (
-                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-900/30">
-                            <Zap size={12} className="text-emerald-400" />
-                            <span className="text-xs font-bold text-emerald-400">{daysAccelerated} days faster</span>
-                        </div>
-                    )}
                 </div>
 
-                {/* Main Date Display */}
-                <div className="text-center mb-6">
-                    <div className="text-5xl font-extrabold tracking-tight text-white mb-2">
-                        {freedomDate.toLocaleDateString('en-US', {
+                {/* Main Date Display (The Heart) */}
+                <div className="text-center mb-8 relative">
+                    <motion.div
+                        key={displayDate.toISOString()}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-2"
+                    >
+                        {displayDate.toLocaleDateString('en-US', {
                             month: 'long',
                             day: 'numeric',
                             year: 'numeric',
                         })}
+                    </motion.div>
+
+                    <div className="flex flex-col items-center gap-1">
+                        <p className={`text-sm font-mono tracking-tight transition-colors ${extraPayment > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                            {extraPayment > 0
+                                ? `Wait... that's ${Math.round(simulatedSavingsMonths)} months SOONER!`
+                                : `You cut ${(data.months_saved + (data.years_saved * 12)).toFixed(0)} months of payments.`
+                            }
+                        </p>
+                        <div className="h-1 w-12 rounded-full bg-gradient-to-r from-transparent via-blue-500/50 to-transparent mt-2" />
                     </div>
-                    <p className="text-sm text-slate-500 font-mono">
-                        Projected debt-free on this date
-                    </p>
                 </div>
 
-                {/* Countdown Boxes */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="text-center p-4 rounded-xl bg-slate-900/60 border border-slate-800/50">
+                {/* Countdown Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
                         <div className="text-3xl font-extrabold text-white tabular-nums">{years}</div>
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Years</div>
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Years</div>
                     </div>
-                    <div className="text-center p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
+                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
                         <div className="text-3xl font-extrabold text-white tabular-nums">{months}</div>
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Months</div>
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Months</div>
                     </div>
-                    <div className="text-center p-4 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
-                        <div className="text-3xl font-extrabold text-blue-400 tabular-nums">{days}</div>
-                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">Days</div>
+                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
+                        <div className={`text-3xl font-extrabold tabular-nums ${extraPayment > 0 ? 'text-emerald-400' : 'text-blue-400'}`}>{days}</div>
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Days</div>
                     </div>
                 </div>
 
-                {/* Stats Bar */}
-                <div className="flex items-center justify-between text-xs border-t border-zinc-800/50 pt-4">
-                    <div className="flex items-center gap-1.5">
-                        <Clock size={12} className="text-zinc-500" />
-                        <span className="text-zinc-500">Bank estimate:</span>
-                        <span className="text-slate-400 font-medium line-through decoration-rose-500/50">
-                            {standardDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                        </span>
+                {/* Simulator (Bottom Section) */}
+                <div className="space-y-4 pt-6 border-t border-zinc-800/50">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <TrendingUp size={14} className={extraPayment > 0 ? "text-emerald-400" : ""} />
+                            <span className="text-xs font-semibold uppercase tracking-wider">Acceleration Simulator</span>
+                        </div>
+                        {extraPayment > 0 && (
+                            <span className="text-xs font-bold text-emerald-400 animate-pulse">
+                                +{formatMoney(extraPayment)} / mo
+                            </span>
+                        )}
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-zinc-500">Interest saved:</span>
-                        <span className="text-emerald-400 font-bold">{formatMoney(data.interest_saved)}</span>
+
+                    <div className="space-y-3">
+                        <Slider
+                            value={[extraPayment]}
+                            max={2000}
+                            step={50}
+                            onValueChange={(v) => setExtraPayment(v[0])}
+                            className="py-2"
+                        />
+                        <div className="flex justify-between text-[10px] text-zinc-600 font-mono uppercase">
+                            <span>Current Plan</span>
+                            <span>+ $2,000/mo</span>
+                        </div>
                     </div>
                 </div>
             </CardContent>
 
-            <TacticalActionBanner />
+            {/* Action Banner forces layout stretch */}
+            <div className="mt-auto">
+                <TacticalActionBanner />
+            </div>
         </Card >
     );
 }

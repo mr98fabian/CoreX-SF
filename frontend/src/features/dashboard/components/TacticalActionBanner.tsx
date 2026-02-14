@@ -21,7 +21,7 @@ export default function TacticalActionBanner() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://127.0.0.1:8001/api/strategy/tactical-gps');
+            const res = await fetch('/api/strategy/tactical-gps');
             const data = await res.json();
             if (Array.isArray(data)) {
                 // Find next move based on full date comparison
@@ -69,7 +69,7 @@ export default function TacticalActionBanner() {
                 destination: nextMove.destination
             };
 
-            const res = await fetch('http://127.0.0.1:8001/api/strategy/execute', {
+            const res = await fetch('/api/strategy/execute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -116,7 +116,16 @@ export default function TacticalActionBanner() {
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                            {nextMove.display_date}
+                            {(() => {
+                                const moveDate = new Date(nextMove.date);
+                                const today = new Date();
+                                moveDate.setHours(0, 0, 0, 0);
+                                today.setHours(0, 0, 0, 0);
+
+                                if (moveDate.getTime() === today.getTime()) return <span className="text-emerald-400 animate-pulse font-extrabold">HOY</span>;
+                                if (moveDate.getTime() < today.getTime()) return <span className="text-rose-400 font-bold">EXPIRED</span>;
+                                return nextMove.display_date;
+                            })()}
                         </span>
                         <span className="text-xs font-medium text-zinc-200 truncate max-w-[180px]">
                             {nextMove.title}

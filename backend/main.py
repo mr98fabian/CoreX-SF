@@ -4,45 +4,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select, SQLModel, Field
 from typing import List, Optional
 from database import create_db_and_tables, engine, seed_data
-from models import Account, CashflowItem, Transaction, TransactionCreate
+from models import Account, CashflowItem, Transaction, TransactionCreate, User
 from decimal import Decimal
 from datetime import date, timedelta
 from velocity_engine import (
     get_projections, DebtAccount, generate_tactical_schedule, CashflowTactical,
-    get_peace_shield_status, calculate_purchase_time_cost, DEFAULT_PEACE_SHIELD
+    get_peace_shield_status, calculate_purchase_time_cost, DEFAULT_PEACE_SHIELD,
+    calculate_minimum_payment
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 import uuid
 from decimal import Decimal, ROUND_HALF_UP
 
-def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
-    """
-    Calculates minimum monthly payment: (Balance * (APR / 12)) + (Balance * 0.01)
-    Floor: $25 or Total Balance if less.
-    """
-    # Enforce Decimal types to avoid float errors
-    try:
-        b = Decimal(str(balance)) if balance is not None else Decimal("0")
-        a = Decimal(str(apr)) if apr is not None else Decimal("0")
-    except:
-        return Decimal("0.00")
 
-    if b <= 0:
-        return Decimal("0.00")
-    
-    # Formula: (Balance * (APR% / 12)) + (Balance * 1%)
-    monthly_interest = b * (a / Decimal("100") / Decimal("12"))
-    principal_payment = b * Decimal("0.01")
-    calculated = monthly_interest + principal_payment
-    
-    floor = Decimal("25.00")
-    
-    if b < floor:
-        result = b
-    else:
-        result = max(floor, calculated)
-    
-    return result.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+# --- APP ---
 
 
 # --- APP ---
@@ -70,10 +45,35 @@ def get_accounts():
 @app.post("/api/accounts", response_model=Account)
 def create_account(account: Account):
     with Session(engine) as session:
-        # Auto-calculate min_payment if it's a debt account
+        # Auto-calculate min_payment if it's a debt account AND user didn't provide one
         if account.type == "debt":
-            account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
+            if account.min_payment is None or account.min_payment == 0:
+                account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
             
+        session.add(account)
+        session.commit()
+        session.refresh(account)
+        return account
+
+@app.put("/api/accounts/{id}", response_model=Account)
+def update_account(id: int, account_data: Account):
+    with Session(engine) as session:
+        account = session.get(Account, id)
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found")
+        
+        account.name = account_data.name
+        account.balance = account_data.balance
+        account.interest_rate = account_data.interest_rate
+        account.type = account_data.type
+        account.min_payment = account_data.min_payment
+        account.due_day = account_data.due_day
+        account.closing_day = account_data.closing_day
+        
+        # Recalculate if 0, otherwise trust user
+        if account.type == "debt" and (account.min_payment is None or account.min_payment == 0):
+            account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
+
         session.add(account)
         session.commit()
         session.refresh(account)
@@ -195,9 +195,25 @@ def get_dashboard_metrics():
         
         chase_balance = chase_acc.balance if chase_acc else Decimal('0')
         
-        # Attack Equity = Chase - Shield
-        # If negative, it's 0 (no attack power)
-        attack_equity = max(Decimal('0'), chase_balance - shield_target)
+        # --- ATTACK EQUITY & SAFETY PROTOCOL ---
+        # 1. Convert accounts to DebtAccount list for logic
+        debt_objects = [
+            DebtAccount(
+                name=acc.name,
+                balance=acc.balance,
+                interest_rate=acc.interest_rate,
+                min_payment=acc.min_payment if acc.min_payment else Decimal('50'),
+                due_day=acc.due_day if acc.due_day else 15
+            )
+            for acc in accounts if acc.type == "debt" and acc.balance > 0
+        ]
+        
+        # 2. Calculate Safe Attack Equity
+        from velocity_engine import calculate_safe_attack_equity
+        safety_data = calculate_safe_attack_equity(chase_balance, shield_target, debt_objects)
+        
+        attack_equity = safety_data["safe_equity"]
+        reserved_for_bills = safety_data["reserved_for_bills"]
         
         # Velocity Target (Highest Interest Debt)
         debts = [acc for acc in accounts if acc.type == "debt" and acc.balance > 0]
@@ -255,28 +271,29 @@ def get_dashboard_metrics():
             # 4. English/Spanish Justification
             if has_surplus:
                 why_text = (
-                    f"Tienes un excedente de ${float(attack_equity):,.2f} sobre tu Peace Shield. "
-                    f"Al atacar hoy, eliminas el interés diario de ${float(daily_interest):,.2f} "
-                    f"y adelantas tu fecha de libertad."
+                    f"Tienes un excedente SEGURO de ${float(attack_equity):,.2f}. "
+                    f"(Ya reservamos ${float(reserved_for_bills):,.2f} para facturas próximas). "
+                    f"Ataca hoy para eliminar interés diario."
                 )
             else:
-                days_wait = (next_payday - today).days
-                why_text = (
-                    f"Tu ataque está en pausa recargando energía. "
-                    f"Próxima inyección de capital estimada para el {next_payday.strftime('%d de %B')} "
-                    f"(en {days_wait} días)."
-                )
+                if reserved_for_bills > 0:
+                     why_text = (
+                        f"Tu ataque está pausado por Seguridad. "
+                        f"Reservando ${float(reserved_for_bills):,.2f} para pagos mínimos próximos. "
+                        f"La prioridad es sobrevivir este mes."
+                    )
+                else:
+                    why_text = "Tu ataque está recargando. Esperando ingresos."
 
             velocity_target = {
                 "name": target_account.name,
                 "balance": float(target_account.balance),
                 "interest_rate": float(target_account.interest_rate),
                 "min_payment": float(target_account.min_payment),
-                # Smart Fields
                 "action_date": action_date.strftime("%Y-%m-%d"),
-                "priority_reason": f"Atacamos {target_account.name} porque tiene el APR más alto ({float(r)}%), maximizando tu ahorro.",
+                "priority_reason": f"Atacamos {target_account.name} (APR {float(r)}%) tras asegurar tus facturas.",
                 "justification": why_text,
-                "shield_note": f"Este movimiento respeta tu Peace Shield de ${float(shield_target):,.2f}, manteniendo tu seguridad intacta.",
+                "shield_note": f"🛡️ Shield: ${float(shield_target):,.0f} | 📅 Bills: ${float(reserved_for_bills):,.0f}",
                 "daily_interest_saved": float(daily_interest),
                 "next_payday": next_payday.strftime("%Y-%m-%d")
             }
@@ -287,6 +304,9 @@ def get_dashboard_metrics():
             "chase_balance": chase_balance,
             "shield_target": shield_target,
             "attack_equity": attack_equity,
+            "reserved_for_bills": float(reserved_for_bills),
+            "safety_breakdown": safety_data["breakdown"],
+            "calendar": safety_data.get("projection_data", []), # New Field
             "velocity_target": velocity_target
         }
 
@@ -337,6 +357,36 @@ def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income"):
             "transaction_count": len(filtered_txs)
         }
 
+
+# --- RUTAS PEACE SHIELD ---
+@app.get("/api/peace-shield")
+def get_peace_shield_data():
+    with Session(engine) as session:
+        user = session.exec(select(User)).first()
+        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+        accounts = session.exec(select(Account)).all()
+        # Calculate liquid cash (Checking + Savings)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type in ["checking", "savings"])
+        
+        return get_peace_shield_status(Decimal(str(liquid_cash)), shield_target)
+
+class ShieldUpdate(BaseModel):
+    target: float
+
+@app.put("/api/user/me/shield")
+def update_shield_target(data: ShieldUpdate):
+    with Session(engine) as session:
+        user = session.exec(select(User)).first()
+        if not user:
+            # Should exist from seed, but graceful handling
+            user = User(email="user@corex.io", shield_target=Decimal(str(data.target)))
+            session.add(user)
+        else:
+            user.shield_target = Decimal(str(data.target))
+            session.add(user)
+        session.commit()
+        return {"ok": True}
+
 @app.get("/api/velocity/projections")
 def get_velocity_projections():
     """Calculate real velocity banking projections from account data."""
@@ -362,6 +412,54 @@ def get_velocity_projections():
         projections = get_projections(debts, Decimal(str(liquid_cash)))
         
         return projections
+
+@app.get("/api/velocity/freedom-path")
+def get_freedom_path():
+    """Get the month-by-month freedom path simulation."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account)).all()
+        debts = [
+            DebtAccount(
+                name=acc.name,
+                balance=acc.balance,
+                interest_rate=acc.interest_rate,
+                min_payment=acc.min_payment if acc.min_payment else Decimal('50'),
+                due_day=acc.due_day if acc.due_day else 15
+            )
+            for acc in accounts if acc.type == "debt" and acc.balance > 0
+        ]
+        
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        # Default Velocity: 20% of liquid cash
+        velocity_amount = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
+        simulation = simulate_freedom_path(debts, velocity_amount)
+        return simulation
+
+@app.get("/api/velocity/simulate")
+def get_simulation(extra_cash: float):
+    """Simulate payoff with custom extra monthly cash."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account)).all()
+        debts = [
+            DebtAccount(
+                name=acc.name,
+                balance=acc.balance,
+                interest_rate=acc.interest_rate,
+                min_payment=acc.min_payment if acc.min_payment else Decimal('50'),
+                due_day=acc.due_day if acc.due_day else 15
+            )
+            for acc in accounts if acc.type == "debt" and acc.balance > 0
+        ]
+        
+        # Base Velocity + User Extra
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        base_velocity = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
+        total_monthly_power = base_velocity + Decimal(str(extra_cash))
+        
+        simulation = simulate_freedom_path(debts, total_monthly_power)
+        return simulation
 
 @app.get("/api/strategy/tactical-gps")
 def get_tactical_gps():
@@ -442,7 +540,7 @@ from database import get_session
 from datetime import date, timedelta
 from typing import List
 from pydantic import BaseModel
-from velocity_engine import DebtAccount, CashflowTactical, generate_tactical_schedule, get_projections, Movement
+from velocity_engine import DebtAccount, CashflowTactical, generate_tactical_schedule, get_projections, Movement, simulate_freedom_path, calculate_minimum_payment
 from fastapi import HTTPException
 
 

@@ -13,6 +13,36 @@ from dataclasses import dataclass
 
 DEFAULT_PEACE_SHIELD = Decimal("1000.00")  # Dave Ramsey starter fund
 
+def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
+    """
+    Calculates minimum monthly payment: (Balance * (APR / 12)) + (Balance * 0.01)
+    Floor: $25 or Total Balance if less.
+    """
+    # Enforce Decimal types to avoid float errors
+    try:
+        b = Decimal(str(balance)) if balance is not None else Decimal("0")
+        a = Decimal(str(apr)) if apr is not None else Decimal("0")
+    except:
+        return Decimal("0.00")
+
+    if b <= 0:
+        return Decimal("0.00")
+    
+    # Formula: (Balance * (APR% / 12)) + (Balance * 1%)
+    monthly_interest = b * (a / Decimal("100") / Decimal("12"))
+    principal_payment = b * Decimal("0.01")
+    calculated = monthly_interest + principal_payment
+    
+    floor = Decimal("25.00")
+    
+    if b < floor:
+        result = b
+    else:
+        result = max(floor, calculated)
+    
+    return result.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 @dataclass
 class DebtAccount:
     """Represents a debt account for calculations."""
@@ -21,11 +51,27 @@ class DebtAccount:
     interest_rate: Decimal  # Annual APR as percentage (e.g., 24.99)
     min_payment: Decimal
     due_day: int = 15
+    is_active: bool = True # For simulation
     
     @property
     def monthly_rate(self) -> Decimal:
         """Convert annual APR to monthly rate."""
         return (self.interest_rate / Decimal('100')) / Decimal('12')
+
+@dataclass
+class FreedomMilestone:
+    month_date: str # YYYY-MM
+    name: str # "Sapphire Preferred Paid Off"
+    type: str # "debt_paid" or "freedom"
+
+@dataclass
+class MonthSnapshot:
+    date: str # YYYY-MM
+    events: List[FreedomMilestone]
+    total_balance: Decimal
+    debts_active: int
+    interest_paid: Decimal
+    is_freedom_month: bool = False
 
 
 def calculate_months_to_payoff(
@@ -50,7 +96,6 @@ def calculate_months_to_payoff(
     if monthly_payment <= monthly_interest:
         return 600  # Cap at 50 years (Functional Infinity)
     
-    # Amortization formula: n = -log(1 - (r*P/M)) / log(1 + r)
     # Simplified iterative approach for precision
     months = 0
     remaining = balance
@@ -64,6 +109,53 @@ def calculate_months_to_payoff(
         months += 1
     
     return months
+
+
+
+def calculate_debt_free_date(
+    debts: List[DebtAccount],
+    extra_monthly: Decimal = Decimal('0')
+) -> Dict:
+    """
+    Calculate the debt-free date using standard vs. velocity strategy.
+    
+    Args:
+        debts: List of debt accounts
+        extra_monthly: Extra cash available for velocity payments
+        
+    Returns:
+        Dict with projections for both strategies
+    """
+    if not debts:
+        return {
+            "standard_months": 0,
+            "velocity_months": 0,
+            "standard_date": date.today().isoformat(),
+            "velocity_date": date.today().isoformat(),
+            "months_saved": 0,
+            "interest_saved": Decimal('0')
+        }
+    
+    # 1. Standard Strategy (Min Payments Only)
+    standard_sim = simulate_freedom_path(debts, Decimal('0'))
+    
+    # 2. Velocity Strategy (Min + Extra)
+    velocity_sim = simulate_freedom_path(debts, extra_monthly)
+    
+    months_saved = standard_sim["total_months"] - velocity_sim["total_months"]
+    interest_saved = Decimal(str(standard_sim["total_interest_paid"])) - Decimal(str(velocity_sim["total_interest_paid"]))
+    
+    return {
+        "standard_months": standard_sim["total_months"],
+        "velocity_months": velocity_sim["total_months"],
+        "standard_date": standard_sim["freedom_date"],
+        "velocity_date": velocity_sim["freedom_date"],
+        "months_saved": max(0, months_saved),
+        "interest_saved": max(Decimal('0'), interest_saved).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    }
+
+
+
 
 
 def calculate_total_interest(
@@ -113,103 +205,7 @@ def get_velocity_target(debts: List[DebtAccount]) -> Optional[DebtAccount]:
     return max(active_debts, key=lambda d: d.interest_rate)
 
 
-def calculate_debt_free_date(
-    debts: List[DebtAccount],
-    extra_monthly: Decimal = Decimal('0')
-) -> Dict:
-    """
-    Calculate the debt-free date using standard vs. velocity strategy.
-    
-    Args:
-        debts: List of debt accounts
-        extra_monthly: Extra cash available for velocity payments
-        
-    Returns:
-        Dict with projections for both strategies
-    """
-    if not debts:
-        return {
-            "standard_months": 0,
-            "velocity_months": 0,
-            "standard_date": date.today().isoformat(),
-            "velocity_date": date.today().isoformat(),
-            "months_saved": 0,
-            "interest_saved": Decimal('0')
-        }
-    
-    # Filter active debts
-    active_debts = [d for d in debts if d.balance > 0]
-    if not active_debts:
-        return {
-            "standard_months": 0,
-            "velocity_months": 0,
-            "standard_date": date.today().isoformat(),
-            "velocity_date": date.today().isoformat(),
-            "months_saved": 0,
-            "interest_saved": Decimal('0')
-        }
-    
-    # STANDARD STRATEGY: Pay minimums on everything
-    standard_months = 0
-    standard_interest = Decimal('0')
-    
-    for debt in active_debts:
-        months = calculate_months_to_payoff(debt.balance, debt.interest_rate, debt.min_payment)
-        standard_months = max(standard_months, months)
-        standard_interest += calculate_total_interest(debt.balance, debt.interest_rate, debt.min_payment)
-    
-    # VELOCITY STRATEGY: Pay minimums + put extra toward highest APR
-    # Simplified simulation
-    velocity_months = 0
-    velocity_interest = Decimal('0')
-    remaining_debts = [
-        {"name": d.name, "balance": d.balance, "apr": d.interest_rate, "min": d.min_payment}
-        for d in active_debts
-    ]
-    
-    while any(d["balance"] > 0 for d in remaining_debts) and velocity_months < 600:
-        velocity_months += 1
-        extra_available = extra_monthly
-        
-        # Sort by APR descending for velocity targeting
-        remaining_debts.sort(key=lambda x: x["apr"], reverse=True)
-        
-        for debt in remaining_debts:
-            if debt["balance"] <= 0:
-                continue
-                
-            monthly_rate = (debt["apr"] / Decimal('100')) / Decimal('12')
-            interest = debt["balance"] * monthly_rate
-            velocity_interest += interest
-            
-            # Payment = minimum + extra (for highest APR only)
-            payment = debt["min"]
-            if debt == remaining_debts[0] and extra_available > 0:
-                payment += extra_available
-                extra_available = Decimal('0')
-            
-            principal = payment - interest
-            if principal > 0:
-                debt["balance"] -= principal
-                if debt["balance"] < 0:
-                    debt["balance"] = Decimal('0')
-    
-    # Calculate dates
-    today = date.today()
-    standard_date = today + timedelta(days=standard_months * 30)
-    velocity_date = today + timedelta(days=velocity_months * 30)
-    
-    months_saved = standard_months - velocity_months
-    interest_saved = standard_interest - velocity_interest
-    
-    return {
-        "standard_months": standard_months,
-        "velocity_months": velocity_months,
-        "standard_date": standard_date.isoformat(),
-        "velocity_date": velocity_date.isoformat(),
-        "months_saved": max(0, months_saved),
-        "interest_saved": max(Decimal('0'), interest_saved).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    }
+
 
 
 @dataclass
@@ -377,6 +373,164 @@ def get_peace_shield_status(
     }
 
 
+# --- TACTICAL CALENDAR & SAFETY ENGINE ---
+
+@dataclass
+class CalendarDay:
+    date: str
+    date_obj: date
+    events: List[dict]
+    starting_balance: Decimal
+    ending_balance: Decimal
+    is_critical: bool = False # Has Bill
+    is_reinforcement: bool = False # Has Income
+    status: str = "safe" # safe, warning, danger (below shield)
+
+def generate_projected_calendar(
+    start_date: date,
+    num_days: int,
+    current_liquid_cash: Decimal,
+    shield_target: Decimal,
+    debts: List[DebtAccount],
+    recurring_incomes: List[dict] = None
+) -> Dict:
+    """
+    Simulates daily cashflow to find the 'Lowest Low' and build a visual calendar.
+    """
+    if recurring_incomes is None:
+        # Default fallback if no income data provided
+        # Assuming User's example: $2000 on the 12th
+        recurring_incomes = [{"name": "Salary", "amount": Decimal("2000.00"), "day": 12}]
+
+    calendar_days = []
+    running_balance = current_liquid_cash
+    lowest_projected_balance = current_liquid_cash
+    limiting_event = None
+    
+    # Track reserved amounts for specific bills
+    reserved_breakdown = []
+
+    for i in range(num_days):
+        current_date = start_date + timedelta(days=i)
+        day_num = current_date.day
+        
+        daily_events = []
+        is_critical = False
+        is_reinforcement = False
+        
+        # 1. Check for Bills (Debts)
+        for debt in debts:
+            # Simple Due Day check. 
+            if debt.due_day == day_num:
+                amount = debt.min_payment
+                running_balance -= amount
+                daily_events.append({
+                    "name": debt.name,
+                    "amount": float(amount),
+                    "type": "bill"
+                })
+                is_critical = True
+                
+        # 2. Check for Income
+        for income in recurring_incomes:
+            if income["day"] == day_num:
+                amount = income["amount"]
+                running_balance += amount
+                daily_events.append({
+                    "name": income["name"],
+                    "amount": float(amount),
+                    "type": "income"
+                })
+                is_reinforcement = True
+
+        # 3. Determine Status
+        status = "safe"
+        if running_balance < shield_target:
+            status = "danger"
+        elif running_balance < shield_target * Decimal('1.1'):
+            status = "warning"
+
+        # 4. Update Lowest Low
+        if running_balance < lowest_projected_balance:
+            lowest_projected_balance = running_balance
+            # Find the event that caused the dip
+            if daily_events:
+                 limiting_event = f"{daily_events[-1]['name']} on {current_date.strftime('%b %d')}"
+            else:
+                 limiting_event = f"Low point on {current_date.strftime('%b %d')}"
+
+        calendar_days.append(CalendarDay(
+            date=current_date.strftime("%Y-%m-%d"),
+            date_obj=current_date,
+            events=daily_events,
+            starting_balance=Decimal('0'), # Populated if needed, but ending is key
+            ending_balance=running_balance,
+            is_critical=is_critical,
+            is_reinforcement=is_reinforcement,
+            status=status
+        ))
+
+    return {
+        "calendar": calendar_days,
+        "lowest_projected_balance": lowest_projected_balance,
+        "limiting_event": limiting_event
+    }
+
+def calculate_safe_attack_equity(
+    liquid_cash: Decimal,
+    shield_target: Decimal,
+    debts: List[DebtAccount],
+    days_buffer: int = 35 # Look ahead 1 month + buffer
+) -> Dict:
+    """
+    Calculates Available Equity based on the 'Lowest Low' projection.
+    
+    Rule: You can only spend what keeps you ABOVE the Shield at your lowest projected point.
+    """
+    # 1. Run Simulation
+    projection = generate_projected_calendar(
+        start_date=date.today(),
+        num_days=days_buffer,
+        current_liquid_cash=liquid_cash,
+        shield_target=shield_target,
+        debts=debts
+        # incomes handled inside default for now, or passed in future
+    )
+    
+    lowest_balance = projection["lowest_projected_balance"]
+    limiting_event = projection["limiting_event"]
+    
+    # 2. Calculate Safe Equity
+    # If lowest point > shield, the difference is safe to spend today.
+    # If lowest point < shield, we have 0 safe equity (and maybe a problem).
+    safe_equity = max(Decimal('0'), lowest_balance - shield_target)
+    
+    # 3. Calculate "Reserved"
+    # Raw Equity would be (Liquid - Shield). 
+    # Reserved is the difference between Raw and Safe.
+    raw_equity = max(Decimal('0'), liquid_cash - shield_target)
+    reserved_for_bills = max(Decimal('0'), raw_equity - safe_equity)
+    
+    # 4. Build Breakdown
+    breakdown = []
+    if reserved_for_bills > 0 and limiting_event:
+        breakdown.append({
+            "name": "Projected Low Point",
+            "amount": float(reserved_for_bills),
+            "due_date": limiting_event, # Text description
+            "days_until": 0 # Not relevant for this logic
+        })
+
+    return {
+        "safe_equity": safe_equity,
+        "raw_equity": raw_equity,
+        "reserved_for_bills": reserved_for_bills,
+        "breakdown": breakdown,
+        "projection_data": projection["calendar"], # Pass this back for the UI!
+        "message": f"Reserved ${float(reserved_for_bills):,.2f} to protect against {limiting_event}" if reserved_for_bills > 0 else "Full Power Available"
+    }
+
+
 # ================================================================
 # PURCHASE TIME-COST SIMULATOR — "The Cost of Living Future"
 # ================================================================
@@ -502,5 +656,113 @@ def calculate_purchase_time_cost(
             "total_debt_count": len(debts),
             "total_debt_balance": float(sum(d.balance for d in debts))
         }
+    }
+
+
+# ================================================================
+# FREEDOM PATH SIMULATOR
+# ================================================================
+
+def simulate_freedom_path(
+    debts: List[DebtAccount],
+    extra_monthly_payment: Decimal = Decimal('0')
+) -> Dict:
+    """
+    Simulates the journey to zero debt month-by-month.
+    Supports 'What-If' scenarios by accepting extra monthly payment.
+    """
+    # 1. Clone debts
+    sim_debts = [
+        DebtAccount(
+            name=d.name,
+            balance=d.balance,
+            interest_rate=d.interest_rate,
+            min_payment=d.min_payment,
+            due_day=d.due_day
+        ) for d in debts if d.balance > 0
+    ]
+    
+    timeline = []
+    current_date = date.today().replace(day=1) 
+    total_interest_paid = Decimal('0')
+    months_elapsed = 0
+    max_months = 600
+    
+    # We need to know who is the Velocity Target to focus fire
+    # Re-eval target every month? Yes, Standard Velocity.
+    
+    while any(d.balance > 0 for d in sim_debts) and months_elapsed < max_months:
+        if months_elapsed > 0:
+             if current_date.month == 12:
+                 current_date = date(current_date.year + 1, 1, 1)
+             else:
+                 current_date = date(current_date.year, current_date.month + 1, 1)
+        
+        month_str = current_date.strftime("%Y-%m")
+        month_events = []
+        monthly_interest_sum = Decimal('0')
+        
+        # 2. Accrue Interest & Pay Minimums
+        # We assume we have enough cash for minimums. 
+        for debt in sim_debts:
+            if debt.balance <= Decimal('0'):
+                continue
+                
+            interest = (debt.balance * debt.monthly_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            debt.balance += interest
+            monthly_interest_sum += interest
+            total_interest_paid += interest
+            
+            payment = min(debt.balance, debt.min_payment)
+            debt.balance -= payment
+            
+            if debt.balance <= Decimal('0.01'):
+                 debt.balance = Decimal('0')
+                 month_events.append(f"{debt.name} Paid Off")
+
+        # 3. Allocating Extra Cash (Velocity + User Extra)
+        # We need to find the Target
+        active_debts = [d for d in sim_debts if d.balance > 0]
+        
+        if active_debts:
+            available_for_attack = extra_monthly_payment
+            
+            # Simple Strategy: Highest Rate First (Avalanche)
+            # In real engine, we'd use get_velocity_target, but let's keep it self-contained for speed
+            active_debts.sort(key=lambda x: x.interest_rate, reverse=True)
+            
+            for debt in active_debts:
+                if available_for_attack <= 0:
+                    break
+                
+                payment = min(debt.balance, available_for_attack)
+                debt.balance -= payment
+                available_for_attack -= payment
+                
+                if debt.balance <= Decimal('0.01'):
+                    debt.balance = Decimal('0')
+                    month_events.append(f"{debt.name} Eliminated")
+        
+        # 4. Snapshot
+        total_balance = sum(d.balance for d in sim_debts)
+        
+        snapshot = {
+            "date": month_str,
+            "month_display": current_date.strftime("%b %Y"),
+            "events": list(set(month_events)),
+            "total_balance": float(total_balance),
+            "debts_active": len([d for d in sim_debts if d.balance > 0]),
+            "interest_paid": float(monthly_interest_sum),
+            "is_freedom_month": (total_balance <= 0)
+        }
+        timeline.append(snapshot)
+        months_elapsed += 1
+
+    return {
+        "timeline": timeline,
+        "freedom_date": current_date.strftime("%Y-%m-%d"),
+        "freedom_month_display": current_date.strftime("%B %Y"),
+        "total_interest_paid": float(total_interest_paid),
+        "total_months": months_elapsed
     }
 

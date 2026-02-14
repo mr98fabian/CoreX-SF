@@ -102,7 +102,7 @@ export default function AccountsPage() {
     const fetchAccounts = async () => {
         try {
             setErrorMsg(null);
-            const res = await fetch('http://127.0.0.1:8001/api/accounts');
+            const res = await fetch('/api/accounts');
             if (!res.ok) throw new Error("Failed to fetch accounts");
             const data = await res.json();
             // Ensure numbers
@@ -128,7 +128,7 @@ export default function AccountsPage() {
     const onSubmit = async (values: AccountFormValues) => {
         setIsSubmitting(true);
         try {
-            const res = await fetch('http://127.0.0.1:8001/api/accounts', {
+            const res = await fetch('/api/accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
@@ -151,7 +151,7 @@ export default function AccountsPage() {
     const confirmDelete = async (id: number) => {
         if (!confirm("Are you sure? This will verify related transactions and delete history.")) return;
         try {
-            const res = await fetch(`http://127.0.0.1:8001/api/accounts/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setAccounts(prev => prev.filter(a => a.id !== id));
                 toast({ title: "Account Deleted", variant: "destructive" });
@@ -163,7 +163,7 @@ export default function AccountsPage() {
 
     const handleResetSystem = async () => {
         try {
-            const res = await fetch('http://127.0.0.1:8001/api/accounts', { method: 'DELETE' });
+            const res = await fetch('/api/accounts', { method: 'DELETE' });
             if (res.ok) {
                 setAccounts([]);
                 toast({ title: "System Reset", description: "All accounts and transactions wiped." });
@@ -182,35 +182,37 @@ export default function AccountsPage() {
     const formatMoney = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     return (
-        <div className="container mx-auto p-6 space-y-8 animate-in fade-in duration-500">
+        <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-700 max-w-7xl pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                    <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-lg mb-2">
                         Financial Network
                     </h1>
-                    <p className="text-slate-500 mt-1">Manage your connected assets and liabilities</p>
+                    <p className="text-slate-400 font-light text-lg">Manage your connected assets and liabilities</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" size="icon" onClick={fetchAccounts} title="Refresh Data">
-                        <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} strokeWidth={1.5} />
+                    <Button variant="outline" size="icon" onClick={fetchAccounts} title="Refresh Data" className="border-white/10 hover:bg-white/5">
+                        <RefreshCw size={18} className={isLoading ? "animate-spin text-gold-400" : "text-slate-400"} strokeWidth={1.5} />
                     </Button>
 
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive">Reset System</Button>
+                            <Button variant="destructive" className="shadow-lg shadow-rose-900/20 hover:shadow-rose-900/40">Reset System</Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-slate-950 border-rose-900/50">
+                        <AlertDialogContent className="glass-panel border-rose-900/50 bg-slate-950/90 backdrop-blur-xl">
                             <AlertDialogHeader>
-                                <AlertDialogTitle className="text-rose-500">Nuclear Option: Hard Reset</AlertDialogTitle>
-                                <AlertDialogDescription>
+                                <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
+                                    <AlertCircle size={20} /> Nuclear Option: Hard Reset
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-300">
                                     This will delete <b>ALL accounts, transactions, and movement logs</b>.
                                     This action cannot be undone. Are you absolutely sure?
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="border-none hover:bg-slate-900">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetSystem} className="bg-rose-600 hover:bg-rose-700">
+                                <AlertDialogCancel className="border-white/10 hover:bg-white/5 text-slate-300">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetSystem} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
                                     Yes, Wipe Everything
                                 </AlertDialogAction>
                             </AlertDialogFooter>
@@ -219,46 +221,46 @@ export default function AccountsPage() {
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 active:scale-95">
-                                <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add Account
+                            <Button variant="glow" className="font-bold tracking-wide">
+                                <Plus className="mr-2 h-4 w-4" strokeWidth={2} /> Add Account
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800 text-white">
+                        <DialogContent className="glass-panel sm:max-w-[450px] bg-slate-950/90 backdrop-blur-2xl border-white/10">
                             <DialogHeader>
-                                <DialogTitle>Add Manual Account</DialogTitle>
+                                <DialogTitle className="text-2xl font-bold text-white">Add Manual Account</DialogTitle>
                                 <DialogDescription className="text-slate-400">
-                                    Enter account details manually.
+                                    Enter account details manually to track in the Velocity engine.
                                 </DialogDescription>
                             </DialogHeader>
                             <Form {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 mt-2">
                                     <FormField
                                         control={form.control}
                                         name="name"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Account Name</FormLabel>
+                                                <FormLabel className="text-emerald-400 font-semibold">Account Name</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. Chase Sapphire, Wells Fargo" {...field} className="bg-slate-900 border-slate-800" />
+                                                    <Input placeholder="e.g. Chase Sapphire, Wells Fargo" {...field} className="bg-slate-950/50 border-white/10 focus:border-emerald-500/50 text-white h-11" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 gap-5">
                                         <FormField
                                             control={form.control}
                                             name="type"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Type</FormLabel>
+                                                    <FormLabel className="text-emerald-400 font-semibold">Type</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                         <FormControl>
-                                                            <SelectTrigger className="bg-slate-900 border-slate-800 text-white">
+                                                            <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
                                                                 <SelectValue placeholder="Select type" />
                                                             </SelectTrigger>
                                                         </FormControl>
-                                                        <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                                                        <SelectContent className="bg-slate-950 border-slate-800 text-white">
                                                             <SelectItem value="debt">Debt (Credit/Loan)</SelectItem>
                                                             <SelectItem value="checking">Checking (Cash)</SelectItem>
                                                             <SelectItem value="savings">Savings (Reserve)</SelectItem>
@@ -273,9 +275,12 @@ export default function AccountsPage() {
                                             name="balance"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Current Balance</FormLabel>
+                                                    <FormLabel className="text-emerald-400 font-semibold">Current Balance</FormLabel>
                                                     <FormControl>
-                                                        <Input type="number" placeholder="0.00" {...field} className="bg-slate-900 border-slate-800" />
+                                                        <div className="relative">
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                                                            <Input type="number" placeholder="0.00" {...field} className="bg-slate-950/50 border-white/10 focus:border-emerald-500/50 text-white pl-7 h-11 font-mono" />
+                                                        </div>
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>
@@ -284,15 +289,18 @@ export default function AccountsPage() {
                                     </div>
                                     {form.watch("type") === "debt" && (
                                         <>
-                                            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                            <div className="grid grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-2">
                                                 <FormField
                                                     control={form.control}
                                                     name="interest_rate"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>APR (%)</FormLabel>
+                                                            <FormLabel className="text-rose-400 font-semibold">APR (%)</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-slate-900 border-slate-800" />
+                                                                <div className="relative">
+                                                                    <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-slate-950/50 border-white/10 focus:border-rose-500/50 text-white h-11 font-mono pr-8" />
+                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">%</span>
+                                                                </div>
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -303,33 +311,35 @@ export default function AccountsPage() {
                                                     name="min_payment"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="flex items-center justify-between">
+                                                            <FormLabel className="flex items-center justify-between text-rose-400 font-semibold">
                                                                 Min. Payment
-                                                                <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded uppercase tracking-wider">Auto</span>
+                                                                <span className="text-[10px] bg-slate-800/50 text-slate-400 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wider" title="Leave 0 to auto-calculate">Optional</span>
                                                             </FormLabel>
                                                             <FormControl>
-                                                                <Input
-                                                                    type="number"
-                                                                    {...field}
-                                                                    className="bg-slate-900/50 border-slate-800 text-slate-500 cursor-not-allowed"
-                                                                    disabled={true}
-                                                                    placeholder="Auto-calculated"
-                                                                />
+                                                                <div className="relative">
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600">$</span>
+                                                                    <Input
+                                                                        type="number"
+                                                                        {...field}
+                                                                        className="bg-slate-950/50 border-white/10 focus:border-rose-500/50 text-white pl-7 h-11 font-mono"
+                                                                        placeholder="0.00 (Auto)"
+                                                                    />
+                                                                </div>
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
                                                     )}
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                            <div className="grid grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-2">
                                                 <FormField
                                                     control={form.control}
                                                     name="closing_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Closing Day (Corte)</FormLabel>
+                                                            <FormLabel className="text-slate-300">Closing Day (Corte)</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-slate-900 border-slate-800" />
+                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-slate-950/50 border-white/10 text-white h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -340,9 +350,9 @@ export default function AccountsPage() {
                                                     name="due_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel>Due Day (Pago)</FormLabel>
+                                                            <FormLabel className="text-slate-300">Due Day (Pago)</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-slate-900 border-slate-800" />
+                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-slate-950/50 border-white/10 text-white h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -352,8 +362,8 @@ export default function AccountsPage() {
                                         </>
                                     )}
                                     <DialogFooter className="pt-4">
-                                        <Button type="submit" disabled={isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-500">
-                                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Verify & Connect"}
+                                        <Button type="submit" disabled={isSubmitting} variant="premium" className="w-full h-12 text-lg">
+                                            {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : "Verify & Connect"}
                                         </Button>
                                     </DialogFooter>
                                 </form>
@@ -364,70 +374,87 @@ export default function AccountsPage() {
             </div>
 
             {errorMsg && (
-                <div className="bg-rose-950/30 border border-rose-900/50 p-4 rounded-lg flex items-center gap-3 text-rose-400">
-                    <AlertCircle size={20} strokeWidth={1.5} />
-                    <span>{errorMsg}</span>
+                <div className="glass-panel bg-rose-950/10 border-rose-900/50 p-4 rounded-lg flex items-center gap-3 text-rose-400">
+                    <AlertCircle size={20} className="text-rose-500" />
+                    <span className="font-medium">{errorMsg}</span>
                 </div>
             )}
 
             {/* Content Grid */}
-            <div className="space-y-8">
+            <div className="space-y-12">
                 {/* Liabilities */}
-                <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-rose-400 flex items-center gap-2">
-                        <CreditCard size={20} strokeWidth={1.5} /> Liabilities (Debt)
-                    </h2>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 pb-2 border-b border-white/5">
+                        <div className="p-2 bg-rose-500/10 rounded-lg">
+                            <CreditCard size={24} className="text-rose-500" strokeWidth={1.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Liabilities (Debt)</h2>
+                            <p className="text-sm text-slate-500">Credit cards and loans attacking your wealth</p>
+                        </div>
+                    </div>
+
                     {debts.length === 0 ? (
-                        <div className="p-8 border border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-500 bg-slate-950/50">
-                            <CreditCard size={32} className="mb-2 opacity-50" />
-                            <p>No debts added yet.</p>
+                        <div className="p-12 border border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-950/30">
+                            <CreditCard size={48} className="mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No debts added yet.</p>
+                            <p className="text-sm opacity-60">You are either free or haven't connected your burdens.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {debts.map(acc => (
-                                <Card key={acc.id} className="relative overflow-hidden group hover:border-rose-500/50 transition-all">
-                                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-rose-500 hover:bg-rose-900/20" onClick={() => confirmDelete(acc.id)}>
-                                            <Trash2 size={12} strokeWidth={1.5} />
+                                <Card key={acc.id} className="glass-card group hover:border-rose-500/30 transition-all duration-500">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => confirmDelete(acc.id)}>
+                                            <Trash2 size={14} strokeWidth={1.5} />
                                         </Button>
                                     </div>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium text-rose-500 flex justify-between">
-                                            {acc.name}
-                                            <span className="text-xs bg-rose-950/50 px-2 py-0.5 rounded text-rose-300">{acc.interest_rate}% APR</span>
+
+                                    <CardHeader className="pb-2 relative z-10">
+                                        <CardTitle className="flex justify-between items-start">
+                                            <span className="text-lg font-bold text-white group-hover:text-rose-200 transition-colors truncate pr-8">{acc.name}</span>
+                                            <span className="text-[10px] bg-rose-950/40 border border-rose-500/20 px-2 py-1 rounded text-rose-300 font-mono tracking-wide">
+                                                {acc.interest_rate}% APR
+                                            </span>
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold text-white">{formatMoney(acc.balance)}</div>
-                                        <p className="text-xs text-slate-500 mt-1">Outstanding Balance</p>
 
-                                        <div className="mt-4 grid grid-cols-2 gap-2 text-[10px] text-slate-400 border-t border-slate-800/50 pt-3">
+                                    <CardContent className="relative z-10">
+                                        <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+                                            {formatMoney(acc.balance)}
+                                        </div>
+                                        <p className="text-xs text-rose-400/80 font-medium uppercase tracking-wider mb-6">Outstanding Balance</p>
+
+                                        <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/30 p-3 rounded-lg border border-white/5 mb-6">
                                             <div>
-                                                <span className="block text-slate-500 uppercase font-semibold">Min. Payment</span>
-                                                <span className="text-slate-200">{formatMoney(acc.min_payment)}</span>
+                                                <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">Min. Payment</span>
+                                                <span className="text-slate-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
                                             </div>
                                             <div>
-                                                <span className="block text-slate-500 uppercase font-semibold">Schedule</span>
-                                                <span className="text-slate-200">Cut: {acc.closing_day} | Due: {acc.due_day}</span>
+                                                <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">Due Date</span>
+                                                <span className="text-slate-200 font-mono text-sm">Day {acc.due_day}</span>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2 mt-4">
+                                        <div className="flex gap-2">
                                             <TransactionDrawer account={acc} formatMoney={formatMoney} onUpdate={fetchAccounts} />
                                             <Button
-                                                variant="ghost"
+                                                variant="outline"
                                                 size="sm"
                                                 onClick={() => setUpdatingAccount(acc)}
-                                                className="text-xs h-9 text-slate-500 hover:text-white hover:bg-slate-800"
+                                                className="h-9 px-3 border-white/10 hover:bg-white/5 text-slate-400 hover:text-white"
                                                 title="Manual Adjustment"
                                             >
-                                                <RefreshCw size={14} strokeWidth={1.5} />
+                                                <RefreshCw size={14} />
                                             </Button>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="w-full text-xs h-9 border-rose-900 text-rose-400 hover:bg-rose-900/20">Pay Off</Button>
+                                                    <Button variant="outline" size="sm" className="flex-1 h-9 border-rose-900/30 text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-500/50 transition-all font-medium">
+                                                        Pay Off
+                                                    </Button>
                                                 </AlertDialogTrigger>
-                                                <AlertDialogContent className="bg-slate-950 border-slate-800">
+                                                <AlertDialogContent className="glass-panel bg-slate-950/90 border-white/10">
                                                     <AccountActionDialog account={acc} type="payment" onClose={() => { }} onUpdate={fetchAccounts} />
                                                 </AlertDialogContent>
                                             </AlertDialog>
@@ -440,49 +467,76 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Assets */}
-                <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
-                        <Landmark size={20} strokeWidth={1.5} /> Assets (Cash)
-                    </h2>
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 pb-2 border-b border-white/5">
+                        <div className="p-2 bg-emerald-500/10 rounded-lg">
+                            <Landmark size={24} className="text-emerald-500" strokeWidth={1.5} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Assets (Cash)</h2>
+                            <p className="text-sm text-slate-500">Checking and savings fueling your velocity</p>
+                        </div>
+                    </div>
+
                     {assets.length === 0 ? (
-                        <div className="p-8 border border-dashed border-slate-800 rounded-lg flex flex-col items-center justify-center text-slate-500 bg-slate-950/50">
-                            <Landmark size={32} className="mb-2 opacity-50" />
-                            <p>No assets connected.</p>
+                        <div className="p-12 border border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-950/30">
+                            <Landmark size={48} className="mb-4 opacity-20" />
+                            <p className="text-lg font-medium">No assets connected.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {assets.map(acc => (
-                                <Card key={acc.id} className="relative overflow-hidden group hover:border-emerald-500/50 transition-all">
-                                    <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-rose-500 hover:bg-rose-900/20" onClick={() => confirmDelete(acc.id)}>
-                                            <Trash2 size={12} strokeWidth={1.5} />
+                                <Card key={acc.id} className="glass-card group hover:border-emerald-500/30 transition-all duration-500">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => confirmDelete(acc.id)}>
+                                            <Trash2 size={14} strokeWidth={1.5} />
                                         </Button>
                                     </div>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm font-medium text-emerald-500">{acc.name}</CardTitle>
+
+                                    <CardHeader className="pb-2 relative z-10">
+                                        <CardTitle className="text-lg font-bold text-emerald-400">{acc.name}</CardTitle>
                                     </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold text-white">{formatMoney(acc.balance)}</div>
-                                        <p className="text-xs text-slate-500 mt-1">Available Cash</p>
-                                        <div className="flex gap-2 mt-4">
+
+                                    <CardContent className="relative z-10">
+                                        <div className="text-3xl font-extrabold text-white tracking-tight mb-1">
+                                            {formatMoney(acc.balance)}
+                                        </div>
+                                        <p className="text-xs text-emerald-400/80 font-medium uppercase tracking-wider mb-6">Available Cash</p>
+
+                                        <div className="flex gap-2 mt-auto">
                                             <TransactionDrawer account={acc} formatMoney={formatMoney} onUpdate={fetchAccounts} />
                                             <Button
-                                                variant="ghost"
+                                                variant="outline"
                                                 size="sm"
                                                 onClick={() => setUpdatingAccount(acc)}
-                                                className="h-9 px-2 text-slate-500 hover:text-white hover:bg-slate-800"
+                                                className="h-9 w-9 p-0 border-white/10 hover:bg-white/5 text-slate-400 hover:text-white"
                                                 title="Manual Adjustment"
                                             >
-                                                <RefreshCw size={14} strokeWidth={1.5} />
+                                                <RefreshCw size={14} />
                                             </Button>
-                                            <div className="flex gap-1 w-full">
+
+                                            <div className="flex gap-1 flex-1">
                                                 <AlertDialog>
-                                                    <AlertDialogTrigger asChild><Button size="sm" className="w-full text-xs h-9 bg-emerald-900/20 text-emerald-400 hover:bg-emerald-900/40 border border-emerald-900/50">Dep</Button></AlertDialogTrigger>
-                                                    <AlertDialogContent className="bg-slate-950 border-slate-800"><AccountActionDialog account={acc} type="deposit" onClose={() => { }} onUpdate={fetchAccounts} /></AlertDialogContent>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button size="sm" className="flex-1 h-9 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-xs font-semibold">
+                                                            Deposit
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent className="glass-panel bg-slate-950/90 border-white/10">
+                                                        <AccountActionDialog account={acc} type="deposit" onClose={() => { }} onUpdate={fetchAccounts} />
+                                                    </AlertDialogContent>
                                                 </AlertDialog>
+
                                                 <AlertDialog>
-                                                    <AlertDialogTrigger asChild><Button size="sm" className="w-full text-xs h-9 bg-rose-900/20 text-rose-400 hover:bg-rose-900/40 border border-rose-900/50">Spd</Button></AlertDialogTrigger>
-                                                    <AlertDialogContent className="bg-slate-950 border-slate-800"><AccountActionDialog account={acc} type="spend" onClose={() => { }} onUpdate={fetchAccounts} /></AlertDialogContent>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button size="sm" className="flex-1 h-9 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 text-xs font-semibold">
+                                                            Spend
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent className="glass-panel bg-slate-950/90 border-white/10">
+                                                        <AccountActionDialog account={acc} type="spend" onClose={() => { }} onUpdate={fetchAccounts} />
+                                                    </AlertDialogContent>
                                                 </AlertDialog>
                                             </div>
                                         </div>
@@ -494,7 +548,7 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Cashflow Section */}
-                <div className="pt-8 border-t border-zinc-900">
+                <div className="pt-12 border-t border-white/5">
                     <CashflowManager />
                 </div>
             </div>
@@ -508,7 +562,7 @@ export default function AccountsPage() {
                         setUpdatingAccount(null);
                     }}
                 />
-            )};
+            )}
         </div>
     );
 }
@@ -536,7 +590,7 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                 date: new Date().toISOString().split('T')[0]
             };
 
-            const res = await fetch('http://127.0.0.1:8001/api/transactions', {
+            const res = await fetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -554,37 +608,47 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
             <DialogHeader>
-                <DialogTitle className="text-white capitalize">{type} Transaction</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-white capitalize text-2xl font-bold flex items-center gap-2">
+                    {type === 'payment' && <CreditCard className="text-rose-500" />}
+                    {type === 'deposit' && <Landmark className="text-emerald-500" />}
+                    {type === 'spend' && <Trash2 className="text-rose-500" />}
+                    {type} Transaction
+                </DialogTitle>
+                <DialogDescription className="text-slate-400">
                     {type === 'payment' ? `Pay off debt for ${account.name}` :
                         type === 'deposit' ? `Add funds to ${account.name}` :
                             `Record expense from ${account.name}`}
                 </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2">
-                <label className="text-xs text-slate-400">Amount</label>
-                <Input
-                    type="number" step="0.01"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="bg-slate-900 border-slate-800 text-lg"
-                    placeholder="0.00"
-                    autoFocus
-                />
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Amount</label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">$</span>
+                        <Input
+                            type="number" step="0.01"
+                            value={amount}
+                            onChange={e => setAmount(e.target.value)}
+                            className="bg-slate-950/50 border-white/10 text-xl font-mono h-12 pl-8 text-white focus:border-white/20"
+                            placeholder="0.00"
+                            autoFocus
+                        />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Description (Optional)</label>
+                    <Input
+                        placeholder={type === 'deposit' ? "Paycheck, Gift, etc." : "Groceries, Coffee, etc."}
+                        value={desc}
+                        onChange={e => setDesc(e.target.value)}
+                        className="bg-slate-950/50 border-white/10 text-white h-11"
+                    />
+                </div>
             </div>
-            <div className="space-y-2">
-                <label className="text-xs text-slate-400">Description (Optional)</label>
-                <Input
-                    placeholder={type === 'deposit' ? "Paycheck, Gift, etc." : "Groceries, Coffee, etc."}
-                    value={desc}
-                    onChange={e => setDesc(e.target.value)}
-                    className="bg-slate-900 border-slate-800"
-                />
-            </div>
-            <DialogFooter>
-                <AlertDialogAction type="submit" className={`w-full ${type === 'deposit' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'}`} disabled={loading}>
+            <DialogFooter className="pt-2">
+                <AlertDialogAction type="submit" className={`w-full h-12 text-lg shadow-lg ${type === 'deposit' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-rose-600 hover:bg-rose-500 shadow-rose-900/20'}`} disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : 'Confirm Transaction'}
                 </AlertDialogAction>
             </DialogFooter>
@@ -629,7 +693,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                 finalAmount = operation === 'add' ? numAmount : -numAmount;
             }
 
-            const res = await fetch(`http://127.0.0.1:8001/api/transactions/manual`, {
+            const res = await fetch(`/api/transactions/manual`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -654,10 +718,10 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-slate-950 border-slate-800 text-white sm:max-w-[400px]">
+            <DialogContent className="glass-panel sm:max-w-[420px] bg-slate-950/90 backdrop-blur-2xl border-white/10 text-white">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-white">
-                        <RefreshCw size={18} className="text-blue-500" strokeWidth={1.5} />
+                    <DialogTitle className="flex items-center gap-2 text-white text-xl font-bold">
+                        <RefreshCw size={20} className="text-blue-500" strokeWidth={2} />
                         Manual Adjustment
                     </DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -669,21 +733,21 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
                 <div className="space-y-6 py-4">
                     {/* Operation Selector */}
-                    <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 bg-slate-900/50 p-1 rounded-lg border border-white/5">
                         <button
                             onClick={() => setOperation('add')}
-                            className={`py-2 text-sm font-medium rounded-md transition-all ${operation === 'add'
-                                ? (isDebt ? "bg-rose-900/50 text-rose-200 shadow-sm" : "bg-emerald-900/50 text-emerald-200 shadow-sm")
-                                : "text-slate-500 hover:text-slate-300"
+                            className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'add'
+                                ? (isDebt ? "bg-rose-500 text-white shadow-lg shadow-rose-900/20" : "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20")
+                                : "text-slate-500 hover:text-white hover:bg-white/5"
                                 }`}
                         >
                             {isDebt ? "Add Charge (+)" : "Add Deposit (+)"}
                         </button>
                         <button
                             onClick={() => setOperation('subtract')}
-                            className={`py-2 text-sm font-medium rounded-md transition-all ${operation === 'subtract'
-                                ? (isDebt ? "bg-emerald-900/50 text-emerald-200 shadow-sm" : "bg-rose-900/50 text-rose-200 shadow-sm")
-                                : "text-slate-500 hover:text-slate-300"
+                            className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'subtract'
+                                ? (isDebt ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20" : "bg-rose-500 text-white shadow-lg shadow-rose-900/20")
+                                : "text-slate-500 hover:text-white hover:bg-white/5"
                                 }`}
                         >
                             {isDebt ? "Subtract Payment (-)" : "Subtract Expense (-)"}
@@ -696,46 +760,46 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                             Adjustment Amount
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg">$</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl font-light">$</span>
                             <Input
                                 type="number"
                                 step="0.01"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="bg-slate-900 border-slate-800 pl-7 text-2xl font-mono h-14"
+                                className="bg-slate-950/50 border-white/10 pl-8 text-3xl font-mono h-16 font-bold text-white focus:border-blue-500/50"
                                 autoFocus
                             />
                         </div>
                     </div>
 
                     {/* Preview Section */}
-                    <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-800">
-                        <div className="flex justify-between items-center text-sm mb-1">
+                    <div className="bg-slate-900/30 rounded-lg p-4 border border-white/5 space-y-3">
+                        <div className="flex justify-between items-center text-sm">
                             <span className="text-slate-500">Current Balance:</span>
                             <span className="font-mono text-slate-300">${currentBalance.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm mb-2 pb-2 border-b border-slate-800">
+                        <div className="flex justify-between items-center text-sm pb-3 border-b border-white/5">
                             <span className={operation === 'add' ? "text-emerald-500" : "text-rose-500"}>
                                 {operation === 'add' ? '+' : '-'} Adjustment:
                             </span>
-                            <span className={`font-mono ${operation === 'add' ? "text-emerald-500" : "text-rose-500"}`}>
-                                ${numAmount.toFixed(2)}
+                            <span className={`font-mono font-medium ${operation === 'add' ? "text-emerald-500" : "text-rose-500"}`}>
+                                {operation === 'add' ? '+' : '-'}${numAmount.toFixed(2)}
                             </span>
                         </div>
-                        <div className="flex justify-between items-center text-base font-semibold">
+                        <div className="flex justify-between items-center text-lg font-bold">
                             <span className="text-white">New Balance:</span>
-                            <span className="font-mono text-white">${newBalance.toFixed(2)}</span>
+                            <span className="font-mono text-blue-400">${newBalance.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={onClose} className="hover:bg-slate-800 text-slate-400">Cancel</Button>
+                    <Button variant="ghost" onClick={onClose} className="hover:bg-white/10 text-slate-400">Cancel</Button>
                     <Button
                         onClick={handleTransaction}
                         disabled={loading || !amount || parseFloat(amount) <= 0}
-                        className="bg-blue-600 hover:bg-blue-500 text-white"
+                        className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
                     >
                         {loading ? <Loader2 className="animate-spin mr-2" /> : 'Apply Transaction'}
                     </Button>
@@ -763,7 +827,7 @@ function TransactionDrawer({ account, formatMoney, onUpdate }: { account: Accoun
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`http://127.0.0.1:8001/api/accounts/${account.id}/transactions`);
+            const res = await fetch(`/api/accounts/${account.id}/transactions`);
             if (res.ok) {
                 const data = await res.json();
                 setTransactions(data);
@@ -789,7 +853,7 @@ function TransactionDrawer({ account, formatMoney, onUpdate }: { account: Accoun
                 date: new Date().toISOString().split('T')[0]
             };
 
-            const res = await fetch('http://127.0.0.1:8001/api/transactions', {
+            const res = await fetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

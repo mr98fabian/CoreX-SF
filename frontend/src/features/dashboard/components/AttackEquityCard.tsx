@@ -7,6 +7,7 @@ interface AttackEquityCardProps {
     attackEquity: number;
     chaseBalance: number;
     shieldTarget: number;
+    reservedForBills?: number; // New optional prop
     velocityTarget: {
         name: string;
         balance: number;
@@ -25,6 +26,7 @@ export default function AttackEquityCard({
     attackEquity,
     chaseBalance,
     shieldTarget,
+    reservedForBills = 0,
     velocityTarget,
     onSuccess
 }: AttackEquityCardProps) {
@@ -59,7 +61,7 @@ export default function AttackEquityCard({
                 destination: targetName
             };
 
-            const response = await fetch('http://127.0.0.1:8001/api/strategy/execute', {
+            const response = await fetch('/api/strategy/execute', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -91,18 +93,34 @@ export default function AttackEquityCard({
                 <Sword className="h-4 w-4 text-amber-500" strokeWidth={1.5} />
             </CardHeader>
             <CardContent className="relative z-10">
-                <div className="text-3xl font-bold text-white mb-1 drop-shadow-lg">
-                    {formatMoney(attackEquity)}
-                </div>
+                <div className="flex flex-col gap-1 mb-4">
+                    <div className="text-4xl font-extrabold text-gold-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] leading-tight">
+                        {formatMoney(attackEquity)}
+                    </div>
 
-                <div className="flex items-center gap-2 text-xs text-zinc-500 mb-4">
-                    <span className="flex items-center gap-1">
-                        Chase: <span className="text-emerald-400">{formatMoney(chaseBalance)}</span>
-                    </span>
-                    <span>-</span>
-                    <span className="flex items-center gap-1">
-                        Shield: <span className="text-blue-400">{formatMoney(shieldTarget)}</span>
-                    </span>
+                    {reservedForBills > 0 ? (
+                        <div className="flex flex-col gap-1 animate-fadeIn">
+                            <span className="flex items-center gap-1.5 text-[10px] text-amber-500/80 font-medium px-2 py-0.5 bg-amber-950/40 rounded-full w-fit border border-amber-500/10">
+                                <ShieldCheck className="h-3 w-3" />
+                                <span>Reserved for bills: {formatMoney(reservedForBills)}</span>
+                            </span>
+                            <div className="flex items-center gap-2 text-[10px] text-zinc-600 pl-1">
+                                <span>Liquid: {formatMoney(chaseBalance)}</span>
+                                <span>-</span>
+                                <span>Shield: {formatMoney(shieldTarget)}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <span className="flex items-center gap-1">
+                                Chase: <span className="text-emerald-400">{formatMoney(chaseBalance)}</span>
+                            </span>
+                            <span>-</span>
+                            <span className="flex items-center gap-1">
+                                Shield: <span className="text-blue-400">{formatMoney(shieldTarget)}</span>
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {canFullPayoff ? (
@@ -149,10 +167,39 @@ export default function AttackEquityCard({
                         {/* Action Header */}
                         <div className="flex items-center justify-between text-xs">
                             <span className="text-zinc-500 font-medium uppercase tracking-wider">Próxima Acción</span>
-                            <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-900/50">
-                                <Calendar className="h-3 w-3" strokeWidth={1.5} />
-                                <span className="font-mono">{new Date(velocityTarget.action_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                            </div>
+
+                            {(() => {
+                                const actionDate = new Date(velocityTarget.action_date);
+                                const today = new Date();
+                                actionDate.setHours(0, 0, 0, 0);
+                                today.setHours(0, 0, 0, 0);
+
+                                const isToday = actionDate.getTime() === today.getTime();
+                                const isPast = actionDate.getTime() < today.getTime();
+
+                                if (isToday) {
+                                    return (
+                                        <div className="flex items-center gap-1.5 text-emerald-950 bg-emerald-400 px-3 py-0.5 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-pulse">
+                                            <Calendar className="h-3 w-3" strokeWidth={2} />
+                                            <span className="font-extrabold tracking-tight">HOY</span>
+                                        </div>
+                                    );
+                                } else if (isPast) {
+                                    return (
+                                        <div className="flex items-center gap-1.5 text-rose-300 bg-rose-950/30 px-2 py-0.5 rounded-full border border-rose-900/50">
+                                            <ShieldAlert className="h-3 w-3" strokeWidth={1.5} />
+                                            <span className="font-bold">Acción Expirada</span>
+                                        </div>
+                                    );
+                                } else {
+                                    return (
+                                        <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded-full border border-emerald-900/50">
+                                            <Calendar className="h-3 w-3" strokeWidth={1.5} />
+                                            <span className="font-mono">{actionDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                        </div>
+                                    );
+                                }
+                            })()}
                         </div>
 
                         {/* Justification Card */}

@@ -30,12 +30,12 @@ export default function DebtAttackTable() {
 
     useEffect(() => {
         // Fetch Accounts
-        fetch("http://127.0.0.1:8001/api/accounts")
+        fetch("/api/accounts")
             .then((res) => res.json())
             .then((data) => setAccounts(data));
 
         // Fetch Velocity Data
-        fetch("http://127.0.0.1:8001/api/velocity/projections")
+        fetch("/api/velocity/projections")
             .then((res) => res.json())
             .then((data) => setVelocityData(data));
     }, []);
