@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
 import { TrendingDown, Wallet, PiggyBank, Calendar, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +51,8 @@ interface VelocityProjections {
 }
 
 export default function DashboardPage() {
+    const { user } = useAuth();
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.name?.split(' ')[0] || 'there';
     const [data, setData] = useState<DashboardData | null>(null);
     const [projections, setProjections] = useState<VelocityProjections | null>(null);
     const [loading, setLoading] = useState(true);
@@ -124,7 +127,7 @@ export default function DashboardPage() {
             {/* 1. HEADER SECTION (Greetings + Actions) */}
             <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end p-2">
                 <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2">Good Morning, Fabian.</h1>
+                    <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2">Good Morning, {userName}.</h1>
                     <div className="flex items-center gap-2 text-emerald-400 bg-emerald-950/30 px-3 py-1 rounded-full w-fit border border-emerald-500/20 backdrop-blur-sm">
                         <span className="relative flex h-2 w-2">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>

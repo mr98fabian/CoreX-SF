@@ -354,8 +354,8 @@ export default function LoginPage() {
                                     type="button"
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
-                                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                            : 'text-slate-400 hover:text-white'
+                                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
+                                        : 'text-slate-400 hover:text-white'
                                         }`}
                                 >
                                     {tab === 'signin' ? 'Sign In' : 'Create Account'}
@@ -396,7 +396,7 @@ export default function LoginPage() {
                             <FormInput
                                 id="fullName" label="Full Name" value={fullName}
                                 onChange={(v) => { setFullName(v); clearFieldError('fullName'); }}
-                                placeholder="Fabian Murillo" error={fieldErrors.fullName}
+                                placeholder="John Doe" error={fieldErrors.fullName}
                             />
                         )}
 
@@ -404,7 +404,7 @@ export default function LoginPage() {
                         <FormInput
                             id="email" label="Email" type="email" value={email}
                             onChange={(v) => { setEmail(v); clearFieldError('email'); }}
-                            placeholder="fabian@example.com" error={fieldErrors.email}
+                            placeholder="you@example.com" error={fieldErrors.email}
                             autoComplete="email"
                         />
 
@@ -413,7 +413,7 @@ export default function LoginPage() {
                             <FormInput
                                 id="confirmEmail" label="Confirm Email" type="email" value={confirmEmail}
                                 onChange={(v) => { setConfirmEmail(v); clearFieldError('confirmEmail'); }}
-                                placeholder="fabian@example.com" error={fieldErrors.confirmEmail}
+                                placeholder="you@example.com" error={fieldErrors.confirmEmail}
                                 autoComplete="off"
                             />
                         )}

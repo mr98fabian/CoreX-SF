@@ -38,7 +38,7 @@ export default function SettingsPage() {
                         <CardContent className="space-y-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="name" className="text-slate-300">Display Name</Label>
-                                <Input id="name" defaultValue="Fabian" className="bg-slate-900 border-slate-700 text-white" />
+                                <Input id="name" defaultValue="" className="bg-slate-900 border-slate-700 text-white" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="email" className="text-slate-300">Email Address</Label>

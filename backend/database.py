@@ -41,7 +41,7 @@ def seed_data():
         if not session.exec(select(User)).first():
             print("Running Seed Data...")
             # Create Default User
-            user = User(name="Fabian", email="fabian@corex.com", shield_target=Decimal("1000.00"))
+            user = User(name="Demo User", email="demo@corex.com", shield_target=Decimal("1000.00"))
             session.add(user)
             
             session.commit()
