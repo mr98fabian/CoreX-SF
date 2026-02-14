@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, DollarSign } from "lucide-react";
+import { apiFetch } from '@/lib/api';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -84,8 +85,7 @@ export function TransactionDialog({
     // Fetch accounts on open
     useEffect(() => {
         if (open) {
-            fetch("/api/accounts")
-                .then((res) => res.json())
+            apiFetch<Account[]>('/api/accounts')
                 .then((data) => setAccounts(data))
                 .catch((err) => console.error("Error fetching accounts:", err));
         }
@@ -115,9 +115,8 @@ export function TransactionDialog({
         try {
             const finalAmount = values.type === 'expense' ? -Math.abs(values.amount) : Math.abs(values.amount);
 
-            const response = await fetch("/api/transactions/manual", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            await apiFetch('/api/transactions/manual', {
+                method: 'POST',
                 body: JSON.stringify({
                     account_id: parseInt(values.account_id),
                     amount: finalAmount,
@@ -127,8 +126,6 @@ export function TransactionDialog({
                 }),
             });
 
-            if (!response.ok) throw new Error("Failed to create transaction");
-
             toast.success("Transaction Record Saved", {
                 description: `${values.type === 'income' ? '+' : '-'}$${Math.abs(values.amount)} - ${values.description}`
             });
@@ -137,7 +134,7 @@ export function TransactionDialog({
                 amount: 0,
                 description: "",
                 category: "",
-                type: defaultType, // Reset to default type
+                type: defaultType,
                 account_id: "",
             });
 

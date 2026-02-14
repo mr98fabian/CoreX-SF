@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { apiFetch } from '@/lib/api';
 
 export interface CashflowItem {
     id: number;
@@ -24,16 +25,12 @@ export function useCashflowStats() {
     const fetchCashflow = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/cashflow');
-            if (res.ok) {
-                setItems(await res.json());
-                setError(null);
-            } else {
-                setError("Failed to fetch cashflow data");
-            }
+            const data = await apiFetch<CashflowItem[]>('/api/cashflow');
+            setItems(data);
+            setError(null);
         } catch (e) {
             console.error("Failed to fetch cashflow", e);
-            setError("Network error");
+            setError("Failed to fetch cashflow data");
         } finally {
             setLoading(false);
         }

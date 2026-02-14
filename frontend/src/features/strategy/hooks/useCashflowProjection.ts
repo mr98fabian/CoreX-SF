@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "";
+import { apiFetch } from '@/lib/api';
 
 // --- Types ---
 export interface CashflowEvent {
@@ -35,11 +34,9 @@ export function useCashflowProjection(months = 3) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(
-                `${API_BASE}/api/cashflow/projection?months=${months}`
+            const json = await apiFetch<CashflowProjection>(
+                `/api/cashflow/projection?months=${months}`
             );
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-            const json: CashflowProjection = await res.json();
             setData(json);
         } catch (err) {
             setError(

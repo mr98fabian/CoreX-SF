@@ -24,12 +24,12 @@ export default function DashboardLayout() {
                     isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0 border-none"
                 )}
             >
-                <div className="flex h-16 items-center px-6 min-w-max border-b border-white/5">
+                <div className="flex h-16 items-center justify-center px-6 min-w-max border-b border-white/5">
                     <div className="flex items-center gap-2 group cursor-default">
                         <img
                             src="/korex-logotipo.png"
                             alt="KoreX"
-                            className="h-7 invert brightness-200 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                            className="h-8 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
                         />
                     </div>
                 </div>

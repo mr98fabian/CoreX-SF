@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TrendingDown, Wallet, PiggyBank, Calendar, Zap } from 'lucide-react';
@@ -74,11 +75,8 @@ export default function DashboardPage() {
             setIsSimLoading(true);
             try {
                 // Use the base simulate endpoint which combines base velocity + extra
-                const res = await fetch(`/api/velocity/simulate?extra_cash=${extraCash}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setSimulationData(data);
-                }
+                const data = await apiFetch(`/api/velocity/simulate?extra_cash=${extraCash}`);
+                setSimulationData(data);
             } catch (error) {
                 console.error("Simulation failed", error);
             } finally {
@@ -90,12 +88,12 @@ export default function DashboardPage() {
 
     useEffect(() => {
         Promise.all([
-            fetch('/api/dashboard').then(res => res.json()),
-            fetch('/api/velocity/projections').then(res => res.json())
+            apiFetch('/api/dashboard'),
+            apiFetch('/api/velocity/projections')
         ])
             .then(([dashboardData, velocityData]) => {
-                setData(dashboardData);
-                setProjections(velocityData);
+                setData(dashboardData as any);
+                setProjections(velocityData as any);
                 setLoading(false);
             })
             .catch(err => {

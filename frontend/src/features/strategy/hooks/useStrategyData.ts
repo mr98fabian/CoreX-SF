@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-
-const API_BASE = import.meta.env.VITE_API_URL || '';
+import { apiFetch } from '@/lib/api';
 
 // --- Type Definitions ---
 
@@ -93,9 +92,7 @@ export function useStrategyData() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_BASE}/api/strategy/command-center`);
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-            const json = await res.json();
+            const json = await apiFetch<StrategyCommandData>('/api/strategy/command-center');
             setData(json);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load strategy data');

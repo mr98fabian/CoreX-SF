@@ -2,6 +2,7 @@ import { RefreshCw, Loader2, AlertTriangle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from "@/components/ui/use-toast";
+import { apiFetch } from '@/lib/api';
 import { useStrategyData } from "./hooks/useStrategyData";
 import MorningBriefing from "./components/MorningBriefing";
 import FreedomCounter from "./components/FreedomCounter";
@@ -11,7 +12,7 @@ import SimulationControls from "./components/SimulationControls";
 import VictoryTimeline from "./components/VictoryTimeline";
 import TacticalCashflowMap from "./components/TacticalCashflowMap";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+
 
 export default function StrategyPage() {
     usePageTitle('Strategy');
@@ -25,9 +26,8 @@ export default function StrategyPage() {
         const { recommended_action } = data.morning_briefing;
 
         try {
-            const res = await fetch(`${API_BASE}/api/strategy/execute`, {
+            await apiFetch('/api/strategy/execute', {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     movements: [
                         {
@@ -39,8 +39,6 @@ export default function StrategyPage() {
                     ],
                 }),
             });
-
-            if (!res.ok) throw new Error("Execution failed");
 
             toast({
                 title: "⚡ Attack Executed",

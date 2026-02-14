@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sword, ShieldAlert, Zap, Calendar, Lightbulb, ShieldCheck, Trophy } from 'lucide-react';
@@ -61,16 +62,10 @@ export default function AttackEquityCard({
                 destination: targetName
             };
 
-            const response = await fetch('/api/strategy/execute', {
+            await apiFetch('/api/strategy/execute', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || 'Execution failed');
-            }
 
             // Success!!
             onSuccess();

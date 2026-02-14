@@ -5,7 +5,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assuming you have a utils file for classnames
+import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api';
 
 // Define types for the API response
 interface CashflowData {
@@ -25,13 +26,8 @@ export default function CashflowMonitor() {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await fetch(`http://localhost:8001/api/dashboard/cashflow_monitor?timeframe=${timeframe}&type=${type}`);
-                if (response.ok) {
-                    const result = await response.json();
-                    setData(result);
-                } else {
-                    console.error('Failed to fetch cashflow data');
-                }
+                const result = await apiFetch<CashflowData>(`/api/dashboard/cashflow_monitor?timeframe=${timeframe}&type=${type}`);
+                setData(result);
             } catch (error) {
                 console.error('Error fetching cashflow data:', error);
             } finally {

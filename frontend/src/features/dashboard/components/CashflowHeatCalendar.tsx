@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ArrowUpCircle, ArrowDownCircle, X } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "";
+import { apiFetch } from '@/lib/api';
 
 // --- Types ---
 interface CashflowEvent {
@@ -72,9 +71,8 @@ export default function CashflowHeatCalendar() {
     const fetchProjection = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE}/api/cashflow/projection?months=6`);
-            if (!res.ok) throw new Error(`API error: ${res.status}`);
-            setData(await res.json());
+            const result = await apiFetch<CashflowProjection>('/api/cashflow/projection?months=6');
+            setData(result);
         } catch {
             console.error("Failed to load projection");
         } finally {

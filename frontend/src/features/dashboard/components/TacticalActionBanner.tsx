@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { ArrowRight, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -21,8 +22,7 @@ export default function TacticalActionBanner() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/strategy/tactical-gps');
-            const data = await res.json();
+            const data = await apiFetch<Movement[]>('/api/strategy/tactical-gps');
             if (Array.isArray(data)) {
                 // Find next move based on full date comparison
                 const today = new Date();
@@ -69,18 +69,13 @@ export default function TacticalActionBanner() {
                 destination: nextMove.destination
             };
 
-            const res = await fetch('/api/strategy/execute', {
+            await apiFetch('/api/strategy/execute', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (res.ok) {
-                // Refresh data to show next move
-                await fetchData();
-            } else {
-                console.error("Execution failed");
-            }
+            // Refresh data to show next move
+            await fetchData();
         } catch (error) {
             console.error("Error executing action", error);
         } finally {

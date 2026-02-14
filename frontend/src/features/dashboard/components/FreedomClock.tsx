@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, Flame, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,8 +28,7 @@ export default function FreedomClock() {
     const [extraPayment, setExtraPayment] = useState(0);
 
     useEffect(() => {
-        fetch('/api/velocity/projections')
-            .then(res => res.json())
+        apiFetch<FreedomData>('/api/velocity/projections')
             .then(d => {
                 setData(d);
                 setLoading(false);
@@ -69,6 +69,21 @@ export default function FreedomClock() {
     const standardDate = new Date(data.standard_debt_free_date);
     const velocityDate = new Date(data.velocity_debt_free_date);
 
+    // Guard: if the backend returned invalid/null dates, bail to error UI
+    const datesInvalid = isNaN(standardDate.getTime()) || isNaN(velocityDate.getTime());
+
+    if (datesInvalid) {
+        return (
+            <Card className="border-red-900/40 bg-red-950/10 h-full">
+                <CardContent className="h-full flex flex-col items-center justify-center text-red-500">
+                    <Clock size={32} className="mb-2 opacity-50" />
+                    <span className="text-xs font-mono">Projection System Offline</span>
+                    <Button variant="link" size="sm" onClick={() => window.location.reload()} className="text-red-400 mt-1 h-auto p-0 text-xs">Retry</Button>
+                </CardContent>
+            </Card>
+        );
+    }
+
     // Calculate Months for Score
     const getMonthsDifference = (d1: Date, d2: Date) => {
         return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
@@ -85,12 +100,12 @@ export default function FreedomClock() {
     // Implied Monthly Pay = TotalDebt / VelocityMonths
     const impliedMonthlyPay = data.total_debt / velocityMonths;
     const simulatedNewPay = impliedMonthlyPay + extraPayment;
-    const simulatedMonths = data.total_debt / simulatedNewPay;
+    const simulatedMonths = simulatedNewPay > 0 ? data.total_debt / simulatedNewPay : velocityMonths;
     const simulatedSavingsMonths = Math.max(0, velocityMonths - simulatedMonths);
 
     // Simulated Date
     const simulatedDate = new Date(now);
-    simulatedDate.setMonth(now.getMonth() + simulatedMonths);
+    simulatedDate.setMonth(now.getMonth() + Math.round(simulatedMonths));
 
     // Visualization Vars
     const displayDate = extraPayment > 0 ? simulatedDate : velocityDate;

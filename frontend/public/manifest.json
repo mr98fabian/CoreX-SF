@@ -1,0 +1,22 @@
+{
+    "name": "KoreX",
+    "short_name": "KoreX",
+    "description": "Velocity Banking Intelligence Platform",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#020617",
+    "theme_color": "#f59e0b",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/korex-icon.png",
+            "sizes": "389x377",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "finance",
+        "productivity"
+    ]
+}

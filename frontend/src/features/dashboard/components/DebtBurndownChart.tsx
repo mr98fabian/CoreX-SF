@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { apiFetch } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 
 interface ChartDataPoint {
     month: string;
     bankBalance: number;
-    corexBalance: number;
+    velocityBalance: number;
 }
 
 interface VelocityData {
@@ -49,7 +50,7 @@ const generateProjections = (totalDebt: number, minPayments: number, velocityPow
     const data: ChartDataPoint[] = [];
 
     let bankBalance = totalDebt;
-    let corexBalance = totalDebt;
+    let velocityBalance = totalDebt;
 
     // Assuming average APR of 15% for simulation
     const monthlyInterestRate = 0.15 / 12;
@@ -58,7 +59,7 @@ const generateProjections = (totalDebt: number, minPayments: number, velocityPow
         data.push({
             month: months[i],
             bankBalance: Math.max(0, Math.round(bankBalance)),
-            corexBalance: Math.max(0, Math.round(corexBalance))
+            velocityBalance: Math.max(0, Math.round(velocityBalance))
         });
 
         // Standard (bank) strategy: minimums only, interest accrues
@@ -66,8 +67,8 @@ const generateProjections = (totalDebt: number, minPayments: number, velocityPow
         bankBalance = Math.max(0, bankBalance + bankInterest - minPayments);
 
         // Velocity strategy: minimums + velocity power, more principal paid
-        const corexInterest = corexBalance * monthlyInterestRate;
-        corexBalance = Math.max(0, corexBalance + corexInterest - minPayments - velocityPower);
+        const velocityInterest = velocityBalance * monthlyInterestRate;
+        velocityBalance = Math.max(0, velocityBalance + velocityInterest - minPayments - velocityPower);
     }
 
     return data;
@@ -78,10 +79,8 @@ export default function DebtBurndownChart() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/velocity/projections')
-            .then(res => res.json())
-            .then((velocityData: VelocityData) => {
-                // Generate realistic projections based on actual debt
+        apiFetch<VelocityData>('/api/velocity/projections')
+            .then((velocityData) => {
                 const projections = generateProjections(
                     velocityData.total_debt || 0,
                     velocityData.total_min_payments || 0,
@@ -92,6 +91,7 @@ export default function DebtBurndownChart() {
             })
             .catch(err => {
                 console.error('Error fetching velocity data:', err);
+                setData([]);
                 setLoading(false);
             });
     }, []);
@@ -119,8 +119,8 @@ export default function DebtBurndownChart() {
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                             <defs>
-                                {/* CoreX Gradient: Blue/Cyan/Emerald mix or just Deep Blue to Transparent */}
-                                <linearGradient id="colorCorex" x1="0" y1="0" x2="0" y2="1">
+                                {/* Velocity Gradient: Blue to transparent */}
+                                <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
                                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                 </linearGradient>
@@ -149,10 +149,10 @@ export default function DebtBurndownChart() {
                             />
                             <Area
                                 type="monotone"
-                                dataKey="corexBalance"
+                                dataKey="velocityBalance"
                                 stroke="#3b82f6"
                                 fillOpacity={1}
-                                fill="url(#colorCorex)"
+                                fill="url(#colorVelocity)"
                                 strokeWidth={3}
                             />
                         </AreaChart>

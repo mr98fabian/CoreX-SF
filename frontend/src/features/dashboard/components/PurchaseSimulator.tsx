@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,13 +47,10 @@ export default function PurchaseSimulator() {
         setResult(null);
 
         try {
-            const res = await fetch('/api/simulator/time-cost', {
+            const data = await apiFetch<SimulationResult>('/api/simulator/time-cost', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: value }),
             });
-            if (!res.ok) throw new Error('Simulation failed');
-            const data: SimulationResult = await res.json();
             setResult(data);
         } catch {
             setError('Could not connect to the KoreX engine.');

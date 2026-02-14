@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const EFFECTIVE_DATE = 'February 14, 2026';
 
@@ -66,6 +67,7 @@ const sections = [
 ];
 
 export default function PrivacyPolicyPage() {
+    usePageTitle('Privacy Policy');
     return (
         <div className="min-h-screen bg-slate-950 text-slate-300">
             {/* Header */}
@@ -78,7 +80,7 @@ export default function PrivacyPolicyPage() {
                         Back to Login
                     </Link>
                     <div className="flex items-center gap-2">
-                        <img src="/korex-icon.png" alt="KoreX" className="w-6 h-6 invert brightness-200" />
+                        <img src="/korex-icon.png" alt="KoreX" className="w-6 h-6" />
                         <span className="text-sm font-semibold text-white">KoreX</span>
                     </div>
                 </div>

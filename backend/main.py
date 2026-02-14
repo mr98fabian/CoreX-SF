@@ -20,7 +20,7 @@ import httpx
 
 # --- AUTH MIDDLEWARE ---
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://stvjvmnlhknzyrbbntcp.supabase.co")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
     """Extract and validate user_id from Supabase JWT via /auth/v1/user."""
@@ -29,13 +29,17 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
     
     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
     
+    # Supabase /auth/v1/user requires a valid 'apikey' header (anon key or service key).
+    # Fall back to the JWT itself only if no key is configured.
+    api_key = SUPABASE_ANON_KEY or token
+    
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
                 f"{SUPABASE_URL}/auth/v1/user",
                 headers={
                     "Authorization": f"Bearer {token}",
-                    "apikey": SUPABASE_SERVICE_KEY or token,
+                    "apikey": api_key,
                 }
             )
             if resp.status_code != 200:

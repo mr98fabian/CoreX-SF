@@ -336,7 +336,7 @@ export default function LoginPage() {
                 src="/korex-icon.png"
                 alt=""
                 aria-hidden="true"
-                className="absolute opacity-[0.03] w-[500px] h-[500px] invert pointer-events-none select-none"
+                className="absolute opacity-[0.03] w-[500px] h-[500px] pointer-events-none select-none"
                 style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
             />
 
@@ -346,9 +346,9 @@ export default function LoginPage() {
                     <img
                         src="/korex-imagotipo.png"
                         alt="KoreX"
-                        className="h-14 mx-auto mb-4 invert brightness-200 drop-shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+                        className="h-20 mx-auto mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
-                    <p className="text-slate-400 text-sm mt-1">Velocity Banking Intelligence Platform</p>
+                    <p className="text-slate-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
 
                 {/* Card */}
@@ -671,6 +671,14 @@ function Styles() {
                 to { stroke-dashoffset: 0; }
             }
             .animate-slide-in { animation: slideIn 0.3s ease-out; }
+            .animate-splash-in {
+                opacity: 0;
+                animation: splashIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @keyframes splashIn {
+                from { opacity: 0; transform: translateY(-20px) scale(0.85); filter: blur(8px); }
+                to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            }
             .animate-success-pop { animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
             .animate-check-draw {
                 stroke-dasharray: 24;

@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { Button } from '@/components/ui/button';
 import { Building2, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 import {
     Tooltip,
     TooltipContent,
@@ -17,7 +18,7 @@ interface PlaidLinkButtonProps {
     onSuccess?: () => void;
 }
 
-const API_BASE = '';
+
 
 export function PlaidLinkButton({ onSuccess }: PlaidLinkButtonProps) {
     const [linkToken, setLinkToken] = useState<string | null>(null);
@@ -30,8 +31,7 @@ export function PlaidLinkButton({ onSuccess }: PlaidLinkButtonProps) {
     useEffect(() => {
         const fetchLinkToken = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/plaid/create_link_token`);
-                const data = await response.json();
+                const data = await apiFetch<any>('/api/plaid/create_link_token');
 
                 if (data.error) {
                     setError(data.message);
@@ -52,18 +52,16 @@ export function PlaidLinkButton({ onSuccess }: PlaidLinkButtonProps) {
         setLoading(true);
         try {
             // Exchange public token
-            await fetch(`${API_BASE}/api/plaid/exchange_public_token`, {
+            await apiFetch('/api/plaid/exchange_public_token', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ public_token: publicToken }),
             });
 
             // Import accounts into CoreX
             setImporting(true);
-            const importRes = await fetch(`${API_BASE}/api/plaid/import_accounts`, {
+            const importData = await apiFetch<any>('/api/plaid/import_accounts', {
                 method: 'POST',
             });
-            const importData = await importRes.json();
 
             console.log('Imported accounts:', importData);
             setSuccess(true);

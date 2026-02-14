@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -104,10 +105,7 @@ export default function AccountsPage() {
     const fetchAccounts = async () => {
         try {
             setErrorMsg(null);
-            const res = await fetch('/api/accounts');
-            if (!res.ok) throw new Error("Failed to fetch accounts");
-            const data = await res.json();
-            // Ensure numbers
+            const data = await apiFetch<any[]>('/api/accounts');
             const safeData = data.map((acc: any) => ({
                 ...acc,
                 balance: Number(acc.balance),
@@ -130,13 +128,10 @@ export default function AccountsPage() {
     const onSubmit = async (values: AccountFormValues) => {
         setIsSubmitting(true);
         try {
-            const res = await fetch('/api/accounts', {
+            await apiFetch('/api/accounts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(values),
             });
-
-            if (!res.ok) throw new Error("Failed to create account");
 
             await fetchAccounts();
             setIsDialogOpen(false);
@@ -153,11 +148,9 @@ export default function AccountsPage() {
     const confirmDelete = async (id: number) => {
         if (!confirm("Are you sure? This will verify related transactions and delete history.")) return;
         try {
-            const res = await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setAccounts(prev => prev.filter(a => a.id !== id));
-                toast({ title: "Account Deleted", variant: "destructive" });
-            }
+            await apiFetch(`/api/accounts/${id}`, { method: 'DELETE' });
+            setAccounts(prev => prev.filter(a => a.id !== id));
+            toast({ title: "Account Deleted", variant: "destructive" });
         } catch (e) {
             console.error("Delete failed", e);
         }
@@ -165,12 +158,10 @@ export default function AccountsPage() {
 
     const handleResetSystem = async () => {
         try {
-            const res = await fetch('/api/accounts', { method: 'DELETE' });
-            if (res.ok) {
-                setAccounts([]);
-                toast({ title: "System Reset", description: "All accounts and transactions wiped." });
-                window.location.reload();
-            }
+            await apiFetch('/api/accounts', { method: 'DELETE' });
+            setAccounts([]);
+            toast({ title: "System Reset", description: "All accounts and transactions wiped." });
+            window.location.reload();
         } catch (e) {
             console.error("Reset failed", e);
         }
@@ -592,16 +583,13 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                 date: new Date().toISOString().split('T')[0]
             };
 
-            const res = await fetch('/api/transactions', {
+            await apiFetch('/api/transactions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (res.ok) {
-                onUpdate();
-                onClose(); // In a real dialog, this might need more logic to close the parent
-            }
+            onUpdate();
+            onClose();
         } catch (e) {
             console.error("Action failed", e);
         } finally {
@@ -695,9 +683,8 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                 finalAmount = operation === 'add' ? numAmount : -numAmount;
             }
 
-            const res = await fetch(`/api/transactions/manual`, {
+            await apiFetch(`/api/transactions/manual`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     account_id: account.id,
                     amount: finalAmount,
@@ -707,10 +694,8 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                 })
             });
 
-            if (res.ok) {
-                onUpdate();
-                onClose();
-            }
+            onUpdate();
+            onClose();
         } catch (e) {
             console.error("Adjustment failed", e);
         } finally {
@@ -829,11 +814,8 @@ function TransactionDrawer({ account, formatMoney, onUpdate }: { account: Accoun
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/accounts/${account.id}/transactions`);
-            if (res.ok) {
-                const data = await res.json();
-                setTransactions(data);
-            }
+            const data = await apiFetch<any[]>(`/api/accounts/${account.id}/transactions`);
+            setTransactions(data);
         } catch (e) {
             console.error("Failed to load transactions", e);
         } finally {
@@ -855,17 +837,14 @@ function TransactionDrawer({ account, formatMoney, onUpdate }: { account: Accoun
                 date: new Date().toISOString().split('T')[0]
             };
 
-            const res = await fetch('/api/transactions', {
+            await apiFetch('/api/transactions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (res.ok) {
-                txForm.reset();
-                fetchTransactions();
-                onUpdate(); // Call parent update
-            }
+            txForm.reset();
+            fetchTransactions();
+            onUpdate();
         } catch (e) {
             console.error("Tx failed", e);
         }

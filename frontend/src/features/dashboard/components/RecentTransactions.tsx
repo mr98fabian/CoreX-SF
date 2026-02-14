@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,14 +19,14 @@ export default function RecentTransactions() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/transactions/recent?limit=8')
-            .then(res => res.json())
+        apiFetch<Transaction[]>('/api/transactions/recent?limit=8')
             .then(data => {
-                setTransactions(data);
+                setTransactions(Array.isArray(data) ? data : []);
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Error fetching transactions:", err);
+                setTransactions([]);
                 setLoading(false);
             });
     }, []);

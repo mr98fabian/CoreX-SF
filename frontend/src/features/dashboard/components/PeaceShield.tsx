@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, ShieldCheck, ShieldAlert, Zap, Lock, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,7 @@ export default function PeaceShield() {
     const recommendedShield = stats.monthlyExpenses * 3;
 
     const fetchShield = () => {
-        fetch('/api/peace-shield')
-            .then(res => res.json())
+        apiFetch<ShieldData>('/api/peace-shield')
             .then(d => {
                 setData(d);
                 setNewTarget(d.shield_target.toString());
@@ -57,20 +57,15 @@ export default function PeaceShield() {
 
     const updateTarget = async () => {
         try {
-            const res = await fetch('/api/user/me/shield', {
+            await apiFetch('/api/user/me/shield', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ target: parseFloat(newTarget) })
             });
-            if (res.ok) {
-                toast.success("Peace Shield Updated");
-                setEditOpen(false);
-                fetchShield();
-            } else {
-                toast.error("Failed to update shield");
-            }
+            toast.success("Peace Shield Updated");
+            setEditOpen(false);
+            fetchShield();
         } catch (e) {
-            toast.error("Error updating shield");
+            toast.error("Failed to update shield");
         }
     };
 

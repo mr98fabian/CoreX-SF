@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiFetch } from '@/lib/api';
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Repeat } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,25 +35,22 @@ export function CashflowManager() {
         }
 
         try {
-            const res = await fetch('/api/cashflow', {
+            await apiFetch('/api/cashflow', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newItem)
             });
 
-            if (res.ok) {
-                fetchCashflow();
-                setIsDialogOpen(false);
-                setNewItem({
-                    category: 'expense',
-                    frequency: 'monthly',
-                    day_of_month: 1,
-                    is_variable: false,
-                    day_of_week: 0,
-                    date_specific_1: 15,
-                    date_specific_2: 30
-                });
-            }
+            fetchCashflow();
+            setIsDialogOpen(false);
+            setNewItem({
+                category: 'expense',
+                frequency: 'monthly',
+                day_of_month: 1,
+                is_variable: false,
+                day_of_week: 0,
+                date_specific_1: 15,
+                date_specific_2: 30
+            });
         } catch (e) {
             console.error("Add failed", e);
         }
@@ -60,7 +58,7 @@ export function CashflowManager() {
 
     const handleDelete = async (id: number) => {
         try {
-            await fetch(`/api/cashflow/${id}`, { method: 'DELETE' });
+            await apiFetch(`/api/cashflow/${id}`, { method: 'DELETE' });
             fetchCashflow();
         } catch (e) {
             console.error("Delete failed", e);
