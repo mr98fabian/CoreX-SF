@@ -5,6 +5,7 @@ import type { MorningBriefingData } from "../hooks/useStrategyData";
 
 interface Props {
     data: MorningBriefingData;
+    onExecute?: () => void;
 }
 
 export default function MorningBriefing({ data }: Props) {

@@ -5,6 +5,7 @@ import type { DecisionOptionsData } from "../hooks/useStrategyData";
 
 interface Props {
     data: DecisionOptionsData;
+    onSelect?: (optionId: string) => void;
 }
 
 const OPTION_ICONS: Record<string, typeof Swords> = {
