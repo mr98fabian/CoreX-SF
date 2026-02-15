@@ -13,9 +13,10 @@ import {
 import {
     User, Palette, Brain, Bell, Database, Info, Flame,
     Download, Upload, Trash2, RefreshCw, FileSpreadsheet,
-    FileJson, CheckCircle, AlertTriangle, Globe, DollarSign,
+    FileJson, FileText, CheckCircle, AlertTriangle, Globe, DollarSign,
     Calendar, Shield, Sparkles, ExternalLink, Github, BookOpen,
 } from "lucide-react";
+import { generateMonthlyReport } from "@/lib/PDFReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { apiFetch } from "@/lib/api";
@@ -63,6 +64,7 @@ export default function SettingsPage() {
     const [currency, setCurrency] = useState(() => localStorage.getItem("corex-currency") || "USD");
     const [dateFormat, setDateFormat] = useState(() => localStorage.getItem("corex-date-format") || "MM/DD/YYYY");
     const [exportLoading, setExportLoading] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
     const [importFile, setImportFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,21 +190,16 @@ export default function SettingsPage() {
             }
             setImportFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            alert(language === "es"
-                ? `✅ Archivo leído: ${sheetNames.length} hojas encontradas. Revisa la consola para detalles.`
-                : `✅ File read: ${sheetNames.length} sheets found. Check console for details.`
-            );
+            alert(`✅ ${t("settings.data.importSuccess").replace("{count}", String(sheetNames.length))}`);
+
         } catch (err) {
             console.error("Import failed:", err);
         }
     };
 
     const handleResetDemo = async () => {
-        const confirmed = window.confirm(
-            language === "es"
-                ? "⚠️ Esto reseteará TODOS los datos demo. ¿Continuar?"
-                : "⚠️ This will reset ALL demo data. Continue?"
-        );
+        const confirmed = window.confirm(t("settings.data.resetConfirm"));
+
         if (!confirmed) return;
         setResetLoading(true);
         try {
@@ -216,11 +213,8 @@ export default function SettingsPage() {
     };
 
     const handleClearCache = () => {
-        const confirmed = window.confirm(
-            language === "es"
-                ? "¿Limpiar toda la caché local? Tus preferencias se resetearán."
-                : "Clear all local cache? Your preferences will be reset."
-        );
+        const confirmed = window.confirm(t("settings.data.clearConfirm"));
+
         if (!confirmed) return;
         localStorage.clear();
         window.location.reload();
@@ -230,50 +224,50 @@ export default function SettingsPage() {
     const renderProfile = () => (
         <div className="space-y-6">
             <SectionHeader title={t("settings.profile.title")} subtitle={t("settings.profile.subtitle")} icon={<User className="h-5 w-5 text-blue-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardContent className="pt-6 space-y-6">
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shrink-0">
+                        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white dark:text-white shrink-0">
                             CM
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">Carlos Mendoza</h3>
-                            <p className="text-sm text-slate-400">carlos@demo.corex.io</p>
+                            <h3 className="text-lg font-semibold text-white dark:text-slate-100">Carlos Mendoza</h3>
+                            <p className="text-sm text-slate-400 dark:text-slate-500">carlos@demo.corex.io</p>
                             <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
-                                Demo Account
+                                {t("settings.profile.demoAccount")}
                             </Badge>
                         </div>
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
 
                     {/* Form fields */}
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name" className="text-slate-300">{t("settings.profile.displayName")}</Label>
-                            <Input id="name" defaultValue="Carlos Mendoza" className="bg-slate-900 border-slate-700 text-white focus:border-blue-500/50" />
+                            <Label htmlFor="name" className="text-slate-300 dark:text-slate-300">{t("settings.profile.displayName")}</Label>
+                            <Input id="name" defaultValue="Carlos Mendoza" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="email" className="text-slate-300">{t("settings.profile.email")}</Label>
-                            <Input id="email" defaultValue="carlos@demo.corex.io" className="bg-slate-900 border-slate-700 text-white focus:border-blue-500/50" />
+                            <Label htmlFor="email" className="text-slate-300 dark:text-slate-300">{t("settings.profile.email")}</Label>
+                            <Input id="email" defaultValue="carlos@demo.corex.io" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
                         </div>
                     </div>
 
                     {/* Security */}
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-white dark:text-slate-100 flex items-center gap-2">
                             <Shield className="h-4 w-4 text-emerald-500" />
-                            {language === "es" ? "Seguridad" : "Security"}
+                            {t("settings.profile.security")}
                         </h4>
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label className="text-sm text-slate-200">
-                                    {language === "es" ? "Autenticación de Dos Factores" : "Two-Factor Authentication"}
+                                <Label className="text-sm text-slate-200 dark:text-slate-300">
+                                    {t("settings.profile.twoFactor")}
                                 </Label>
-                                <p className="text-xs text-slate-500">
-                                    {language === "es" ? "Asegura tu cuenta con 2FA." : "Secure your account with 2FA."}
+                                <p className="text-xs text-slate-500 dark:text-slate-500">
+                                    {t("settings.profile.twoFactorDesc")}
                                 </p>
                             </div>
                             <Switch />
@@ -287,7 +281,7 @@ export default function SettingsPage() {
     const renderAppearance = () => (
         <div className="space-y-6">
             <SectionHeader title={t("settings.appearance.title")} subtitle={t("settings.appearance.subtitle")} icon={<Palette className="h-5 w-5 text-purple-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardContent className="pt-6 space-y-6">
                     {/* Language */}
                     <div className="flex items-center justify-between">
@@ -301,17 +295,17 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "es")}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white">
+                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="en" className="text-white focus:bg-slate-800">🇺🇸 English</SelectItem>
-                                <SelectItem value="es" className="text-white focus:bg-slate-800">🇪🇸 Español</SelectItem>
+                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
+                                <SelectItem value="en" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">🇺🇸 English</SelectItem>
+                                <SelectItem value="es" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">🇪🇸 Español</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
 
                     {/* Currency */}
                     <div className="flex items-center justify-between">
@@ -325,18 +319,18 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={currency} onValueChange={handleCurrencyChange}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white">
+                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="USD" className="text-white focus:bg-slate-800">$ USD (US Dollar)</SelectItem>
-                                <SelectItem value="MXN" className="text-white focus:bg-slate-800">$ MXN (Peso Mexicano)</SelectItem>
-                                <SelectItem value="EUR" className="text-white focus:bg-slate-800">€ EUR (Euro)</SelectItem>
+                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
+                                <SelectItem value="USD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ USD (US Dollar)</SelectItem>
+                                <SelectItem value="MXN" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ MXN (Peso Mexicano)</SelectItem>
+                                <SelectItem value="EUR" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">€ EUR (Euro)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
 
                     {/* Date Format */}
                     <div className="flex items-center justify-between">
@@ -350,13 +344,13 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={dateFormat} onValueChange={handleDateFormatChange}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white">
+                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="MM/DD/YYYY" className="text-white focus:bg-slate-800">MM/DD/YYYY</SelectItem>
-                                <SelectItem value="DD/MM/YYYY" className="text-white focus:bg-slate-800">DD/MM/YYYY</SelectItem>
-                                <SelectItem value="YYYY-MM-DD" className="text-white focus:bg-slate-800">YYYY-MM-DD</SelectItem>
+                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
+                                <SelectItem value="MM/DD/YYYY" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">MM/DD/YYYY</SelectItem>
+                                <SelectItem value="DD/MM/YYYY" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">DD/MM/YYYY</SelectItem>
+                                <SelectItem value="YYYY-MM-DD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">YYYY-MM-DD</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -368,7 +362,7 @@ export default function SettingsPage() {
     const renderAlgorithm = () => (
         <div className="space-y-6">
             <SectionHeader title={t("settings.algorithm.title")} subtitle={t("settings.algorithm.subtitle")} icon={<Brain className="h-5 w-5 text-blue-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardContent className="pt-6 space-y-6">
                     {/* Strategy Mode */}
                     <div className="space-y-3">
@@ -377,8 +371,8 @@ export default function SettingsPage() {
                             <button
                                 onClick={() => setStrategyMode("balanced")}
                                 className={`rounded-xl border-2 p-4 text-left transition-all ${strategyMode === "balanced"
-                                        ? "border-blue-500 bg-blue-950/30 ring-1 ring-blue-500/30"
-                                        : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
+                                    ? "border-blue-500 bg-blue-950/30 ring-1 ring-blue-500/30"
+                                    : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
@@ -391,8 +385,8 @@ export default function SettingsPage() {
                             <button
                                 onClick={() => setStrategyMode("aggressive")}
                                 className={`rounded-xl border-2 p-4 text-left transition-all relative ${strategyMode === "aggressive"
-                                        ? "border-orange-500 bg-orange-950/20 ring-1 ring-orange-500/30"
-                                        : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
+                                    ? "border-orange-500 bg-orange-950/20 ring-1 ring-orange-500/30"
+                                    : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
@@ -405,7 +399,7 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
 
                     {/* Emergency Fund */}
                     <div className="space-y-3">
@@ -417,19 +411,19 @@ export default function SettingsPage() {
                         <p className="text-xs text-slate-500">{t("settings.algorithm.emergencyDesc")}</p>
                     </div>
 
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
 
                     {/* Paycheck Frequency */}
                     <div className="flex items-center justify-between">
                         <Label className="text-sm text-slate-200">{t("settings.algorithm.paycheck")}</Label>
                         <Select defaultValue="biweekly">
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white">
+                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="weekly" className="text-white focus:bg-slate-800">{language === "es" ? "Semanal" : "Weekly"}</SelectItem>
-                                <SelectItem value="biweekly" className="text-white focus:bg-slate-800">{language === "es" ? "Quincenal" : "Bi-Weekly"}</SelectItem>
-                                <SelectItem value="monthly" className="text-white focus:bg-slate-800">{language === "es" ? "Mensual" : "Monthly"}</SelectItem>
+                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
+                                <SelectItem value="weekly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.weekly")}</SelectItem>
+                                <SelectItem value="biweekly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.biweekly")}</SelectItem>
+                                <SelectItem value="monthly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.monthly")}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -450,7 +444,7 @@ export default function SettingsPage() {
         return (
             <div className="space-y-6">
                 <SectionHeader title={t("settings.notifications.title")} subtitle={t("settings.notifications.subtitle")} icon={<Bell className="h-5 w-5 text-amber-400" />} />
-                <Card className="border-slate-800 bg-slate-950/50">
+                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-6 space-y-1">
                         {items.map((item, i) => (
                             <div key={item.key}>
@@ -465,7 +459,7 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch checked={item.state} onCheckedChange={item.setter} />
                                 </div>
-                                {i < items.length - 1 && <Separator className="bg-slate-800/50" />}
+                                {i < items.length - 1 && <Separator className="bg-slate-800/50 dark:bg-slate-700/50" />}
                             </div>
                         ))}
                     </CardContent>
@@ -479,15 +473,15 @@ export default function SettingsPage() {
             <SectionHeader title={t("settings.data.title")} subtitle={t("settings.data.subtitle")} icon={<Database className="h-5 w-5 text-purple-400" />} />
 
             {/* Export Section */}
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm text-white flex items-center gap-2">
                         <Download className="h-4 w-4 text-emerald-400" />
-                        {language === "es" ? "Exportar Datos" : "Export Data"}
+                        {t("settings.data.exportData")}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         <button
                             onClick={handleExportExcel}
                             disabled={exportLoading}
@@ -508,6 +502,26 @@ export default function SettingsPage() {
                         </button>
 
                         <button
+                            onClick={async () => {
+                                setPdfLoading(true);
+                                try {
+                                    await generateMonthlyReport(language as 'en' | 'es', currency);
+                                } catch (err) {
+                                    console.error('PDF generation failed:', err);
+                                    alert(`❌ ${t("settings.data.pdfError")}`);
+                                } finally {
+                                    setPdfLoading(false);
+                                }
+                            }}
+                            disabled={pdfLoading}
+                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 transition-all text-center"
+                        >
+                            <FileText className={`h-8 w-8 text-rose-400 group-hover:scale-110 transition-transform ${pdfLoading ? 'animate-pulse' : ''}`} />
+                            <span className="text-sm font-medium text-rose-300">{t("settings.data.exportPdf")}</span>
+                            <span className="text-[10px] text-slate-500">{t("settings.data.exportPdfDesc")}</span>
+                        </button>
+
+                        <button
                             onClick={handleDownloadTemplate}
                             className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all text-center"
                         >
@@ -520,7 +534,7 @@ export default function SettingsPage() {
             </Card>
 
             {/* Import Section */}
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm text-white flex items-center gap-2">
                         <Upload className="h-4 w-4 text-blue-400" />
@@ -548,12 +562,12 @@ export default function SettingsPage() {
                                 <div className="flex gap-2 justify-center">
                                     <Button size="sm" onClick={handleImportExcel} className="bg-blue-600 hover:bg-blue-700">
                                         <Upload className="h-3 w-3 mr-1" />
-                                        {language === "es" ? "Procesar" : "Process"}
+                                        {t("settings.data.process")}
                                     </Button>
                                     <Button size="sm" variant="outline" onClick={() => { setImportFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
                                         className="border-slate-700 text-slate-300 hover:bg-slate-800"
                                     >
-                                        {language === "es" ? "Cancelar" : "Cancel"}
+                                        {t("settings.data.cancelImport")}
                                     </Button>
                                 </div>
                             </div>
@@ -561,10 +575,10 @@ export default function SettingsPage() {
                             <div>
                                 <label htmlFor="import-file" className="cursor-pointer">
                                     <p className="text-sm text-slate-400 mb-1">
-                                        {language === "es" ? "Arrastra un archivo aquí o" : "Drag a file here or"}
+                                        {t("settings.data.dragFile")}
                                     </p>
                                     <span className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
-                                        {language === "es" ? "haz clic para seleccionar" : "click to browse"}
+                                        {t("settings.data.clickBrowse")}
                                     </span>
                                 </label>
                                 <p className="text-[10px] text-slate-600 mt-2">.xlsx, .xls, .csv</p>
@@ -575,7 +589,7 @@ export default function SettingsPage() {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="border-rose-500/20 bg-slate-950/50">
+            <Card className="border-rose-500/20 bg-slate-950/50 dark:border-rose-500/30 dark:bg-slate-900/60">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm text-rose-400 flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4" />
@@ -596,10 +610,10 @@ export default function SettingsPage() {
                             className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                         >
                             <RefreshCw className={`h-3 w-3 mr-1 ${resetLoading ? "animate-spin" : ""}`} />
-                            {language === "es" ? "Resetear" : "Reset"}
+                            {t("settings.data.reset")}
                         </Button>
                     </div>
-                    <Separator className="bg-slate-800" />
+                    <Separator className="bg-slate-800 dark:bg-slate-700" />
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-slate-200">{t("settings.data.clearCache")}</p>
@@ -612,7 +626,7 @@ export default function SettingsPage() {
                             className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
                         >
                             <Trash2 className="h-3 w-3 mr-1" />
-                            {language === "es" ? "Limpiar" : "Clear"}
+                            {t("settings.data.clear")}
                         </Button>
                     </div>
                 </CardContent>
@@ -625,23 +639,21 @@ export default function SettingsPage() {
             <SectionHeader title={t("settings.about.title")} subtitle={t("settings.about.subtitle")} icon={<Info className="h-5 w-5 text-slate-400" />} />
 
             {/* Version Hero */}
-            <Card className="border-slate-800 bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 overflow-hidden relative">
+            <Card className="border-slate-800 bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-blue-950/30 dark:to-slate-900 overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
                 <CardContent className="pt-6 pb-8">
                     <div className="text-center space-y-4">
                         <div className="inline-flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-amber-400" />
                             <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">
-                                {language === "es" ? "Sistema Financiero" : "Financial System"}
+                                {t("settings.about.financialSystem")}
                             </span>
                         </div>
                         <h2 className="text-4xl font-bold text-white tracking-tight">
                             CoreX <span className="text-blue-400">v1.0.0</span>
                         </h2>
-                        <p className="text-sm text-slate-400 max-w-md mx-auto">
-                            {language === "es"
-                                ? "Motor de Velocity Banking de próxima generación para la libertad financiera."
-                                : "Next-generation Velocity Banking engine for financial freedom."}
+                        <p className="text-sm text-slate-400 dark:text-slate-500 max-w-md mx-auto">
+                            {t("settings.about.tagline")}
                         </p>
                     </div>
                 </CardContent>
@@ -649,19 +661,19 @@ export default function SettingsPage() {
 
             {/* Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Card className="border-slate-800 bg-slate-950/50">
+                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.version")}</p>
                         <p className="text-lg font-bold text-white font-mono">1.0.0</p>
                     </CardContent>
                 </Card>
-                <Card className="border-slate-800 bg-slate-950/50">
+                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.build")}</p>
                         <p className="text-lg font-bold text-white font-mono">Feb 2026</p>
                     </CardContent>
                 </Card>
-                <Card className="border-slate-800 bg-slate-950/50">
+                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.engine")}</p>
                         <p className="text-lg font-bold text-white font-mono">Velocity v3</p>
@@ -670,7 +682,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Tech Stack */}
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm text-white">{t("settings.about.techStack")}</CardTitle>
                 </CardHeader>
@@ -686,18 +698,18 @@ export default function SettingsPage() {
             </Card>
 
             {/* Links */}
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                 <CardContent className="pt-4 pb-4">
                     <div className="grid grid-cols-3 gap-3">
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
                             <BookOpen className="h-4 w-4" />
                             Docs
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
                             <Github className="h-4 w-4" />
                             GitHub
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
                             <ExternalLink className="h-4 w-4" />
                             Support
                         </a>
@@ -743,8 +755,8 @@ export default function SettingsPage() {
                                 key={item.id}
                                 onClick={() => setActiveSection(item.id)}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${activeSection === item.id
-                                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                        : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                                     }`}
                             >
                                 {item.icon}
@@ -753,7 +765,7 @@ export default function SettingsPage() {
                         ))}
 
                         {/* Version badge at bottom */}
-                        <div className="pt-6 mt-4 border-t border-slate-800">
+                        <div className="pt-6 mt-4 border-t border-slate-800 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-2 py-2">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                                 <span className="text-[10px] text-slate-600 font-mono">CoreX v1.0.0</span>
@@ -765,10 +777,10 @@ export default function SettingsPage() {
                 {/* Mobile Dropdown (visible < lg) */}
                 <div className="lg:hidden w-full">
                     <Select value={activeSection} onValueChange={(v) => setActiveSection(v as Section)}>
-                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white mb-4">
+                        <SelectTrigger className="w-full bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 mb-4">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700">
+                        <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
                             {NAV_ITEMS.map((item) => (
                                 <SelectItem key={item.id} value={item.id} className="text-white focus:bg-slate-800">
                                     {t(item.labelKey)}
@@ -796,12 +808,12 @@ export default function SettingsPage() {
 function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: string; icon: React.ReactNode }) {
     return (
         <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 mt-0.5">
+            <div className="p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50 dark:bg-slate-800/60 dark:border-slate-600/50 mt-0.5">
                 {icon}
             </div>
             <div>
-                <h2 className="text-lg font-bold text-white">{title}</h2>
-                <p className="text-sm text-slate-400">{subtitle}</p>
+                <h2 className="text-lg font-bold text-white dark:text-slate-100">{title}</h2>
+                <p className="text-sm text-slate-400 dark:text-slate-500">{subtitle}</p>
             </div>
         </div>
     );

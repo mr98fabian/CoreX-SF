@@ -1,0 +1,420 @@
+"""
+Strategy Router — Velocity banking, Peace Shield, tactical GPS,
+command center, purchase simulator, and cashflow intelligence.
+"""
+from fastapi import APIRouter, HTTPException, Depends
+from sqlmodel import Session, select
+from decimal import Decimal, ROUND_HALF_UP
+from datetime import date, timedelta
+from typing import List
+
+from database import engine
+from models import Account, CashflowItem, Transaction, User, MovementLog
+from schemas import MovementExecute, SimulatorRequest
+from helpers import bypass_fk, accounts_to_debt_objects
+from auth import get_current_user_id
+
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from core_engine.calculators import calculate_minimum_payment
+
+from velocity_engine import (
+    DebtAccount, CashflowTactical,
+    get_projections, get_velocity_target, get_peace_shield_status,
+    calculate_safe_attack_equity, simulate_freedom_path,
+    generate_action_plan, calculate_purchase_time_cost,
+    DEFAULT_PEACE_SHIELD,
+)
+from transaction_classifier import classify_transaction, classify_batch, get_cashflow_summary
+
+router = APIRouter(prefix="/api", tags=["strategy"])
+
+
+# ── PEACE SHIELD ───────────────────────────────────────────────
+
+@router.get("/peace-shield")
+async def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
+    with Session(engine) as session:
+        user = session.exec(select(User)).first()
+        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type in ["checking", "savings"])
+        return get_peace_shield_status(Decimal(str(liquid_cash)), shield_target)
+
+
+@router.put("/user/me/shield")
+def update_shield_target(data: dict):
+    target = data.get("target", 5000)
+    with Session(engine) as session:
+        user = session.exec(select(User)).first()
+        if not user:
+            user = User(email="user@corex.io", shield_target=Decimal(str(target)))
+            session.add(user)
+        else:
+            user.shield_target = Decimal(str(target))
+            session.add(user)
+        session.commit()
+        return {"ok": True}
+
+
+# ── VELOCITY PROJECTIONS ───────────────────────────────────────
+
+@router.get("/velocity/projections")
+async def get_velocity_projections(user_id: str = Depends(get_current_user_id)):
+    """Calculate real velocity banking projections from account data."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_debt_objects(accounts)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        return get_projections(debts, Decimal(str(liquid_cash)))
+
+
+@router.get("/velocity/freedom-path")
+async def get_freedom_path(user_id: str = Depends(get_current_user_id)):
+    """Get the month-by-month freedom path simulation."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_debt_objects(accounts)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        velocity_amount = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return simulate_freedom_path(debts, velocity_amount)
+
+
+@router.get("/velocity/simulate")
+async def get_simulation(extra_cash: float, user_id: str = Depends(get_current_user_id)):
+    """Simulate payoff with custom extra monthly cash."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_debt_objects(accounts)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        base_velocity = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        total_monthly_power = base_velocity + Decimal(str(extra_cash))
+        return simulate_freedom_path(debts, total_monthly_power)
+
+
+# ── TACTICAL GPS & EXECUTION ──────────────────────────────────
+
+@router.get("/strategy/tactical-gps")
+async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
+    """Generate a 2-month action plan with impact metrics."""
+    with Session(engine) as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+        debts = accounts_to_debt_objects(accounts)
+
+        cf_tactical = [
+            CashflowTactical(
+                name=cf.name,
+                amount=cf.amount,
+                day_of_month=cf.day_of_month,
+                category=cf.category,
+            )
+            for cf in cashflows
+        ]
+
+        checking_balance = sum(acc.balance for acc in accounts if acc.type == "checking")
+
+        # Dynamic Funding Source Selection
+        asset_accounts = [acc for acc in accounts if acc.type in ["checking", "savings"] and acc.balance > 0]
+        asset_accounts.sort(key=lambda x: x.balance, reverse=True)
+        funding_name = asset_accounts[0].name if asset_accounts else "Checking"
+
+        # Get User Shield Target
+        user = session.exec(select(User)).first()
+        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+
+        return generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target)
+
+
+@router.post("/strategy/execute")
+async def execute_movement(data: MovementExecute, user_id: str = Depends(get_current_user_id)):
+    """Executes a tactical movement by creating a transaction and UPDATING BALANCES."""
+    with Session(engine) as session:
+        amount = Decimal(str(data.amount))
+
+        # 1. Find Source Account (e.g. Chase) — scoped to user
+        source_acc = session.exec(select(Account).where(Account.name == data.source, Account.user_id == user_id)).first()
+        if source_acc:
+            source_acc.balance -= amount
+            session.add(source_acc)
+
+        # 2. Find Destination Account (e.g. Credit Card) — scoped to user
+        dest_acc = session.exec(select(Account).where(Account.name == data.destination, Account.user_id == user_id)).first()
+        if dest_acc:
+            dest_acc.balance -= amount
+            if dest_acc.type == "debt":
+                dest_acc.min_payment = calculate_minimum_payment(dest_acc.balance, dest_acc.interest_rate)
+            session.add(dest_acc)
+
+        # 3. Record Transaction
+        primary_account_id = source_acc.id if source_acc else (dest_acc.id if dest_acc else None)
+        if not primary_account_id:
+            raise HTTPException(status_code=400, detail="Execution Failed: Source nor Destination account found in DB.")
+
+        try:
+            tx = Transaction(
+                date=date.today().isoformat(),
+                amount=amount,
+                description=f"Velocity Execution: {data.title}",
+                category="Debt Payment" if dest_acc else "Transfer",
+                account_id=primary_account_id,
+                user_id=user_id,
+                is_manual=False,
+            )
+            session.add(tx)
+            with bypass_fk(session):
+                session.commit()
+            return {
+                "status": "executed",
+                "new_balance_source": source_acc.balance if source_acc else "N/A",
+                "source_found": bool(source_acc),
+                "dest_found": bool(dest_acc),
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Execution Failed: {str(e)}")
+
+
+@router.get("/strategy/executed-logs")
+async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
+    """Retrieve all logged strategic movements for current user."""
+    with Session(engine) as session:
+        return session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
+
+
+# ── PURCHASE SIMULATOR ────────────────────────────────────────
+
+@router.post("/simulator/time-cost")
+async def simulate_purchase_cost(req: SimulatorRequest, user_id: str = Depends(get_current_user_id)):
+    """Calculate how many days a purchase delays freedom."""
+    if req.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive.")
+
+    with Session(engine) as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_debt_objects(accounts)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        extra_monthly = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'))
+        return calculate_purchase_time_cost(Decimal(str(req.amount)), debts, extra_monthly)
+
+
+# ── TRANSACTION CLASSIFIER ────────────────────────────────────
+
+@router.get("/transactions/classified")
+async def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_current_user_id)):
+    """Return transactions with smart tags (income/debt/life)."""
+    with Session(engine) as session:
+        txs = session.exec(
+            select(Transaction).where(Transaction.user_id == user_id).order_by(Transaction.date.desc()).limit(limit)
+        ).all()
+        raw = [
+            {"id": tx.id, "account_id": tx.account_id, "amount": float(tx.amount),
+             "date": tx.date, "name": tx.description, "category": tx.category}
+            for tx in txs
+        ]
+        return classify_batch(raw)
+
+
+@router.get("/cashflow/summary")
+async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
+    """Return the AI-classified cashflow summary."""
+    with Session(engine) as session:
+        txs = session.exec(
+            select(Transaction).where(Transaction.user_id == user_id).order_by(Transaction.date.desc()).limit(100)
+        ).all()
+        raw = [
+            {"amount": float(tx.amount), "name": tx.description, "category": tx.category}
+            for tx in txs
+        ]
+        classified = classify_batch(raw)
+        return get_cashflow_summary(classified)
+
+
+# ── STRATEGY COMMAND CENTER ───────────────────────────────────
+
+@router.get("/strategy/command-center")
+async def get_strategy_command_center(user_id: str = Depends(get_current_user_id)):
+    """
+    Consolidated Strategy Intelligence endpoint.
+    Returns morning briefing, confidence meter, freedom counter,
+    and attack streak — all in one call.
+    """
+    with Session(engine) as session:
+        # --- 1. Load all user accounts ---
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        user = session.exec(select(User)).first()
+        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+
+        debt_accounts = accounts_to_debt_objects(accounts)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        liquid_cash_dec = Decimal(str(liquid_cash))
+
+        # --- 2. Shield status ---
+        shield = get_peace_shield_status(liquid_cash_dec, shield_target)
+
+        # --- 3. Safe Attack Equity ---
+        safety_data = calculate_safe_attack_equity(liquid_cash_dec, shield_target, debt_accounts)
+        attack_amount = safety_data["safe_equity"]
+
+        # --- 4. Velocity Target (Avalanche) ---
+        target = get_velocity_target(debt_accounts)
+
+        # --- 5. Morning Briefing ---
+        morning_briefing = None
+        if target and attack_amount > 0:
+            daily_interest = (target.balance * (target.interest_rate / Decimal('100'))) / Decimal('365')
+            daily_interest = daily_interest.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+            interest_saved_monthly = (attack_amount * (target.interest_rate / Decimal('100'))) / Decimal('12')
+            interest_saved_monthly = interest_saved_monthly.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+            days_accelerated = 0
+            if target.min_payment > 0:
+                months_saved = attack_amount / target.min_payment
+                days_accelerated = int((months_saved * Decimal('30')).quantize(Decimal('1')))
+
+            hourly_rate = Decimal('25')
+            annual_interest_saved = interest_saved_monthly * Decimal('12')
+            freedom_hours = (annual_interest_saved / hourly_rate).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+
+            morning_briefing = {
+                "available_cash": float(liquid_cash_dec),
+                "attack_amount": float(attack_amount),
+                "shield_status": {
+                    "percentage": shield.get("fill_percentage", 0),
+                    "is_active": shield.get("is_active", False),
+                    "health": shield.get("health", "unknown"),
+                },
+                "recommended_action": {
+                    "amount": float(attack_amount),
+                    "destination": target.name,
+                    "destination_apr": float(target.interest_rate),
+                    "destination_balance": float(target.balance),
+                    "daily_cost": float(daily_interest),
+                    "reason": (
+                        f"Highest APR at {float(target.interest_rate)}% — "
+                        f"costs ${float(daily_interest)}/day in interest"
+                    ),
+                },
+                "impact": {
+                    "days_accelerated": days_accelerated,
+                    "interest_saved_monthly": float(interest_saved_monthly),
+                    "freedom_hours_earned": float(freedom_hours),
+                },
+            }
+
+        # --- 6. Confidence Meter (all debts ranked) ---
+        confidence_meter = {"debts_ranked": [], "strategy": "avalanche", "explanation": ""}
+        if debt_accounts:
+            ranked = sorted(debt_accounts, key=lambda d: d.interest_rate, reverse=True)
+            confidence_meter["debts_ranked"] = [
+                {
+                    "name": d.name, "apr": float(d.interest_rate),
+                    "balance": float(d.balance),
+                    "daily_cost": float((d.balance * (d.interest_rate / Decimal('100'))) / Decimal('365')),
+                    "is_target": (target and d.name == target.name),
+                }
+                for d in ranked
+            ]
+            if len(ranked) >= 2:
+                top, second = ranked[0], ranked[1]
+                confidence_meter["explanation"] = (
+                    f"Every $100 to {top.name} saves "
+                    f"${float(top.interest_rate)}/yr vs "
+                    f"${float(second.interest_rate)}/yr to {second.name}"
+                )
+
+        # --- 7. Freedom Counter ---
+        projections = get_projections(debt_accounts, liquid_cash_dec)
+        freedom_counter = {
+            "current_freedom_date": projections.get("velocity_debt_free_date", "N/A"),
+            "standard_freedom_date": projections.get("standard_debt_free_date", "N/A"),
+            "months_saved": projections.get("months_saved", 0),
+            "interest_saved": projections.get("interest_saved", 0),
+            "total_days_recovered": projections.get("months_saved", 0) * 30,
+            "velocity_power": projections.get("velocity_power", 0),
+        }
+
+        # --- 8. Attack Streak ---
+        executed_logs = session.exec(
+            select(MovementLog)
+            .where(MovementLog.status.in_(["executed", "verified"]), MovementLog.user_id == user_id)
+            .order_by(MovementLog.date_executed.desc())
+        ).all()
+
+        total_attacks = len(executed_logs)
+        current_streak = 0
+        if executed_logs:
+            months_with_attacks = set()
+            for log in executed_logs:
+                if log.date_executed:
+                    months_with_attacks.add(log.date_executed[:7])
+
+            check_date = date.today().replace(day=1)
+            for _ in range(24):
+                month_key = check_date.strftime("%Y-%m")
+                if month_key in months_with_attacks:
+                    current_streak += 1
+                    if check_date.month == 1:
+                        check_date = date(check_date.year - 1, 12, 1)
+                    else:
+                        check_date = date(check_date.year, check_date.month - 1, 1)
+                else:
+                    break
+
+        streak = {"current": current_streak, "total_attacks": total_attacks}
+
+        # --- 9. Decision Helper Options ---
+        decision_options = None
+        if target and attack_amount > 0:
+            full_attack_savings = float(
+                (attack_amount * (target.interest_rate / Decimal('100'))) / Decimal('12')
+            )
+            shield_gap = max(Decimal('0'), shield_target - liquid_cash_dec)
+            shield_boost_pct = min(
+                Decimal('100'),
+                ((liquid_cash_dec + attack_amount) / shield_target) * Decimal('100'),
+            ) if shield_target > 0 else Decimal('100')
+
+            half = attack_amount / Decimal('2')
+            split_savings = float((half * (target.interest_rate / Decimal('100'))) / Decimal('12'))
+
+            shield_pct = shield.get("fill_percentage", 100)
+            if shield_pct < 50:
+                recommended = "shield"
+            elif shield_pct < 80:
+                recommended = "split"
+            else:
+                recommended = "attack"
+
+            decision_options = {
+                "options": [
+                    {
+                        "id": "attack", "label": "Full Attack",
+                        "amount": float(attack_amount),
+                        "impact": f"Save ${full_attack_savings:.2f}/mo in interest",
+                        "description": f"Apply all to {target.name}",
+                    },
+                    {
+                        "id": "shield", "label": "Boost Shield",
+                        "amount": float(attack_amount),
+                        "impact": f"Shield reaches {float(shield_boost_pct):.0f}%",
+                        "description": "Strengthen your emergency fund",
+                    },
+                    {
+                        "id": "split", "label": "Balanced Split",
+                        "amount": float(attack_amount),
+                        "impact": f"Save ${split_savings:.2f}/mo + boost shield",
+                        "description": "50% attack, 50% safety",
+                    },
+                ],
+                "recommended": recommended,
+            }
+
+        return {
+            "morning_briefing": morning_briefing,
+            "confidence_meter": confidence_meter,
+            "freedom_counter": freedom_counter,
+            "streak": streak,
+            "decision_options": decision_options,
+        }
+
