@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { apiFetch } from '@/lib/api';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -156,7 +157,7 @@ type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 
 export default function LoginPage() {
     usePageTitle('Sign In');
-    const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword } = useAuth();
+    const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword, signInAsDemo } = useAuth();
 
     const [view, setView] = useState<ViewState>('signin');
     const [email, setEmail] = useState('');
@@ -169,6 +170,7 @@ export default function LoginPage() {
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isDemoLoading, setIsDemoLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
@@ -257,6 +259,19 @@ export default function LoginPage() {
         } catch {
             setError('Google sign-in failed. Please try again.');
             setIsGoogleLoading(false);
+        }
+    };
+
+    const handleDemoLogin = async () => {
+        setIsDemoLoading(true);
+        setError('');
+        try {
+            await signInAsDemo();
+            // Auto-seed stress test data for demo user
+            await apiFetch('/api/dev/seed-stress-test', { method: 'POST' });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Demo mode failed');
+            setIsDemoLoading(false);
         }
     };
 
@@ -610,6 +625,34 @@ export default function LoginPage() {
                                     </svg>
                                 )}
                                 Continue with Google
+                            </button>
+
+                            {/* Demo Mode Button */}
+                            <button
+                                type="button"
+                                onClick={handleDemoLogin}
+                                disabled={isDemoLoading || isSubmitting}
+                                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
+                                    bg-gradient-to-r from-violet-600/20 to-purple-600/20
+                                    border border-violet-400/20 text-violet-300 text-sm font-medium
+                                    hover:from-violet-600/30 hover:to-purple-600/30 hover:border-violet-400/40
+                                    hover:text-violet-200 hover:shadow-lg hover:shadow-violet-500/10
+                                    transition-all duration-300 active:scale-[0.98]
+                                    disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                            >
+                                {isDemoLoading ? (
+                                    <span className="inline-flex items-center gap-2">
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
+                                        Loading demo data...
+                                    </span>
+                                ) : (
+                                    <>
+                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        Enter Demo Mode
+                                    </>
+                                )}
                             </button>
                         </>
                     )}

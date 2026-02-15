@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2 } from 'lucide-react';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Transaction {
     id: number;
@@ -17,6 +19,8 @@ interface Transaction {
 export default function RecentTransactions() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const { formatDateShort } = useFormatMoney();
+    const { t } = useLanguage();
 
     useEffect(() => {
         apiFetch<Transaction[]>('/api/transactions/recent?limit=8')
@@ -31,15 +35,12 @@ export default function RecentTransactions() {
             });
     }, []);
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    };
+
 
     if (loading) {
         return (
-            <Card className="border-slate-800 bg-slate-950/50">
-                <CardContent className="flex items-center justify-center p-12">
+            <Card className="border-slate-800 bg-slate-950/50 h-full">
+                <CardContent className="flex items-center justify-center p-12 h-full">
                     <Loader2 className="h-6 w-6 animate-spin text-emerald-500" strokeWidth={1.5} />
                 </CardContent>
             </Card>
@@ -47,9 +48,9 @@ export default function RecentTransactions() {
     }
 
     return (
-        <Card className="border-slate-800 bg-slate-950/50">
+        <Card className="border-slate-800 bg-slate-950/50 h-full">
             <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-slate-100">Recent Transactions</CardTitle>
+                <CardTitle className="text-slate-800 dark:text-slate-100">{t('dashboard.recentTx.title')}</CardTitle>
                 <Badge variant="outline" className="text-xs border-slate-700 text-slate-500 font-normal">
                     Real-time Sync
                 </Badge>
@@ -74,14 +75,14 @@ export default function RecentTransactions() {
                         ) : (
                             transactions.map((tx) => (
                                 <TableRow key={tx.id} className="border-slate-800 hover:bg-slate-900/40 cursor-pointer">
-                                    <TableCell className="font-mono text-slate-400 text-xs">{formatDate(tx.date)}</TableCell>
-                                    <TableCell className="text-slate-100 font-medium max-w-[200px] truncate">{tx.description}</TableCell>
+                                    <TableCell className="font-mono text-slate-400 text-xs">{formatDateShort(tx.date)}</TableCell>
+                                    <TableCell className="text-slate-800 dark:text-slate-100 font-medium max-w-[200px] truncate">{tx.description}</TableCell>
                                     <TableCell>
                                         <Badge variant="secondary" className="bg-slate-800 text-slate-400 hover:bg-slate-700 whitespace-nowrap">
                                             {tx.category}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className={`text-right font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : 'text-slate-100'}`}>
+                                    <TableCell className={`text-right font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : 'text-slate-800 dark:text-slate-100'}`}>
                                         {tx.amount > 0 ? '+' : ''}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                     </TableCell>
                                 </TableRow>

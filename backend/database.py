@@ -1,4 +1,5 @@
 from sqlmodel import create_engine, SQLModel, Session, select
+from sqlalchemy import text
 from models import User, Account, Transaction, CashflowItem, MovementLog
 from decimal import Decimal
 
@@ -31,6 +32,26 @@ else:
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+    # Run safe migrations for new columns (SQLite create_all won't add to existing tables)
+    _migrate_account_columns()
+
+def _migrate_account_columns():
+    """Add loan classification columns if they don't exist."""
+    migrations = [
+        ("interest_type", "VARCHAR DEFAULT 'revolving'"),
+        ("debt_subtype", "VARCHAR DEFAULT 'credit_card'"),
+        ("original_amount", "DECIMAL(14,2) DEFAULT NULL"),
+        ("loan_term_months", "INTEGER DEFAULT NULL"),
+        ("remaining_months", "INTEGER DEFAULT NULL"),
+    ]
+    with Session(engine) as session:
+        for col_name, col_def in migrations:
+            try:
+                session.exec(text(f"ALTER TABLE accounts ADD COLUMN {col_name} {col_def}"))
+                session.commit()
+                print(f"  ✅ Added column: accounts.{col_name}")
+            except Exception:
+                session.rollback()  # Column likely already exists
 
 def get_session():
     with Session(engine) as session:

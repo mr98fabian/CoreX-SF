@@ -6,12 +6,12 @@ from typing import List, Optional
 from database import create_db_and_tables, engine, seed_data, get_session
 from models import Account, CashflowItem, Transaction, TransactionCreate, User, MovementLog
 from decimal import Decimal, ROUND_HALF_UP
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from velocity_engine import (
     get_projections, DebtAccount, generate_tactical_schedule, CashflowTactical,
     get_peace_shield_status, calculate_purchase_time_cost, DEFAULT_PEACE_SHIELD,
     calculate_minimum_payment, calculate_safe_attack_equity, Movement,
-    simulate_freedom_path, get_velocity_target
+    simulate_freedom_path, get_velocity_target, generate_action_plan
 )
 from transaction_classifier import classify_batch, get_cashflow_summary, classify_transaction
 import uuid
@@ -28,6 +28,12 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
         raise HTTPException(status_code=401, detail="Missing Authorization header")
     
     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+    
+    # ── Demo Mode Bypass (dev/testing only) ──────────────────
+    DEMO_TOKEN = "demo-stress-test-token"
+    DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
+    if token == DEMO_TOKEN:
+        return DEMO_USER_ID
     
     # Supabase /auth/v1/user requires a valid 'apikey' header (anon key or service key).
     # Fall back to the JWT itself only if no key is configured.
@@ -53,6 +59,64 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
         raise HTTPException(status_code=401, detail="Auth service unreachable")
 
 
+# --- UTILITY: Minimum Payment Calculator ---
+def calculate_minimum_payment(
+    balance: Decimal,
+    apr: Decimal,
+    interest_type: str = "revolving",
+    remaining_months: int | None = None,
+) -> Decimal:
+    """
+    Dual-formula minimum payment calculator.
+    
+    REVOLVING (Credit Cards / HELOC):
+        min_payment = max(1% of balance, $25) + monthly_interest
+        
+    FIXED (Auto Loan / Mortgage / Personal):
+        Standard amortization: P × r(1+r)^n / ((1+r)^n - 1)
+        Falls back to revolving formula if remaining_months is missing.
+    """
+    if balance <= 0:
+        return Decimal("0")
+    
+    monthly_rate = apr / Decimal("100") / Decimal("12")
+    
+    if interest_type == "fixed" and remaining_months and remaining_months > 0:
+        # Amortization formula: P × r(1+r)^n / ((1+r)^n - 1)
+        if monthly_rate > 0:
+            factor = (1 + monthly_rate) ** remaining_months
+            payment = balance * (monthly_rate * factor) / (factor - 1)
+        else:
+            # 0% APR — straight division
+            payment = balance / Decimal(str(remaining_months))
+        return min(payment, balance).quantize(Decimal("0.01"))
+    
+    # REVOLVING: max(1% of balance, $25) + monthly_interest
+    monthly_interest = balance * monthly_rate
+    one_percent = balance * Decimal("0.01")
+    base = max(one_percent, Decimal("25"))
+    minimum = base + monthly_interest
+    return min(minimum, balance).quantize(Decimal("0.01"))
+
+
+# ── Helper: bypass FK constraints for sessions that reference auth.users ──
+from contextlib import contextmanager
+from sqlalchemy import text
+
+DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
+
+@contextmanager
+def _bypass_fk(session):
+    """Temporarily disable FK constraint checks.
+    Needed because cashflow_items, accounts, etc. have FK to auth.users,
+    but demo/test users don't exist in that Supabase-managed table."""
+    session.execute(text("SET session_replication_role = 'replica'"))
+    try:
+        yield
+    finally:
+        session.execute(text("SET session_replication_role = 'origin'"))
+
+
 # --- APP ---
 app = FastAPI()
 
@@ -63,6 +127,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.on_event("startup")
 def on_startup():
@@ -89,8 +154,9 @@ async def create_account(account: Account, user_id: str = Depends(get_current_us
             if account.min_payment is None or account.min_payment == 0:
                 account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
             
-        session.add(account)
-        session.commit()
+        with _bypass_fk(session):
+            session.add(account)
+            session.commit()
         session.refresh(account)
         return account
 
@@ -113,8 +179,9 @@ async def update_account(id: int, account_data: Account, user_id: str = Depends(
         if account.type == "debt" and (account.min_payment is None or account.min_payment == 0):
             account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
 
-        session.add(account)
-        session.commit()
+        with _bypass_fk(session):
+            session.add(account)
+            session.commit()
         session.refresh(account)
         return account
 
@@ -135,7 +202,8 @@ async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = De
             account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
             
         session.add(account)
-        session.commit()
+        with _bypass_fk(session):
+            session.commit()
         session.refresh(account)
         return account
 
@@ -192,17 +260,48 @@ async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- RUTAS CASHFLOW ---
-@app.get("/api/cashflow", response_model=List[CashflowItem])
+@app.get("/api/cashflow")
 async def get_cashflow(user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
-        return session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+        # 1. Real cashflow items
+        real_items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+        result = [item.model_dump() for item in real_items]
+        
+        # 2. Virtual debt items — active debts become recurring expenses automatically
+        debt_accounts = session.exec(
+            select(Account).where(Account.user_id == user_id, Account.type == "debt", Account.balance > 0)
+        ).all()
+        
+        for acc in debt_accounts:
+            min_pay = float(acc.min_payment) if acc.min_payment and acc.min_payment > 0 else 50.0
+            result.append({
+                "id": -acc.id,                          # Negative ID = virtual item
+                "user_id": user_id,
+                "name": f"Deuda: {acc.name}",
+                "amount": min_pay,
+                "category": "expense",
+                "frequency": "monthly",
+                "day_of_month": acc.due_day or 15,
+                "day_of_week": None,
+                "date_specific_1": None,
+                "date_specific_2": None,
+                "month_of_year": None,
+                "is_variable": False,
+                "is_debt_virtual": True,                # Frontend flag
+                "source_account_id": acc.id,
+                "debt_balance": float(acc.balance),
+                "interest_rate": float(acc.interest_rate),
+            })
+        
+        return result
 
 @app.post("/api/cashflow", response_model=CashflowItem)
 async def create_cashflow(item: CashflowItem, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
         item.user_id = user_id
-        session.add(item)
-        session.commit()
+        with _bypass_fk(session):
+            session.add(item)
+            session.commit()
         session.refresh(item)
         return item
 
@@ -304,6 +403,21 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
                         "amount": signed_amt,
                         "category": item.category,
                     })
+            
+            # Inject debt min_payments as monthly expense events
+            import calendar
+            last_day_of_month = calendar.monthrange(d.year, d.month)[1]
+            for acc in accounts:
+                if acc.type == "debt" and acc.balance > 0:
+                    due = acc.due_day or 15
+                    clamped_due = min(due, last_day_of_month)
+                    if d.day == clamped_due:
+                        min_pay = float(acc.min_payment) if acc.min_payment and acc.min_payment > 0 else 50.0
+                        daily_events[d_str].append({
+                            "name": f"Deuda: {acc.name}",
+                            "amount": -min_pay,
+                            "category": "debt_payment",
+                        })
 
         # Step 2: Build running balance
         # Start from today's liquid_cash, walk backward to fill past,
@@ -397,9 +511,39 @@ async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
             for acc in accounts if acc.type == "debt" and acc.balance > 0
         ]
         
-        # 2. Calculate Safe Attack Equity
-        # calculate_safe_attack_equity imported at top
-        safety_data = calculate_safe_attack_equity(chase_balance, shield_target, debt_objects)
+        # 1b. Fetch REAL cashflow items for accurate projection
+        cashflow_items = session.exec(
+            select(CashflowItem).where(CashflowItem.user_id == user_id)
+        ).all()
+        
+        # Build recurring incomes list from actual DB data
+        real_incomes = [
+            {
+                "name": item.name,
+                "amount": Decimal(str(item.amount)),
+                "day": item.day_of_month or 1
+            }
+            for item in cashflow_items
+            if item.category == "income" and item.frequency == "monthly"
+        ]
+        
+        # Build recurring expenses list (non-debt bills: rent, utilities, etc.)
+        real_expenses = [
+            {
+                "name": item.name,
+                "amount": Decimal(str(item.amount)),
+                "day": item.day_of_month or 1
+            }
+            for item in cashflow_items
+            if item.category == "expense" and item.frequency == "monthly"
+        ]
+        
+        # 2. Calculate Safe Attack Equity with REAL data
+        safety_data = calculate_safe_attack_equity(
+            liquid_cash, shield_target, debt_objects,
+            recurring_incomes=real_incomes if real_incomes else None,
+            recurring_expenses=real_expenses if real_expenses else None
+        )
         
         attack_equity = safety_data["safe_equity"]
         reserved_for_bills = safety_data["reserved_for_bills"]
@@ -652,7 +796,7 @@ async def get_simulation(extra_cash: float, user_id: str = Depends(get_current_u
 
 @app.get("/api/strategy/tactical-gps")
 async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
-    """Generate the precise day-by-day movement schedule."""
+    """Generate a 2-month action plan with impact metrics."""
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
@@ -681,46 +825,16 @@ async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
         checking_balance = sum(acc.balance for acc in accounts if acc.type == "checking")
         
         # Dynamic Funding Source Selection
-        # Find all asset accounts (checking/savings) with positive balance
-        asset_accounts = [
-            DebtAccount(
-                name=acc.name,
-                balance=acc.balance,
-                interest_rate=acc.interest_rate,
-                min_payment=Decimal('0'),
-                due_day=acc.due_day if acc.due_day else 1
-            )
-            for acc in accounts 
-            if acc.type in ["checking", "savings"] and acc.balance > 0
-        ]
-        
-        # Sort by balance descending to find the strongest account
-        funding_account = None
-        if asset_accounts:
-            asset_accounts.sort(key=lambda x: x.balance, reverse=True)
-            funding_account = asset_accounts[0]
+        asset_accounts = [acc for acc in accounts if acc.type in ["checking", "savings"] and acc.balance > 0]
+        asset_accounts.sort(key=lambda x: x.balance, reverse=True)
+        funding_name = asset_accounts[0].name if asset_accounts else "Checking"
         
         # Get User Shield Target
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
-        movements = generate_tactical_schedule(debts, cf_tactical, checking_balance, funding_account, shield_target)
-        
-        # Convert Movement objects to dict for JSON serialization
-        results = []
-        for m in movements:
-            results.append({
-                "day": m.date.day, # Keep 'day' for frontend compatibility if needed, or derived
-                "date": m.date.isoformat(),
-                "display_date": m.display_date,
-                "title": m.title,
-                "description": m.description,
-                "amount": float(m.amount),
-                "type": m.type,
-                "source": m.source,
-                "destination": m.destination
-            })
-        return results
+        # Generate 2-month action plan with impact metrics
+        return generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target)
 
 # (All imports consolidated at top of file)
 
@@ -776,7 +890,8 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
                 is_manual=False
             )
             session.add(tx)
-            session.commit()
+            with _bypass_fk(session):
+                session.commit()
             return {
                 "status": "executed", 
                 "new_balance_source": source_acc.balance if source_acc else "N/A",
@@ -819,15 +934,24 @@ async def create_transaction(tx: TransactionCreate, user_id: str = Depends(get_c
         
         # 2. Update Account Balance
         amount_decimal = Decimal(str(tx.amount))
+        abs_amount = abs(amount_decimal)
         
         if account.type == "debt":
-            account.balance -= amount_decimal
+            if tx.category == "payment":
+                account.balance -= abs_amount  # Payment REDUCES debt
+            else:
+                account.balance += abs_amount  # New charge INCREASES debt
+            # Recalculate minimum payment based on new balance
+            account.min_payment = calculate_minimum_payment(
+                account.balance, account.interest_rate,
+                account.interest_type, account.remaining_months
+            )
         else:
             account.balance += amount_decimal
                 
         session.add(account)
-            
-        session.commit()
+        with _bypass_fk(session):
+            session.commit()
         session.refresh(db_tx)
         return db_tx
 
@@ -926,7 +1050,8 @@ async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id))
                 session.add(new_account)
                 imported.append(new_account.name)
             
-            session.commit()
+            with _bypass_fk(session):
+                session.commit()
         
         return {"success": True, "imported": imported, "count": len(imported)}
     except Exception as e:
@@ -980,7 +1105,8 @@ async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(g
                 session.add(new_tx)
                 counts["added"] += 1
             
-            session.commit()
+            with _bypass_fk(session):
+                session.commit()
             
             # --- AUTO-VERIFICATION LOGIC ---
             pending_logs = session.exec(select(MovementLog).where(MovementLog.status == "executed", MovementLog.user_id == user_id)).all()
@@ -1004,7 +1130,8 @@ async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(g
                     log.verified_transaction_id = match.id
                     session.add(log)
             
-            session.commit()
+            with _bypass_fk(session):
+                session.commit()
             
         return {
             "success": True, 
@@ -1037,14 +1164,22 @@ async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depend
         session.add(new_tx)
         
         # Update Account Balance
+        abs_amount = abs(Decimal(str(tx.amount)))
         if account.type == "debt":
-            account.balance -= tx.amount
-            account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
+            if tx.category == "payment":
+                account.balance -= abs_amount  # Payment REDUCES debt
+            else:
+                account.balance += abs_amount  # New charge INCREASES debt
+            account.min_payment = calculate_minimum_payment(
+                account.balance, account.interest_rate,
+                account.interest_type, account.remaining_months
+            )
         else:
-            account.balance += tx.amount
+            account.balance += Decimal(str(tx.amount))
             
         session.add(account)
-        session.commit()
+        with _bypass_fk(session):
+            session.commit()
         session.refresh(new_tx)
         return new_tx
 
@@ -1397,3 +1532,164 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
             "streak": streak,
             "decision_options": decision_options,
         }
+
+
+# ================================================================
+# DEMO MODE — Stress Test Seed Endpoint
+# ================================================================
+
+@app.post("/api/dev/seed-stress-test")
+async def seed_stress_test(user_id: str = Depends(get_current_user_id)):
+    """Seed Carlos Mendoza stress-test dataset."""
+    try:
+        return _seed_impl(user_id)
+    except Exception as e:
+        import traceback
+        return {"status": "error", "detail": str(e), "tb": traceback.format_exc()}
+
+def _seed_impl(user_id: str):
+    from sqlalchemy import text
+
+    with Session(engine) as session:
+        uid = user_id  # Already a valid UUID string
+
+        # ── 1. CLEAR existing data (TRUNCATE is faster than DELETE) ──
+        session.execute(text("DELETE FROM transactions WHERE user_id = CAST(:uid AS uuid)"), {"uid": uid})
+        session.execute(text("DELETE FROM movement_log WHERE user_id = CAST(:uid AS uuid)"), {"uid": uid})
+        session.execute(text("DELETE FROM accounts WHERE user_id = CAST(:uid AS uuid)"), {"uid": uid})
+        session.execute(text("DELETE FROM cashflow_items WHERE user_id = CAST(:uid AS uuid)"), {"uid": uid})
+
+        # ── 1b. DISABLE FK checks for demo seeding ──────────
+        session.execute(text("SET session_replication_role = 'replica'"))
+
+        # ── 2. ACCOUNTS ────────────────────────────────────
+        accounts_data = [
+            # === ASSETS (4) ===
+            ("Chase Business Checking", "checking", 12450.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None),
+            ("Wells Fargo Personal", "checking", 3200.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None),
+            ("Ally Savings (Emergency)", "savings", 8500.00, 4.25, 0, None, None, False, "revolving", "credit_card", None, None, None),
+            ("Marcus Savings (Investment)", "savings", 15000.00, 4.40, 0, None, None, False, "revolving", "credit_card", None, None, None),
+            # === REVOLVING DEBT (5) ===
+            ("Amex Platinum Business", "debt", 18500.00, 24.99, 450.00, 5, 28, True, "revolving", "credit_card", None, None, None),
+            ("Chase Sapphire Reserve", "debt", 7200.00, 21.49, 180.00, 12, 5, False, "revolving", "credit_card", None, None, None),
+            ("Capital One Venture X", "debt", 4800.00, 19.99, 120.00, 20, 13, False, "revolving", "credit_card", None, None, None),
+            ("Citi Double Cash", "debt", 2300.00, 17.49, 60.00, 28, 21, False, "revolving", "credit_card", None, None, None),
+            ("HELOC - Property #2", "debt", 45000.00, 8.75, 375.00, 1, 25, False, "revolving", "heloc", None, None, None),
+            # === FIXED / AMORTIZED DEBT (7) ===
+            ("Mortgage - Casa Principal", "debt", 385000.00, 6.875, 2850.00, 1, None, False, "fixed", "mortgage", 420000.00, 360, 312),
+            ("Mortgage - Rental #1", "debt", 220000.00, 7.25, 1680.00, 15, None, False, "fixed", "mortgage", 250000.00, 360, 288),
+            ("Mortgage - Rental #2", "debt", 175000.00, 7.50, 1395.00, 15, None, False, "fixed", "mortgage", 200000.00, 360, 300),
+            ("Tesla Model X Lease", "debt", 42000.00, 4.99, 780.00, 10, None, False, "fixed", "auto_loan", 65000.00, 72, 48),
+            ("Range Rover Sport", "debt", 35000.00, 5.49, 650.00, 18, None, False, "fixed", "auto_loan", 55000.00, 60, 36),
+            ("SBA Business Loan", "debt", 85000.00, 9.25, 1200.00, 25, None, False, "fixed", "personal_loan", 120000.00, 120, 84),
+            ("Student Loan (MBA)", "debt", 28000.00, 5.50, 310.00, 5, None, False, "fixed", "student_loan", 45000.00, 120, 60),
+        ]
+
+        acc_insert = text("""
+            INSERT INTO accounts (user_id, name, type, balance, interest_rate, min_payment,
+                due_day, closing_day, is_velocity_target, interest_type, debt_subtype,
+                original_amount, loan_term_months, remaining_months)
+            VALUES (CAST(:uid AS uuid), :name, :type, :balance, :rate, :min_pay,
+                :due_day, :closing_day, :vel_target, :int_type, :debt_sub,
+                :orig_amt, :term, :remaining)
+            RETURNING id, name
+        """)
+
+        acc_map = {}
+        for a in accounts_data:
+            result = session.execute(acc_insert, {
+                "uid": uid, "name": a[0], "type": a[1],
+                "balance": a[2], "rate": a[3], "min_pay": a[4],
+                "due_day": a[5], "closing_day": a[6], "vel_target": a[7],
+                "int_type": a[8], "debt_sub": a[9],
+                "orig_amt": a[10], "term": a[11], "remaining": a[12],
+            })
+            row = result.fetchone()
+            acc_map[row[1]] = row[0]  # name -> id
+
+        # ── 3. CASHFLOW ITEMS (batch insert) ──────────────
+        cf_insert = text("""
+            INSERT INTO cashflow_items (user_id, name, amount, category, frequency,
+                is_variable, day_of_month, day_of_week, month_of_year)
+            VALUES (CAST(:uid AS uuid), :name, :amount, :category, :freq,
+                :is_var, :dom, :dow, :moy)
+        """)
+
+        cashflows_data = [
+            ("LLC Distribution", 8500.00, "income", "monthly", False, 1, None, None),
+            ("W2 Consulting", 4200.00, "income", "biweekly", False, 15, 4, None),
+            ("Rental Income #1", 2800.00, "income", "monthly", False, 5, None, None),
+            ("Rental Income #2", 2200.00, "income", "monthly", False, 5, None, None),
+            ("Freelance Projects", 1500.00, "income", "monthly", True, 15, None, None),
+            ("Dividends - Brokerage", 350.00, "income", "monthly", False, 20, None, None),
+            ("Airbnb Guest Payments", 900.00, "income", "weekly", True, 1, 0, None),
+            ("Annual Bonus", 12000.00, "income", "annually", False, 15, None, 3),
+            ("Property Tax - Casa", 580.00, "expense", "monthly", False, 1, None, None),
+            ("Property Tax - Rental #1", 320.00, "expense", "monthly", False, 1, None, None),
+            ("Property Tax - Rental #2", 280.00, "expense", "monthly", False, 1, None, None),
+            ("HOA - Rental #1", 250.00, "expense", "monthly", False, 1, None, None),
+            ("Insurance Bundle (3 props + 2 cars)", 890.00, "expense", "monthly", False, 10, None, None),
+            ("Utilities - All Properties", 420.00, "expense", "monthly", True, 15, None, None),
+            ("Internet + Phone Bundle", 280.00, "expense", "monthly", False, 18, None, None),
+            ("Gym + Country Club", 350.00, "expense", "monthly", False, 1, None, None),
+            ("Kids School Tuition", 1800.00, "expense", "monthly", False, 5, None, None),
+            ("Groceries + Household", 600.00, "expense", "weekly", True, 1, 5, None),
+        ]
+
+        # Batch insert all cashflow items at once
+        cf_params = [
+            {"uid": uid, "name": cf[0], "amount": cf[1], "category": cf[2],
+             "freq": cf[3], "is_var": cf[4], "dom": cf[5], "dow": cf[6], "moy": cf[7]}
+            for cf in cashflows_data
+        ]
+        for p in cf_params:
+            session.execute(cf_insert, p)
+
+        # ── 4. HISTORICAL TRANSACTIONS (batch insert) ──────
+        today = datetime.now()
+
+        tx_insert = text("""
+            INSERT INTO transactions (user_id, account_id, amount, description, category, date)
+            VALUES (CAST(:uid AS uuid), :acc_id, :amount, :desc, :cat, :dt)
+        """)
+
+        transactions_data = [
+            (acc_map.get("Chase Business Checking"), 8500.00, "LLC Distribution - February", "salary", 14),
+            (acc_map.get("Chase Business Checking"), 4200.00, "W2 Consulting Biweekly", "salary", 7),
+            (acc_map.get("Chase Business Checking"), 2800.00, "Rental Income - Property #1", "rental", 10),
+            (acc_map.get("Chase Business Checking"), 2200.00, "Rental Income - Property #2", "rental", 10),
+            (acc_map.get("Amex Platinum Business"), 450.00, "Velocity Execution: MIN PAYMENT Amex", "payment", 20),
+            (acc_map.get("Chase Sapphire Reserve"), 180.00, "Velocity Execution: MIN PAYMENT Chase Sapphire", "payment", 18),
+            (acc_map.get("Amex Platinum Business"), 2500.00, "Velocity Execution: ATTACK Amex Platinum", "payment", 13),
+            (acc_map.get("Chase Business Checking"), -890.00, "Insurance Bundle - All Policies", "insurance", 5),
+            (acc_map.get("Chase Business Checking"), -1800.00, "Kids School Tuition - February", "education", 10),
+            (acc_map.get("Chase Business Checking"), -600.00, "Groceries - Costco + Whole Foods", "food", 3),
+            (acc_map.get("Chase Business Checking"), 900.00, "Airbnb Guest Payment - Weekend Stay", "rental", 2),
+            (acc_map.get("Chase Business Checking"), -350.00, "Gym + Country Club Monthly", "lifestyle", 1),
+        ]
+
+        # Batch insert all transactions at once
+        tx_params = [
+            {"uid": uid, "acc_id": tx[0], "amount": tx[1], "desc": tx[2],
+             "cat": tx[3], "dt": (today - timedelta(days=tx[4])).strftime("%Y-%m-%d")}
+            for tx in transactions_data
+        ]
+        for p in tx_params:
+            session.execute(tx_insert, p)
+
+        # Re-enable FK constraints
+        session.execute(text("SET session_replication_role = 'origin'"))
+        session.commit()
+
+    return {
+        "status": "success",
+        "message": "Carlos Mendoza Stress Test loaded",
+        "summary": {
+            "accounts": len(accounts_data),
+            "cashflows": len(cashflows_data),
+            "transactions": len(transactions_data),
+            "total_debt": sum(a[2] for a in accounts_data if a[1] == "debt"),
+            "total_assets": sum(a[2] for a in accounts_data if a[1] in ["checking", "savings"]),
+            "shield_target": 5000.00,
+        }
+    }

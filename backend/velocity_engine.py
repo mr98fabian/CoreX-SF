@@ -292,6 +292,144 @@ def generate_tactical_schedule(
     
     return sorted(movements, key=lambda x: x.date)
 
+
+def generate_action_plan(
+    debts: List[DebtAccount],
+    cashflows: List[CashflowTactical],
+    checking_balance: Decimal,
+    funding_account_name: str = "Chase Cuenta",
+    shield_target: Decimal = DEFAULT_PEACE_SHIELD
+) -> List[Dict]:
+    """
+    Generates a 2-month action plan by simulating day-by-day cashflow.
+    
+    Produces a chronological list of ALL financial events:
+    - Income arrivals
+    - Minimum payment due dates
+    - Attack opportunities (after income, when funds > shield)
+    
+    Each movement includes an impact estimate (daily_interest_saved, days_shortened).
+    """
+    today = date.today()
+    end_date = today + timedelta(days=62)  # ~2 months forward
+    
+    movements: List[Dict] = []
+    sim_balance = checking_balance
+    
+    # Clone debts so simulation doesn't mutate originals
+    sim_debts = [
+        DebtAccount(
+            name=d.name, balance=d.balance,
+            interest_rate=d.interest_rate,
+            min_payment=d.min_payment,
+            due_day=d.due_day
+        ) for d in debts if d.balance > 0
+    ]
+    
+    # Sort by interest rate for avalanche attacks
+    sim_debts.sort(key=lambda x: x.interest_rate, reverse=True)
+    
+    # Separate incomes and expenses from cashflows
+    incomes = [cf for cf in cashflows if cf.category == "income"]
+    
+    current = today
+    while current <= end_date:
+        day_num = current.day
+        display = current.strftime("%B %d, %Y")
+        iso = current.isoformat()
+        
+        # ─── 1. MIN PAYMENTS on due dates ───────────────────
+        for debt in sim_debts:
+            if debt.balance <= 0:
+                continue
+            if debt.due_day == day_num:
+                payment = min(debt.min_payment, debt.balance)
+                if payment > 0:
+                    movements.append({
+                        "day": day_num,
+                        "date": iso,
+                        "display_date": display,
+                        "title": f"MIN PAYMENT: {debt.name}",
+                        "description": f"Minimum payment due for {debt.name}",
+                        "amount": float(payment),
+                        "type": "min_payment",
+                        "source": funding_account_name,
+                        "destination": debt.name,
+                        "daily_interest_saved": 0,
+                        "days_shortened": 0,
+                    })
+                    sim_balance -= payment
+                    debt.balance -= payment
+        
+        # ─── 2. INCOME arrivals ─────────────────────────────
+        for inc in incomes:
+            if inc.day_of_month == day_num:
+                movements.append({
+                    "day": day_num,
+                    "date": iso,
+                    "display_date": display,
+                    "title": f"INCOME: {inc.name}",
+                    "description": f"${float(inc.amount):,.2f} deposited to {funding_account_name}",
+                    "amount": float(inc.amount),
+                    "type": "income",
+                    "source": inc.name,
+                    "destination": funding_account_name,
+                    "daily_interest_saved": 0,
+                    "days_shortened": 0,
+                })
+                sim_balance += inc.amount
+        
+        # ─── 3. ATTACK OPPORTUNITY after income ─────────────
+        attack_funds = sim_balance - shield_target
+        if attack_funds > Decimal('10'):  # Minimum $10 to make an attack worthwhile
+            remaining_ammo = attack_funds
+            
+            for debt in sim_debts:
+                if remaining_ammo <= Decimal('10'):
+                    break
+                if debt.balance <= 0:
+                    continue
+                
+                payment = min(remaining_ammo, debt.balance)
+                
+                # Calculate impact: daily interest saved = payment * (APR/100) / 365
+                daily_savings = float(
+                    (payment * (debt.interest_rate / Decimal('100')) / Decimal('365'))
+                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                )
+                
+                # Days shortened ≈ payment / daily_interest_of_this_debt
+                total_daily_interest = float(
+                    (debt.balance * (debt.interest_rate / Decimal('100')) / Decimal('365'))
+                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                )
+                days_short = round(float(payment) / max(total_daily_interest, 0.01))
+                
+                is_payoff = payment >= debt.balance
+                
+                movements.append({
+                    "day": day_num,
+                    "date": iso,
+                    "display_date": display,
+                    "title": f"PAY OFF: {debt.name}" if is_payoff else f"ATTACK: {debt.name}",
+                    "description": f"🎯 Pagar ${float(payment):,.2f} desde {funding_account_name} hacia {debt.name}",
+                    "amount": float(payment),
+                    "type": "attack",
+                    "source": funding_account_name,
+                    "destination": debt.name,
+                    "daily_interest_saved": daily_savings,
+                    "days_shortened": days_short,
+                })
+                
+                remaining_ammo -= payment
+                sim_balance -= payment
+                debt.balance -= payment
+        
+        current += timedelta(days=1)
+    
+    return movements
+
+
 def get_projections(debts: List[DebtAccount], liquid_cash: Decimal) -> Dict:
     """
     Generate complete velocity banking projections.
@@ -392,15 +530,18 @@ def generate_projected_calendar(
     current_liquid_cash: Decimal,
     shield_target: Decimal,
     debts: List[DebtAccount],
-    recurring_incomes: List[dict] = None
+    recurring_incomes: List[dict] = None,
+    recurring_expenses: List[dict] = None
 ) -> Dict:
     """
     Simulates daily cashflow to find the 'Lowest Low' and build a visual calendar.
     """
     if recurring_incomes is None:
         # Default fallback if no income data provided
-        # Assuming User's example: $2000 on the 12th
         recurring_incomes = [{"name": "Salary", "amount": Decimal("2000.00"), "day": 12}]
+
+    if recurring_expenses is None:
+        recurring_expenses = []
 
     calendar_days = []
     running_balance = current_liquid_cash
@@ -428,6 +569,18 @@ def generate_projected_calendar(
                     "name": debt.name,
                     "amount": float(amount),
                     "type": "bill"
+                })
+                is_critical = True
+
+        # 1b. Check for Recurring Expenses (non-debt bills: rent, utilities, etc.)
+        for expense in recurring_expenses:
+            if expense["day"] == day_num:
+                amount = expense["amount"]
+                running_balance -= amount
+                daily_events.append({
+                    "name": expense["name"],
+                    "amount": float(amount),
+                    "type": "expense"
                 })
                 is_critical = True
                 
@@ -480,7 +633,9 @@ def calculate_safe_attack_equity(
     liquid_cash: Decimal,
     shield_target: Decimal,
     debts: List[DebtAccount],
-    days_buffer: int = 35 # Look ahead 1 month + buffer
+    days_buffer: int = 35, # Look ahead 1 month + buffer
+    recurring_incomes: List[dict] = None,
+    recurring_expenses: List[dict] = None
 ) -> Dict:
     """
     Calculates Available Equity based on the 'Lowest Low' projection.
@@ -493,8 +648,9 @@ def calculate_safe_attack_equity(
         num_days=days_buffer,
         current_liquid_cash=liquid_cash,
         shield_target=shield_target,
-        debts=debts
-        # incomes handled inside default for now, or passed in future
+        debts=debts,
+        recurring_incomes=recurring_incomes,
+        recurring_expenses=recurring_expenses
     )
     
     lowest_balance = projection["lowest_projected_balance"]

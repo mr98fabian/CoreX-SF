@@ -40,20 +40,20 @@ export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfS
 
 
     return (
-        <Card className="border-white/10 bg-black/40 backdrop-blur-xl">
-            <CardHeader>
+        <Card className="border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col">
+            <CardHeader className="pb-2 pt-4 px-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-white">
-                        <Calculator className="h-5 w-5 text-purple-400" />
+                    <CardTitle className="flex items-center gap-2 text-white text-sm">
+                        <Calculator className="h-4 w-4 text-purple-400" />
                         Simulador "What If?"
                     </CardTitle>
                     {isLoading && <Loader2 className="h-4 w-4 animate-spin text-purple-400" />}
                 </div>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-slate-400 text-xs">
                     ¿Qué pasa si inyectas más capital mensualmente?
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 flex-1 flex flex-col justify-between px-4 pb-4">
                 <div className={isLoading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
                     <div className="mb-4 flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-300">Inyección Extra Mensual</span>

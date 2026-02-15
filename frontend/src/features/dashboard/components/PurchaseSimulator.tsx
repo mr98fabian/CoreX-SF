@@ -84,7 +84,7 @@ export default function PurchaseSimulator() {
     };
 
     return (
-        <Card className="border-slate-800 bg-slate-950/50 overflow-hidden">
+        <Card className="border-slate-800 bg-slate-950/50 overflow-hidden h-full flex flex-col">
             <CardHeader className="pb-3 border-b border-slate-800/50">
                 <CardTitle className="flex items-center gap-2 text-zinc-200 text-base">
                     <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-900/30">
@@ -97,7 +97,7 @@ export default function PurchaseSimulator() {
                 </CardTitle>
             </CardHeader>
 
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-4 space-y-4 flex-1">
                 {/* Input Form */}
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <div className="relative flex-1">

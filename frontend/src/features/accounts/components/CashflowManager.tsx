@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { apiFetch } from '@/lib/api';
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Repeat } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Repeat, Lock, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,8 @@ import { useCashflowStats } from "../hooks/useCashflowStats";
 import type { Timeframe, CashflowItem } from "../hooks/useCashflowStats";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function CashflowManager() {
-    const { items, fetchCashflow, calculateStats, formatMoney } = useCashflowStats();
+export function CashflowManager({ refreshKey = 0 }: { refreshKey?: number }) {
+    const { items, fetchCashflow, calculateStats, formatMoney } = useCashflowStats(refreshKey);
     const [currentTimeframe, setCurrentTimeframe] = useState<Timeframe>('monthly');
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -66,7 +66,8 @@ export function CashflowManager() {
     };
 
     const income = items.filter(i => i.category === 'income');
-    const expenses = items.filter(i => i.category === 'expense');
+    const expenses = items.filter(i => i.category === 'expense' && !i.is_debt_virtual);
+    const debtItems = items.filter(i => i.is_debt_virtual);
 
     return (
         <div className="space-y-8">
@@ -109,6 +110,21 @@ export function CashflowManager() {
                         <div className="text-3xl font-extrabold text-white drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">
                             {formatMoney(stats.expenses)}
                         </div>
+                        {stats.debtExpenses > 0 && (
+                            <div className="mt-2 space-y-1">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Fixed: {formatMoney(stats.regularExpenses)}</span>
+                                    <span className="text-amber-500">Debt: {formatMoney(stats.debtExpenses)}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs mt-1">
+                                    <span className={`font-semibold ${stats.debtDrainPct > 50 ? 'text-red-400' :
+                                        stats.debtDrainPct > 30 ? 'text-amber-400' : 'text-emerald-400'
+                                        }`}>
+                                        {stats.debtDrainPct.toFixed(0)}% Debt Drain
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -371,7 +387,7 @@ export function CashflowManager() {
                     <h3 className="text-rose-400 font-semibold text-sm uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-white/5">
                         <TrendingDown size={16} /> Recurring Expenses
                     </h3>
-                    {expenses.length === 0 && (
+                    {expenses.length === 0 && debtItems.length === 0 && (
                         <div className="text-slate-600 italic text-sm p-4 border border-dashed border-white/5 rounded-lg text-center">
                             No recurring expenses added.
                         </div>
@@ -403,6 +419,43 @@ export function CashflowManager() {
                             </div>
                         </div>
                     ))}
+
+                    {/* Debt Obligations — Auto-generated from active debts */}
+                    {debtItems.length > 0 && (
+                        <>
+                            <h3 className="text-amber-400 font-semibold text-sm uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-amber-900/20 mt-6">
+                                <CreditCard size={16} /> Debt Obligations
+                                <span className="text-xs font-normal text-amber-600 ml-auto">Auto-synced</span>
+                            </h3>
+                            {debtItems.map(item => (
+                                <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-amber-950/20 border border-amber-900/30 group hover:border-amber-500/40 hover:bg-amber-950/30 transition-all duration-300">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-amber-500/10 p-2.5 rounded-lg group-hover:bg-amber-500/20 transition-colors">
+                                            <CreditCard size={18} className="text-amber-500" />
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-white group-hover:text-amber-200 transition-colors">{item.name}</div>
+                                            <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                                <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-400/80">{item.interest_rate}% APR</span>
+                                                <span>• Due Day {item.day_of_month}</span>
+                                            </div>
+                                            {item.debt_balance !== undefined && (
+                                                <div className="text-xs text-amber-500/60 mt-1">
+                                                    {formatMoney(item.debt_balance)} remaining
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <span className="font-mono text-amber-400 font-bold text-lg">{formatMoney(item.amount)}</span>
+                                        <div className="h-8 w-8 flex items-center justify-center text-amber-700" title="Auto-managed — pay off debt to remove">
+                                            <Lock size={14} />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
                 </div>
             </div>
         </div>

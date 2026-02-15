@@ -1,7 +1,9 @@
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, Column
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+import uuid
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -13,7 +15,7 @@ class User(SQLModel, table=True):
 class Account(SQLModel, table=True):
     __tablename__ = "accounts"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(index=True, description="Supabase Auth user UUID")
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
     name: str
     type: str = Field(description="debt, checking, savings")
     balance: Decimal = Field(default=0, max_digits=14, decimal_places=2)
@@ -25,12 +27,21 @@ class Account(SQLModel, table=True):
     is_velocity_target: bool = Field(default=False)
     plaid_account_id: Optional[str] = Field(default=None, index=True)
     
+    # Loan Classification Fields
+    interest_type: str = Field(default="revolving", description="fixed (amortized) or revolving (daily balance)")
+    debt_subtype: str = Field(default="credit_card", description="credit_card, heloc, auto_loan, mortgage, personal_loan, student_loan")
+    
+    # Fixed-Loan Only Fields (Amortization)
+    original_amount: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2, description="Original loan principal")
+    loan_term_months: Optional[int] = Field(default=None, description="Total loan term in months")
+    remaining_months: Optional[int] = Field(default=None, description="Months remaining on the loan")
+    
     transactions: List["Transaction"] = Relationship(back_populates="account")
 
 class CashflowItem(SQLModel, table=True):
     __tablename__ = "cashflow_items"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(index=True, description="Supabase Auth user UUID")
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
     name: str
     amount: Decimal = Field(default=0, max_digits=14, decimal_places=2)
     category: str  # "income" or "expense"
@@ -47,7 +58,7 @@ class CashflowItem(SQLModel, table=True):
 class Transaction(SQLModel, table=True):
     __tablename__ = "transactions"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(index=True, description="Supabase Auth user UUID")
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
     account_id: Optional[int] = Field(default=None, foreign_key="accounts.id")
     date: str # ISO format YYYY-MM-DD
     amount: Decimal = Field(default=0, max_digits=14, decimal_places=2) # Positivo = Ingreso/Pago a Deuda, Negativo = Gasto
@@ -60,7 +71,7 @@ class Transaction(SQLModel, table=True):
 class MovementLog(SQLModel, table=True):
     __tablename__ = "movement_log"
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: str = Field(index=True, description="Supabase Auth user UUID")
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
     movement_key: str = Field(index=True) # Unique key for the movement (e.g., "pump-salary-2024-02-01")
     title: str
     amount: Decimal = Field(max_digits=14, decimal_places=2)

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import TacticalActionBanner from './TacticalActionBanner';
 import { motion } from "framer-motion";
+import { useFormatMoney } from '@/hooks/useFormatMoney';
 
 interface FreedomData {
     velocity_debt_free_date: string;
@@ -26,6 +27,7 @@ export default function FreedomClock() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [extraPayment, setExtraPayment] = useState(0);
+    const { formatMoney, locale } = useFormatMoney();
 
     useEffect(() => {
         apiFetch<FreedomData>('/api/velocity/projections')
@@ -39,8 +41,7 @@ export default function FreedomClock() {
             });
     }, []);
 
-    const formatMoney = (n: number) =>
-        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
 
     if (loading) {
         return (
@@ -115,7 +116,7 @@ export default function FreedomClock() {
     const days = totalDays % 30;
 
     return (
-        <Card className="relative overflow-hidden border-blue-900/40 bg-gradient-to-br from-zinc-950 via-blue-950/10 to-zinc-950 shadow-[0_0_60px_rgba(30,58,138,0.15)] h-full flex flex-col justify-between group">
+        <Card className="relative overflow-hidden border-blue-200 dark:border-blue-900/40 bg-gradient-to-br from-white dark:from-zinc-950 via-blue-50 dark:via-blue-950/10 to-white dark:to-zinc-950 shadow-lg dark:shadow-[0_0_60px_rgba(30,58,138,0.15)] h-full flex flex-col justify-between group">
             {/* Subtle pulsing glow */}
             <div className={`absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl transition-all duration-1000 ${extraPayment > 0 ? 'bg-emerald-500/10 scale-110' : 'animate-pulse'}`} />
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
@@ -129,7 +130,7 @@ export default function FreedomClock() {
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-bold text-zinc-100 tracking-wide uppercase">Velocity Engine</h3>
+                                <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 tracking-wide uppercase">Velocity Engine</h3>
                                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/20">
                                     {velocityScore}x SPEED
                                 </span>
@@ -148,9 +149,9 @@ export default function FreedomClock() {
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        className="text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-2"
+                        className="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2"
                     >
-                        {displayDate.toLocaleDateString('en-US', {
+                        {displayDate.toLocaleDateString(locale, {
                             month: 'long',
                             day: 'numeric',
                             year: 'numeric',
@@ -170,8 +171,8 @@ export default function FreedomClock() {
 
                 {/* Countdown Grid */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
-                        <div className="text-3xl font-extrabold text-white tabular-nums">{years}</div>
+                    <div className="text-center p-4 rounded-2xl bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-300 dark:group-hover:border-slate-700/60 transition-colors">
+                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{years}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Years</div>
                     </div>
                     <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
@@ -185,7 +186,7 @@ export default function FreedomClock() {
                 </div>
 
                 {/* Simulator (Bottom Section) */}
-                <div className="space-y-4 pt-6 border-t border-zinc-800/50">
+                <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-zinc-800/50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-zinc-400">
                             <TrendingUp size={14} className={extraPayment > 0 ? "text-emerald-400" : ""} />

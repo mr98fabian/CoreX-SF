@@ -54,3 +54,61 @@
 - **Thinking & Coding:** English (Standard).
 - **Explanation:** Spanish (Español) - Casual but professional tone.
 - **Format:** Use Markdown. Use `blocks` for code. Bold key concepts.
+
+## 7. WORKFLOW INTELLIGENCE (OPERATIONAL RULES)
+
+### 7.1 Ideation First (ALWAYS)
+- **Every prompt** must include **ideas, improvements, or better alternatives** before execution.
+- If the user asks for X, suggest X + 2 enhanced variations.
+- Never execute blindly — always propose the *senior engineer* version of what was requested.
+
+### 7.2 Skill Scanning (MANDATORY)
+- **Before ANY task**, scan ALL skills in `.agent/skills/` and select the most relevant one.
+- If a skill is found: read its `SKILL.md` and follow its instructions.
+- If no skill fits perfectly: **combine** the 2-3 most relevant skills.
+- Log which skill(s) you selected and why.
+
+### 7.3 Auto-Skill Creation
+- If NO existing skill is optimal for the task, **proactively recommend creating** a new skill.
+- Present: Skill Name, Description, What It Would Cover.
+- Ask for approval before creating it.
+- New skills must follow the format in `.agent/skills/prompt-engineer/SKILL.md`.
+
+### 7.4 Token & API Access
+- If the task involves **external services** (Railway, Vercel, Supabase, Plaid, etc.) that have CLI tokens or API keys the AI could use, **always ask the user** to provide them.
+- Explain *what access it gives* and *why it would speed things up*.
+- Never assume access — always request explicitly.
+
+### 7.5 Execution Preview (NO SURPRISES)
+- **Before executing ANY code changes or commands**, provide a clear summary:
+  1. **What** will change (files, configs, commands)
+  2. **Why** it's the best approach
+  3. **Risks** or things to be aware of
+  4. **Recommendations** or better alternatives
+- Wait for user's "go" before executing.
+- Exception: trivial fixes (typos, imports) can proceed with inline explanation.
+
+### 7.6 Git Checkpoint Discipline (RECOMMENDED)
+- After every major feature or fix, **commit with a descriptive message** before moving on.
+- Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`.
+- Never accumulate 5+ unrelated changes in a single commit.
+
+### 7.7 Error Forensics (RECOMMENDED)
+- When debugging, **always read the full error message** before proposing a fix.
+- Request screenshots or logs from the user if the error is not in the terminal.
+- Never guess at fixes — diagnose first, then prescribe.
+- Document the root cause in comments or skill updates to prevent recurrence.
+
+### 7.8 Skill Evolution (RECOMMENDED)
+- If a deployed skill helped solve a problem but was **missing information** that caused extra iterations, **update the skill** with the new knowledge.
+- Skills are living documents — they improve with every project.
+
+### 7.9 Dependency Audit (RECOMMENDED)
+- Before adding a new dependency, check: Is it maintained? Does it overlap with an existing one?
+- Prefer **zero-dependency solutions** when the implementation is < 50 lines.
+- Always pin versions in `requirements.txt` and `package.json`.
+
+### 7.10 Context Memory (RECOMMENDED)
+- At the start of complex tasks, **summarize what you already know** about the project state.
+- Reference previous conversations and KIs before re-investigating.
+- Avoid repeating research that was already done in prior sessions.

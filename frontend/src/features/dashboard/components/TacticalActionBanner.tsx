@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
-import { ArrowRight, CheckCircle2, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowRight, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
 
 interface Movement {
     day: number;
@@ -19,69 +18,33 @@ export default function TacticalActionBanner() {
     const [loading, setLoading] = useState(true);
     const [nextMove, setNextMove] = useState<Movement | null>(null);
 
-    const fetchData = async () => {
-        setLoading(true);
-        try {
-            const data = await apiFetch<Movement[]>('/api/strategy/tactical-gps');
-            if (Array.isArray(data)) {
-                // Find next move based on full date comparison
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // Normalize to start of day
-
-                // Filter for moves today or in future
-                const upcoming = data.filter((m: Movement) => {
-                    const moveDate = new Date(m.date);
-                    return moveDate >= today;
-                });
-
-                // Sort by date ascending
-                upcoming.sort((a: Movement, b: Movement) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-                if (upcoming.length > 0) {
-                    setNextMove(upcoming[0]);
-                } else {
-                    setNextMove(null);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to fetch tactical GPS", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const data = await apiFetch<Movement[]>('/api/strategy/tactical-gps');
+                if (Array.isArray(data)) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const upcoming = data.filter((m: Movement) => {
+                        const moveDate = new Date(m.date);
+                        return moveDate >= today;
+                    });
+
+                    upcoming.sort((a: Movement, b: Movement) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                    setNextMove(upcoming.length > 0 ? upcoming[0] : null);
+                }
+            } catch (error) {
+                console.error("Failed to fetch tactical GPS", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchData();
     }, []);
-
-    const [executing, setExecuting] = useState(false);
-
-    const handleExecute = async () => {
-        if (!nextMove) return;
-        setExecuting(true);
-        try {
-            const payload = {
-                movement_key: `${nextMove.title}-${nextMove.date}-${nextMove.amount}`, // Unique key
-                title: nextMove.title,
-                amount: nextMove.amount,
-                date_planned: nextMove.date,
-                source: nextMove.source,
-                destination: nextMove.destination
-            };
-
-            await apiFetch('/api/strategy/execute', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-
-            // Refresh data to show next move
-            await fetchData();
-        } catch (error) {
-            console.error("Error executing action", error);
-        } finally {
-            setExecuting(false);
-        }
-    };
 
     if (loading) return <div className="h-8 animate-pulse bg-zinc-800/50 w-full rounded-b-xl" />;
 
@@ -134,15 +97,11 @@ export default function TacticalActionBanner() {
                     {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(nextMove.amount)}
                 </span>
 
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 px-2 text-[10px] hover:bg-white/5 hover:text-white text-zinc-400 border border-transparent hover:border-zinc-700 rounded-md uppercase tracking-wider disabled:opacity-50"
-                    onClick={handleExecute}
-                    disabled={executing}
-                >
-                    {executing ? "EXECUTING..." : "EXECUTE"}
-                </Button>
+                {/* Informational badge — no execute action */}
+                <span className="flex items-center gap-1 h-6 px-2 text-[10px] text-zinc-500 border border-zinc-800 rounded-md uppercase tracking-wider">
+                    <Calendar size={10} strokeWidth={1.5} />
+                    SCHEDULED
+                </span>
             </div>
         </div>
     );

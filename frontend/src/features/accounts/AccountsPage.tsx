@@ -29,6 +29,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 
+// Loan subtype → interest_type mapping (auto-inferred)
+const REVOLVING_SUBTYPES = ["credit_card", "heloc"];
+const inferInterestType = (subtype: string) => REVOLVING_SUBTYPES.includes(subtype) ? "revolving" : "fixed";
+
 // Validation Schema
 const accountFormSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -39,6 +43,8 @@ const accountFormSchema = z.object({
     min_payment: z.coerce.number().min(0).default(0),
     due_day: z.coerce.number().min(1).max(31).optional(),
     closing_day: z.coerce.number().min(1).max(31).optional(),
+    // Loan Classification — interest_type is auto-inferred from debt_subtype
+    debt_subtype: z.enum(["credit_card", "heloc", "auto_loan", "mortgage", "personal_loan", "student_loan"]).default("credit_card"),
 });
 
 const transactionFormSchema = z.object({
@@ -63,6 +69,11 @@ interface Account {
     closing_day?: number;
     payment_frequency: string;
     plaid_account_id?: string;
+    interest_type?: string;
+    debt_subtype?: string;
+    original_amount?: number;
+    loan_term_months?: number;
+    remaining_months?: number;
 }
 
 interface Transaction {
@@ -83,6 +94,7 @@ export default function AccountsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [updatingAccount, setUpdatingAccount] = useState<Account | null>(null);
+    const [cashflowRefreshKey, setCashflowRefreshKey] = useState(0);
 
 
     // Form Setup
@@ -98,8 +110,11 @@ export default function AccountsPage() {
             due_day: 1,
             closing_day: 15,
             payment_frequency: "monthly",
+            debt_subtype: "credit_card",
         },
     });
+
+    const watchType = form.watch("type");
 
     // API Functions
     const fetchAccounts = async () => {
@@ -113,6 +128,8 @@ export default function AccountsPage() {
                 min_payment: Number(acc.min_payment)
             }));
             setAccounts(safeData);
+            // Trigger cashflow refetch so Debt Obligations section stays in sync
+            setCashflowRefreshKey(prev => prev + 1);
         } catch (err) {
             console.error(err);
             setErrorMsg("Error connecting to the backend engine.");
@@ -128,9 +145,14 @@ export default function AccountsPage() {
     const onSubmit = async (values: AccountFormValues) => {
         setIsSubmitting(true);
         try {
+            // Auto-infer interest_type from debt_subtype
+            const payload = {
+                ...values,
+                interest_type: values.type === "debt" ? inferInterestType(values.debt_subtype) : undefined,
+            };
             await apiFetch('/api/accounts', {
                 method: 'POST',
-                body: JSON.stringify(values),
+                body: JSON.stringify(payload),
             });
 
             await fetchAccounts();
@@ -280,8 +302,34 @@ export default function AccountsPage() {
                                             )}
                                         />
                                     </div>
-                                    {form.watch("type") === "debt" && (
+                                    {watchType === "debt" && (
                                         <>
+                                            {/* Debt Type — single dropdown, interest_type auto-inferred */}
+                                            <FormField
+                                                control={form.control}
+                                                name="debt_subtype"
+                                                render={({ field }) => (
+                                                    <FormItem className="animate-in fade-in slide-in-from-top-2">
+                                                        <FormLabel className="text-amber-400 font-semibold">Debt Type</FormLabel>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
+                                                                    <SelectValue placeholder="What kind of debt?" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent className="bg-slate-950 border-slate-800 text-white">
+                                                                <SelectItem value="credit_card">💳 Credit Card</SelectItem>
+                                                                <SelectItem value="auto_loan">🚗 Auto Loan</SelectItem>
+                                                                <SelectItem value="mortgage">🏠 Mortgage</SelectItem>
+                                                                <SelectItem value="personal_loan">💰 Personal Loan</SelectItem>
+                                                                <SelectItem value="student_loan">🎓 Student Loan</SelectItem>
+                                                                <SelectItem value="heloc">🏦 HELOC</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </FormItem>
+                                                )}
+                                            />
+
                                             <div className="grid grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-2">
                                                 <FormField
                                                     control={form.control}
@@ -324,6 +372,7 @@ export default function AccountsPage() {
                                                     )}
                                                 />
                                             </div>
+
                                             <div className="grid grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-2">
                                                 <FormField
                                                     control={form.control}
@@ -542,7 +591,7 @@ export default function AccountsPage() {
 
                 {/* Cashflow Section */}
                 <div className="pt-12 border-t border-white/5">
-                    <CashflowManager />
+                    <CashflowManager refreshKey={cashflowRefreshKey} />
                 </div>
             </div>
 
@@ -572,13 +621,15 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
         setLoading(true);
         try {
             let finalAmount = parseFloat(amount);
-            if (type === 'spend' || type === 'payment') finalAmount = -Math.abs(finalAmount);
+            // Payments send POSITIVE amounts — backend handles debt reduction
+            // Only 'spend' sends negative (asset withdrawal)
+            if (type === 'spend') finalAmount = -Math.abs(finalAmount);
             else finalAmount = Math.abs(finalAmount);
 
             const payload = {
                 account_id: account.id,
                 amount: finalAmount,
-                description: desc || (type === 'deposit' ? 'Manual Deposit' : 'Manual Expense'),
+                description: desc || (type === 'payment' ? `Debt Payment — ${account.name}` : type === 'deposit' ? 'Manual Deposit' : 'Manual Expense'),
                 category: type === 'payment' ? 'payment' : 'manual',
                 date: new Date().toISOString().split('T')[0]
             };
@@ -599,19 +650,19 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            <DialogHeader>
-                <DialogTitle className="text-white capitalize text-2xl font-bold flex items-center gap-2">
+            <AlertDialogHeader>
+                <AlertDialogTitle className="text-white capitalize text-2xl font-bold flex items-center gap-2">
                     {type === 'payment' && <CreditCard className="text-rose-500" />}
                     {type === 'deposit' && <Landmark className="text-emerald-500" />}
                     {type === 'spend' && <Trash2 className="text-rose-500" />}
                     {type} Transaction
-                </DialogTitle>
-                <DialogDescription className="text-slate-400">
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-400">
                     {type === 'payment' ? `Pay off debt for ${account.name}` :
                         type === 'deposit' ? `Add funds to ${account.name}` :
                             `Record expense from ${account.name}`}
-                </DialogDescription>
-            </DialogHeader>
+                </AlertDialogDescription>
+            </AlertDialogHeader>
             <div className="space-y-4">
                 <div className="space-y-2">
                     <label className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Amount</label>
@@ -637,11 +688,11 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                     />
                 </div>
             </div>
-            <DialogFooter className="pt-2">
+            <AlertDialogFooter className="pt-2">
                 <AlertDialogAction type="submit" className={`w-full h-12 text-lg shadow-lg ${type === 'deposit' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-rose-600 hover:bg-rose-500 shadow-rose-900/20'}`} disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : 'Confirm Transaction'}
                 </AlertDialogAction>
-            </DialogFooter>
+            </AlertDialogFooter>
         </form>
     );
 }

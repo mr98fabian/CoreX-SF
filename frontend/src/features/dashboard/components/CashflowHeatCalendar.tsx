@@ -71,7 +71,7 @@ export default function CashflowHeatCalendar() {
     const fetchProjection = useCallback(async () => {
         setLoading(true);
         try {
-            const result = await apiFetch<CashflowProjection>('/api/cashflow/projection?months=6');
+            const result = await apiFetch<CashflowProjection>('/api/cashflow/projection?months=5');
             setData(result);
         } catch {
             console.error("Failed to load projection");
@@ -170,9 +170,9 @@ export default function CashflowHeatCalendar() {
 
             <CardContent className="px-4 pb-4 space-y-5">
                 {/* Month grids side by side */}
-                <div className="flex gap-6 overflow-x-auto pb-2">
-                    {months.map((month) => (
-                        <div key={month.label} className="shrink-0 min-w-[220px]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {months.slice(0, 5).map((month) => (
+                        <div key={month.label} className="min-w-0">
                             <div className="text-xs text-slate-400 font-mono mb-2 tracking-wide">
                                 {month.label}
                             </div>

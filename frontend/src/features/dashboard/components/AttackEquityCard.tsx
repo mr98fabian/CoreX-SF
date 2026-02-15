@@ -1,14 +1,12 @@
-import { useState } from 'react';
-import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Sword, ShieldAlert, Zap, Calendar, Lightbulb, ShieldCheck, Trophy } from 'lucide-react';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
 
 interface AttackEquityCardProps {
     attackEquity: number;
     chaseBalance: number;
     shieldTarget: number;
-    reservedForBills?: number; // New optional prop
+    reservedForBills?: number;
     velocityTarget: {
         name: string;
         balance: number;
@@ -20,7 +18,6 @@ interface AttackEquityCardProps {
         shield_note?: string;
         daily_interest_saved?: number;
     } | null;
-    onSuccess: () => void;
 }
 
 export default function AttackEquityCard({
@@ -29,56 +26,15 @@ export default function AttackEquityCard({
     shieldTarget,
     reservedForBills = 0,
     velocityTarget,
-    onSuccess
 }: AttackEquityCardProps) {
-    const [executing, setExecuting] = useState(false);
+    const { formatMoney } = useFormatMoney();
 
-    const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-    };
-
-    // Rule: Show Execute button ONLY if we can fully pay off the target (or significantly attack it?)
-    // User request: "Cuando el 'Attack Equity' sea mayor que la deuda... mostrar botón 'Execute Full Payoff'."
-    // So strictly: if attackEquity >= velocityTarget.balance
     const canFullPayoff = velocityTarget && attackEquity >= velocityTarget.balance;
     const targetName = velocityTarget?.name || "No Debt";
     const targetBalance = velocityTarget?.balance || 0;
 
-    const handleExecute = async () => {
-        if (!velocityTarget) return;
-
-        setExecuting(true);
-        try {
-            // Pay exact debt balance to clear it, or max equity?
-            // "Execute Full Payoff" implies paying the balance.
-            const payAmount = targetBalance;
-
-            const payload = {
-                movement_key: `attack-full-${new Date().getTime()}`,
-                title: `FULL PAYOFF: ${targetName}`,
-                amount: payAmount,
-                date_planned: new Date().toISOString().split('T')[0],
-                source: "Chase Cuenta",
-                destination: targetName
-            };
-
-            await apiFetch('/api/strategy/execute', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-
-            // Success!!
-            onSuccess();
-        } catch (error) {
-            console.error("Attack failed", error);
-            alert(`Attack Failed: ${error}`);
-        } finally {
-            setExecuting(false);
-        }
-    };
-
     return (
-        <Card className="relative overflow-hidden group border-amber-500/30 bg-amber-950/10 hover:border-amber-500/60 transition-colors duration-500">
+        <Card className="relative overflow-hidden group border-amber-300 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-950/10 hover:border-amber-400 dark:hover:border-amber-500/60 transition-colors duration-500">
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
@@ -118,27 +74,11 @@ export default function AttackEquityCard({
                     )}
                 </div>
 
+                {/* Status indicator — informational only */}
                 {canFullPayoff ? (
-                    <div className="mt-2 animate-in fade-in slide-in-from-bottom-2">
-                        <Button
-                            onClick={handleExecute}
-                            disabled={executing}
-                            variant="premium"
-                            className="w-full shadow-lg shadow-amber-900/20"
-                            size="sm"
-                        >
-                            {executing ? (
-                                <span className="animate-pulse">Executing...</span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <Zap className="h-4 w-4 fill-white" strokeWidth={1.5} />
-                                    Execute Payoff ({formatMoney(targetBalance)})
-                                </span>
-                            )}
-                        </Button>
-                        <p className="text-[10px] text-zinc-500 text-center mt-2">
-                            Target: <span className="text-rose-300 font-semibold">{targetName}</span>
-                        </p>
+                    <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/30 p-2 rounded border border-emerald-900/50">
+                        <Zap className="h-3 w-3 fill-emerald-400" strokeWidth={1.5} />
+                        <span>Ready to eliminate <span className="font-semibold text-white">{targetName}</span> ({formatMoney(targetBalance)})</span>
                     </div>
                 ) : (
                     <div>

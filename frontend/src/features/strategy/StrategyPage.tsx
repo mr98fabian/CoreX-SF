@@ -8,8 +8,6 @@ import MorningBriefing from "./components/MorningBriefing";
 import FreedomCounter from "./components/FreedomCounter";
 import ConfidenceMeter from "./components/ConfidenceMeter";
 import AttackDecisionHelper from "./components/AttackDecisionHelper";
-import SimulationControls from "./components/SimulationControls";
-import VictoryTimeline from "./components/VictoryTimeline";
 import TacticalCashflowMap from "./components/TacticalCashflowMap";
 
 
@@ -163,12 +161,6 @@ export default function StrategyPage() {
 
             {/* Tactical Cashflow Map — full width */}
             <TacticalCashflowMap />
-
-            {/* Bottom Row — Simulation + Timeline (existing components) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SimulationControls />
-                <VictoryTimeline />
-            </div>
         </div>
     );
 }

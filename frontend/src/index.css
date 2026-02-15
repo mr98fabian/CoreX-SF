@@ -3,52 +3,71 @@
 @tailwind utilities;
 
 @layer base {
+  /* ═══════════════════════════════════════════════════════════════════
+     LIGHT MODE (default)
+     Clean, professional light theme with soft shadows
+     ═══════════════════════════════════════════════════════════════════ */
   :root {
-    /* DEFAULT (LIGHT MODE) - Intentionally kept dark-ish or neutral for now, 
-       but CoreX is primarily Dark Mode. */
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 20% 97%;       /* #f5f6fa soft blue-gray */
+    --foreground: 222 47% 11%;        /* #0f172a slate-900 */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 100%;                /* #ffffff pure white */
+    --card-foreground: 222 47% 11%;   /* #0f172a */
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 48 96% 53%; /* Gold/Amber #fbbf24 */
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 48 96% 45%;            /* Rich gold */
+    --primary-foreground: 0 0% 100%;  /* White text on gold */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 14% 93%;         /* #e8eaef light gray */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 14% 93%;
+    --muted-foreground: 215 16% 47%;  /* #637490 medium gray */
 
-    --accent: 142.1 76.2% 36.3%; /* Emerald #10b981 */
-    --accent-foreground: 210 40% 98%;
+    --accent: 151 55% 41%;            /* Emerald */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;         /* Red-500 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 48 96% 53%; /* Gold ring */
+    --border: 220 13% 87%;            /* #d4d7dd light border */
+    --input: 220 13% 87%;
+    --ring: 48 96% 45%;
 
     --radius: 0.75rem;
+
+    /* CoreX custom semantic tokens */
+    --cx-surface: 220 20% 97%;
+    --cx-surface-elevated: 0 0% 100%;
+    --cx-sidebar-bg: 0 0% 100%;
+    --cx-sidebar-border: 220 13% 87%;
+    --cx-glass: 0 0% 100% / 0.7;
+    --cx-glass-border: 220 13% 87%;
+    --cx-text-primary: 222 47% 11%;
+    --cx-text-secondary: 215 16% 47%;
+    --cx-text-muted: 215 16% 63%;
+    --cx-gradient-start: rgba(16, 185, 129, 0.06);
+    --cx-gradient-mid: rgba(251, 191, 36, 0.04);
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     DARK MODE
+     Rich, immersive dark theme with glassmorphism
+     ═══════════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 224 71% 4%; /* #020617 Slate-950 */
-    --foreground: 210 40% 98%;
+    --background: 224 71% 4%;         /* #020617 slate-950 */
+    --foreground: 210 40% 98%;        /* #f8fafc slate-50 */
 
-    --card: 222 47% 11%; /* Slate-900 */
+    --card: 222 47% 11%;              /* #0f172a slate-900 */
     --card-foreground: 210 40% 98%;
 
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 48 96% 51%; /* Gold */
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 48 96% 51%;            /* Gold #fbbf24 */
+    --primary-foreground: 222 47% 11%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -56,7 +75,7 @@
     --muted: 223 47% 11%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 151 55% 41.5%; /* Emerald */
+    --accent: 151 55% 41.5%;          /* Emerald */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -65,6 +84,19 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 48 96% 53%;
+
+    /* CoreX semantic tokens for dark */
+    --cx-surface: 224 71% 4%;
+    --cx-surface-elevated: 222 47% 11%;
+    --cx-sidebar-bg: 224 71% 3%;
+    --cx-sidebar-border: 217.2 32.6% 17.5%;
+    --cx-glass: 222 47% 6% / 0.6;
+    --cx-glass-border: 0 0% 100% / 0.05;
+    --cx-text-primary: 210 40% 98%;
+    --cx-text-secondary: 215 20% 65%;
+    --cx-text-muted: 215 20% 45%;
+    --cx-gradient-start: rgba(16, 185, 129, 0.08);
+    --cx-gradient-mid: rgba(251, 191, 36, 0.05);
   }
 }
 
@@ -74,28 +106,63 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
-    /* Rich radial gradient background for depth */
-    background-image: 
-        radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
-        radial-gradient(circle at 80% 10%, rgba(251, 191, 36, 0.05) 0%, transparent 30%);
+    background-image:
+        radial-gradient(circle at 50% 0%, var(--cx-gradient-start) 0%, transparent 40%),
+        radial-gradient(circle at 80% 10%, var(--cx-gradient-mid) 0%, transparent 30%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 @layer utilities {
+  /* ─── Glassmorphism (theme-aware) ───────────────────────────── */
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-xl border border-white/5 shadow-xl shadow-black/20;
-  }
-  
-  .glass-panel {
-    @apply bg-slate-950/60 backdrop-blur-md border border-slate-800/50;
+    @apply backdrop-blur-xl shadow-xl;
+    background: hsl(var(--cx-glass));
+    border: 1px solid hsl(var(--cx-glass-border));
   }
 
+  .glass-panel {
+    @apply backdrop-blur-md;
+    background: hsl(var(--cx-glass));
+    border: 1px solid hsl(var(--cx-glass-border));
+  }
+
+  /* ─── Theme-aware surface utilities ─────────────────────────── */
+  .surface-base {
+    background: hsl(var(--cx-surface));
+  }
+  .surface-elevated {
+    background: hsl(var(--cx-surface-elevated));
+  }
+  .text-primary-cx {
+    color: hsl(var(--cx-text-primary));
+  }
+  .text-secondary-cx {
+    color: hsl(var(--cx-text-secondary));
+  }
+  .text-muted-cx {
+    color: hsl(var(--cx-text-muted));
+  }
+
+  /* ─── Gradient text ─────────────────────────────────────────── */
   .text-gradient-gold {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500;
   }
-
   .text-gradient-emerald {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-emerald-500 to-teal-500;
+  }
+
+  /* ─── Light mode specific card style ────────────────────────── */
+  :root .card-elevated {
+    @apply bg-white shadow-md shadow-slate-200/50 border border-slate-200;
+  }
+  .dark .card-elevated {
+    @apply bg-slate-900/40 shadow-xl shadow-black/20 border border-white/5;
+  }
+
+  /* ─── Smooth theme transition ───────────────────────────────── */
+  .theme-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 }

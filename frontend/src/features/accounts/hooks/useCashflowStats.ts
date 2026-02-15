@@ -13,11 +13,16 @@ export interface CashflowItem {
     date_specific_1?: number;
     date_specific_2?: number;
     month_of_year?: number;
+    // Virtual debt item fields (injected by backend for active debts)
+    is_debt_virtual?: boolean;
+    source_account_id?: number;
+    debt_balance?: number;
+    interest_rate?: number;
 }
 
 export type Timeframe = 'daily' | 'weekly' | 'monthly' | 'annually';
 
-export function useCashflowStats() {
+export function useCashflowStats(refreshKey: number = 0) {
     const [items, setItems] = useState<CashflowItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -36,7 +41,7 @@ export function useCashflowStats() {
         }
     };
 
-    useEffect(() => { fetchCashflow(); }, []);
+    useEffect(() => { fetchCashflow(); }, [refreshKey]);
 
     // 1. Normalize everything to MONTHLY first (Base Unit)
     const getMonthlyAmount = (item: CashflowItem) => {
@@ -57,14 +62,25 @@ export function useCashflowStats() {
 
         const incomeItems = items.filter(i => i.category === 'income');
         const expenseItems = items.filter(i => i.category === 'expense');
+        const debtExpenseItems = items.filter(i => i.is_debt_virtual);
+        const regularExpenseItems = items.filter(i => i.category === 'expense' && !i.is_debt_virtual);
 
         const totalIncomeMonthly = incomeItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
         const totalExpensesMonthly = expenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
+        const totalDebtMonthly = debtExpenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
+        const totalRegularMonthly = regularExpenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
+
+        // Debt Drain: % of income consumed by debt payments
+        const debtDrainPct = totalIncomeMonthly > 0 ? (totalDebtMonthly / totalIncomeMonthly) * 100 : 0;
 
         return {
             income: totalIncomeMonthly * factor,
             expenses: totalExpensesMonthly * factor,
             surplus: (totalIncomeMonthly - totalExpensesMonthly) * factor,
+            // Debt intelligence
+            debtExpenses: totalDebtMonthly * factor,
+            regularExpenses: totalRegularMonthly * factor,
+            debtDrainPct,
             // Raw monthly values for Peace Shield reference
             monthlyExpenses: totalExpensesMonthly
         };

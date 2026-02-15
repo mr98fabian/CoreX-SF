@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useCashflowStats } from '../../accounts/hooks/useCashflowStats';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
 
 interface ShieldData {
     shield_target: number;
@@ -32,6 +33,7 @@ export default function PeaceShield() {
     const [error, setError] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [newTarget, setNewTarget] = useState("");
+    const { formatMoney } = useFormatMoney();
 
     // NEW: Hook for financial intelligence
     const { calculateStats } = useCashflowStats();
@@ -69,8 +71,7 @@ export default function PeaceShield() {
         }
     };
 
-    const formatMoney = (n: number) =>
-        new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
 
     if (loading) {
         return (
@@ -102,8 +103,8 @@ export default function PeaceShield() {
 
     return (
         <Card className={`relative overflow-hidden border transition-all duration-500 group h-full flex flex-col justify-center ${isCharged
-            ? 'border-emerald-900/40 bg-gradient-to-r from-zinc-950 to-emerald-950/10 shadow-[0_0_20px_rgba(16,185,129,0.08)]'
-            : 'border-amber-900/40 bg-gradient-to-r from-zinc-950 to-amber-950/10 shadow-[0_0_20px_rgba(245,158,11,0.08)]'
+            ? 'border-emerald-200 dark:border-emerald-900/40 bg-gradient-to-r from-white dark:from-zinc-950 to-emerald-50 dark:to-emerald-950/10 shadow-lg dark:shadow-[0_0_20px_rgba(16,185,129,0.08)]'
+            : 'border-amber-200 dark:border-amber-900/40 bg-gradient-to-r from-white dark:from-zinc-950 to-amber-50 dark:to-amber-950/10 shadow-lg dark:shadow-[0_0_20px_rgba(245,158,11,0.08)]'
             }`}>
             <CardContent className="p-4">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -179,7 +180,7 @@ export default function PeaceShield() {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-sm font-bold text-zinc-200">Peace Shield</h4>
+                            <h4 className="text-sm font-bold text-zinc-700 dark:text-zinc-200">Peace Shield</h4>
                             <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${isCharged
                                 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
                                 : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
@@ -189,7 +190,7 @@ export default function PeaceShield() {
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="w-full h-2.5 rounded-full bg-zinc-900 border border-zinc-800/50 overflow-hidden mb-1.5">
+                        <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-800/50 overflow-hidden mb-1.5">
                             <div
                                 className={`h-full rounded-full transition-all duration-1000 ease-out ${isCharged
                                     ? 'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_15px_#10b981]'

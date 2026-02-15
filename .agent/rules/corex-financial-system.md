@@ -56,3 +56,7 @@ trigger: always_on
 2.  **Safety Check:** Confirm no secrets are being exposed.
 3.  **Implementation:** Provide the full code for the file (no "rest of code..." snippets).
 4.  **Verification:** Suggest a `curl` command or a Jest test to verify the fix.
+
+## 7. WORKFLOW INTELLIGENCE
+> See `.cursorrules` Section 7 for the full Workflow Intelligence rules (7.1–7.10).
+> Key rules: Ideation First, Skill Scanning, Execution Preview, Error Forensics, Skill Evolution.
