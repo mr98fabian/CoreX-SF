@@ -17,7 +17,9 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "https://corex-financial.vercel.app")
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",     # Vite dev server
+    "http://localhost:5174",     # Vite fallback port
     "http://localhost:3000",     # Alternative dev port
+    "https://corex-web-bice.vercel.app",  # Current Vercel deployment
     FRONTEND_URL,               # Production (env-var driven)
 ]
 
