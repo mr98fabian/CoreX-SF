@@ -26,17 +26,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger("corex")
 
-# ── CORS: easy to change via env var when you buy a domain ──
+# ── CORS: Production domain + local dev servers ──────────────
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korexf.com")
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",     # Vite dev server
     "http://localhost:5174",     # Vite fallback port
     "http://localhost:3000",     # Alternative dev port
-    "https://corex-web-bice.vercel.app",  # Legacy Vercel deployment
-    "https://korexf.com",       # Custom domain
-    "https://www.korexf.com",   # Custom domain (www)
-    FRONTEND_URL,               # Production (env-var driven)
+    "https://korexf.com",       # Production domain
+    "https://www.korexf.com",   # Production domain (www)
+    FRONTEND_URL,               # Env-var override (if different)
 ]
 
 # ── App ──────────────────────────────────────────────────────
