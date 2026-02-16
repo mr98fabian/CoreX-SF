@@ -6,7 +6,7 @@ import { setDemoToken, clearDemoToken, getDemoToken } from '@/lib/api';
 // Demo mode constants — must match backend
 const DEMO_TOKEN = 'demo-stress-test-token';
 const DEMO_USER_ID = '00000000-0000-4000-a000-000000000001';
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.DEV ? 'http://localhost:8000' : '';
 
 interface AuthContextType {
     user: User | null;

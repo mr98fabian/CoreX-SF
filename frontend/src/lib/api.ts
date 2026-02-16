@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
 
-// Backend base URL: uses VITE_API_URL in production (Railway), localhost in dev
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Backend base URL: In production, Vercel proxies /api/* to Railway (same-origin, no CORS).
+// In dev, connect directly to local backend.
+const API_BASE = import.meta.env.DEV ? 'http://localhost:8000' : '';
 
 // Demo Mode constants
 const DEMO_TOKEN_KEY = 'corex_demo_token';
