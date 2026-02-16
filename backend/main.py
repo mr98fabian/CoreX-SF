@@ -9,6 +9,7 @@ All routes live in backend/routers/. This file handles:
 """
 import os
 import uuid
+import time
 import logging
 import traceback
 from fastapi import FastAPI, Request
@@ -16,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from database import create_db_and_tables, seed_data
+from exceptions import CoreXError
 
 # ── Logging ──────────────────────────────────────────────────
 logging.basicConfig(
@@ -25,13 +27,15 @@ logging.basicConfig(
 logger = logging.getLogger("corex")
 
 # ── CORS: easy to change via env var when you buy a domain ──
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://corex-financial.vercel.app")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korexf.com")
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",     # Vite dev server
     "http://localhost:5174",     # Vite fallback port
     "http://localhost:3000",     # Alternative dev port
-    "https://corex-web-bice.vercel.app",  # Current Vercel deployment
+    "https://corex-web-bice.vercel.app",  # Legacy Vercel deployment
+    "https://korexf.com",       # Custom domain
+    "https://www.korexf.com",   # Custom domain (www)
     FRONTEND_URL,               # Production (env-var driven)
 ]
 
@@ -47,18 +51,39 @@ app.add_middleware(
 )
 
 
-# ── Request ID Middleware ────────────────────────────────────
+# ── Request ID + Process Time Middleware ─────────────────────
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
+    start = time.perf_counter()
     logger.info(f"[{request_id}] {request.method} {request.url.path}")
     response = await call_next(request)
+    elapsed_ms = round((time.perf_counter() - start) * 1000, 1)
     response.headers["X-Request-ID"] = request_id
+    response.headers["X-Process-Time"] = f"{elapsed_ms}ms"
     return response
 
 
-# ── Global Exception Handler ────────────────────────────────
+# ── CoreXError Handler (structured business errors) ─────────
+@app.exception_handler(CoreXError)
+async def corex_error_handler(request: Request, exc: CoreXError):
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.warning(
+        f"[{request_id}] {exc.error_code}: {exc.message} | details={exc.details}"
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.error_code,
+            "message": exc.message,
+            "details": exc.details,
+            "request_id": request_id,
+        },
+    )
+
+
+# ── Global Exception Handler (catch-all for unhandled errors) 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
@@ -69,7 +94,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={
-            "error": "internal_server_error",
+            "error": "INTERNAL_ERROR",
             "message": "Something went wrong. Please try again.",
             "request_id": request_id,
         },
@@ -98,6 +123,8 @@ from routers.strategy import router as strategy_router
 from routers.transactions import router as transactions_router
 from routers.demo import router as demo_router
 from routers.analytics import router as analytics_router
+from routers.subscriptions import router as subscriptions_router
+from routers.notifications import router as notifications_router
 
 app.include_router(accounts_router)
 app.include_router(cashflow_router)
@@ -106,4 +133,6 @@ app.include_router(strategy_router)
 app.include_router(transactions_router)
 app.include_router(demo_router)
 app.include_router(analytics_router)
+app.include_router(subscriptions_router)
+app.include_router(notifications_router)
 

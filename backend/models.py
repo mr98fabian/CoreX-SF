@@ -55,6 +55,11 @@ class CashflowItem(SQLModel, table=True):
     date_specific_2: Optional[int] = Field(default=None) # e.g. 30
     month_of_year: Optional[int] = Field(default=None) # 1-12 for annual
 
+    # Auto-execute support
+    account_id: Optional[int] = Field(default=None, foreign_key="accounts.id")
+    is_income: bool = Field(default=False)
+    last_executed_date: Optional[str] = Field(default=None, description="ISO date of last auto-execution")
+
 class Transaction(SQLModel, table=True):
     __tablename__ = "transactions"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -79,6 +84,20 @@ class MovementLog(SQLModel, table=True):
     date_executed: str # ISO format
     status: str = Field(default="executed") # executed, verified
     verified_transaction_id: Optional[int] = Field(default=None, foreign_key="transactions.id")
+
+class Subscription(SQLModel, table=True):
+    __tablename__ = "subscriptions"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
+    plan: str = Field(default="starter", description="starter, velocity, accelerator, freedom")
+    status: str = Field(default="active", description="active, cancelled, past_due, expired, paused")
+    ls_subscription_id: Optional[str] = Field(default=None, index=True)
+    ls_customer_id: Optional[str] = Field(default=None)
+    current_period_end: Optional[str] = Field(default=None, description="ISO 8601 datetime")
+    update_payment_method_url: Optional[str] = Field(default=None)
+    customer_portal_url: Optional[str] = Field(default=None)
+    created_at: Optional[str] = Field(default=None)
+    updated_at: Optional[str] = Field(default=None)
 
 class TransactionCreate(SQLModel):
     account_id: int

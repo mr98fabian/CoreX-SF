@@ -1,6 +1,6 @@
 from sqlmodel import create_engine, SQLModel, Session, select
 from sqlalchemy import text
-from models import User, Account, Transaction, CashflowItem, MovementLog
+from models import User, Account, Transaction, CashflowItem, MovementLog, Subscription
 from decimal import Decimal
 
 import os

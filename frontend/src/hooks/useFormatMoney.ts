@@ -2,7 +2,7 @@
 // Reads the user's currency preference from localStorage and returns
 // formatMoney() and formatDate() that respect the chosen locale.
 
-type CurrencyCode = "USD" | "MXN" | "EUR";
+type CurrencyCode = "USD" | "MXN" | "EUR" | "GBP" | "CAD" | "COP" | "ARS" | "BRL";
 
 interface CurrencyConfig {
     locale: string;
@@ -13,6 +13,11 @@ const CURRENCY_MAP: Record<CurrencyCode, CurrencyConfig> = {
     USD: { locale: "en-US", currency: "USD" },
     MXN: { locale: "es-MX", currency: "MXN" },
     EUR: { locale: "de-DE", currency: "EUR" },
+    GBP: { locale: "en-GB", currency: "GBP" },
+    CAD: { locale: "en-CA", currency: "CAD" },
+    COP: { locale: "es-CO", currency: "COP" },
+    ARS: { locale: "es-AR", currency: "ARS" },
+    BRL: { locale: "pt-BR", currency: "BRL" },
 };
 
 /**

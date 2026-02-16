@@ -407,6 +407,11 @@ export default function SettingsPage() {
                                 <SelectItem value="USD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ USD (US Dollar)</SelectItem>
                                 <SelectItem value="MXN" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ MXN (Peso Mexicano)</SelectItem>
                                 <SelectItem value="EUR" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">€ EUR (Euro)</SelectItem>
+                                <SelectItem value="GBP" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">£ GBP (British Pound)</SelectItem>
+                                <SelectItem value="CAD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ CAD (Canadian Dollar)</SelectItem>
+                                <SelectItem value="COP" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ COP (Peso Colombiano)</SelectItem>
+                                <SelectItem value="ARS" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ ARS (Peso Argentino)</SelectItem>
+                                <SelectItem value="BRL" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">R$ BRL (Real Brasileiro)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

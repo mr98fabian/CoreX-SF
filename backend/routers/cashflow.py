@@ -4,11 +4,16 @@ Cashflow Router — CRUD and projection for recurring income/expenses.
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from datetime import date, timedelta
+from decimal import Decimal
+import logging
+import calendar
 
 from database import engine
-from models import Account, CashflowItem
+from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk
 from auth import get_current_user_id
+
+logger = logging.getLogger("corex.cashflow")
 
 router = APIRouter(prefix="/api", tags=["cashflow"])
 
@@ -212,4 +217,79 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
             "today": today_str,
             "total_days": total_days,
             "days": days_list,
+        }
+
+
+@router.post("/cashflow/auto-execute")
+async def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
+    """
+    Checks all recurring CashflowItems and auto-creates Transaction records
+    for items due today that haven't been executed yet.
+    Called on Dashboard load (fire-and-forget).
+    """
+    today = date.today()
+    today_str = today.isoformat()
+
+    with Session(engine) as session:
+        items = session.exec(
+            select(CashflowItem).where(CashflowItem.user_id == user_id)
+        ).all()
+
+        executed = []
+        for item in items:
+            # Skip if already executed today
+            if getattr(item, "last_executed_date", None) == today_str:
+                continue
+
+            # Check if this item triggers today
+            due_day = item.day_of_month
+            if due_day is None:
+                continue
+
+            last_day = calendar.monthrange(today.year, today.month)[1]
+            clamped_due = min(due_day, last_day)
+
+            if today.day != clamped_due:
+                continue
+
+            # Skip if no linked account
+            if not item.account_id:
+                continue
+
+            account = session.get(Account, item.account_id)
+            if not account:
+                continue
+
+            # Create transaction
+            amount = Decimal(str(float(item.amount)))
+            tx = Transaction(
+                user_id=user_id,
+                account_id=item.account_id,
+                amount=amount,
+                type=item.category or ("income" if item.is_income else "expense"),
+                description=f"[Auto] {item.name}",
+                date=today_str,
+            )
+            with bypass_fk(session):
+                session.add(tx)
+
+            # Update last_executed_date to prevent duplicate execution
+            if hasattr(item, "last_executed_date"):
+                item.last_executed_date = today_str
+                session.add(item)
+
+            executed.append({
+                "name": item.name,
+                "amount": float(amount),
+                "account": account.name,
+            })
+
+        if executed:
+            session.commit()
+            logger.info(f"Auto-executed {len(executed)} recurring transactions for user={user_id}")
+
+        return {
+            "executed": executed,
+            "count": len(executed),
+            "date": today_str,
         }
