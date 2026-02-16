@@ -212,8 +212,8 @@ export default function PeaceShield() {
 
                     {/* Attack Status */}
                     <div className={`text-center px-3 py-2 rounded-xl border min-w-[90px] ${isCharged
-                        ? 'bg-emerald-500/5 border-emerald-900/20'
-                        : 'bg-zinc-900/50 border-zinc-800/50'
+                        ? 'bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-900/20'
+                        : 'bg-slate-100 dark:bg-zinc-900/50 border-slate-200 dark:border-zinc-800/50'
                         }`}>
                         {isCharged ? (
                             <>
@@ -223,9 +223,9 @@ export default function PeaceShield() {
                             </>
                         ) : (
                             <>
-                                <Lock size={18} className="text-zinc-600 mx-auto mb-0.5" />
-                                <div className="text-[10px] font-bold text-zinc-500 uppercase">Attack</div>
-                                <div className="text-[9px] text-zinc-600">Paused</div>
+                                <Lock size={18} className="text-slate-400 dark:text-zinc-600 mx-auto mb-0.5" />
+                                <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase">Attack</div>
+                                <div className="text-[9px] text-slate-400 dark:text-zinc-600">Paused</div>
                             </>
                         )}
                     </div>

@@ -635,15 +635,16 @@ export default function AccountsPage() {
 
             {/* ─── LOCKED ACCOUNTS BANNER ─── */}
             {lockedDebts.length > 0 && (
-                <div className="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-r from-rose-950/40 via-rose-950/20 to-transparent p-4 animate-in fade-in slide-in-from-top-3 duration-500">
+                <div className="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-r from-rose-950/40 via-rose-950/20 to-transparent p-3 sm:p-4 animate-in fade-in slide-in-from-top-3 duration-500">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.08),transparent_70%)] pointer-events-none" />
-                    <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-rose-500/10 flex items-center justify-center animate-pulse">
-                                <ShieldAlert size={20} className="text-rose-500" />
+                    <div className="relative flex flex-col gap-3">
+                        <div className="flex items-start sm:items-center gap-3">
+                            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-rose-500/10 flex items-center justify-center animate-pulse shrink-0">
+                                <ShieldAlert size={18} className="text-rose-500 sm:hidden" />
+                                <ShieldAlert size={20} className="text-rose-500 hidden sm:block" />
                             </div>
-                            <div>
-                                <div className="flex items-center gap-2">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                     <span className="text-sm font-bold text-rose-400">
                                         {lockedDebts.length} account{lockedDebts.length > 1 ? 's' : ''} locked
                                     </span>
@@ -651,14 +652,17 @@ export default function AccountsPage() {
                                         Unmonitored
                                     </span>
                                 </div>
-                                <p className="text-xs text-rose-300/70 mt-0.5">
-                                    {formatMoney(lockedTotalDebt)} in unmonitored debt • ~{formatMoney(lockedDailyInterest)}/day draining
+                                <p className="text-[11px] sm:text-xs text-rose-300/70 mt-0.5 leading-snug">
+                                    {formatMoney(lockedTotalDebt)} in unmonitored debt
+                                    <span className="hidden sm:inline"> • </span>
+                                    <br className="sm:hidden" />
+                                    ~{formatMoney(lockedDailyInterest)}/day draining
                                 </p>
                             </div>
                         </div>
                         <button
                             onClick={() => setShowUpgradeModal(true)}
-                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-lg shadow-rose-900/30 hover:shadow-rose-900/50"
+                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-lg shadow-rose-900/30 hover:shadow-rose-900/50"
                         >
                             <Lock size={12} />
                             Unlock All — Upgrade Now

@@ -344,10 +344,19 @@ export default function ActionPlanPage() {
                 description: `${formatMoney(movement.amount)} ${t('actionPlan.moved')}: ${movement.source} → ${movement.destination}`,
             });
             await fetchData();
-        } catch {
+        } catch (err: any) {
+            // Extract backend detail if available for better debugging
+            let errorDetail = t('actionPlan.executionFailedDesc');
+            try {
+                if (err?.detail) {
+                    errorDetail = err.detail;
+                } else if (err?.message) {
+                    errorDetail = err.message;
+                }
+            } catch { /* use default */ }
             toast({
                 title: t('actionPlan.executionFailed'),
-                description: t('actionPlan.executionFailedDesc'),
+                description: errorDetail,
                 variant: 'destructive',
             });
         } finally {

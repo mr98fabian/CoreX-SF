@@ -728,7 +728,7 @@ export default function SettingsPage() {
                             </span>
                         </div>
                         <h2 className="text-4xl font-bold text-white tracking-tight">
-                            CoreX <span className="text-blue-400">v1.0.0</span>
+                            CoreX <span className="text-blue-400">v{__APP_VERSION__}</span>
                         </h2>
                         <p className="text-sm text-slate-400 dark:text-slate-500 max-w-md mx-auto">
                             {t("settings.about.tagline")}
@@ -742,19 +742,19 @@ export default function SettingsPage() {
                 <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.version")}</p>
-                        <p className="text-lg font-bold text-white font-mono">1.0.0</p>
+                        <p className="text-lg font-bold text-white font-mono">{__APP_VERSION__}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.build")}</p>
-                        <p className="text-lg font-bold text-white font-mono">Feb 2026</p>
+                        <p className="text-lg font-bold text-white font-mono">{__BUILD_DATE__}</p>
                     </CardContent>
                 </Card>
                 <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.engine")}</p>
-                        <p className="text-lg font-bold text-white font-mono">Velocity v3</p>
+                        <p className="text-lg font-bold text-white font-mono">Velocity v1</p>
                     </CardContent>
                 </Card>
             </div>
@@ -1400,7 +1400,7 @@ export default function SettingsPage() {
                         <div className="pt-6 mt-4 border-t border-slate-800 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-2 py-2">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] text-slate-600 font-mono">CoreX v1.0.0</span>
+                                <span className="text-[10px] text-slate-600 font-mono">CoreX v{__APP_VERSION__}</span>
                             </div>
                         </div>
                     </div>

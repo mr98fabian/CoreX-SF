@@ -30,37 +30,147 @@ interface CashflowProjection {
 // --- Color scale: balance → heat color ---
 function getHeatColor(balance: number, min: number, max: number): string {
     const range = max - min || 1;
-    const ratio = (balance - min) / range; // 0 to 1
+    const pct = (balance - min) / range;
 
-    if (balance < 0) return "bg-rose-900/80 border-rose-700/40";
-    if (ratio < 0.2) return "bg-rose-800/60 border-rose-700/30";
-    if (ratio < 0.4) return "bg-amber-800/50 border-amber-700/30";
-    if (ratio < 0.6) return "bg-emerald-900/50 border-emerald-700/30";
-    if (ratio < 0.8) return "bg-emerald-800/60 border-emerald-600/30";
-    return "bg-cyan-800/50 border-cyan-600/30";
+    if (pct < 0.25) return "bg-rose-900/70 border-rose-800/50 text-rose-200";
+    if (pct < 0.45) return "bg-rose-800/50 border-rose-700/40 text-rose-200";
+    if (pct < 0.55) return "bg-amber-900/50 border-amber-800/40 text-amber-200";
+    if (pct < 0.70) return "bg-emerald-900/50 border-emerald-800/40 text-emerald-200";
+    if (pct < 0.85) return "bg-emerald-800/60 border-emerald-700/40 text-emerald-200";
+    return "bg-cyan-900/50 border-cyan-800/40 text-cyan-200";
 }
 
 function getHeatDot(balance: number, min: number, max: number): string {
     const range = max - min || 1;
-    const ratio = (balance - min) / range;
+    const pct = (balance - min) / range;
 
-    if (balance < 0) return "bg-rose-500";
-    if (ratio < 0.2) return "bg-rose-400";
-    if (ratio < 0.4) return "bg-amber-500";
-    if (ratio < 0.6) return "bg-emerald-500";
-    if (ratio < 0.8) return "bg-emerald-400";
+    if (pct < 0.25) return "bg-rose-500";
+    if (pct < 0.45) return "bg-rose-400";
+    if (pct < 0.55) return "bg-amber-500";
+    if (pct < 0.70) return "bg-emerald-500";
+    if (pct < 0.85) return "bg-emerald-400";
     return "bg-cyan-400";
 }
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const formatMoney = (n: number) =>
-    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+function formatMoney(n: number) {
+    return n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
 
-const formatMoneyShort = (n: number) => {
-    if (Math.abs(n) >= 1000) return `$${(n / 1000).toFixed(1)}K`;
+function formatMoneyShort(n: number) {
+    if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+    if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
     return `$${n.toFixed(0)}`;
-};
+}
+
+// --- Day Detail Panel (reusable for inline & mobile modal) ---
+function DayDetailContent({
+    selectedDay,
+    minBal,
+    maxBal,
+    getPrevDay,
+    onClose,
+}: {
+    selectedDay: ProjectionDay;
+    minBal: number;
+    maxBal: number;
+    getPrevDay: (day: ProjectionDay) => ProjectionDay | null;
+    onClose: () => void;
+}) {
+    return (
+        <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-3 h-3 rounded-full shrink-0 ${getHeatDot(selectedDay.balance, minBal, maxBal)}`} />
+                    <div className="min-w-0">
+                        <span className="text-sm font-semibold text-white block truncate">
+                            {new Date(selectedDay.date + "T12:00:00").toLocaleDateString("en-US", {
+                                weekday: "long", month: "long", day: "numeric", year: "numeric",
+                            })}
+                        </span>
+                        {selectedDay.is_today && (
+                            <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">
+                                TODAY
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="text-slate-500 hover:text-white transition-colors shrink-0 p-1"
+                >
+                    <X className="h-5 w-5" />
+                </button>
+            </div>
+
+            {/* Balance + Delta */}
+            <div className="flex flex-wrap items-baseline gap-2 sm:gap-4 mb-4">
+                <span className="text-2xl font-bold font-mono text-white">
+                    {formatMoney(selectedDay.balance)}
+                </span>
+                {(() => {
+                    const prev = getPrevDay(selectedDay);
+                    if (!prev) return null;
+                    const delta = selectedDay.balance - prev.balance;
+                    if (delta === 0) return null;
+                    return (
+                        <span className={`text-xs sm:text-sm font-mono ${delta > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                            {delta > 0 ? "+" : ""}{formatMoney(delta)} vs yesterday
+                        </span>
+                    );
+                })()}
+            </div>
+
+            {/* Events: Income and Expenses */}
+            {selectedDay.events.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Expected Money In */}
+                    {selectedDay.events.filter(e => e.category === "income").length > 0 && (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-emerald-400 font-semibold">
+                                <ArrowUpCircle className="h-3.5 w-3.5" />
+                                EXPECTED MONEY IN
+                            </div>
+                            {selectedDay.events
+                                .filter(e => e.category === "income")
+                                .map((ev, i) => (
+                                    <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-950/30 border border-emerald-900/30">
+                                        <span className="text-sm text-slate-300 truncate mr-2">{ev.name}</span>
+                                        <span className="text-sm font-mono font-semibold text-emerald-400 shrink-0">
+                                            +{formatMoney(Math.abs(ev.amount))}
+                                        </span>
+                                    </div>
+                                ))}
+                        </div>
+                    )}
+
+                    {/* Expected Money Out */}
+                    {selectedDay.events.filter(e => e.category === "expense").length > 0 && (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs text-rose-400 font-semibold">
+                                <ArrowDownCircle className="h-3.5 w-3.5" />
+                                EXPECTED MONEY OUT
+                            </div>
+                            {selectedDay.events
+                                .filter(e => e.category === "expense")
+                                .map((ev, i) => (
+                                    <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-950/30 border border-rose-900/30">
+                                        <span className="text-sm text-slate-300 truncate mr-2">{ev.name}</span>
+                                        <span className="text-sm font-mono font-semibold text-rose-400 shrink-0">
+                                            {formatMoney(ev.amount)}
+                                        </span>
+                                    </div>
+                                ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <p className="text-sm text-slate-600 italic">No scheduled transactions for this day</p>
+            )}
+        </div>
+    );
+}
 
 // --- Main Component ---
 export default function CashflowHeatCalendar() {
@@ -81,6 +191,15 @@ export default function CashflowHeatCalendar() {
     }, []);
 
     useEffect(() => { fetchProjection(); }, [fetchProjection]);
+
+    // Lock body scroll when modal is open on mobile
+    useEffect(() => {
+        if (!selectedDay) return;
+        const isMobile = window.innerWidth < 640;
+        if (!isMobile) return;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, [selectedDay]);
 
     if (loading || !data) {
         return (
@@ -169,7 +288,7 @@ export default function CashflowHeatCalendar() {
             </CardHeader>
 
             <CardContent className="px-4 pb-4 space-y-5">
-                {/* Month grids side by side */}
+                {/* Month grids — single column on mobile to prevent overlap */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-4">
                     {months.slice(0, 5).map((month) => (
                         <div key={month.label} className="min-w-0">
@@ -235,98 +354,44 @@ export default function CashflowHeatCalendar() {
                     ))}
                 </div>
 
-                {/* --- Click Popup: Day Detail Panel --- */}
+                {/* --- Desktop: Inline Day Detail Panel --- */}
                 {selectedDay && (
-                    <div className="rounded-xl border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl p-4 animate-in slide-in-from-bottom-3 duration-300">
-                        <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-3 h-3 rounded-full ${getHeatDot(selectedDay.balance, minBal, maxBal)}`} />
-                                <div>
-                                    <span className="text-sm font-semibold text-white">
-                                        {new Date(selectedDay.date + "T12:00:00").toLocaleDateString("en-US", {
-                                            weekday: "long", month: "long", day: "numeric", year: "numeric",
-                                        })}
-                                    </span>
-                                    {selectedDay.is_today && (
-                                        <span className="ml-2 text-[10px] font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full">
-                                            TODAY
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedDay(null)}
-                                className="text-slate-500 hover:text-white transition-colors"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        </div>
-
-                        {/* Balance + Delta */}
-                        <div className="flex items-baseline gap-4 mb-4">
-                            <span className="text-2xl font-bold font-mono text-white">
-                                {formatMoney(selectedDay.balance)}
-                            </span>
-                            {(() => {
-                                const prev = getPrevDay(selectedDay);
-                                if (!prev) return null;
-                                const delta = selectedDay.balance - prev.balance;
-                                if (delta === 0) return null;
-                                return (
-                                    <span className={`text-sm font-mono ${delta > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                                        {delta > 0 ? "+" : ""}{formatMoney(delta)} vs yesterday
-                                    </span>
-                                );
-                            })()}
-                        </div>
-
-                        {/* Events: Income and Expenses */}
-                        {selectedDay.events.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Expected Money In */}
-                                {selectedDay.events.filter(e => e.category === "income").length > 0 && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-xs text-emerald-400 font-semibold">
-                                            <ArrowUpCircle className="h-3.5 w-3.5" />
-                                            EXPECTED MONEY IN
-                                        </div>
-                                        {selectedDay.events
-                                            .filter(e => e.category === "income")
-                                            .map((ev, i) => (
-                                                <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-950/30 border border-emerald-900/30">
-                                                    <span className="text-sm text-slate-300">{ev.name}</span>
-                                                    <span className="text-sm font-mono font-semibold text-emerald-400">
-                                                        +{formatMoney(Math.abs(ev.amount))}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-
-                                {/* Expected Money Out */}
-                                {selectedDay.events.filter(e => e.category === "expense").length > 0 && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-xs text-rose-400 font-semibold">
-                                            <ArrowDownCircle className="h-3.5 w-3.5" />
-                                            EXPECTED MONEY OUT
-                                        </div>
-                                        {selectedDay.events
-                                            .filter(e => e.category === "expense")
-                                            .map((ev, i) => (
-                                                <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-950/30 border border-rose-900/30">
-                                                    <span className="text-sm text-slate-300">{ev.name}</span>
-                                                    <span className="text-sm font-mono font-semibold text-rose-400">
-                                                        {formatMoney(ev.amount)}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-slate-600 italic">No scheduled transactions for this day</p>
-                        )}
+                    <div className="hidden sm:block rounded-xl border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl animate-in slide-in-from-bottom-3 duration-300">
+                        <DayDetailContent
+                            selectedDay={selectedDay}
+                            minBal={minBal}
+                            maxBal={maxBal}
+                            getPrevDay={getPrevDay}
+                            onClose={() => setSelectedDay(null)}
+                        />
                     </div>
+                )}
+
+                {/* --- Mobile: Bottom Sheet Modal --- */}
+                {selectedDay && (
+                    <>
+                        {/* Backdrop overlay */}
+                        <div
+                            className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+                            onClick={() => setSelectedDay(null)}
+                        />
+                        {/* Bottom sheet */}
+                        <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-5 duration-300 max-h-[70vh] overflow-y-auto">
+                            {/* Drag handle */}
+                            <div className="flex justify-center pt-3 pb-1 sticky top-0">
+                                <div className="w-10 h-1 rounded-full bg-slate-600" />
+                            </div>
+                            <DayDetailContent
+                                selectedDay={selectedDay}
+                                minBal={minBal}
+                                maxBal={maxBal}
+                                getPrevDay={getPrevDay}
+                                onClose={() => setSelectedDay(null)}
+                            />
+                            {/* Safe area bottom padding for iPhones with home indicator */}
+                            <div className="h-6" />
+                        </div>
+                    </>
                 )}
 
                 {/* Balance range footer */}
