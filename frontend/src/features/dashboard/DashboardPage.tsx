@@ -142,7 +142,7 @@ export default function DashboardPage() {
                ═══════════════════════════════════════════════════════════ */}
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end px-1">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">{greeting}, {userName}.</h1>
+                    <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">{greeting}, {userName}.</h1>
                     <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/30 px-3 py-1 rounded-full w-fit border border-emerald-300 dark:border-emerald-500/20 backdrop-blur-sm">
                         <span className="relative flex h-2 w-2">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
                         <TrendingDown className="h-3.5 w-3.5 text-rose-500 group-hover:scale-110 transition-transform" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 pt-0">
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(totalDebt)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(totalDebt)}</div>
                         <p className="text-[10px] text-zinc-500 mt-0.5">{t('dashboard.totalDebtDesc')}</p>
                     </CardContent>
                 </Card>
@@ -207,7 +207,7 @@ export default function DashboardPage() {
                         <Wallet className="h-3.5 w-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 pt-0">
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(liquidCash)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(liquidCash)}</div>
                         <p className="text-[10px] text-emerald-500 mt-0.5 flex items-center gap-1">
                             <Zap size={10} className="fill-emerald-500" /> {t('dashboard.liquidCashDesc')}
                         </p>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                         <PiggyBank className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 pt-0">
-                        <div className="text-2xl font-bold text-amber-500 tracking-tight">{formatMoney(interestSaved)}</div>
+                        <div className="text-xl md:text-2xl font-bold text-amber-500 tracking-tight">{formatMoney(interestSaved)}</div>
                         <p className="text-[10px] text-zinc-500 mt-0.5">{t('dashboard.interestSavedDesc')}</p>
                     </CardContent>
                 </Card>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                         <Calendar className="h-3.5 w-3.5 text-blue-500 group-hover:scale-110 transition-transform" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4 pt-0">
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                        <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                             {yearsSaved > 0 ? (
                                 <span className='text-blue-800 dark:text-blue-100'>{yearsSaved} <span className="text-base text-blue-500 dark:text-blue-400">{t('dashboard.years')}</span></span>
                             ) : (
@@ -310,10 +310,10 @@ export default function DashboardPage() {
                  3. FREEDOM PATH & SIMULATOR
                ═══════════════════════════════════════════════════════════ */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="lg:col-span-2 h-[480px]">
+                <div className="lg:col-span-2 h-[320px] lg:h-[480px]">
                     <FreedomPathCalendar simulation={simulationData} isLoading={isSimLoading} />
                 </div>
-                <div className="h-[480px]">
+                <div className="h-[320px] lg:h-[480px]">
                     <WhatIfSimulator
                         currentExtra={extraCash}
                         onSimulate={setExtraCash}
