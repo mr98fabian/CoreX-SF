@@ -61,13 +61,13 @@ export default function UpgradeNudge() {
         <>
             {/* Floating Toast */}
             <div
-                className={`fixed bottom-6 right-6 z-30 max-w-sm transition-all duration-500 ease-out ${dismissed
-                    ? 'translate-y-4 opacity-0 pointer-events-none'
+                className={`fixed bottom-6 right-6 z-30 max-w-sm transition-all duration-500 ease-out pointer-events-none ${dismissed
+                    ? 'translate-y-4 opacity-0'
                     : 'translate-y-0 opacity-100'
                     }`}
                 style={{ animation: dismissed ? 'none' : 'slideInUp 0.5s ease-out' }}
             >
-                <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-amber-900/20">
+                <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-amber-900/20 pointer-events-auto">
                     {/* Ambient glow */}
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-rose-500/5 pointer-events-none" />
                     <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
