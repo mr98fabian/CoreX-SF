@@ -32,9 +32,16 @@ export default function DashboardLayout() {
         return location.pathname.startsWith(path);
     };
 
+    const navLinks = [
+        { path: '/', icon: LayoutDashboard, label: t("nav.dashboard") },
+        { path: '/action-plan', icon: ListChecks, label: t("nav.actionPlan") },
+        { path: '/accounts', icon: Wallet, label: t("nav.accounts") },
+        { path: '/settings', icon: Settings, label: t("nav.settings") },
+    ];
+
     const sidebarContent = (
         <>
-            <div className="flex h-16 items-center justify-center px-6 min-w-max border-b border-slate-200 dark:border-white/5">
+            <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-white/5">
                 <div className="flex items-center gap-2 group cursor-default">
                     <img
                         src="/korex-logotipo.png"
@@ -47,7 +54,7 @@ export default function DashboardLayout() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute right-2 top-3 text-slate-400 hover:text-white"
+                        className="text-slate-400 hover:text-white"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <X size={20} />
@@ -55,31 +62,25 @@ export default function DashboardLayout() {
                 )}
             </div>
 
-            <nav className="flex-1 space-y-1.5 px-3 py-4 min-w-max">
-                <Link to="/">
-                    <Button variant={isActive('/') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/') ? "shadow-lg shadow-amber-900/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5")}>
-                        <LayoutDashboard size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{t("nav.dashboard")}</span>
-                    </Button>
-                </Link>
-                <Link to="/action-plan">
-                    <Button variant={isActive('/action-plan') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/action-plan') ? "shadow-lg shadow-amber-900/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5")}>
-                        <ListChecks size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{t("nav.actionPlan")}</span>
-                    </Button>
-                </Link>
-                <Link to="/accounts">
-                    <Button variant={isActive('/accounts') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/accounts') ? "shadow-lg shadow-amber-900/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5")}>
-                        <Wallet size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{t("nav.accounts")}</span>
-                    </Button>
-                </Link>
-
-                <Link to="/settings">
-                    <Button variant={isActive('/settings') ? "premium" : "ghost"} className={cn("w-full justify-start gap-2 h-10 transition-all", isActive('/settings') ? "shadow-lg shadow-amber-900/20" : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5")}>
-                        <Settings size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{t("nav.settings")}</span>
-                    </Button>
-                </Link>
+            <nav className="flex-1 space-y-1.5 px-3 py-4">
+                {navLinks.map(({ path, icon: Icon, label }) => (
+                    <Link key={path} to={path} onClick={() => isMobile && setIsSidebarOpen(false)}>
+                        <Button
+                            variant={isActive(path) ? "premium" : "ghost"}
+                            className={cn(
+                                "w-full justify-start gap-2 h-10 transition-all",
+                                isActive(path)
+                                    ? "shadow-lg shadow-amber-900/20"
+                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                            )}
+                        >
+                            <Icon size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{label}</span>
+                        </Button>
+                    </Link>
+                ))}
             </nav>
 
-            <div className="border-t border-slate-200 dark:border-white/5 p-4 min-w-max space-y-3">
+            <div className="border-t border-slate-200 dark:border-white/5 p-4 space-y-3">
                 {user && (
                     <div className="flex items-center gap-3 px-2">
                         {user.user_metadata?.avatar_url ? (
@@ -116,30 +117,32 @@ export default function DashboardLayout() {
 
     return (
         <div className="flex h-screen w-full overflow-hidden bg-transparent">
-            {/* ═══ MOBILE: Overlay sidebar + backdrop ═══ */}
-            {isMobile && (
-                <>
-                    {/* Backdrop */}
-                    {isSidebarOpen && (
-                        <div
-                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-200"
-                            onClick={() => setIsSidebarOpen(false)}
-                        />
-                    )}
-                    {/* Drawer */}
-                    <aside
-                        className={cn(
-                            "fixed inset-y-0 left-0 z-50 w-64 flex flex-col backdrop-blur-xl transition-transform duration-300 ease-in-out",
-                            "bg-white/95 dark:bg-slate-950/95 border-r border-slate-200 dark:border-white/5",
-                            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                        )}
-                    >
-                        {sidebarContent}
-                    </aside>
-                </>
+
+            {/* ═══ MOBILE: Backdrop overlay (covers entire screen) ═══ */}
+            {isMobile && isSidebarOpen && (
+                <div
+                    className="fixed inset-0 z-40"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.65)' }}
+                    onClick={() => setIsSidebarOpen(false)}
+                />
             )}
 
-            {/* ═══ DESKTOP: Normal sidebar (unchanged behavior) ═══ */}
+            {/* ═══ MOBILE: Drawer sidebar (fixed, full-height, slides in/out) ═══ */}
+            {isMobile && (
+                <aside
+                    className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 dark:border-white/5 transition-transform duration-300 ease-in-out"
+                    style={{
+                        width: '85vw',
+                        maxWidth: '320px',
+                        backgroundColor: isDark ? 'rgb(2 6 23 / 0.98)' : 'rgb(255 255 255 / 0.98)',
+                        transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+                    }}
+                >
+                    {sidebarContent}
+                </aside>
+            )}
+
+            {/* ═══ DESKTOP: Normal sidebar (pushes content) ═══ */}
             {!isMobile && (
                 <aside
                     className={cn(
