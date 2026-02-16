@@ -3,6 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
+import { withPlanLimit } from '@/lib/planLimits';
 
 interface ChartDataPoint {
     month: string;
@@ -79,7 +80,7 @@ export default function DebtBurndownChart() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        apiFetch<VelocityData>('/api/velocity/projections')
+        apiFetch<VelocityData>(withPlanLimit('/api/velocity/projections'))
             .then((velocityData) => {
                 const projections = generateProjections(
                     velocityData.total_debt || 0,

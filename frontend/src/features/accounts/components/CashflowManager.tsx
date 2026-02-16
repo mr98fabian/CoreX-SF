@@ -11,7 +11,7 @@ import { useCashflowStats } from "../hooks/useCashflowStats";
 import type { Timeframe, CashflowItem } from "../hooks/useCashflowStats";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function CashflowManager({ refreshKey = 0 }: { refreshKey?: number }) {
+export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(), onUpgrade }: { refreshKey?: number; lockedIds?: Set<number>; onUpgrade?: () => void }) {
     const { items, fetchCashflow, calculateStats, formatMoney } = useCashflowStats(refreshKey);
     const [currentTimeframe, setCurrentTimeframe] = useState<Timeframe>('monthly');
 
@@ -427,33 +427,63 @@ export function CashflowManager({ refreshKey = 0 }: { refreshKey?: number }) {
                                 <CreditCard size={16} /> Debt Obligations
                                 <span className="text-xs font-normal text-amber-600 ml-auto">Auto-synced</span>
                             </h3>
-                            {debtItems.map(item => (
-                                <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-amber-950/20 border border-amber-900/30 group hover:border-amber-500/40 hover:bg-amber-950/30 transition-all duration-300">
-                                    <div className="flex items-center gap-4">
-                                        <div className="bg-amber-500/10 p-2.5 rounded-lg group-hover:bg-amber-500/20 transition-colors">
-                                            <CreditCard size={18} className="text-amber-500" />
-                                        </div>
-                                        <div>
-                                            <div className="font-semibold text-white group-hover:text-amber-200 transition-colors">{item.name}</div>
-                                            <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                                <span className="bg-amber-500/10 px-1.5 py-0.5 rounded text-amber-400/80">{item.interest_rate}% APR</span>
-                                                <span>• Due Day {item.day_of_month}</span>
-                                            </div>
-                                            {item.debt_balance !== undefined && (
-                                                <div className="text-xs text-amber-500/60 mt-1">
-                                                    {formatMoney(item.debt_balance)} remaining
+                            {debtItems.map(item => {
+                                const isLocked = !!(item.source_account_id && lockedIds.has(item.source_account_id));
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`relative flex justify-between items-center p-4 rounded-xl transition-all duration-300 ${isLocked
+                                            ? 'bg-slate-950/60 border border-rose-500/15 opacity-50 cursor-pointer hover:opacity-70 hover:border-rose-500/30'
+                                            : 'bg-amber-950/20 border border-amber-900/30 group hover:border-amber-500/40 hover:bg-amber-950/30'
+                                            }`}
+                                        onClick={isLocked && onUpgrade ? onUpgrade : undefined}
+                                    >
+                                        {/* Lock overlay for locked accounts */}
+                                        {isLocked && (
+                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/40 backdrop-blur-[1px] rounded-xl">
+                                                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+                                                    <Lock size={12} className="text-rose-400" />
+                                                    <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Locked</span>
                                                 </div>
-                                            )}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-2.5 rounded-lg transition-colors ${isLocked
+                                                ? 'bg-rose-500/10'
+                                                : 'bg-amber-500/10 group-hover:bg-amber-500/20'
+                                                }`}>
+                                                <CreditCard size={18} className={isLocked ? 'text-rose-500/60' : 'text-amber-500'} />
+                                            </div>
+                                            <div>
+                                                <div className={`font-semibold transition-colors ${isLocked
+                                                    ? 'text-slate-500'
+                                                    : 'text-white group-hover:text-amber-200'
+                                                    }`}>{item.name}</div>
+                                                <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                                    <span className={`px-1.5 py-0.5 rounded ${isLocked
+                                                        ? 'bg-rose-500/10 text-rose-400/60'
+                                                        : 'bg-amber-500/10 text-amber-400/80'
+                                                        }`}>{item.interest_rate}% APR</span>
+                                                    <span>• Due Day {item.day_of_month}</span>
+                                                </div>
+                                                {item.debt_balance !== undefined && (
+                                                    <div className={`text-xs mt-1 ${isLocked ? 'text-rose-500/40' : 'text-amber-500/60'}`}>
+                                                        {formatMoney(item.debt_balance)} remaining
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className={`font-mono font-bold text-lg ${isLocked ? 'text-slate-500' : 'text-amber-400'
+                                                }`}>{formatMoney(item.amount)}</span>
+                                            <div className={`h-8 w-8 flex items-center justify-center ${isLocked ? 'text-rose-500/60' : 'text-amber-700'
+                                                }`} title={isLocked ? 'Upgrade plan to unlock' : 'Auto-managed — pay off debt to remove'}>
+                                                <Lock size={14} />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="font-mono text-amber-400 font-bold text-lg">{formatMoney(item.amount)}</span>
-                                        <div className="h-8 w-8 flex items-center justify-center text-amber-700" title="Auto-managed — pay off debt to remove">
-                                            <Lock size={14} />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </>
                     )}
                 </div>

@@ -1,18 +1,18 @@
 """
 Dashboard Router — Main dashboard metrics and cashflow monitor.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from decimal import Decimal
 from datetime import date, timedelta
 
 from database import engine
 from models import Account, CashflowItem, Transaction, User
-from helpers import accounts_to_debt_objects
+from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects
 from auth import get_current_user_id
 from velocity_engine import (
     DebtAccount, get_velocity_target, DEFAULT_PEACE_SHIELD,
-    calculate_safe_attack_equity,
+    calculate_safe_attack_equity, detect_debt_alerts,
 )
 
 import sys, os
@@ -23,13 +23,23 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 
 
 @router.get("/dashboard")
-async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
+async def get_dashboard_metrics(
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
-        total_debt = sum(acc.balance for acc in accounts if acc.type == "debt")
+        # Plan-aware filtering: only active (unlocked) debts count
+        all_debts = [acc for acc in accounts if acc.type == "debt"]
+        active_debts = filter_active_debt_accounts(accounts, plan_limit)
+        active_debt_ids = {id(a) for a in active_debts}
+
+        total_debt = sum(acc.balance for acc in active_debts)
+        total_all_debt = sum(acc.balance for acc in all_debts)
+        unmonitored_debt = total_all_debt - total_debt
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
 
         # Calculate Chase Balance (or primary checking)
@@ -40,7 +50,7 @@ async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
         chase_balance = chase_acc.balance if chase_acc else Decimal("0")
 
         # --- ATTACK EQUITY & SAFETY PROTOCOL ---
-        debt_objects = accounts_to_debt_objects(accounts)
+        debt_objects = accounts_to_active_debt_objects(accounts, plan_limit)
 
         # Fetch REAL cashflow items for accurate projection
         cashflow_items = session.exec(
@@ -79,8 +89,8 @@ async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
         attack_equity = safety_data["safe_equity"]
         reserved_for_bills = safety_data["reserved_for_bills"]
 
-        # Velocity Target (Highest Interest Debt)
-        debts = [acc for acc in accounts if acc.type == "debt" and acc.balance > 0]
+        # Velocity Target (Highest Interest ACTIVE Debt)
+        debts = active_debts
         velocity_target = None
 
         if debts:
@@ -152,6 +162,9 @@ async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
                 "next_payday": next_payday.strftime("%Y-%m-%d"),
             }
 
+        # --- DEBT ALERTS (Phase 4 integration) ---
+        debt_alerts = detect_debt_alerts(debt_objects) if debt_objects else []
+
         return {
             "total_debt": total_debt,
             "liquid_cash": liquid_cash,
@@ -162,6 +175,9 @@ async def get_dashboard_metrics(user_id: str = Depends(get_current_user_id)):
             "safety_breakdown": safety_data["breakdown"],
             "calendar": safety_data.get("projection_data", []),
             "velocity_target": velocity_target,
+            "unmonitored_debt": float(unmonitored_debt),
+            "locked_account_count": len(all_debts) - len(active_debts),
+            "debt_alerts": debt_alerts,
         }
 
 

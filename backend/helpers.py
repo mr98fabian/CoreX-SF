@@ -50,6 +50,37 @@ def accounts_to_debt_objects(accounts) -> list[DebtAccount]:
     ]
 
 
+def filter_active_debt_accounts(accounts, plan_limit: int | None = None):
+    """Return only the ACTIVE (unlocked) debt Account ORM objects.
+
+    Sorts debts by interest_rate DESC so highest-APR accounts stay active.
+    If plan_limit is None or <= 0, returns ALL debts (unlimited plan).
+    """
+    debts = [acc for acc in accounts if acc.type == "debt" and acc.balance > 0]
+    debts.sort(key=lambda a: a.interest_rate, reverse=True)
+    if plan_limit and plan_limit > 0:
+        return debts[:plan_limit]
+    return debts
+
+
+def accounts_to_active_debt_objects(accounts, plan_limit: int | None = None) -> list[DebtAccount]:
+    """Convert Account ORM list → DebtAccount list, respecting plan lock priority.
+
+    Only returns the top `plan_limit` debts sorted by APR descending.
+    """
+    active = filter_active_debt_accounts(accounts, plan_limit)
+    return [
+        DebtAccount(
+            name=acc.name,
+            balance=acc.balance,
+            interest_rate=acc.interest_rate,
+            min_payment=acc.min_payment if acc.min_payment else Decimal("50"),
+            due_day=acc.due_day if acc.due_day else 15,
+        )
+        for acc in active
+    ]
+
+
 def get_liquid_cash(accounts) -> Decimal:
     """Sum of non-debt account balances."""
     return sum(acc.balance for acc in accounts if acc.type != "debt")

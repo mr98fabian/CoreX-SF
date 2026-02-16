@@ -9,6 +9,7 @@ import FreedomCounter from "./components/FreedomCounter";
 import ConfidenceMeter from "./components/ConfidenceMeter";
 import AttackDecisionHelper from "./components/AttackDecisionHelper";
 import TacticalCashflowMap from "./components/TacticalCashflowMap";
+import DebtAlertBanner from "./components/DebtAlertBanner";
 
 
 
@@ -116,6 +117,11 @@ export default function StrategyPage() {
                     <RefreshCw className="h-4 w-4" />
                 </Button>
             </div>
+
+            {/* Debt Health Alerts */}
+            {data.debt_alerts?.length > 0 && (
+                <DebtAlertBanner alerts={data.debt_alerts} />
+            )}
 
             {/* Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

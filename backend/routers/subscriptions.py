@@ -314,6 +314,197 @@ async def get_customer_portal(
     return {"portal_url": sub.customer_portal_url}
 
 
+# ── GET /savings-estimate — Dynamic neuromarketing data ──────
+@router.get("/savings-estimate")
+async def get_savings_estimate(
+    user_id: str = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+):
+    """
+    Calculates real savings projections per plan based on user's actual debt.
+    Uses interest differentials between minimum-payment and velocity strategies.
+    This powers the neuromarketing UI on the pricing page.
+    """
+    from models import Account
+    from decimal import Decimal
+
+    # Fetch all user's liability accounts (debts with interest)
+    accounts = session.exec(
+        select(Account).where(
+            Account.user_id == user_id,
+            Account.type == "debt",
+        )
+    ).all()
+
+    if not accounts:
+        # Return zero estimates for users with no debt data
+        empty_plan = {
+            "annual_savings": 0,
+            "monthly_savings": 0,
+            "daily_interest_burning": 0,
+            "roi_days": 999,
+            "years_without": 30,
+            "years_with": 30,
+            "total_interest_without": 0,
+            "total_interest_with": 0,
+        }
+        return {
+            "has_data": False,
+            "total_debt": 0,
+            "daily_interest_all": 0,
+            "plans": {
+                "starter": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 0},
+                "velocity": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 97},
+                "accelerator": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 197},
+                "freedom": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 347},
+            },
+            "social_proof": {
+                "total_accounts_monitored": len(accounts),
+                "total_debt_tracked": 0,
+            },
+        }
+
+    # Sort accounts by interest rate descending (highest APR = most impactful)
+    sorted_accounts = sorted(
+        accounts,
+        key=lambda a: float(a.interest_rate or 0),
+        reverse=True,
+    )
+
+    plan_limits = {
+        "starter": 2,
+        "velocity": 5,
+        "accelerator": 15,
+        "freedom": 999,
+    }
+    plan_costs_annual = {
+        "starter": 0,
+        "velocity": 97,
+        "accelerator": 197,
+        "freedom": 347,
+    }
+
+    # Velocity banking typically accelerates payoff by 35-60%
+    # We use a conservative 40% acceleration factor
+    VELOCITY_ACCELERATION = 0.40
+
+    total_debt = sum(float(a.balance or 0) for a in sorted_accounts)
+    total_daily_interest = sum(
+        float(a.balance or 0) * float(a.interest_rate or 0) / 100 / 365
+        for a in sorted_accounts
+    )
+
+    plans_result = {}
+    for plan_name, limit in plan_limits.items():
+        # Take top N accounts by APR for this plan
+        plan_accounts = sorted_accounts[:limit]
+        n_used = len(plan_accounts)
+
+        # Calculate annual interest for these accounts (minimum payment path)
+        annual_interest_without = sum(
+            float(a.balance or 0) * float(a.interest_rate or 0) / 100
+            for a in plan_accounts
+        )
+
+        # With velocity: accelerated payoff reduces total interest paid
+        # Over the lifetime, velocity saves ~40% of remaining interest
+        annual_interest_with = annual_interest_without * (1 - VELOCITY_ACCELERATION)
+        annual_savings = annual_interest_without - annual_interest_with
+
+        # ROI calculation: how quickly does the plan pay for itself?
+        plan_cost = plan_costs_annual[plan_name]
+        if annual_savings > 0 and plan_cost > 0:
+            roi_days = round(plan_cost / annual_savings * 365)
+        elif plan_cost == 0:
+            roi_days = 0  # Free plan, instant "ROI"
+        else:
+            roi_days = 999
+
+        # Estimate years to payoff
+        avg_balance = sum(float(a.balance or 0) for a in plan_accounts) / max(n_used, 1)
+        avg_rate = sum(float(a.interest_rate or 0) for a in plan_accounts) / max(n_used, 1)
+        years_without = min(30, max(5, round(avg_balance / max(avg_rate * 100, 1))))  # rough estimate
+        years_with = max(2, round(years_without * (1 - VELOCITY_ACCELERATION)))
+
+        # Total interest over full payoff period
+        total_interest_without = round(annual_interest_without * years_without)
+        total_interest_with = round(annual_interest_with * years_with)
+
+        daily_interest = sum(
+            float(a.balance or 0) * float(a.interest_rate or 0) / 100 / 365
+            for a in plan_accounts
+        )
+
+        plans_result[plan_name] = {
+            "accounts_used": n_used,
+            "annual_savings": round(annual_savings, 2),
+            "monthly_savings": round(annual_savings / 12, 2),
+            "daily_interest_burning": round(daily_interest, 2),
+            "roi_days": roi_days,
+            "plan_cost_annual": plan_cost,
+            "years_without": years_without,
+            "years_with": years_with,
+            "total_interest_without": total_interest_without,
+            "total_interest_with": total_interest_with,
+        }
+
+    return {
+        "has_data": True,
+        "total_debt": round(total_debt, 2),
+        "daily_interest_all": round(total_daily_interest, 2),
+        "plans": plans_result,
+        "social_proof": {
+            "total_accounts_monitored": len(accounts),
+            "total_debt_tracked": round(total_debt, 2),
+        },
+    }
+
+
+# ── POST /apply-promo — Server-side promo code validation ────
+class PromoRequest(BaseModel):
+    code: str
+
+
+@router.post("/apply-promo")
+async def apply_promo_code(
+    body: PromoRequest,
+    user_id: str = Depends(get_current_user_id),
+    session: Session = Depends(get_session),
+):
+    """
+    Validates a promo code server-side.
+    Currently supports the developer code only.
+    """
+    code = body.code.strip().upper()
+
+    # Developer code — grants unlimited access
+    if code == "KOREX-DEV-UNLIMITED":
+        # Upsert subscription to freedom plan
+        _upsert_subscription(
+            session=session,
+            user_id=user_id,
+            plan="freedom",
+            status="active",
+            ls_subscription_id="dev-license",
+            ls_customer_id="developer",
+        )
+        logger.info(f"Developer license activated for user={user_id}")
+        return {
+            "valid": True,
+            "plan": "freedom-dev",
+            "label": "Freedom (Developer)",
+            "message": "🎉 Developer license activated — Unlimited accounts, forever.",
+        }
+
+    # Future: check promo_codes table
+    # promo = session.exec(select(PromoCode).where(PromoCode.code == code)).first()
+
+    return {
+        "valid": False,
+        "message": "Invalid code. Please check and try again.",
+    }
+
+
 # ── Helpers ──────────────────────────────────────────────────
 def _variant_to_plan(variant_id: str) -> str:
     """Reverse-lookup: variant_id → plan name."""

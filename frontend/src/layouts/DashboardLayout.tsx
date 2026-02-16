@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
+import UpgradeNudge from '@/components/UpgradeNudge';
 
 export default function DashboardLayout() {
     const isMobile = useIsMobile();
@@ -196,6 +197,7 @@ export default function DashboardLayout() {
                 </div>
             </main>
             <FeedbackWidget />
+            <UpgradeNudge />
         </div>
     );
 }

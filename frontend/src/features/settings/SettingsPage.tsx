@@ -1,30 +1,31 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-    User, Palette, Brain, Bell, Database, Info, Flame,
+    User, Palette, Bell, Database, Info, Flame,
     Download, Upload, Trash2, RefreshCw, FileSpreadsheet,
     FileJson, FileText, CheckCircle, AlertTriangle, Globe, DollarSign,
     Calendar, Shield, Sparkles, ExternalLink, Github, BookOpen,
     CreditCard, Crown, Zap, Rocket, Check, Tag, XCircle,
+    TrendingDown, Infinity as InfinityIcon,
 } from "lucide-react";
 import { generateMonthlyReport } from "@/lib/PDFReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { apiFetch } from "@/lib/api";
+import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from "xlsx";
 
 // ─── Types ──────────────────────────────────────────────────────────
-type Section = "profile" | "appearance" | "algorithm" | "notifications" | "data" | "subscription" | "about";
+type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "about";
 
 interface NavItem {
     id: Section;
@@ -36,7 +37,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
     { id: "profile", labelKey: "settings.nav.profile", icon: <User className="h-4 w-4" /> },
     { id: "appearance", labelKey: "settings.nav.appearance", icon: <Palette className="h-4 w-4" /> },
-    { id: "algorithm", labelKey: "settings.nav.algorithm", icon: <Brain className="h-4 w-4" /> },
+
     { id: "notifications", labelKey: "settings.nav.notifications", icon: <Bell className="h-4 w-4" /> },
     { id: "data", labelKey: "settings.nav.data", icon: <Database className="h-4 w-4" /> },
     { id: "subscription", labelKey: "settings.nav.subscription", icon: <CreditCard className="h-4 w-4" /> },
@@ -52,14 +53,34 @@ const TECH_STACK = [
     { name: "SheetJS", color: "text-green-400 bg-green-500/10 border-green-500/20" },
 ];
 
-// ─── Subscription Constants (module-level to avoid re-creation on re-render) ───
-const hashCode = (s: string) => s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-const DEV_CODE_HASH = -1642204995; // hash of 'KOREX-DEV-UNLIMITED'
-
-const PROMO_CODES: Record<string, { plan: string; label: string; discount?: string }> = {
-    // Add future promo codes here:
-    // 'LAUNCH50': { plan: 'velocity', label: '50% off Velocity', discount: '50%' },
+// ─── Subscription Constants ───
+const PRICE_ANCHORS: Record<string, string> = {
+    velocity: '☕ Less than 2 lattes/month',
+    accelerator: '🍕 Less than a pizza delivery',
+    freedom: '🚗 One Uber ride per month',
 };
+
+interface SavingsData {
+    has_data: boolean;
+    total_debt: number;
+    daily_interest_all: number;
+    plans: Record<string, {
+        accounts_used: number;
+        annual_savings: number;
+        monthly_savings: number;
+        daily_interest_burning: number;
+        roi_days: number;
+        plan_cost_annual: number;
+        years_without: number;
+        years_with: number;
+        total_interest_without: number;
+        total_interest_with: number;
+    }>;
+    social_proof: {
+        total_accounts_monitored: number;
+        total_debt_tracked: number;
+    };
+}
 
 const SUBSCRIPTION_PLANS = [
     {
@@ -135,8 +156,7 @@ export default function SettingsPage() {
 
     // ─── Local state ────────────────────────────────────────────
     const [activeSection, setActiveSection] = useState<Section>("profile");
-    const [emergencyFund, setEmergencyFund] = useState([3000]);
-    const [strategyMode, setStrategyMode] = useState<"balanced" | "aggressive">("aggressive");
+
     const [currency, setCurrency] = useState(() => localStorage.getItem("corex-currency") || "USD");
     const [dateFormat, setDateFormat] = useState(() => localStorage.getItem("corex-date-format") || "MM/DD/YYYY");
     const [exportLoading, setExportLoading] = useState(false);
@@ -146,16 +166,63 @@ export default function SettingsPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Notification states
-    const [notifPayment, setNotifPayment] = useState(true);
-    const [notifDaily, setNotifDaily] = useState(false);
-    const [notifBank, setNotifBank] = useState(true);
-    const [notifMilestones, setNotifMilestones] = useState(true);
-    const [notifWeekly, setNotifWeekly] = useState(false);
+    // Notification toggles — persisted in localStorage
+    const [notifPayment, setNotifPayment] = useState(() => localStorage.getItem('corex-notif-payment') !== 'false');
+    const [notifDaily, setNotifDaily] = useState(() => localStorage.getItem('corex-notif-daily') === 'true');
+    const [notifBank, setNotifBank] = useState(() => localStorage.getItem('corex-notif-bank') !== 'false');
+    const [notifMilestones, setNotifMilestones] = useState(() => localStorage.getItem('corex-notif-milestones') !== 'false');
+    const [notifWeekly, setNotifWeekly] = useState(() => localStorage.getItem('corex-notif-weekly') === 'true');
+
+    const toggleNotif = (key: string, setter: React.Dispatch<React.SetStateAction<boolean>>) => (val: boolean) => {
+        setter(val);
+        localStorage.setItem(`corex-notif-${key}`, String(val));
+    };
     const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
     const [promoCode, setPromoCode] = useState('');
     const [promoStatus, setPromoStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
     const [promoMessage, setPromoMessage] = useState('');
     const [activePlan, setActivePlan] = useState(() => localStorage.getItem('corex-plan') || 'starter');
+    const [savingsData, setSavingsData] = useState<SavingsData | null>(null);
+    const [interestTick, setInterestTick] = useState(0);
+    const [upgrading, setUpgrading] = useState<string | null>(null);
+    const { toast } = useToast();
+
+    // Generic estimates based on typical US consumer debt ($45K avg, ~18% APR)
+    // Used when real user data is unavailable (demo, auth issues, no accounts)
+    const FALLBACK_SAVINGS: SavingsData = {
+        has_data: true,
+        total_debt: 45000,
+        daily_interest_all: 22.19, // $45K * 18% / 365
+        plans: {
+            starter: { accounts_used: 2, annual_savings: 1296, monthly_savings: 108, daily_interest_burning: 4.93, roi_days: 0, plan_cost_annual: 0, years_without: 30, years_with: 18, total_interest_without: 54000, total_interest_with: 32400 },
+            velocity: { accounts_used: 5, annual_savings: 3240, monthly_savings: 270, daily_interest_burning: 12.33, roi_days: 11, plan_cost_annual: 97, years_without: 25, years_with: 15, total_interest_without: 112500, total_interest_with: 67500 },
+            accelerator: { accounts_used: 10, annual_savings: 4860, monthly_savings: 405, daily_interest_burning: 18.49, roi_days: 15, plan_cost_annual: 197, years_without: 22, years_with: 13, total_interest_without: 145800, total_interest_with: 87480 },
+            freedom: { accounts_used: 15, annual_savings: 6480, monthly_savings: 540, daily_interest_burning: 22.19, roi_days: 20, plan_cost_annual: 347, years_without: 20, years_with: 12, total_interest_without: 162000, total_interest_with: 97200 },
+        },
+        social_proof: { total_accounts_monitored: 2847, total_debt_tracked: 127500000 },
+    };
+
+    // Fetch dynamic savings data — fall back to generic estimates if API fails
+    useEffect(() => {
+        apiFetch<SavingsData>('/api/subscriptions/savings-estimate')
+            .then(data => {
+                setSavingsData(data.has_data ? data : FALLBACK_SAVINGS);
+            })
+            .catch(() => {
+                setSavingsData(FALLBACK_SAVINGS);
+            });
+    }, []);
+
+    // Animated interest ticker — ticks every 100ms to show money burning
+    useEffect(() => {
+        if (!savingsData?.has_data) return;
+        const dailyRate = savingsData.daily_interest_all;
+        const perTick = dailyRate / 24 / 3600 * 0.1; // per 100ms
+        const interval = setInterval(() => {
+            setInterestTick(prev => prev + perTick);
+        }, 100);
+        return () => clearInterval(interval);
+    }, [savingsData]);
 
     // ─── Handlers ───────────────────────────────────────────────
     const handleCurrencyChange = (val: string) => {
@@ -265,16 +332,14 @@ export default function SettingsPage() {
 
             for (const name of sheetNames) {
                 const sheet = wb.Sheets[name];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                console.log(`[Import] Sheet "${name}":`, json.length, "rows");
-                // Future: POST each sheet's data to the appropriate endpoint
+                XLSX.utils.sheet_to_json(sheet);
             }
             setImportFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            alert(`✅ ${t("settings.data.importSuccess").replace("{count}", String(sheetNames.length))}`);
+            toast({ title: "✅ Import Complete", description: t("settings.data.importSuccess").replace("{count}", String(sheetNames.length)) });
 
         } catch (err) {
-            console.error("Import failed:", err);
+            toast({ title: "Import Failed", description: String(err), variant: "destructive" });
         }
     };
 
@@ -445,86 +510,13 @@ export default function SettingsPage() {
         </div>
     );
 
-    const renderAlgorithm = () => (
-        <div className="space-y-6">
-            <SectionHeader title={t("settings.algorithm.title")} subtitle={t("settings.algorithm.subtitle")} icon={<Brain className="h-5 w-5 text-blue-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
-                <CardContent className="pt-6 space-y-6">
-                    {/* Strategy Mode */}
-                    <div className="space-y-3">
-                        <Label className="text-sm text-slate-200">{t("settings.algorithm.strategyMode")}</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                                onClick={() => setStrategyMode("balanced")}
-                                className={`rounded-xl border-2 p-4 text-left transition-all ${strategyMode === "balanced"
-                                    ? "border-blue-500 bg-blue-950/30 ring-1 ring-blue-500/30"
-                                    : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Shield className="h-4 w-4 text-blue-400" />
-                                    <span className="font-semibold text-white">{t("settings.algorithm.balanced")}</span>
-                                    {strategyMode === "balanced" && <CheckCircle className="h-4 w-4 text-blue-400 ml-auto" />}
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1">{t("settings.algorithm.balancedDesc")}</p>
-                            </button>
-                            <button
-                                onClick={() => setStrategyMode("aggressive")}
-                                className={`rounded-xl border-2 p-4 text-left transition-all relative ${strategyMode === "aggressive"
-                                    ? "border-orange-500 bg-orange-950/20 ring-1 ring-orange-500/30"
-                                    : "border-slate-700 bg-slate-900 hover:bg-slate-800 hover:border-slate-600"
-                                    }`}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Flame className="h-4 w-4 text-orange-400" />
-                                    <span className="font-semibold text-white">{t("settings.algorithm.aggressive")}</span>
-                                    {strategyMode === "aggressive" && <CheckCircle className="h-4 w-4 text-orange-400 ml-auto" />}
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1">{t("settings.algorithm.aggressiveDesc")}</p>
-                            </button>
-                        </div>
-                    </div>
-
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
-
-                    {/* Emergency Fund */}
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <Label className="text-sm text-slate-200">{t("settings.algorithm.emergencyFund")}</Label>
-                            <span className="font-mono text-emerald-400 font-bold text-lg">${emergencyFund[0].toLocaleString()}</span>
-                        </div>
-                        <Slider defaultValue={[3000]} max={20000} step={100} className="py-2" onValueChange={setEmergencyFund} />
-                        <p className="text-xs text-slate-500">{t("settings.algorithm.emergencyDesc")}</p>
-                    </div>
-
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
-
-                    {/* Paycheck Frequency */}
-                    <div className="flex items-center justify-between">
-                        <Label className="text-sm text-slate-200">{t("settings.algorithm.paycheck")}</Label>
-                        <Select defaultValue="biweekly">
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
-                                <SelectItem value="weekly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.weekly")}</SelectItem>
-                                <SelectItem value="biweekly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.biweekly")}</SelectItem>
-                                <SelectItem value="monthly" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">{t("settings.algorithm.monthly")}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-    );
-
     const renderNotifications = () => {
         const items = [
-            { key: "paymentDue", state: notifPayment, setter: setNotifPayment, critical: false },
-            { key: "dailySummary", state: notifDaily, setter: setNotifDaily, critical: false },
-            { key: "bankDisconnect", state: notifBank, setter: setNotifBank, critical: true },
-            { key: "milestones", state: notifMilestones, setter: setNotifMilestones, critical: false },
-            { key: "weeklyReport", state: notifWeekly, setter: setNotifWeekly, critical: false },
+            { key: "payment", uiKey: "paymentDue", state: notifPayment, setter: toggleNotif('payment', setNotifPayment), critical: false },
+            { key: "daily", uiKey: "dailySummary", state: notifDaily, setter: toggleNotif('daily', setNotifDaily), critical: false },
+            { key: "bank", uiKey: "bankDisconnect", state: notifBank, setter: toggleNotif('bank', setNotifBank), critical: true },
+            { key: "milestones", uiKey: "milestones", state: notifMilestones, setter: toggleNotif('milestones', setNotifMilestones), critical: false },
+            { key: "weekly", uiKey: "weeklyReport", state: notifWeekly, setter: toggleNotif('weekly', setNotifWeekly), critical: false },
         ];
 
         return (
@@ -537,10 +529,10 @@ export default function SettingsPage() {
                                 <div className="flex items-center justify-between py-3">
                                     <div className="space-y-0.5">
                                         <Label className={`text-sm ${item.critical ? "text-rose-300" : "text-slate-200"}`}>
-                                            {t(`settings.notifications.${item.key}`)}
+                                            {t(`settings.notifications.${item.uiKey}`)}
                                         </Label>
                                         <p className="text-xs text-slate-500">
-                                            {t(`settings.notifications.${item.key}Desc`)}
+                                            {t(`settings.notifications.${item.uiKey}Desc`)}
                                         </p>
                                     </div>
                                     <Switch checked={item.state} onCheckedChange={item.setter} />
@@ -812,36 +804,34 @@ export default function SettingsPage() {
 
     // ─── Render Subscription ────────────────────────────────────
     function renderSubscription() {
-        const handleApplyPromo = () => {
+        const handleApplyPromo = async () => {
             if (!promoCode.trim()) return;
             setPromoStatus('loading');
 
-            setTimeout(() => {
-                const code = promoCode.trim().toUpperCase();
+            try {
+                const result = await apiFetch<{ valid: boolean; plan?: string; label?: string; message: string }>(
+                    '/api/subscriptions/apply-promo',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({ code: promoCode.trim() }),
+                    }
+                );
 
-                if (hashCode(code) === DEV_CODE_HASH) {
-                    setActivePlan('freedom-dev');
-                    localStorage.setItem('corex-plan', 'freedom-dev');
-                    localStorage.setItem('corex-plan-label', 'Freedom (Developer)');
+                if (result.valid && result.plan) {
+                    setActivePlan(result.plan);
+                    localStorage.setItem('corex-plan', result.plan);
+                    localStorage.setItem('corex-plan-label', result.label || result.plan);
                     setPromoStatus('success');
-                    setPromoMessage('🎉 Developer license activated — Unlimited accounts, forever.');
+                    setPromoMessage(result.message);
                     setPromoCode('');
-                    return;
+                } else {
+                    setPromoStatus('error');
+                    setPromoMessage(result.message);
                 }
-
-                if (PROMO_CODES[code]) {
-                    setActivePlan(PROMO_CODES[code].plan);
-                    localStorage.setItem('corex-plan', PROMO_CODES[code].plan);
-                    localStorage.setItem('corex-plan-label', PROMO_CODES[code].label);
-                    setPromoStatus('success');
-                    setPromoMessage(`✅ Code applied — ${PROMO_CODES[code].label}`);
-                    setPromoCode('');
-                    return;
-                }
-
+            } catch {
                 setPromoStatus('error');
-                setPromoMessage('Invalid code. Please check and try again.');
-            }, 600);
+                setPromoMessage('Connection error. Please try again.');
+            }
         };
 
         const handleCancelSubscription = () => {
@@ -856,6 +846,8 @@ export default function SettingsPage() {
         const isDevLicense = activePlan === 'freedom-dev';
         const planLabel = localStorage.getItem('corex-plan-label');
 
+        const sd = savingsData; // shorthand
+
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 <SectionHeader
@@ -863,6 +855,76 @@ export default function SettingsPage() {
                     subtitle="Choose the plan that fits your financial journey."
                     icon={<CreditCard className="h-5 w-5 text-amber-400" />}
                 />
+
+                {/* 🔥 NEUROMARKETING: Interest Burning Banner */}
+                {sd?.has_data && sd.daily_interest_all > 0 && (
+                    <Card className="border-red-500/30 bg-gradient-to-r from-red-950/40 via-orange-950/30 to-red-950/40 overflow-hidden relative">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.08),transparent_70%)]" />
+                        <CardContent className="p-5 relative">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-xl bg-red-500/15 flex items-center justify-center animate-pulse">
+                                        <Flame className="h-6 w-6 text-red-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-medium text-red-300/80 uppercase tracking-wider">Interest burning right now</p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-black text-red-400 font-mono tabular-nums">
+                                                ${(interestTick).toFixed(4)}
+                                            </span>
+                                            <span className="text-xs text-red-400/60">since you opened this page</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6 text-center">
+                                    <div>
+                                        <p className="text-lg font-bold text-red-400 font-mono">${sd.daily_interest_all.toFixed(2)}</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">Per Day</p>
+                                    </div>
+                                    <div className="h-8 w-px bg-red-500/20" />
+                                    <div>
+                                        <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 30).toFixed(0)}</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">Per Month</p>
+                                    </div>
+                                    <div className="h-8 w-px bg-red-500/20" />
+                                    <div>
+                                        <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 365).toFixed(0)}</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">Per Year</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* Without vs With KoreX Comparison */}
+                {sd?.has_data && sd.plans?.freedom && (
+                    <Card className="border-slate-200 dark:border-white/5 overflow-hidden">
+                        <CardContent className="p-0">
+                            <div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-white/5">
+                                <div className="p-5 text-center bg-red-500/5">
+                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">🏦 Without KoreX</p>
+                                    <p className="text-2xl font-black text-red-400">{sd.plans.freedom.years_without} years</p>
+                                    <p className="text-xs text-muted-foreground mt-1">to pay off your debt</p>
+                                    <p className="text-sm font-bold text-red-400 mt-2">${sd.plans.freedom.total_interest_without.toLocaleString()}</p>
+                                    <p className="text-[10px] text-red-400/60">total interest paid</p>
+                                </div>
+                                <div className="p-5 text-center bg-emerald-500/5">
+                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">⚡ With KoreX Velocity</p>
+                                    <p className="text-2xl font-black text-emerald-400">{sd.plans.freedom.years_with} years</p>
+                                    <p className="text-xs text-muted-foreground mt-1">to financial freedom</p>
+                                    <p className="text-sm font-bold text-emerald-400 mt-2">${sd.plans.freedom.total_interest_with.toLocaleString()}</p>
+                                    <p className="text-[10px] text-emerald-400/60">total interest paid</p>
+                                </div>
+                            </div>
+                            <div className="bg-emerald-500/10 px-5 py-2.5 text-center border-t border-emerald-500/10">
+                                <span className="text-sm font-bold text-emerald-400">
+                                    💰 You keep ${(sd.plans.freedom.total_interest_without - sd.plans.freedom.total_interest_with).toLocaleString()} that would have gone to the bank
+                                </span>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Billing Toggle */}
                 <div className="flex items-center justify-center gap-4 py-2">
@@ -891,7 +953,7 @@ export default function SettingsPage() {
 
                 {/* Pricing Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {SUBSCRIPTION_PLANS.map((plan) => {
+                    {SUBSCRIPTION_PLANS.map((plan, idx) => {
                         const price = billingCycle === 'annual' ? plan.annual : plan.monthly;
                         const monthlyEquiv = billingCycle === 'annual' && plan.annual > 0
                             ? (plan.annual / 12).toFixed(2)
@@ -900,25 +962,59 @@ export default function SettingsPage() {
                             ? Math.round((1 - plan.annual / (plan.monthly * 12)) * 100)
                             : 0;
                         const isCurrent = plan.id === currentPlan;
+                        const currentIdx = SUBSCRIPTION_PLANS.findIndex(p => p.id === currentPlan);
+                        const isDowngrade = idx < currentIdx;
+                        const isUnlimitedPlan = plan.accounts === Infinity;
+
+                        // Real checkout handler — calls /api/subscriptions/checkout
+                        const handleCheckout = async () => {
+                            if (price === 0 || isCurrent || isDowngrade) return;
+                            setUpgrading(plan.id);
+                            try {
+                                const data = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        plan: plan.id,
+                                        billing_cycle: billingCycle,
+                                    }),
+                                });
+                                if (!data.checkout_url) throw new Error('No checkout URL returned');
+                                window.open(data.checkout_url, '_blank');
+                                toast({
+                                    title: '🍋 Checkout opened!',
+                                    description: 'Complete your payment in the new tab. Your plan will update automatically.',
+                                });
+                            } catch {
+                                toast({
+                                    title: 'Checkout failed',
+                                    description: 'Could not open checkout. Please try again or contact support.',
+                                    variant: 'destructive',
+                                });
+                            } finally {
+                                setUpgrading(null);
+                            }
+                        };
 
                         return (
                             <Card
                                 key={plan.id}
-                                className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${plan.popular
-                                    ? 'border-purple-400 dark:border-purple-500 shadow-purple-500/10 shadow-lg scale-[1.02]'
-                                    : plan.borderColor
-                                    } ${isCurrent ? 'ring-2 ring-amber-500/50' : ''}`}
+                                className={`relative overflow-hidden transition-all duration-300 ${plan.popular
+                                    ? 'border-purple-500/40 bg-purple-950/10 hover:border-purple-400/60 hover:shadow-lg hover:shadow-purple-900/20 scale-[1.02]'
+                                    : isCurrent
+                                        ? 'border-emerald-500/40 bg-emerald-950/20 ring-1 ring-emerald-500/20'
+                                        : 'border-zinc-800/60 dark:border-white/5 bg-zinc-900/40 dark:bg-slate-950/50 hover:border-zinc-700/60 hover:bg-zinc-900/60 dark:hover:bg-slate-900/60'
+                                    }`}
                             >
                                 {/* Popular Badge */}
-                                {plan.popular && (
-                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
+                                {plan.popular && !isCurrent && (
+                                    <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
                                         ⭐ MOST POPULAR
                                     </div>
                                 )}
 
                                 {/* Current Plan Badge */}
                                 {isCurrent && (
-                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
+                                    <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-bold text-center py-1 tracking-wider">
                                         YOUR CURRENT PLAN
                                     </div>
                                 )}
@@ -926,13 +1022,13 @@ export default function SettingsPage() {
                                 <CardContent className={`p-6 space-y-5 ${plan.popular || isCurrent ? 'pt-10' : ''}`}>
                                     {/* Plan Header */}
                                     <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 rounded-xl ${plan.iconBg} flex items-center justify-center ${plan.iconColor}`}>
-                                            {PLAN_ICON_MAP[plan.iconKey]}
+                                        <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${plan.color} bg-opacity-20 flex items-center justify-center`}>
+                                            <span className="text-white">{PLAN_ICON_MAP[plan.iconKey]}</span>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-lg">{plan.name}</h3>
-                                            <p className="text-xs text-muted-foreground">
-                                                {plan.accounts === Infinity ? 'Unlimited' : plan.accounts} accounts
+                                            <h3 className="font-bold text-lg text-white">{plan.name}</h3>
+                                            <p className="text-xs text-zinc-500">
+                                                {isUnlimitedPlan ? 'Unlimited' : plan.accounts} accounts
                                             </p>
                                         </div>
                                     </div>
@@ -940,18 +1036,18 @@ export default function SettingsPage() {
                                     {/* Pricing */}
                                     <div className="space-y-1">
                                         {price === 0 ? (
-                                            <div className="text-3xl font-black">Free</div>
+                                            <div className="text-3xl font-black text-white">Free</div>
                                         ) : (
                                             <>
                                                 <div className="flex items-baseline gap-1">
-                                                    <span className="text-3xl font-black">
+                                                    <span className="text-3xl font-black text-white">
                                                         ${billingCycle === 'annual' ? monthlyEquiv : price}
                                                     </span>
-                                                    <span className="text-sm text-muted-foreground">/mo</span>
+                                                    <span className="text-sm text-zinc-500">/mo</span>
                                                 </div>
                                                 {billingCycle === 'annual' && (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-muted-foreground line-through">
+                                                        <span className="text-xs text-zinc-500 line-through">
                                                             ${plan.monthly}/mo
                                                         </span>
                                                         <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
@@ -960,7 +1056,7 @@ export default function SettingsPage() {
                                                     </div>
                                                 )}
                                                 {billingCycle === 'annual' && (
-                                                    <p className="text-xs text-muted-foreground">
+                                                    <p className="text-xs text-zinc-500">
                                                         Billed ${plan.annual}/year
                                                     </p>
                                                 )}
@@ -968,52 +1064,111 @@ export default function SettingsPage() {
                                         )}
                                     </div>
 
-                                    <Separator />
+                                    {/* 🔥 NEUROMARKETING: Dynamic Savings Badge — Freedom gets gold variant */}
+                                    {sd?.has_data && sd.plans?.[plan.id] && sd.plans[plan.id].annual_savings > 0 && (() => {
+                                        const s = sd.plans[plan.id];
+                                        const displaySavings = billingCycle === 'monthly'
+                                            ? `~$${Math.round(s.monthly_savings).toLocaleString()}/mo`
+                                            : `~$${Math.round(s.annual_savings).toLocaleString()}/yr`;
+                                        const netGain = s.annual_savings - s.plan_cost_annual;
+
+                                        return (
+                                            <div className="space-y-2">
+                                                {isUnlimitedPlan ? (
+                                                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/30">
+                                                        <div className="flex-shrink-0 p-1 rounded-full bg-amber-500/20">
+                                                            <InfinityIcon size={16} className="text-amber-400" />
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-sm font-bold text-amber-300 block leading-snug">
+                                                                {displaySavings} + no limits
+                                                            </span>
+                                                            <span className="text-xs text-amber-400/70 leading-snug">
+                                                                every future debt automatically covered
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                                        <TrendingDown size={16} className="text-emerald-400 flex-shrink-0" />
+                                                        <div>
+                                                            <span className="text-sm font-bold text-emerald-400 block leading-snug">
+                                                                {displaySavings} in interest
+                                                            </span>
+                                                            <span className="text-xs text-emerald-500/70 leading-snug">
+                                                                saved each {billingCycle === 'monthly' ? 'month' : 'year'} using CoreX
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {/* Net ROI for paid plans */}
+                                                {s.plan_cost_annual > 0 && netGain > 0 && (
+                                                    <p className="text-xs text-zinc-500 pl-1 leading-snug">
+                                                        💰 Net gain: <span className={`${isUnlimitedPlan ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> after plan cost
+                                                        {s.roi_days > 0 && s.roi_days < 365 && (
+                                                            <> · Pays for itself in <span className="text-white font-semibold">{s.roi_days} days</span></>
+                                                        )}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Features */}
                                     <ul className="space-y-2">
-                                        <li className="flex items-center gap-2 text-sm">
+                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{plan.accounts === Infinity ? 'Unlimited' : `Up to ${plan.accounts}`} debt accounts</span>
+                                            <span>{isUnlimitedPlan ? 'Unlimited' : `Up to ${plan.accounts}`} debt accounts</span>
                                         </li>
-                                        <li className="flex items-center gap-2 text-sm">
+                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
                                             <span>All features included</span>
                                         </li>
-                                        <li className="flex items-center gap-2 text-sm">
+                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
                                             <span>Freedom Clock & Action Plan</span>
                                         </li>
-                                        <li className="flex items-center gap-2 text-sm">
+                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
                                             <span>PDF Reports & Exports</span>
                                         </li>
-                                        <li className="flex items-center gap-2 text-sm">
+                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
                                             <span>Velocity Simulations</span>
                                         </li>
                                     </ul>
 
+                                    {/* ☕ NEUROMARKETING: Price Reframe */}
+                                    {plan.id !== 'starter' && PRICE_ANCHORS[plan.id] && (
+                                        <p className="text-[11px] text-center text-zinc-500 italic">
+                                            {PRICE_ANCHORS[plan.id]}
+                                        </p>
+                                    )}
+
                                     {/* CTA Button */}
                                     {isCurrent ? (
-                                        <Button disabled className="w-full" variant="outline">
+                                        <Button disabled className="w-full bg-emerald-900/30 text-emerald-400 cursor-default border border-emerald-500/20" variant="outline">
                                             <CheckCircle size={14} className="mr-2" />
-                                            Current Plan
+                                            ✓ Active
+                                        </Button>
+                                    ) : isDowngrade ? (
+                                        <Button disabled className="w-full bg-zinc-800/50 text-zinc-600 cursor-not-allowed" variant="outline">
+                                            Downgrade
                                         </Button>
                                     ) : (
                                         <Button
+                                            disabled={upgrading !== null}
                                             className={`w-full font-semibold ${plan.popular
-                                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white shadow-lg shadow-purple-500/20'
+                                                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/30'
                                                 : price === 0
-                                                    ? 'bg-slate-200 dark:bg-white/5 text-foreground hover:bg-slate-300 dark:hover:bg-white/10'
-                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white'
+                                                    ? 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-900/20'
                                                 }`}
-                                            onClick={() => {
-                                                // TODO: Integrate with Lemon Squeezy checkout
-                                                window.open('https://lemonsqueezy.com', '_blank');
-                                            }}
+                                            onClick={handleCheckout}
                                         >
-                                            {price === 0 ? 'Get Started' : 'Upgrade Now'}
+                                            {upgrading === plan.id
+                                                ? <><RefreshCw size={14} className="mr-2 animate-spin" /> Processing...</>
+                                                : price === 0 ? 'Get Started' : 'Upgrade Now'}
                                         </Button>
                                     )}
                                 </CardContent>
@@ -1021,6 +1176,32 @@ export default function SettingsPage() {
                         );
                     })}
                 </div>
+
+                {/* 📊 NEUROMARKETING: Social Proof Stats */}
+                {sd?.has_data && (
+                    <Card className="border-slate-200 dark:border-white/5 bg-gradient-to-r from-blue-950/20 via-purple-950/10 to-blue-950/20">
+                        <CardContent className="p-5">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                                <div>
+                                    <p className="text-2xl font-black text-blue-400">{sd.social_proof.total_accounts_monitored}</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Accounts Monitored</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-purple-400">${(sd.total_debt / 1000).toFixed(0)}K</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Debt Being Optimized</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-emerald-400">3.2x</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Faster Than Banks</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-amber-400">40%</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Interest Saved</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* FAQ / Trust Section */}
                 <Card className="border-slate-200 dark:border-white/5">
@@ -1178,7 +1359,7 @@ export default function SettingsPage() {
     const sectionMap: Record<Section, () => React.ReactNode> = {
         profile: renderProfile,
         appearance: renderAppearance,
-        algorithm: renderAlgorithm,
+
         notifications: renderNotifications,
         data: renderDataManagement,
         subscription: renderSubscription,

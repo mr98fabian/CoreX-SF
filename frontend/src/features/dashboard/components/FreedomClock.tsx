@@ -140,6 +140,14 @@ export default function FreedomClock() {
                             </p>
                         </div>
                     </div>
+                    {/* Time Accelerated — moved here from standalone KPI */}
+                    <div className="text-right">
+                        <p className="text-2xl font-extrabold text-blue-400 font-mono tracking-tight leading-none">
+                            {data.years_saved > 0 ? data.years_saved.toFixed(1) : (data.months_saved / 12).toFixed(1)}
+                            <span className="text-sm text-blue-500/60 ml-1">yrs</span>
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Ahead of schedule</p>
+                    </div>
                 </div>
 
                 {/* Main Date Display (The Heart) */}
@@ -183,6 +191,35 @@ export default function FreedomClock() {
                         <div className={`text-3xl font-extrabold tabular-nums ${extraPayment > 0 ? 'text-emerald-400' : 'text-blue-400'}`}>{days}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Days</div>
                     </div>
+                </div>
+
+                {/* Freedom Dates Comparison */}
+                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-zinc-900/60 to-red-950/30 border border-emerald-800/20 mb-6">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-emerald-400 text-xs">⚡</span>
+                        <div className="min-w-0">
+                            <p className="text-[9px] uppercase tracking-widest text-emerald-500 font-bold">With KoreX</p>
+                            <p className="text-sm font-bold text-emerald-300 truncate">
+                                {velocityDate.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="text-zinc-600 text-xs font-mono">→</div>
+
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Clock size={12} className="text-red-400/60 flex-shrink-0" />
+                        <div className="min-w-0">
+                            <p className="text-[9px] uppercase tracking-widest text-red-400/70 font-bold">Without</p>
+                            <p className="text-sm font-bold text-red-400/70 line-through truncate">
+                                {standardDate.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+
+                    <span className="ml-auto px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                        {data.months_saved}mo cut
+                    </span>
                 </div>
 
                 {/* Simulator (Bottom Section) */}

@@ -205,6 +205,104 @@ def get_velocity_target(debts: List[DebtAccount]) -> Optional[DebtAccount]:
     return max(active_debts, key=lambda d: d.interest_rate)
 
 
+def detect_debt_alerts(debts: List[DebtAccount]) -> List[Dict]:
+    """
+    Scans all active debts for dangerous conditions.
+    
+    Returns a list of alerts with severity levels:
+    - CRITICAL: Min payment doesn't cover monthly interest (debt grows infinitely)
+    - WARNING:  <10% of payment goes to principal (debt trap)
+    - CAUTION:  Payoff > 360 months (30+ years)
+    """
+    alerts = []
+    
+    for debt in debts:
+        if debt.balance <= 0:
+            continue
+        
+        monthly_interest = (debt.balance * (debt.interest_rate / Decimal('100'))) / Decimal('12')
+        monthly_interest = monthly_interest.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
+        # CRITICAL: Payment doesn't cover interest
+        if debt.min_payment <= monthly_interest:
+            alerts.append({
+                "severity": "critical",
+                "debt_name": debt.name,
+                "title": "Payment Doesn't Cover Interest",
+                "message": (
+                    f"{debt.name}: ${float(debt.min_payment):,.2f}/mo payment "
+                    f"< ${float(monthly_interest):,.2f}/mo interest at "
+                    f"{float(debt.interest_rate)}% APR. Debt grows infinitely."
+                ),
+                "details": {
+                    "balance": float(debt.balance),
+                    "apr": float(debt.interest_rate),
+                    "min_payment": float(debt.min_payment),
+                    "monthly_interest": float(monthly_interest),
+                    "shortfall": float(monthly_interest - debt.min_payment),
+                },
+                "recommendation": (
+                    f"Increase payment to at least ${float(monthly_interest + Decimal('50')):,.2f}/mo "
+                    f"or negotiate a lower rate."
+                ),
+            })
+            continue  # Skip lower-severity checks for this debt
+        
+        # WARNING: <10% of payment goes to principal
+        principal_portion = debt.min_payment - monthly_interest
+        principal_pct = (principal_portion / debt.min_payment * Decimal('100')).quantize(
+            Decimal('0.1'), rounding=ROUND_HALF_UP
+        )
+        
+        if principal_pct < Decimal('10'):
+            alerts.append({
+                "severity": "warning",
+                "debt_name": debt.name,
+                "title": "Debt Trap — Slow Progress",
+                "message": (
+                    f"{debt.name}: Only {float(principal_pct)}% of your "
+                    f"${float(debt.min_payment):,.2f} payment goes to principal. "
+                    f"${float(monthly_interest):,.2f} is swallowed by interest."
+                ),
+                "details": {
+                    "balance": float(debt.balance),
+                    "apr": float(debt.interest_rate),
+                    "principal_pct": float(principal_pct),
+                    "monthly_interest": float(monthly_interest),
+                },
+                "recommendation": (
+                    f"Add extra payments to break free faster. "
+                    f"Even ${float(principal_portion * 2):,.2f} extra/mo doubles your progress."
+                ),
+            })
+            continue
+        
+        # CAUTION: Payoff > 360 months (30 years)
+        months = calculate_months_to_payoff(debt.balance, debt.interest_rate, debt.min_payment)
+        if months > 360:
+            years = round(months / 12, 1)
+            alerts.append({
+                "severity": "caution",
+                "debt_name": debt.name,
+                "title": "Extended Payoff Timeline",
+                "message": (
+                    f"{debt.name}: At current payments, payoff takes "
+                    f"{years} years ({months} months)."
+                ),
+                "details": {
+                    "balance": float(debt.balance),
+                    "apr": float(debt.interest_rate),
+                    "months_to_payoff": months,
+                    "years_to_payoff": years,
+                },
+                "recommendation": "Consider debt consolidation or increasing monthly payments.",
+            })
+    
+    # Sort: critical first, then warning, then caution
+    severity_order = {"critical": 0, "warning": 1, "caution": 2}
+    alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
+    
+    return alerts
 
 
 
@@ -329,6 +427,9 @@ def generate_action_plan(
     # Sort by interest rate for avalanche attacks
     sim_debts.sort(key=lambda x: x.interest_rate, reverse=True)
     
+    # Track original balances for progress percentage
+    original_balances = {d.name: float(d.balance) for d in sim_debts}
+    
     # Separate incomes and expenses from cashflows
     incomes = [cf for cf in cashflows if cf.category == "income"]
     
@@ -345,6 +446,11 @@ def generate_action_plan(
             if debt.due_day == day_num:
                 payment = min(debt.min_payment, debt.balance)
                 if payment > 0:
+                    bal_before = float(debt.balance)
+                    new_debt_bal = float(debt.balance - payment)
+                    new_fund_bal = float(sim_balance - payment)
+                    orig = original_balances.get(debt.name, bal_before)
+                    progress = round((1 - new_debt_bal / orig) * 100, 1) if orig > 0 else 100.0
                     movements.append({
                         "day": day_num,
                         "date": iso,
@@ -357,6 +463,11 @@ def generate_action_plan(
                         "destination": debt.name,
                         "daily_interest_saved": 0,
                         "days_shortened": 0,
+                        "balance_before": bal_before,
+                        "balance_after": new_debt_bal,
+                        "total_interest_saved": 0,
+                        "funding_balance_after": new_fund_bal,
+                        "debt_progress_pct": progress,
                     })
                     sim_balance -= payment
                     debt.balance -= payment
@@ -364,6 +475,7 @@ def generate_action_plan(
         # ─── 2. INCOME arrivals ─────────────────────────────
         for inc in incomes:
             if inc.day_of_month == day_num:
+                new_fund_bal = float(sim_balance + inc.amount)
                 movements.append({
                     "day": day_num,
                     "date": iso,
@@ -376,6 +488,11 @@ def generate_action_plan(
                     "destination": funding_account_name,
                     "daily_interest_saved": 0,
                     "days_shortened": 0,
+                    "balance_before": 0,
+                    "balance_after": 0,
+                    "total_interest_saved": 0,
+                    "funding_balance_after": new_fund_bal,
+                    "debt_progress_pct": 0,
                 })
                 sim_balance += inc.amount
         
@@ -407,6 +524,13 @@ def generate_action_plan(
                 
                 is_payoff = payment >= debt.balance
                 
+                bal_before = float(debt.balance)
+                new_debt_bal = float(debt.balance - payment)
+                total_saved = round(daily_savings * days_short, 2)
+                new_fund_bal = float(sim_balance - payment)
+                orig = original_balances.get(debt.name, bal_before)
+                progress = round((1 - max(new_debt_bal, 0) / orig) * 100, 1) if orig > 0 else 100.0
+                
                 movements.append({
                     "day": day_num,
                     "date": iso,
@@ -419,6 +543,11 @@ def generate_action_plan(
                     "destination": debt.name,
                     "daily_interest_saved": daily_savings,
                     "days_shortened": days_short,
+                    "balance_before": bal_before,
+                    "balance_after": new_debt_bal,
+                    "total_interest_saved": total_saved,
+                    "funding_balance_after": new_fund_bal,
+                    "debt_progress_pct": progress,
                 })
                 
                 remaining_ammo -= payment
@@ -717,8 +846,6 @@ def calculate_purchase_time_cost(
     # 1. Baseline Projection
     baseline = calculate_debt_free_date(debts, extra_monthly)
     baseline_months = baseline["velocity_months"]
-    print(f"DEBUG: Purchase {purchase_amount}, Extra {extra_monthly}")
-    print(f"DEBUG: Baseline Months: {baseline_months}")
 
     # 2. Simulated Impact (Opportunity Cost)
     # We clone the debts to avoid mutating the original objects
@@ -740,7 +867,6 @@ def calculate_purchase_time_cost(
     
     impact = calculate_debt_free_date(simulated_debts, extra_monthly)
     impact_months = impact["velocity_months"]
-    print(f"DEBUG: Impact Months: {impact_months}")
 
     # 3. Calculate Delay
     months_delayed = max(0, impact_months - baseline_months)
@@ -876,15 +1002,40 @@ def simulate_freedom_path(
                  debt.balance = Decimal('0')
                  month_events.append(f"{debt.name} Paid Off")
 
-        # 3. Allocating Extra Cash (Velocity + User Extra)
-        # We need to find the Target
+        # 3. Allocating Extra Cash — GAP-FIRST STRATEGY
+        # Step A: Cover interest shortfalls so no debt GROWS
+        # Step B: Attack highest APR with remaining extra (Avalanche)
         active_debts = [d for d in sim_debts if d.balance > 0]
         
         if active_debts:
             available_for_attack = extra_monthly_payment
             
-            # Simple Strategy: Highest Rate First (Avalanche)
-            # In real engine, we'd use get_velocity_target, but let's keep it self-contained for speed
+            # --- Step A: Cover interest gaps first ---
+            for debt in active_debts:
+                if available_for_attack <= 0:
+                    break
+                
+                # Calculate this month's interest (already accrued above)
+                monthly_interest = (debt.balance * debt.monthly_rate).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                
+                # The min_payment already reduced debt.balance above.
+                # But if min_payment < interest that was accrued, the debt grew.
+                # We calculate the original shortfall to see if we need to cover it.
+                shortfall = monthly_interest - debt.min_payment
+                
+                if shortfall > 0:
+                    gap_payment = min(shortfall, available_for_attack, debt.balance)
+                    debt.balance -= gap_payment
+                    available_for_attack -= gap_payment
+                    
+                    if debt.balance <= Decimal('0.01'):
+                        debt.balance = Decimal('0')
+                        month_events.append(f"{debt.name} Eliminated (gap covered)")
+            
+            # --- Step B: Avalanche with remaining extra ---
+            active_debts = [d for d in sim_debts if d.balance > 0]
             active_debts.sort(key=lambda x: x.interest_rate, reverse=True)
             
             for debt in active_debts:

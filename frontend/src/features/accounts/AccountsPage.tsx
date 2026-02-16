@@ -4,11 +4,12 @@ import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw, Crown, Lock, ArrowUpRight } from 'lucide-react';
+import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw, Crown, Lock, ArrowUpRight, Flame, ShieldAlert } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CashflowManager } from './components/CashflowManager';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import UpgradeModal from '@/components/UpgradeModal';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -232,6 +233,22 @@ export default function AccountsPage() {
     const usagePercent = planLimit === Infinity ? 0 : Math.min((debtCount / planLimit) * 100, 100);
     const isDevLicense = userPlan === 'freedom-dev';
 
+    // ─── Smart Lock Priority ──────────────────────────────────────
+    // Sort by APR descending so highest-interest accounts stay ACTIVE
+    const sortedDebts = [...debts].sort((a, b) => b.interest_rate - a.interest_rate);
+    const activeDebts = planLimit === Infinity ? sortedDebts : sortedDebts.slice(0, planLimit); // used for future backend filtering
+    const lockedDebts = planLimit === Infinity ? [] : sortedDebts.slice(planLimit);
+    const lockedIds = new Set(lockedDebts.map(d => d.id));
+
+    // Locked accounts summary stats (for banner + badges)
+    const lockedTotalDebt = lockedDebts.reduce((sum, d) => sum + d.balance, 0);
+    const lockedDailyInterest = lockedDebts.reduce(
+        (sum, d) => sum + (d.balance * d.interest_rate / 100 / 365), 0
+    );
+
+    // Upgrade modal state
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
     if (isLoading) {
         return (
             <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-500 max-w-7xl pb-20">
@@ -351,7 +368,7 @@ export default function AccountsPage() {
                                     className="font-bold tracking-wide border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        window.location.href = '/settings';
+                                        setShowUpgradeModal(true);
                                     }}
                                 >
                                     <Lock className="mr-2 h-4 w-4" strokeWidth={2} />
@@ -548,10 +565,10 @@ export default function AccountsPage() {
 
             {/* Plan Status Banner */}
             <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border ${isAtLimit
-                    ? 'bg-rose-500/5 border-rose-500/20'
-                    : isNearLimit
-                        ? 'bg-amber-500/5 border-amber-500/20'
-                        : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5'
+                ? 'bg-rose-500/5 border-rose-500/20'
+                : isNearLimit
+                    ? 'bg-amber-500/5 border-amber-500/20'
+                    : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5'
                 }`}>
                 <div className="flex items-center gap-3">
                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${isDevLicense ? 'bg-amber-500/10' : 'bg-blue-500/10'
@@ -581,21 +598,21 @@ export default function AccountsPage() {
                         <div className="w-32 h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-500 ${isAtLimit
-                                        ? 'bg-rose-500'
-                                        : isNearLimit
-                                            ? 'bg-amber-500'
-                                            : 'bg-emerald-500'
+                                    ? 'bg-rose-500'
+                                    : isNearLimit
+                                        ? 'bg-amber-500'
+                                        : 'bg-emerald-500'
                                     }`}
                                 style={{ width: `${usagePercent}%` }}
                             />
                         </div>
                         {isAtLimit && (
-                            <a
-                                href="/settings"
+                            <button
+                                onClick={() => setShowUpgradeModal(true)}
                                 className="text-xs font-semibold text-amber-500 hover:text-amber-400 transition-colors whitespace-nowrap flex items-center gap-1"
                             >
                                 Upgrade <ArrowUpRight size={12} />
-                            </a>
+                            </button>
                         )}
                     </div>
                 )}
@@ -610,9 +627,44 @@ export default function AccountsPage() {
                             You're running out of slots! Upgrade for more debt accounts.
                         </span>
                     </div>
-                    <a href="/settings" className="text-xs font-bold text-amber-500 hover:text-amber-400 underline">
+                    <button onClick={() => setShowUpgradeModal(true)} className="text-xs font-bold text-amber-500 hover:text-amber-400 underline">
                         View Plans
-                    </a>
+                    </button>
+                </div>
+            )}
+
+            {/* ─── LOCKED ACCOUNTS BANNER ─── */}
+            {lockedDebts.length > 0 && (
+                <div className="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-r from-rose-950/40 via-rose-950/20 to-transparent p-4 animate-in fade-in slide-in-from-top-3 duration-500">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.08),transparent_70%)] pointer-events-none" />
+                    <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-rose-500/10 flex items-center justify-center animate-pulse">
+                                <ShieldAlert size={20} className="text-rose-500" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-rose-400">
+                                        {lockedDebts.length} account{lockedDebts.length > 1 ? 's' : ''} locked
+                                    </span>
+                                    <span className="text-[10px] font-bold bg-rose-500/10 text-rose-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                        Unmonitored
+                                    </span>
+                                </div>
+                                <p className="text-xs text-rose-300/70 mt-0.5">
+                                    {formatMoney(lockedTotalDebt)} in unmonitored debt • ~{formatMoney(lockedDailyInterest)}/day draining
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowUpgradeModal(true)}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-lg shadow-rose-900/30 hover:shadow-rose-900/50"
+                        >
+                            <Lock size={12} />
+                            Unlock All — Upgrade Now
+                            <ArrowUpRight size={12} />
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -643,66 +695,116 @@ export default function AccountsPage() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {debts.map(acc => (
-                                <Card key={acc.id} className="glass-card group hover:border-rose-500/30 transition-all duration-500 bg-white dark:bg-slate-950/50">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => confirmDelete(acc.id)}>
-                                            <Trash2 size={14} strokeWidth={1.5} />
-                                        </Button>
-                                    </div>
+                            {sortedDebts.map(acc => {
+                                const isLocked = lockedIds.has(acc.id);
+                                const dailyLoss = acc.balance * acc.interest_rate / 100 / 365;
 
-                                    <CardHeader className="pb-2 relative z-10">
-                                        <CardTitle className="flex justify-between items-start">
-                                            <span className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-200 transition-colors truncate pr-8">{acc.name}</span>
-                                            <span className="text-[10px] bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/20 px-2 py-1 rounded text-rose-500 dark:text-rose-300 font-mono tracking-wide">
-                                                {acc.interest_rate}% APR
-                                            </span>
-                                        </CardTitle>
-                                    </CardHeader>
+                                return (
+                                    <Card
+                                        key={acc.id}
+                                        className={`glass-card group transition-all duration-500 bg-white dark:bg-slate-950/50 relative ${isLocked
+                                            ? 'opacity-60 border-rose-500/15 cursor-pointer'
+                                            : 'hover:border-rose-500/30'
+                                            }`}
+                                        onClick={isLocked ? () => setShowUpgradeModal(true) : undefined}
+                                    >
+                                        {/* Hover gradient — only on active cards */}
+                                        {!isLocked && (
+                                            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                        )}
 
-                                    <CardContent className="relative z-10">
-                                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
-                                            {formatMoney(acc.balance)}
-                                        </div>
-                                        <p className="text-xs text-rose-500 dark:text-rose-400/80 font-medium uppercase tracking-wider mb-6">{t("accounts.outstandingBalance")}</p>
-
-                                        <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-950/30 p-3 rounded-lg border border-slate-200 dark:border-white/5 mb-6">
-                                            <div>
-                                                <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
-                                                <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
+                                        {/* 🔒 Lock Overlay */}
+                                        {isLocked && (
+                                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/30 backdrop-blur-[2px] rounded-lg pointer-events-none">
+                                                <div className="h-12 w-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2">
+                                                    <Lock size={20} className="text-rose-400" />
+                                                </div>
+                                                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Locked</span>
                                             </div>
-                                            <div>
-                                                <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
-                                                <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
-                                            </div>
-                                        </div>
+                                        )}
 
-                                        <div className="flex gap-2">
-                                            <TransactionDrawer account={acc} onUpdate={fetchAccounts} />
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setUpdatingAccount(acc)}
-                                                className="h-9 px-3 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                                title={t("accounts.manualAdjustment")}
-                                            >
-                                                <RefreshCw size={14} />
-                                            </Button>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger asChild>
-                                                    <Button variant="outline" size="sm" className="flex-1 h-9 border-rose-300 dark:border-rose-900/30 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-400 dark:hover:border-rose-500/50 transition-all font-medium">
-                                                        {t("accounts.payOff")}
+                                        {/* Delete button — only active */}
+                                        {!isLocked && (
+                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => confirmDelete(acc.id)}>
+                                                    <Trash2 size={14} strokeWidth={1.5} />
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        <CardHeader className="pb-2 relative z-10">
+                                            <CardTitle className="flex justify-between items-start">
+                                                <span className={`text-lg font-bold truncate pr-8 transition-colors ${isLocked
+                                                    ? 'text-slate-500 dark:text-slate-400'
+                                                    : 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-200'
+                                                    }`}>{acc.name}</span>
+                                                <span className="text-[10px] bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/20 px-2 py-1 rounded text-rose-500 dark:text-rose-300 font-mono tracking-wide">
+                                                    {acc.interest_rate}% APR
+                                                </span>
+                                            </CardTitle>
+                                        </CardHeader>
+
+                                        <CardContent className="relative z-10">
+                                            <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
+                                                {formatMoney(acc.balance)}
+                                            </div>
+                                            <p className="text-xs text-rose-500 dark:text-rose-400/80 font-medium uppercase tracking-wider mb-4">{t("accounts.outstandingBalance")}</p>
+
+                                            {/* 💧 Bleeding Money Badge — only on locked cards */}
+                                            {isLocked && (
+                                                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/15 mb-4 pointer-events-none">
+                                                    <Flame size={14} className="text-rose-500 animate-pulse" />
+                                                    <span className="text-[11px] font-semibold text-rose-400">
+                                                        Not monitored — losing ~{formatMoney(dailyLoss)}/day in interest
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-950/30 p-3 rounded-lg border border-slate-200 dark:border-white/5 mb-6">
+                                                <div>
+                                                    <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
+                                                    <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
+                                                    <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Action buttons — disabled when locked */}
+                                            {isLocked ? (
+                                                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-100 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 text-xs font-medium pointer-events-none">
+                                                    <Lock size={12} />
+                                                    Upgrade to manage this account
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <TransactionDrawer account={acc} onUpdate={fetchAccounts} />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setUpdatingAccount(acc)}
+                                                        className="h-9 px-3 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                                        title={t("accounts.manualAdjustment")}
+                                                    >
+                                                        <RefreshCw size={14} />
                                                     </Button>
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent className="glass-panel bg-white dark:bg-slate-950/90 border-slate-200 dark:border-white/10">
-                                                    <AccountActionDialog account={acc} type="payment" onClose={() => { }} onUpdate={fetchAccounts} />
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button variant="outline" size="sm" className="flex-1 h-9 border-rose-300 dark:border-rose-900/30 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-400 dark:hover:border-rose-500/50 transition-all font-medium">
+                                                                {t("accounts.payOff")}
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent className="glass-panel bg-white dark:bg-slate-950/90 border-slate-200 dark:border-white/10">
+                                                            <AccountActionDialog account={acc} type="payment" onClose={() => { }} onUpdate={fetchAccounts} />
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
@@ -790,7 +892,7 @@ export default function AccountsPage() {
 
                 {/* Cashflow Section */}
                 <div className="pt-12 border-t border-slate-200 dark:border-white/5">
-                    <CashflowManager refreshKey={cashflowRefreshKey} />
+                    <CashflowManager refreshKey={cashflowRefreshKey} lockedIds={lockedIds} onUpgrade={() => setShowUpgradeModal(true)} />
                 </div>
             </div>
 
@@ -804,6 +906,13 @@ export default function AccountsPage() {
                     }}
                 />
             )}
+
+            {/* 🔒 Upgrade Modal — shared component with plan cards */}
+            <UpgradeModal
+                open={showUpgradeModal}
+                onOpenChange={setShowUpgradeModal}
+                reason={`Your ${planName} plan supports ${planLimit} accounts. Upgrade to unlock all ${debtCount} debt accounts and let KoreX optimize every dollar.`}
+            />
         </div>
     );
 }

@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Zap, Shield, Clock, DollarSign, ArrowRight, Sparkles } from "lucide-react";
+import { Zap, Shield, Clock, DollarSign, ArrowRight, Sparkles, AlertTriangle } from "lucide-react";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { MorningBriefingData } from "../hooks/useStrategyData";
@@ -78,6 +78,21 @@ export default function MorningBriefing({ data }: Props) {
                     <p className="text-sm text-slate-500 dark:text-slate-400 italic">
                         "{action.reason}"
                     </p>
+
+                    {/* Gap-First Strategy Info */}
+                    {action.gap_coverage && action.gap_coverage.total_cost > 0 && (
+                        <div className="rounded-lg bg-amber-500/5 border border-amber-500/15 p-3 space-y-1.5">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-amber-400">
+                                <AlertTriangle size={13} />
+                                Gap-First Strategy Active
+                            </div>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                                {formatMoney(action.gap_coverage.total_cost)} covers interest shortfalls on{' '}
+                                {action.gap_coverage.debts.map(d => d.name).join(', ')}{' '}
+                                before attacking {action.destination}.
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Impact Stats */}

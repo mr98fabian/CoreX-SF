@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
+import { withPlanLimit } from '@/lib/planLimits';
 
 // --- Type Definitions ---
 
@@ -16,6 +17,10 @@ interface RecommendedAction {
     destination_balance: number;
     daily_cost: number;
     reason: string;
+    gap_coverage?: {
+        total_cost: number;
+        debts: { name: string; shortfall: number; apr: number }[];
+    } | null;
 }
 
 interface Impact {
@@ -73,12 +78,22 @@ export interface DecisionOptionsData {
     recommended: string;
 }
 
+export interface DebtAlert {
+    severity: 'critical' | 'warning' | 'caution';
+    debt_name: string;
+    title: string;
+    message: string;
+    details: Record<string, number>;
+    recommendation: string;
+}
+
 export interface StrategyCommandData {
     morning_briefing: MorningBriefingData | null;
     confidence_meter: ConfidenceMeterData;
     freedom_counter: FreedomCounterData;
     streak: StreakData;
     decision_options: DecisionOptionsData | null;
+    debt_alerts: DebtAlert[];
 }
 
 // --- Hook ---
@@ -92,7 +107,7 @@ export function useStrategyData() {
         setLoading(true);
         setError(null);
         try {
-            const json = await apiFetch<StrategyCommandData>('/api/strategy/command-center');
+            const json = await apiFetch<StrategyCommandData>(withPlanLimit('/api/strategy/command-center'));
             setData(json);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load strategy data');

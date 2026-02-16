@@ -2,7 +2,7 @@
 Strategy Router — Velocity banking, Peace Shield, tactical GPS,
 command center, purchase simulator, and cashflow intelligence.
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import date, timedelta
@@ -11,7 +11,7 @@ from typing import List
 from database import engine
 from models import Account, CashflowItem, Transaction, User, MovementLog
 from schemas import MovementExecute, SimulatorRequest
-from helpers import bypass_fk, accounts_to_debt_objects
+from helpers import bypass_fk, accounts_to_debt_objects, accounts_to_active_debt_objects
 from auth import get_current_user_id
 
 import sys, os
@@ -23,6 +23,7 @@ from velocity_engine import (
     get_projections, get_velocity_target, get_peace_shield_status,
     calculate_safe_attack_equity, simulate_freedom_path,
     generate_action_plan, calculate_purchase_time_cost,
+    detect_debt_alerts,
     DEFAULT_PEACE_SHIELD,
 )
 from transaction_classifier import classify_transaction, classify_batch, get_cashflow_summary
@@ -60,32 +61,42 @@ def update_shield_target(data: dict):
 # ── VELOCITY PROJECTIONS ───────────────────────────────────────
 
 @router.get("/velocity/projections")
-async def get_velocity_projections(user_id: str = Depends(get_current_user_id)):
+async def get_velocity_projections(
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """Calculate real velocity banking projections from account data."""
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_debt_objects(accounts)
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
         return get_projections(debts, Decimal(str(liquid_cash)))
 
 
 @router.get("/velocity/freedom-path")
-async def get_freedom_path(user_id: str = Depends(get_current_user_id)):
+async def get_freedom_path(
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """Get the month-by-month freedom path simulation."""
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_debt_objects(accounts)
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
         velocity_amount = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return simulate_freedom_path(debts, velocity_amount)
 
 
 @router.get("/velocity/simulate")
-async def get_simulation(extra_cash: float, user_id: str = Depends(get_current_user_id)):
+async def get_simulation(
+    extra_cash: float,
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """Simulate payoff with custom extra monthly cash."""
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_debt_objects(accounts)
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
         base_velocity = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         total_monthly_power = base_velocity + Decimal(str(extra_cash))
@@ -95,12 +106,15 @@ async def get_simulation(extra_cash: float, user_id: str = Depends(get_current_u
 # ── TACTICAL GPS & EXECUTION ──────────────────────────────────
 
 @router.get("/strategy/tactical-gps")
-async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
+async def get_tactical_gps(
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """Generate a 2-month action plan with impact metrics."""
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-        debts = accounts_to_debt_objects(accounts)
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
 
         cf_tactical = [
             CashflowTactical(
@@ -123,7 +137,19 @@ async def get_tactical_gps(user_id: str = Depends(get_current_user_id)):
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
-        return generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target)
+        movements = generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target)
+
+        # Freedom date projections (reuse existing engine function)
+        liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
+        projections = get_projections(debts, Decimal(str(liquid_cash)))
+
+        return {
+            "movements": movements,
+            "freedom_date_velocity": projections.get("velocity_debt_free_date"),
+            "freedom_date_standard": projections.get("standard_debt_free_date"),
+            "months_saved": projections.get("months_saved", 0),
+            "interest_saved": projections.get("interest_saved", 0),
+        }
 
 
 @router.post("/strategy/execute")
@@ -143,7 +169,10 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
         if dest_acc:
             dest_acc.balance -= amount
             if dest_acc.type == "debt":
-                dest_acc.min_payment = calculate_minimum_payment(dest_acc.balance, dest_acc.interest_rate)
+                dest_acc.min_payment = calculate_minimum_payment(
+                    dest_acc.balance, dest_acc.interest_rate,
+                    dest_acc.interest_type, dest_acc.remaining_months,
+                )
             session.add(dest_acc)
 
         # 3. Record Transaction
@@ -184,14 +213,18 @@ async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
 # ── PURCHASE SIMULATOR ────────────────────────────────────────
 
 @router.post("/simulator/time-cost")
-async def simulate_purchase_cost(req: SimulatorRequest, user_id: str = Depends(get_current_user_id)):
+async def simulate_purchase_cost(
+    req: SimulatorRequest,
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """Calculate how many days a purchase delays freedom."""
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive.")
 
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_debt_objects(accounts)
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
         extra_monthly = (Decimal(str(liquid_cash)) * Decimal('0.20')).quantize(Decimal('0.01'))
         return calculate_purchase_time_cost(Decimal(str(req.amount)), debts, extra_monthly)
@@ -232,7 +265,10 @@ async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id))
 # ── STRATEGY COMMAND CENTER ───────────────────────────────────
 
 @router.get("/strategy/command-center")
-async def get_strategy_command_center(user_id: str = Depends(get_current_user_id)):
+async def get_strategy_command_center(
+    user_id: str = Depends(get_current_user_id),
+    plan_limit: int | None = Query(None, description="Max active debt accounts per subscription plan"),
+):
     """
     Consolidated Strategy Intelligence endpoint.
     Returns morning briefing, confidence meter, freedom counter,
@@ -244,7 +280,7 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
-        debt_accounts = accounts_to_debt_objects(accounts)
+        debt_accounts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
         liquid_cash_dec = Decimal(str(liquid_cash))
 
@@ -264,17 +300,50 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
             daily_interest = (target.balance * (target.interest_rate / Decimal('100'))) / Decimal('365')
             daily_interest = daily_interest.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
-            interest_saved_monthly = (attack_amount * (target.interest_rate / Decimal('100'))) / Decimal('12')
+            # Detect interest gaps across all debts
+            total_gap_cost = Decimal('0')
+            gap_debts = []
+            for d in debt_accounts:
+                if d.balance <= 0:
+                    continue
+                mi = (d.balance * (d.interest_rate / Decimal('100'))) / Decimal('12')
+                mi = mi.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                shortfall = mi - d.min_payment
+                if shortfall > 0:
+                    total_gap_cost += shortfall
+                    gap_debts.append({
+                        "name": d.name,
+                        "shortfall": float(shortfall),
+                        "apr": float(d.interest_rate),
+                    })
+
+            # Effective attack = total extra minus gap coverage
+            effective_attack = max(attack_amount - total_gap_cost, Decimal('0'))
+
+            interest_saved_monthly = (effective_attack * (target.interest_rate / Decimal('100'))) / Decimal('12')
             interest_saved_monthly = interest_saved_monthly.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
             days_accelerated = 0
             if target.min_payment > 0:
-                months_saved = attack_amount / target.min_payment
+                months_saved = effective_attack / target.min_payment
                 days_accelerated = int((months_saved * Decimal('30')).quantize(Decimal('1')))
 
             hourly_rate = Decimal('25')
             annual_interest_saved = interest_saved_monthly * Decimal('12')
             freedom_hours = (annual_interest_saved / hourly_rate).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+
+            # Build reason string with gap info
+            if total_gap_cost > 0:
+                reason = (
+                    f"Gap-First Strategy: ${float(total_gap_cost):,.2f}/mo covers interest gaps on "
+                    f"{len(gap_debts)} debt(s). Remaining ${float(effective_attack):,.2f} "
+                    f"attacks {target.name} at {float(target.interest_rate)}% APR"
+                )
+            else:
+                reason = (
+                    f"Highest APR at {float(target.interest_rate)}% — "
+                    f"costs ${float(daily_interest)}/day in interest"
+                )
 
             morning_briefing = {
                 "available_cash": float(liquid_cash_dec),
@@ -285,15 +354,16 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
                     "health": shield.get("health", "unknown"),
                 },
                 "recommended_action": {
-                    "amount": float(attack_amount),
+                    "amount": float(effective_attack),
                     "destination": target.name,
                     "destination_apr": float(target.interest_rate),
                     "destination_balance": float(target.balance),
                     "daily_cost": float(daily_interest),
-                    "reason": (
-                        f"Highest APR at {float(target.interest_rate)}% — "
-                        f"costs ${float(daily_interest)}/day in interest"
-                    ),
+                    "reason": reason,
+                    "gap_coverage": {
+                        "total_cost": float(total_gap_cost),
+                        "debts": gap_debts,
+                    } if total_gap_cost > 0 else None,
                 },
                 "impact": {
                     "days_accelerated": days_accelerated,
@@ -325,12 +395,24 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
 
         # --- 7. Freedom Counter ---
         projections = get_projections(debt_accounts, liquid_cash_dec)
+
+        # Accurate days recovered = actual date diff (standard - velocity)
+        std_date_str = projections.get("standard_debt_free_date", "N/A")
+        vel_date_str = projections.get("velocity_debt_free_date", "N/A")
+        try:
+            from datetime import datetime as _dt
+            std_dt = _dt.fromisoformat(std_date_str)
+            vel_dt = _dt.fromisoformat(vel_date_str)
+            days_recovered = max(0, (std_dt - vel_dt).days)
+        except (ValueError, TypeError):
+            days_recovered = projections.get("months_saved", 0) * 30
+
         freedom_counter = {
-            "current_freedom_date": projections.get("velocity_debt_free_date", "N/A"),
-            "standard_freedom_date": projections.get("standard_debt_free_date", "N/A"),
+            "current_freedom_date": vel_date_str,
+            "standard_freedom_date": std_date_str,
             "months_saved": projections.get("months_saved", 0),
             "interest_saved": projections.get("interest_saved", 0),
-            "total_days_recovered": projections.get("months_saved", 0) * 30,
+            "total_days_recovered": days_recovered,
             "velocity_power": projections.get("velocity_power", 0),
         }
 
@@ -410,11 +492,15 @@ async def get_strategy_command_center(user_id: str = Depends(get_current_user_id
                 "recommended": recommended,
             }
 
+        # --- 10. Debt Health Alerts ---
+        debt_alerts = detect_debt_alerts(debt_accounts)
+
         return {
             "morning_briefing": morning_briefing,
             "confidence_meter": confidence_meter,
             "freedom_counter": freedom_counter,
             "streak": streak,
             "decision_options": decision_options,
+            "debt_alerts": debt_alerts,
         }
 
