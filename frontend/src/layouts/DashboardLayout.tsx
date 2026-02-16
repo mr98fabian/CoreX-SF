@@ -118,7 +118,7 @@ export default function DashboardLayout() {
     );
 
     return (
-        <div className="flex h-[100dvh] w-full overflow-hidden bg-transparent">
+        <div className="flex h-[100dvh] w-full overflow-x-hidden bg-transparent">
 
             {/* ═══ MOBILE: Backdrop overlay (covers entire screen) ═══ */}
             {isMobile && isSidebarOpen && (
@@ -190,7 +190,7 @@ export default function DashboardLayout() {
                 </header>
 
                 {/* SCROLLABLE CONTENT */}
-                <div className="flex-1 md:overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0">
                     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>
