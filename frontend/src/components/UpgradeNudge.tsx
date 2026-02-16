@@ -61,9 +61,9 @@ export default function UpgradeNudge() {
         <>
             {/* Floating Toast */}
             <div
-                className={`fixed bottom-6 right-6 z-50 max-w-sm transition-all duration-500 ease-out ${dismissed
-                        ? 'translate-y-4 opacity-0 pointer-events-none'
-                        : 'translate-y-0 opacity-100'
+                className={`fixed bottom-6 right-6 z-30 max-w-sm transition-all duration-500 ease-out ${dismissed
+                    ? 'translate-y-4 opacity-0 pointer-events-none'
+                    : 'translate-y-0 opacity-100'
                     }`}
                 style={{ animation: dismissed ? 'none' : 'slideInUp 0.5s ease-out' }}
             >
@@ -85,8 +85,8 @@ export default function UpgradeNudge() {
                         {/* Icon + Title */}
                         <div className="flex items-center gap-3">
                             <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${isFree
-                                    ? 'bg-amber-500/10 border border-amber-500/20'
-                                    : 'bg-rose-500/10 border border-rose-500/20'
+                                ? 'bg-amber-500/10 border border-amber-500/20'
+                                : 'bg-rose-500/10 border border-rose-500/20'
                                 }`}>
                                 {isFree
                                     ? <Crown size={18} className="text-amber-400" />

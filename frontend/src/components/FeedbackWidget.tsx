@@ -154,7 +154,7 @@ export default function FeedbackWidget() {
     }
 
     return (
-        <div ref={panelRef} className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+        <div ref={panelRef} className="fixed bottom-5 right-5 z-30 flex flex-col items-end gap-3">
             {/* ─── Expanded Panel ─────────────────────────────── */}
             <div
                 className={cn(

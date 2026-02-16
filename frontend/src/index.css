@@ -111,6 +111,7 @@
         radial-gradient(circle at 80% 10%, var(--cx-gradient-mid) 0%, transparent 30%);
     background-attachment: fixed;
     transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

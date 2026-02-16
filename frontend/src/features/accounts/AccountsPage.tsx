@@ -236,7 +236,7 @@ export default function AccountsPage() {
     // ─── Smart Lock Priority ──────────────────────────────────────
     // Sort by APR descending so highest-interest accounts stay ACTIVE
     const sortedDebts = [...debts].sort((a, b) => b.interest_rate - a.interest_rate);
-    const activeDebts = planLimit === Infinity ? sortedDebts : sortedDebts.slice(0, planLimit); // used for future backend filtering
+    // Active debts = sortedDebts.slice(0, planLimit) — used implicitly via lockedDebts inverse
     const lockedDebts = planLimit === Infinity ? [] : sortedDebts.slice(planLimit);
     const lockedIds = new Set(lockedDebts.map(d => d.id));
 
