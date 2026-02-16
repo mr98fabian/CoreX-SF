@@ -4,6 +4,8 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import AccountsPage from "@/features/accounts/AccountsPage";
 import ActionPlanPage from "@/features/actionplan/ActionPlanPage";
+import AnalyticsPage from "@/features/analytics/AnalyticsPage";
+
 
 import SettingsPage from "@/features/settings/SettingsPage";
 import LoginPage from "@/features/auth/LoginPage";
@@ -43,6 +45,7 @@ function App() {
                   <Route index element={<DashboardPage />} />
                   <Route path="action-plan" element={<ActionPlanPage />} />
                   <Route path="accounts" element={<AccountsPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
 
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>

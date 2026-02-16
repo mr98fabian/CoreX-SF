@@ -1,10 +1,20 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiFetch } from '@/lib/api';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -31,6 +41,9 @@ import {
     TrendingDown,
     Timer,
     DollarSign,
+    Search,
+    SlidersHorizontal,
+    X,
 } from 'lucide-react';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -56,6 +69,15 @@ interface ExecutedTransaction {
     amount: number;
     description: string;
     category: string;
+    account_id?: number;
+    account_name?: string;
+}
+
+interface HistoryResponse {
+    transactions: ExecutedTransaction[];
+    total: number;
+    limit: number;
+    offset: number;
 }
 
 interface AccountInfo {
@@ -80,6 +102,21 @@ const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; ic
 const getTypeStyle = (type: string) =>
     TYPE_STYLES[type] ?? TYPE_STYLES['expense'];
 
+/** Category color mapping for transaction badges */
+const getCategoryColor = (category: string): string => {
+    const lower = category.toLowerCase();
+    if (lower.includes('income') || lower.includes('salary') || lower.includes('deposit')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+    if (lower.includes('food') || lower.includes('dining') || lower.includes('restaurant')) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300';
+    if (lower.includes('transport') || lower.includes('auto') || lower.includes('gas')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
+    if (lower.includes('entertainment') || lower.includes('streaming')) return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
+    if (lower.includes('shopping') || lower.includes('retail')) return 'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300';
+    if (lower.includes('util') || lower.includes('bill') || lower.includes('electric')) return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300';
+    if (lower.includes('health') || lower.includes('medical')) return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
+    if (lower.includes('housing') || lower.includes('rent') || lower.includes('mortgage')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300';
+    if (lower.includes('payment') || lower.includes('velocity') || lower.includes('attack')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300';
+};
+
 // ═══════════════════════════════════════════════════════════════
 // ACTION PLAN PAGE
 // ═══════════════════════════════════════════════════════════════
@@ -92,7 +129,6 @@ export default function ActionPlanPage() {
 
     // ── State ────────────────────────────────────────────────
     const [movements, setMovements] = useState<TacticalMovement[]>([]);
-    const [executedTxs, setExecutedTxs] = useState<ExecutedTransaction[]>([]);
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [executingKey, setExecutingKey] = useState<string | null>(null);
@@ -102,6 +138,19 @@ export default function ActionPlanPage() {
 
     // Month navigator: 0 = current, 1 = next
     const [monthOffset, setMonthOffset] = useState(0);
+
+    // ── History filters & pagination state ────────────────────
+    const [historyTxs, setHistoryTxs] = useState<ExecutedTransaction[]>([]);
+    const [historyTotal, setHistoryTotal] = useState(0);
+    const [historyPage, setHistoryPage] = useState(0);
+    const [historyLoading, setHistoryLoading] = useState(true);
+    const [historySearch, setHistorySearch] = useState('');
+    const [historyAccountFilter, setHistoryAccountFilter] = useState('all');
+    const [historyCategoryFilter, setHistoryCategoryFilter] = useState('all');
+    const [historyDateFrom, setHistoryDateFrom] = useState('');
+    const [historyDateTo, setHistoryDateTo] = useState('');
+    const [showHistoryFilters, setShowHistoryFilters] = useState(false);
+    const HISTORY_PER_PAGE = 15;
 
     const currentMonth = useMemo(() => {
         const d = new Date();
@@ -117,21 +166,32 @@ export default function ActionPlanPage() {
         return `${name.charAt(0).toUpperCase() + name.slice(1)} ${currentMonth.year}`;
     }, [currentMonth, language]);
 
-    // ── Data Fetching ────────────────────────────────────────
+    // Unique category list from history results
+    const historyCategories = useMemo(() => {
+        const cats = new Set(historyTxs.map(tx => tx.category).filter(Boolean));
+        return Array.from(cats).sort();
+    }, [historyTxs]);
+
+    // Active filter count for badge indicator
+    const activeFilterCount = useMemo(() => {
+        let count = 0;
+        if (historyAccountFilter !== 'all') count++;
+        if (historyCategoryFilter !== 'all') count++;
+        if (historyDateFrom) count++;
+        if (historyDateTo) count++;
+        return count;
+    }, [historyAccountFilter, historyCategoryFilter, historyDateFrom, historyDateTo]);
+
+    // ── Data Fetching — Scheduled Movements + Accounts ──────
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const [gpsData, txData, accData] = await Promise.all([
+            const [gpsData, accData] = await Promise.all([
                 apiFetch<TacticalMovement[]>('/api/strategy/tactical-gps'),
-                apiFetch<ExecutedTransaction[]>('/api/transactions/recent?limit=100'),
                 apiFetch<AccountInfo[]>('/api/accounts'),
             ]);
             setMovements(Array.isArray(gpsData) ? gpsData : []);
             setAccounts(Array.isArray(accData) ? accData : []);
-            // Filter only velocity executions for the history
-            const velocityTxs = (Array.isArray(txData) ? txData : [])
-                .filter((tx: ExecutedTransaction) => tx.description?.startsWith('Velocity Execution'));
-            setExecutedTxs(velocityTxs);
         } catch (err) {
             console.error('Action Plan fetch failed:', err);
         } finally {
@@ -139,7 +199,46 @@ export default function ActionPlanPage() {
         }
     };
 
+    // ── Fetch History — uses /api/transactions/all with filters ──
+    const fetchHistory = useCallback(async () => {
+        setHistoryLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.set('limit', String(HISTORY_PER_PAGE));
+            params.set('offset', String(historyPage * HISTORY_PER_PAGE));
+            if (historySearch.trim()) params.set('search', historySearch.trim());
+            if (historyAccountFilter !== 'all') params.set('account_id', historyAccountFilter);
+            if (historyCategoryFilter !== 'all') params.set('category', historyCategoryFilter);
+            if (historyDateFrom) params.set('date_from', historyDateFrom);
+            if (historyDateTo) params.set('date_to', historyDateTo);
+
+            const data = await apiFetch<HistoryResponse>(`/api/transactions/all?${params.toString()}`);
+            setHistoryTxs(data.transactions || []);
+            setHistoryTotal(data.total || 0);
+        } catch (err) {
+            console.error('History fetch failed:', err);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, [historyPage, historySearch, historyAccountFilter, historyCategoryFilter, historyDateFrom, historyDateTo]);
+
     useEffect(() => { fetchData(); }, []);
+    useEffect(() => { fetchHistory(); }, [fetchHistory]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setHistoryPage(0);
+    }, [historySearch, historyAccountFilter, historyCategoryFilter, historyDateFrom, historyDateTo]);
+
+    const historyTotalPages = Math.max(1, Math.ceil(historyTotal / HISTORY_PER_PAGE));
+
+    const clearHistoryFilters = () => {
+        setHistorySearch('');
+        setHistoryAccountFilter('all');
+        setHistoryCategoryFilter('all');
+        setHistoryDateFrom('');
+        setHistoryDateTo('');
+    };
 
     // ── Filter movements by selected month ───────────────────
     const filteredMovements = useMemo(() => {
@@ -586,72 +685,243 @@ export default function ActionPlanPage() {
                 </CardContent>
             </Card>
 
-            {/* ────── EXECUTION HISTORY (with Impact Metrics) ────── */}
+            {/* ────── EXECUTION HISTORY (Enhanced with Search, Filters, Pagination) ────── */}
             <Card className="border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950/60 backdrop-blur-xl">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-lg text-slate-800 dark:text-zinc-200 flex items-center gap-2">
                         <History className="text-amber-400" size={20} />
                         {t('actionPlan.executionHistory')}
                         <span className="text-xs text-slate-400 dark:text-slate-500 font-normal ml-2">
-                            {executedTxs.length} {t('actionPlan.executed')}
+                            {historyTotal} {t('actionPlan.executed')}
                         </span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    {executedTxs.length === 0 ? (
+                <CardContent className="space-y-4">
+                    {/* ── Search + Filter Toggle ── */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="relative flex-1">
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                placeholder={language === 'es' ? 'Buscar transacciones...' : 'Search transactions...'}
+                                value={historySearch}
+                                onChange={(e) => setHistorySearch(e.target.value)}
+                                className="pl-9 h-9 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                            />
+                            {historySearch && (
+                                <button
+                                    onClick={() => setHistorySearch('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowHistoryFilters(!showHistoryFilters)}
+                            className={`h-9 gap-1.5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 ${activeFilterCount > 0 ? 'border-amber-400/50 text-amber-500 dark:text-amber-400' : ''
+                                }`}
+                        >
+                            <SlidersHorizontal size={14} />
+                            {language === 'es' ? 'Filtros' : 'Filters'}
+                            {activeFilterCount > 0 && (
+                                <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px]">
+                                    {activeFilterCount}
+                                </Badge>
+                            )}
+                        </Button>
+                    </div>
+
+                    {/* ── Collapsible Filter Panel ── */}
+                    {showHistoryFilters && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 animate-in slide-in-from-top-2 duration-200">
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Cuenta' : 'Account'}</label>
+                                <Select value={historyAccountFilter} onValueChange={setHistoryAccountFilter}>
+                                    <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm">
+                                        <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{language === 'es' ? 'Todas las cuentas' : 'All accounts'}</SelectItem>
+                                        {accounts.map(acc => (
+                                            <SelectItem key={acc.id} value={String(acc.id)}>{acc.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Categoría' : 'Category'}</label>
+                                <Select value={historyCategoryFilter} onValueChange={setHistoryCategoryFilter}>
+                                    <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm">
+                                        <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">{language === 'es' ? 'Todas las categorías' : 'All categories'}</SelectItem>
+                                        {historyCategories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Desde' : 'From'}</label>
+                                <Input
+                                    type="date"
+                                    value={historyDateFrom}
+                                    onChange={(e) => setHistoryDateFrom(e.target.value)}
+                                    className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Hasta' : 'To'}</label>
+                                <Input
+                                    type="date"
+                                    value={historyDateTo}
+                                    onChange={(e) => setHistoryDateTo(e.target.value)}
+                                    className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                                />
+                            </div>
+                            {activeFilterCount > 0 && (
+                                <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
+                                    <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white gap-1">
+                                        <X size={12} />
+                                        {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* ── History List ── */}
+                    {historyLoading ? (
+                        /* Skeleton Loader */
+                        <div className="space-y-2">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
+                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <Skeleton className="h-4 w-48" />
+                                        <Skeleton className="h-3 w-32" />
+                                    </div>
+                                    <Skeleton className="h-5 w-16 rounded-full" />
+                                    <Skeleton className="h-5 w-20" />
+                                </div>
+                            ))}
+                        </div>
+                    ) : historyTxs.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-500">
                             <CheckCircle2 size={32} className="mb-2 opacity-20" />
-                            <p className="text-sm">{t('actionPlan.noExecuted')}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-600 mt-1">{t('actionPlan.usePlayButton')}</p>
+                            <p className="text-sm">
+                                {historySearch || activeFilterCount > 0
+                                    ? (language === 'es' ? 'No se encontraron transacciones con esos filtros' : 'No transactions match your filters')
+                                    : t('actionPlan.noExecuted')
+                                }
+                            </p>
+                            {(historySearch || activeFilterCount > 0) && (
+                                <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="mt-2 text-xs text-amber-400 hover:text-amber-300">
+                                    {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                                </Button>
+                            )}
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {executedTxs.map((tx) => {
+                            {historyTxs.map((tx) => {
                                 const impact = getImpactForTx(tx);
+                                const isIncome = tx.amount > 0;
                                 return (
                                     <div
                                         key={tx.id}
                                         className="flex flex-col md:flex-row md:items-center justify-between px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors gap-2"
                                     >
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <CheckCircle2 size={16} className="text-emerald-500 flex-shrink-0" />
+                                            <div className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${isIncome ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                                                }`}>
+                                                {isIncome ? <DollarSign size={14} /> : <ArrowRightLeft size={14} />}
+                                            </div>
                                             <div className="min-w-0 flex-1">
                                                 <p className="text-sm text-slate-900 dark:text-white font-medium truncate">
-                                                    {tx.description.replace('Velocity Execution: ', '')}
+                                                    {tx.description}
                                                 </p>
-                                                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{tx.date}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{tx.date}</span>
+                                                    {tx.account_name && (
+                                                        <span className="text-[10px] text-slate-400 dark:text-slate-600">· {tx.account_name}</span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <span className="text-sm font-bold text-emerald-400 flex-shrink-0 md:hidden">{formatMoney(tx.amount)}</span>
                                         </div>
 
-                                        {/* Impact Metrics — stack on mobile */}
-                                        {impact.dailySaved > 0 && (
-                                            <div className="flex flex-wrap items-center gap-2 md:gap-4 md:mr-6 pl-7 md:pl-0">
-                                                <div className="flex items-center gap-1.5 text-xs">
-                                                    <TrendingDown size={12} className="text-emerald-500" />
-                                                    <span className="text-emerald-400 font-medium">
-                                                        {formatMoney(impact.dailySaved)}<span className="text-emerald-600">{t('strategy.confidence.perDay')}</span>
-                                                    </span>
+                                        <div className="flex items-center gap-2 md:gap-3 pl-11 md:pl-0 flex-wrap">
+                                            {/* Impact Metrics (only for velocity executions) */}
+                                            {impact.dailySaved > 0 && (
+                                                <div className="flex items-center gap-2 md:gap-3">
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <TrendingDown size={12} className="text-emerald-500" />
+                                                        <span className="text-emerald-400 font-medium">
+                                                            {formatMoney(impact.dailySaved)}<span className="text-emerald-600">{t('strategy.confidence.perDay')}</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <DollarSign size={12} className="text-emerald-500" />
+                                                        <span className="text-emerald-400 font-medium">
+                                                            {formatMoney(impact.monthlySaved)}<span className="text-emerald-600">{t('actionPlan.perMonth')}</span>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <Timer size={12} className="text-amber-400" />
+                                                        <span className="text-amber-400 font-medium">
+                                                            -{impact.daysShortened}{t('actionPlan.daysAbbr')}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-xs">
-                                                    <DollarSign size={12} className="text-emerald-500" />
-                                                    <span className="text-emerald-400 font-medium">
-                                                        {formatMoney(impact.monthlySaved)}<span className="text-emerald-600">{t('actionPlan.perMonth')}</span>
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-xs">
-                                                    <Timer size={12} className="text-amber-400" />
-                                                    <span className="text-amber-400 font-medium">
-                                                        -{impact.daysShortened}{t('actionPlan.daysAbbr')}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
+                                            )}
 
-                                        <span className="text-sm font-bold text-emerald-400 flex-shrink-0 hidden md:block">{formatMoney(tx.amount)}</span>
+                                            {/* Category Badge */}
+                                            {tx.category && (
+                                                <Badge variant="secondary" className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getCategoryColor(tx.category)}`}>
+                                                    {tx.category}
+                                                </Badge>
+                                            )}
+
+                                            {/* Amount */}
+                                            <span className={`text-sm font-bold flex-shrink-0 ${isIncome ? 'text-emerald-400' : 'text-rose-400'
+                                                }`}>
+                                                {isIncome ? '+' : ''}{formatMoney(tx.amount)}
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })}
+                        </div>
+                    )}
+
+                    {/* ── Pagination ── */}
+                    {historyTotalPages > 1 && (
+                        <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-white/5">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setHistoryPage(p => Math.max(0, p - 1))}
+                                disabled={historyPage === 0}
+                                className="gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                            >
+                                <ChevronLeft size={16} />
+                                {language === 'es' ? 'Anterior' : 'Previous'}
+                            </Button>
+                            <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                                {historyPage + 1} / {historyTotalPages}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setHistoryPage(p => Math.min(historyTotalPages - 1, p + 1))}
+                                disabled={historyPage >= historyTotalPages - 1}
+                                className="gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                            >
+                                {language === 'es' ? 'Siguiente' : 'Next'}
+                                <ChevronRight size={16} />
+                            </Button>
                         </div>
                     )}
                 </CardContent>

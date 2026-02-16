@@ -11,7 +11,9 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.dashboard": { en: "Dashboard", es: "Panel" },
     "nav.actionPlan": { en: "Action Plan", es: "Plan de Acción" },
     "nav.accounts": { en: "My Accounts", es: "Mis Cuentas" },
+
     "nav.settings": { en: "Settings", es: "Configuración" },
+    "nav.analytics": { en: "Analytics", es: "Analíticas" },
     "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
     "nav.coreX": { en: "CoreX", es: "CoreX" },
 
@@ -339,6 +341,7 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.nav.algorithm": { en: "Algorithm", es: "Algoritmo" },
     "settings.nav.notifications": { en: "Notifications", es: "Notificaciones" },
     "settings.nav.data": { en: "Data Management", es: "Gestión de Datos" },
+    "settings.nav.subscription": { en: "Subscription", es: "Suscripción" },
     "settings.nav.about": { en: "About", es: "Acerca de" },
 
     // Profile section

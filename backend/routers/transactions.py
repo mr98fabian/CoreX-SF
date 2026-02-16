@@ -125,6 +125,67 @@ async def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_cu
         ).all()
 
 
+@router.get("/transactions/all")
+async def get_all_transactions(
+    account_id: int = None,
+    category: str = None,
+    date_from: str = None,
+    date_to: str = None,
+    search: str = None,
+    limit: int = 100,
+    offset: int = 0,
+    user_id: str = Depends(get_current_user_id),
+):
+    """Full transaction history with filtering, search, and pagination."""
+    with Session(engine) as session:
+        query = select(Transaction).where(Transaction.user_id == user_id)
+
+        if account_id:
+            query = query.where(Transaction.account_id == account_id)
+        if category:
+            query = query.where(Transaction.category == category)
+        if date_from:
+            query = query.where(Transaction.date >= date_from)
+        if date_to:
+            query = query.where(Transaction.date <= date_to)
+        if search:
+            query = query.where(Transaction.description.ilike(f"%{search}%"))
+
+        # Count total before pagination
+        from sqlalchemy import func
+        count_query = select(func.count()).select_from(query.subquery())
+        total = session.exec(count_query).one()
+
+        results = session.exec(
+            query.order_by(Transaction.date.desc()).offset(offset).limit(limit)
+        ).all()
+
+        # Get account names for mapping
+        account_ids = list(set(tx.account_id for tx in results if tx.account_id))
+        accounts = {}
+        if account_ids:
+            accs = session.exec(select(Account).where(Account.id.in_(account_ids))).all()
+            accounts = {a.id: a.name for a in accs}
+
+        return {
+            "transactions": [
+                {
+                    "id": tx.id,
+                    "date": tx.date,
+                    "amount": float(tx.amount),
+                    "description": tx.description,
+                    "category": tx.category,
+                    "account_id": tx.account_id,
+                    "account_name": accounts.get(tx.account_id, "Unknown"),
+                }
+                for tx in results
+            ],
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+
+
 # ── PLAID SYNC (kept here with transactions) ──────────────────
 
 from pydantic import BaseModel

@@ -1,7 +1,7 @@
 {
-    "name": "KoreX",
+    "name": "KoreX — Velocity Banking System",
     "short_name": "KoreX",
-    "description": "Velocity Banking Intelligence Platform",
+    "description": "Velocity Banking Intelligence Platform. Take control of your finances.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#020617",
@@ -10,7 +10,13 @@
     "icons": [
         {
             "src": "/korex-icon.png",
-            "sizes": "389x377",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/korex-icon.png",
+            "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
         }

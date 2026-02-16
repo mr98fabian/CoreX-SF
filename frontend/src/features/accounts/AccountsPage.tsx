@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw, Crown, Lock, ArrowUpRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CashflowManager } from './components/CashflowManager';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
@@ -147,6 +148,16 @@ export default function AccountsPage() {
     }, []);
 
     const onSubmit = async (values: AccountFormValues) => {
+        // Guard: check account limit for debt accounts
+        if (values.type === 'debt') {
+            const currentPlan = localStorage.getItem('corex-plan') || 'starter';
+            const limit: Record<string, number> = { starter: 2, velocity: 6, accelerator: 12, freedom: Infinity, 'freedom-dev': Infinity };
+            const max = limit[currentPlan] ?? 2;
+            if (debts.length >= max) {
+                setErrorMsg(`Account limit reached (${debts.length}/${max}). Upgrade your plan in Settings → Subscription.`);
+                return;
+            }
+        }
         setIsSubmitting(true);
         try {
             // Auto-infer interest_type from debt_subtype
@@ -197,6 +208,104 @@ export default function AccountsPage() {
     const debts = accounts.filter(a => a.type === 'debt');
     const assets = accounts.filter(a => ['checking', 'savings', 'investment'].includes(a.type));
 
+    // ─── Plan Limit Logic ─────────────────────────────────────────
+    const PLAN_LIMITS: Record<string, number> = {
+        starter: 2,
+        velocity: 6,
+        accelerator: 12,
+        freedom: Infinity,
+        'freedom-dev': Infinity,
+    };
+    const PLAN_NAMES: Record<string, string> = {
+        starter: 'Starter',
+        velocity: 'Velocity',
+        accelerator: 'Accelerator',
+        freedom: 'Freedom',
+        'freedom-dev': 'Freedom (Developer)',
+    };
+    const userPlan = localStorage.getItem('corex-plan') || 'starter';
+    const planLimit = PLAN_LIMITS[userPlan] ?? 2;
+    const planName = PLAN_NAMES[userPlan] ?? 'Starter';
+    const debtCount = debts.length;
+    const isAtLimit = debtCount >= planLimit;
+    const isNearLimit = planLimit !== Infinity && debtCount >= Math.floor(planLimit * 0.8);
+    const usagePercent = planLimit === Infinity ? 0 : Math.min((debtCount / planLimit) * 100, 100);
+    const isDevLicense = userPlan === 'freedom-dev';
+
+    if (isLoading) {
+        return (
+            <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-500 max-w-7xl pb-20">
+                {/* Header skeleton */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-10 w-72" />
+                        <Skeleton className="h-5 w-56" />
+                    </div>
+                    <div className="flex gap-3">
+                        <Skeleton className="h-10 w-10 rounded-md" />
+                        <Skeleton className="h-10 w-32 rounded-md" />
+                        <Skeleton className="h-10 w-36 rounded-md" />
+                    </div>
+                </div>
+
+                <div className="space-y-12">
+                    {/* Liabilities skeleton */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                            <Skeleton className="h-10 w-10 rounded-lg" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-6 w-28" />
+                                <Skeleton className="h-4 w-48" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[...Array(3)].map((_, i) => (
+                                <Card key={i} className="p-6 space-y-4">
+                                    <div className="flex justify-between">
+                                        <Skeleton className="h-5 w-32" />
+                                        <Skeleton className="h-5 w-20" />
+                                    </div>
+                                    <Skeleton className="h-8 w-36" />
+                                    <Skeleton className="h-3 w-24" />
+                                    <Skeleton className="h-16 w-full rounded-lg" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-9 flex-1 rounded-md" />
+                                        <Skeleton className="h-9 w-9 rounded-md" />
+                                        <Skeleton className="h-9 flex-1 rounded-md" />
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Assets skeleton */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                            <Skeleton className="h-10 w-10 rounded-lg" />
+                            <div className="space-y-1">
+                                <Skeleton className="h-6 w-20" />
+                                <Skeleton className="h-4 w-40" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[...Array(2)].map((_, i) => (
+                                <Card key={i} className="p-6 space-y-4">
+                                    <Skeleton className="h-5 w-36" />
+                                    <Skeleton className="h-8 w-28" />
+                                    <Skeleton className="h-3 w-20" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-9 flex-1 rounded-md" />
+                                        <Skeleton className="h-9 flex-1 rounded-md" />
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-700 max-w-7xl pb-20">
             {/* Header */}
@@ -236,9 +345,24 @@ export default function AccountsPage() {
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="glow" className="font-bold tracking-wide">
-                                <Plus className="mr-2 h-4 w-4" strokeWidth={2} /> {t("accounts.addAccount")}
-                            </Button>
+                            {isAtLimit ? (
+                                <Button
+                                    variant="outline"
+                                    className="font-bold tracking-wide border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.location.href = '/settings';
+                                    }}
+                                >
+                                    <Lock className="mr-2 h-4 w-4" strokeWidth={2} />
+                                    Upgrade to Add More
+                                    <ArrowUpRight className="ml-1 h-3 w-3" />
+                                </Button>
+                            ) : (
+                                <Button variant="glow" className="font-bold tracking-wide">
+                                    <Plus className="mr-2 h-4 w-4" strokeWidth={2} /> {t("accounts.addAccount")}
+                                </Button>
+                            )}
                         </DialogTrigger>
                         <DialogContent className="glass-panel sm:max-w-[450px] bg-white dark:bg-slate-950/90 backdrop-blur-2xl border-slate-200 dark:border-white/10">
                             <DialogHeader>
@@ -422,6 +546,76 @@ export default function AccountsPage() {
                 </div>
             )}
 
+            {/* Plan Status Banner */}
+            <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border ${isAtLimit
+                    ? 'bg-rose-500/5 border-rose-500/20'
+                    : isNearLimit
+                        ? 'bg-amber-500/5 border-amber-500/20'
+                        : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5'
+                }`}>
+                <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${isDevLicense ? 'bg-amber-500/10' : 'bg-blue-500/10'
+                        }`}>
+                        {isDevLicense ? <Crown size={16} className="text-amber-500" /> : <CreditCard size={16} className="text-blue-500" />}
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">{planName}</span>
+                            {isDevLicense && (
+                                <span className="text-[10px] font-bold bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded-full">
+                                    LIFETIME
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {planLimit === Infinity
+                                ? `${debtCount} debt accounts • Unlimited`
+                                : `${debtCount}/${planLimit} debt accounts used`}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Progress bar (only for limited plans) */}
+                {planLimit !== Infinity && (
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="w-32 h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${isAtLimit
+                                        ? 'bg-rose-500'
+                                        : isNearLimit
+                                            ? 'bg-amber-500'
+                                            : 'bg-emerald-500'
+                                    }`}
+                                style={{ width: `${usagePercent}%` }}
+                            />
+                        </div>
+                        {isAtLimit && (
+                            <a
+                                href="/settings"
+                                className="text-xs font-semibold text-amber-500 hover:text-amber-400 transition-colors whitespace-nowrap flex items-center gap-1"
+                            >
+                                Upgrade <ArrowUpRight size={12} />
+                            </a>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Upgrade CTA when near limit */}
+            {isNearLimit && !isAtLimit && planLimit !== Infinity && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                    <div className="flex items-center gap-2">
+                        <Crown size={14} className="text-amber-500" />
+                        <span className="text-xs text-amber-500 font-medium">
+                            You're running out of slots! Upgrade for more debt accounts.
+                        </span>
+                    </div>
+                    <a href="/settings" className="text-xs font-bold text-amber-500 hover:text-amber-400 underline">
+                        View Plans
+                    </a>
+                </div>
+            )}
+
             {/* Content Grid */}
             <div className="space-y-12">
                 {/* Liabilities */}
@@ -431,7 +625,12 @@ export default function AccountsPage() {
                             <CreditCard size={24} className="text-rose-500" strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("accounts.liabilities")}</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                                {t("accounts.liabilities")}
+                                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                                    ({debtCount}{planLimit === Infinity ? '' : `/${planLimit}`})
+                                </span>
+                            </h2>
                             <p className="text-sm text-slate-500">{t("accounts.liabilitiesDesc")}</p>
                         </div>
                     </div>

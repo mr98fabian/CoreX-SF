@@ -15,6 +15,7 @@ import {
     Download, Upload, Trash2, RefreshCw, FileSpreadsheet,
     FileJson, FileText, CheckCircle, AlertTriangle, Globe, DollarSign,
     Calendar, Shield, Sparkles, ExternalLink, Github, BookOpen,
+    CreditCard, Crown, Zap, Rocket, Check, Tag, XCircle,
 } from "lucide-react";
 import { generateMonthlyReport } from "@/lib/PDFReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -23,7 +24,7 @@ import { apiFetch } from "@/lib/api";
 import * as XLSX from "xlsx";
 
 // ─── Types ──────────────────────────────────────────────────────────
-type Section = "profile" | "appearance" | "algorithm" | "notifications" | "data" | "about";
+type Section = "profile" | "appearance" | "algorithm" | "notifications" | "data" | "subscription" | "about";
 
 interface NavItem {
     id: Section;
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: "algorithm", labelKey: "settings.nav.algorithm", icon: <Brain className="h-4 w-4" /> },
     { id: "notifications", labelKey: "settings.nav.notifications", icon: <Bell className="h-4 w-4" /> },
     { id: "data", labelKey: "settings.nav.data", icon: <Database className="h-4 w-4" /> },
+    { id: "subscription", labelKey: "settings.nav.subscription", icon: <CreditCard className="h-4 w-4" /> },
     { id: "about", labelKey: "settings.nav.about", icon: <Info className="h-4 w-4" /> },
 ];
 
@@ -75,6 +77,11 @@ export default function SettingsPage() {
     const [notifBank, setNotifBank] = useState(true);
     const [notifMilestones, setNotifMilestones] = useState(true);
     const [notifWeekly, setNotifWeekly] = useState(false);
+    const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
+    const [promoCode, setPromoCode] = useState('');
+    const [promoStatus, setPromoStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
+    const [promoMessage, setPromoMessage] = useState('');
+    const [activePlan, setActivePlan] = useState(() => localStorage.getItem('corex-plan') || 'starter');
 
     // ─── Handlers ───────────────────────────────────────────────
     const handleCurrencyChange = (val: string) => {
@@ -724,6 +731,442 @@ export default function SettingsPage() {
         </div>
     );
 
+    // ─── Render Subscription ────────────────────────────────────
+    function renderSubscription() {
+        const PLANS = [
+            {
+                id: 'starter',
+                name: 'Starter',
+                icon: <Zap className="h-5 w-5" />,
+                accounts: 2,
+                monthly: 0,
+                annual: 0,
+                color: 'from-slate-500 to-slate-600',
+                borderColor: 'border-slate-300 dark:border-slate-700',
+                iconBg: 'bg-slate-500/10',
+                iconColor: 'text-slate-500',
+                badge: null,
+                popular: false,
+            },
+            {
+                id: 'velocity',
+                name: 'Velocity',
+                icon: <Zap className="h-5 w-5" />,
+                accounts: 6,
+                monthly: 20,
+                annual: 97,
+                color: 'from-amber-500 to-orange-500',
+                borderColor: 'border-amber-300 dark:border-amber-700',
+                iconBg: 'bg-amber-500/10',
+                iconColor: 'text-amber-500',
+                badge: null,
+                popular: false,
+            },
+            {
+                id: 'accelerator',
+                name: 'Accelerator',
+                icon: <Rocket className="h-5 w-5" />,
+                accounts: 12,
+                monthly: 35,
+                annual: 197,
+                color: 'from-purple-500 to-indigo-500',
+                borderColor: 'border-purple-400 dark:border-purple-600',
+                iconBg: 'bg-purple-500/10',
+                iconColor: 'text-purple-500',
+                badge: 'MOST POPULAR',
+                popular: true,
+            },
+            {
+                id: 'freedom',
+                name: 'Freedom',
+                icon: <Crown className="h-5 w-5" />,
+                accounts: Infinity,
+                monthly: 55,
+                annual: 347,
+                color: 'from-amber-400 to-yellow-500',
+                borderColor: 'border-yellow-400 dark:border-yellow-600',
+                iconBg: 'bg-yellow-500/10',
+                iconColor: 'text-yellow-500',
+                badge: null,
+                popular: false,
+            },
+        ];
+
+        // Promo code hash validation (simple hash to avoid plain-text exposure)
+        // Developer code: KOREX-DEV-UNLIMITED
+        const hashCode = (s: string) => s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+        const DEV_CODE_HASH = -1642204995; // hash of 'KOREX-DEV-UNLIMITED'
+
+        const PROMO_CODES: Record<string, { plan: string; label: string; discount?: string }> = {
+            // Add future promo codes here:
+            // 'LAUNCH50': { plan: 'velocity', label: '50% off Velocity', discount: '50%' },
+        };
+
+        const handleApplyPromo = () => {
+            if (!promoCode.trim()) return;
+            setPromoStatus('loading');
+
+            // Simulate quick validation delay
+            setTimeout(() => {
+                const code = promoCode.trim().toUpperCase();
+
+                // Check developer code
+                if (hashCode(code) === DEV_CODE_HASH) {
+                    setActivePlan('freedom-dev');
+                    localStorage.setItem('corex-plan', 'freedom-dev');
+                    localStorage.setItem('corex-plan-label', 'Freedom (Developer)');
+                    setPromoStatus('success');
+                    setPromoMessage('🎉 Developer license activated — Unlimited accounts, forever.');
+                    setPromoCode('');
+                    return;
+                }
+
+                // Check regular promo codes
+                if (PROMO_CODES[code]) {
+                    setActivePlan(PROMO_CODES[code].plan);
+                    localStorage.setItem('corex-plan', PROMO_CODES[code].plan);
+                    localStorage.setItem('corex-plan-label', PROMO_CODES[code].label);
+                    setPromoStatus('success');
+                    setPromoMessage(`✅ Code applied — ${PROMO_CODES[code].label}`);
+                    setPromoCode('');
+                    return;
+                }
+
+                setPromoStatus('error');
+                setPromoMessage('Invalid code. Please check and try again.');
+            }, 600);
+        };
+
+        const handleCancelSubscription = () => {
+            setActivePlan('starter');
+            localStorage.setItem('corex-plan', 'starter');
+            localStorage.removeItem('corex-plan-label');
+            setPromoStatus('idle');
+            setPromoMessage('');
+        };
+
+        const currentPlan = activePlan === 'freedom-dev' ? 'freedom' : activePlan;
+        const isDevLicense = activePlan === 'freedom-dev';
+        const planLabel = localStorage.getItem('corex-plan-label');
+
+        return (
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <SectionHeader
+                    title="Subscription"
+                    subtitle="Choose the plan that fits your financial journey."
+                    icon={<CreditCard className="h-5 w-5 text-amber-400" />}
+                />
+
+                {/* Billing Toggle */}
+                <div className="flex items-center justify-center gap-4 py-2">
+                    <button
+                        onClick={() => setBillingCycle('monthly')}
+                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${billingCycle === 'monthly'
+                            ? 'bg-slate-200 dark:bg-white/10 text-foreground'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        Monthly
+                    </button>
+                    <button
+                        onClick={() => setBillingCycle('annual')}
+                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${billingCycle === 'annual'
+                            ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        Annual
+                        <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
+                            SAVE UP TO 60%
+                        </span>
+                    </button>
+                </div>
+
+                {/* Pricing Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    {PLANS.map((plan) => {
+                        const price = billingCycle === 'annual' ? plan.annual : plan.monthly;
+                        const monthlyEquiv = billingCycle === 'annual' && plan.annual > 0
+                            ? (plan.annual / 12).toFixed(2)
+                            : null;
+                        const saving = billingCycle === 'annual' && plan.monthly > 0
+                            ? Math.round((1 - plan.annual / (plan.monthly * 12)) * 100)
+                            : 0;
+                        const isCurrent = plan.id === currentPlan;
+
+                        return (
+                            <Card
+                                key={plan.id}
+                                className={`relative overflow-hidden transition-all duration-300 hover:shadow-lg ${plan.popular
+                                    ? 'border-purple-400 dark:border-purple-500 shadow-purple-500/10 shadow-lg scale-[1.02]'
+                                    : plan.borderColor
+                                    } ${isCurrent ? 'ring-2 ring-amber-500/50' : ''}`}
+                            >
+                                {/* Popular Badge */}
+                                {plan.popular && (
+                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
+                                        ⭐ MOST POPULAR
+                                    </div>
+                                )}
+
+                                {/* Current Plan Badge */}
+                                {isCurrent && (
+                                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
+                                        YOUR CURRENT PLAN
+                                    </div>
+                                )}
+
+                                <CardContent className={`p-6 space-y-5 ${plan.popular || isCurrent ? 'pt-10' : ''}`}>
+                                    {/* Plan Header */}
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-10 w-10 rounded-xl ${plan.iconBg} flex items-center justify-center ${plan.iconColor}`}>
+                                            {plan.icon}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-lg">{plan.name}</h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                {plan.accounts === Infinity ? 'Unlimited' : plan.accounts} accounts
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Pricing */}
+                                    <div className="space-y-1">
+                                        {price === 0 ? (
+                                            <div className="text-3xl font-black">Free</div>
+                                        ) : (
+                                            <>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-3xl font-black">
+                                                        ${billingCycle === 'annual' ? monthlyEquiv : price}
+                                                    </span>
+                                                    <span className="text-sm text-muted-foreground">/mo</span>
+                                                </div>
+                                                {billingCycle === 'annual' && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-muted-foreground line-through">
+                                                            ${plan.monthly}/mo
+                                                        </span>
+                                                        <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
+                                                            {saving}% OFF
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {billingCycle === 'annual' && (
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Billed ${plan.annual}/year
+                                                    </p>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <Separator />
+
+                                    {/* Features */}
+                                    <ul className="space-y-2">
+                                        <li className="flex items-center gap-2 text-sm">
+                                            <Check size={14} className="text-emerald-500 shrink-0" />
+                                            <span>{plan.accounts === Infinity ? 'Unlimited' : `Up to ${plan.accounts}`} debt accounts</span>
+                                        </li>
+                                        <li className="flex items-center gap-2 text-sm">
+                                            <Check size={14} className="text-emerald-500 shrink-0" />
+                                            <span>All features included</span>
+                                        </li>
+                                        <li className="flex items-center gap-2 text-sm">
+                                            <Check size={14} className="text-emerald-500 shrink-0" />
+                                            <span>Freedom Clock & Action Plan</span>
+                                        </li>
+                                        <li className="flex items-center gap-2 text-sm">
+                                            <Check size={14} className="text-emerald-500 shrink-0" />
+                                            <span>PDF Reports & Exports</span>
+                                        </li>
+                                        <li className="flex items-center gap-2 text-sm">
+                                            <Check size={14} className="text-emerald-500 shrink-0" />
+                                            <span>Velocity Simulations</span>
+                                        </li>
+                                    </ul>
+
+                                    {/* CTA Button */}
+                                    {isCurrent ? (
+                                        <Button disabled className="w-full" variant="outline">
+                                            <CheckCircle size={14} className="mr-2" />
+                                            Current Plan
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            className={`w-full font-semibold ${plan.popular
+                                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white shadow-lg shadow-purple-500/20'
+                                                : price === 0
+                                                    ? 'bg-slate-200 dark:bg-white/5 text-foreground hover:bg-slate-300 dark:hover:bg-white/10'
+                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white'
+                                                }`}
+                                            onClick={() => {
+                                                // TODO: Integrate with Lemon Squeezy checkout
+                                                window.open('https://lemonsqueezy.com', '_blank');
+                                            }}
+                                        >
+                                            {price === 0 ? 'Get Started' : 'Upgrade Now'}
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </div>
+
+                {/* FAQ / Trust Section */}
+                <Card className="border-slate-200 dark:border-white/5">
+                    <CardContent className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                            <div className="space-y-2">
+                                <Shield className="h-6 w-6 text-emerald-500 mx-auto" />
+                                <h4 className="text-sm font-semibold">14-Day Free Trial</h4>
+                                <p className="text-xs text-muted-foreground">Try any paid plan risk-free. No credit card required.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <RefreshCw className="h-6 w-6 text-blue-500 mx-auto" />
+                                <h4 className="text-sm font-semibold">Cancel Anytime</h4>
+                                <p className="text-xs text-muted-foreground">No contracts, no hidden fees. Downgrade whenever you want.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <Sparkles className="h-6 w-6 text-amber-500 mx-auto" />
+                                <h4 className="text-sm font-semibold">All Features Included</h4>
+                                <p className="text-xs text-muted-foreground">Every plan gets full access. Only the account limit changes.</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Promo Code Section */}
+                <Card className="border-slate-200 dark:border-white/5">
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <Tag className="h-4 w-4 text-amber-500" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-semibold">Promo Code</h4>
+                                <p className="text-xs text-muted-foreground">Have a discount or special access code?</p>
+                            </div>
+                        </div>
+
+                        {/* Active Plan Badge */}
+                        {(isDevLicense || (activePlan !== 'starter')) && (
+                            <div className={`flex items-center justify-between p-3 rounded-xl border ${isDevLicense
+                                ? 'bg-gradient-to-r from-amber-500/5 to-yellow-500/5 border-amber-500/20'
+                                : 'bg-emerald-500/5 border-emerald-500/20'
+                                }`}>
+                                <div className="flex items-center gap-2">
+                                    {isDevLicense ? <Crown size={14} className="text-amber-500" /> : <CheckCircle size={14} className="text-emerald-500" />}
+                                    <span className="text-sm font-medium">
+                                        {isDevLicense ? '👑 Developer License — Unlimited Forever' : `Active: ${planLabel || activePlan}`}
+                                    </span>
+                                </div>
+                                {!isDevLicense && (
+                                    <button
+                                        onClick={handleCancelSubscription}
+                                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Promo Input */}
+                        <div className="flex gap-2">
+                            <Input
+                                value={promoCode}
+                                onChange={(e) => {
+                                    setPromoCode(e.target.value.toUpperCase());
+                                    if (promoStatus !== 'idle') setPromoStatus('idle');
+                                }}
+                                placeholder="Enter code (e.g. LAUNCH50)"
+                                className="flex-1 font-mono tracking-wider uppercase text-sm"
+                                onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                            />
+                            <Button
+                                onClick={handleApplyPromo}
+                                disabled={!promoCode.trim() || promoStatus === 'loading'}
+                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-6"
+                            >
+                                {promoStatus === 'loading' ? (
+                                    <RefreshCw size={14} className="animate-spin" />
+                                ) : (
+                                    'Apply'
+                                )}
+                            </Button>
+                        </div>
+
+                        {/* Status Message */}
+                        {promoMessage && (
+                            <p className={`text-xs font-medium px-3 py-2 rounded-lg ${promoStatus === 'success'
+                                ? 'bg-emerald-500/10 text-emerald-500'
+                                : promoStatus === 'error'
+                                    ? 'bg-red-500/10 text-red-400'
+                                    : ''
+                                }`}>
+                                {promoMessage}
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Manage / Cancel Subscription */}
+                {activePlan !== 'starter' && (
+                    <Card className="border-red-500/10">
+                        <CardContent className="p-6 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                    <XCircle className="h-4 w-4 text-red-400" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold">Manage Subscription</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                        {isDevLicense
+                                            ? 'Developer license is permanent and cannot be cancelled.'
+                                            : 'Cancel or change your current subscription plan.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {!isDevLicense && (
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                                    <div>
+                                        <p className="text-sm font-medium">Cancel Subscription</p>
+                                        <p className="text-xs text-muted-foreground">You will be downgraded to the Starter plan (2 accounts).</p>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                        onClick={() => {
+                                            if (window.confirm('Are you sure you want to cancel your subscription? You will be downgraded to the Starter plan.')) {
+                                                handleCancelSubscription();
+                                            }
+                                        }}
+                                    >
+                                        Cancel Plan
+                                    </Button>
+                                </div>
+                            )}
+
+                            {isDevLicense && (
+                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                                    <Crown size={14} className="text-amber-500" />
+                                    <span className="text-xs text-amber-500 font-medium">
+                                        Lifetime developer access — no expiration, no limits.
+                                    </span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        );
+    }
+
     // ─── Section Map ────────────────────────────────────────────
     const sectionMap: Record<Section, () => React.ReactNode> = {
         profile: renderProfile,
@@ -731,6 +1174,7 @@ export default function SettingsPage() {
         algorithm: renderAlgorithm,
         notifications: renderNotifications,
         data: renderDataManagement,
+        subscription: renderSubscription,
         about: renderAbout,
     };
 

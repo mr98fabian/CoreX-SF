@@ -4,9 +4,11 @@ import { useAuth } from '../auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TrendingDown, Wallet, PiggyBank, Calendar, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { useToast } from '@/components/ui/use-toast';
 
 
 // Dashboard Components
@@ -66,6 +68,7 @@ export default function DashboardPage() {
     const { user } = useAuth();
     const { t } = useLanguage();
     const { formatMoney } = useFormatMoney();
+    const { toast } = useToast();
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.name?.split(' ')[0] || 'there';
     const [data, setData] = useState<DashboardData | null>(null);
     const [projections, setProjections] = useState<VelocityProjections | null>(null);
@@ -92,6 +95,7 @@ export default function DashboardPage() {
                 setSimulationData(data);
             } catch (error) {
                 console.error("Simulation failed", error);
+                toast({ title: 'Simulation Error', description: (error as Error).message, variant: 'destructive' });
             } finally {
                 setIsSimLoading(false);
             }
@@ -111,6 +115,7 @@ export default function DashboardPage() {
             })
             .catch(err => {
                 console.error("Error connecting to Engine:", err);
+                toast({ title: 'Connection Error', description: 'Failed to load dashboard data. Retrying automatically...', variant: 'destructive' });
                 setLoading(false);
             });
     }, []);
@@ -121,10 +126,57 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-                <div className="text-xl font-mono text-emerald-400 animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-                    {t('dashboard.loading')}
+            <div className="space-y-4 pb-16 animate-in fade-in duration-500">
+                {/* Header skeleton */}
+                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end px-1">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-64" />
+                        <Skeleton className="h-6 w-40 rounded-full" />
+                    </div>
+                    <div className="flex gap-2">
+                        <Skeleton className="h-9 w-24 rounded-md" />
+                        <Skeleton className="h-9 w-24 rounded-md" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-4">
+                    {/* Freedom Clock + Side panels */}
+                    <Skeleton className="col-span-12 lg:col-span-8 h-48 rounded-xl" />
+                    <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+                        <Skeleton className="flex-1 min-h-[90px] rounded-xl" />
+                        <Skeleton className="flex-1 min-h-[90px] rounded-xl" />
+                    </div>
+
+                    {/* 4 KPI cards */}
+                    {[...Array(4)].map((_, i) => (
+                        <Card key={i} className="col-span-6 lg:col-span-3">
+                            <CardHeader className="pb-1 pt-4 px-4">
+                                <Skeleton className="h-3 w-20" />
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 pt-2">
+                                <Skeleton className="h-7 w-28 mb-1" />
+                                <Skeleton className="h-2.5 w-16" />
+                            </CardContent>
+                        </Card>
+                    ))}
+
+                    {/* Strategy Intelligence */}
+                    <Skeleton className="col-span-12 lg:col-span-8 h-40 rounded-xl" />
+                    <Skeleton className="col-span-12 lg:col-span-4 h-40 rounded-xl" />
+
+                    {/* Confidence + Decision */}
+                    <Skeleton className="col-span-12 lg:col-span-8 h-32 rounded-xl" />
+                    <Skeleton className="col-span-12 lg:col-span-4 h-32 rounded-xl" />
+
+                    {/* Heat Calendar */}
+                    <Skeleton className="col-span-12 h-48 rounded-xl" />
+
+                    {/* Burndown Chart */}
+                    <Skeleton className="col-span-12 h-[380px] rounded-xl" />
+
+                    {/* Tools row */}
+                    <Skeleton className="col-span-12 lg:col-span-4 h-56 rounded-xl" />
+                    <Skeleton className="col-span-12 lg:col-span-8 h-56 rounded-xl" />
                 </div>
             </div>
         );
