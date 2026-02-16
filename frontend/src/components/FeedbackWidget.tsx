@@ -160,7 +160,7 @@ export default function FeedbackWidget() {
     }
 
     return (
-        <div ref={panelRef} className="fixed bottom-5 right-5 z-30 flex flex-col items-end gap-3">
+        <div ref={panelRef} className="fixed bottom-5 right-5 z-30 flex flex-col items-end gap-3 pointer-events-none">
             {/* ─── Expanded Panel ─────────────────────────────── */}
             <div
                 className={cn(
@@ -336,7 +336,7 @@ export default function FeedbackWidget() {
                 onClick={() => setIsOpen(!isOpen)}
                 aria-label="Report a bug or send feedback"
                 className={cn(
-                    'group relative h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300',
+                    'group relative h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto',
                     'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10',
                     'hover:bg-amber-500/10 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10',
                     'active:scale-95',
