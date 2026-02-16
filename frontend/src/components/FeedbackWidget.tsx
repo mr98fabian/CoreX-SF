@@ -80,15 +80,21 @@ export default function FeedbackWidget() {
         return () => clearInterval(interval);
     }, [isOpen]);
 
-    // Close on outside click
+    // Close on outside click/touch
     useEffect(() => {
-        function handleClick(e: MouseEvent) {
+        function handleOutsideInteraction(e: MouseEvent | TouchEvent) {
             if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
                 setIsOpen(false);
             }
         }
-        if (isOpen) document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
+        if (isOpen) {
+            document.addEventListener('mousedown', handleOutsideInteraction);
+            document.addEventListener('touchstart', handleOutsideInteraction, { passive: true });
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideInteraction);
+            document.removeEventListener('touchstart', handleOutsideInteraction);
+        };
     }, [isOpen]);
 
     // Reset form after close

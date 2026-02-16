@@ -112,6 +112,16 @@
     background-attachment: fixed;
     transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-overflow-scrolling: touch;
+    /* Eliminate 300ms tap delay on all mobile browsers */
+    touch-action: manipulation;
+  }
+
+  /* Ensure interactive elements have minimum 44px touch targets on mobile */
+  @media (pointer: coarse) {
+    button, a, [role="button"], input, select, textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
