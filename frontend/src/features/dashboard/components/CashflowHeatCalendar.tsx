@@ -147,7 +147,7 @@ export default function CashflowHeatCalendar() {
                         <Calendar className="h-5 w-5 text-cyan-400" />
                         Cashflow Heat Map
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-slate-500">
+                    <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-slate-500 flex-wrap">
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-rose-800" />
                             Low
@@ -170,23 +170,23 @@ export default function CashflowHeatCalendar() {
 
             <CardContent className="px-4 pb-4 space-y-5">
                 {/* Month grids side by side */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-4">
                     {months.slice(0, 5).map((month) => (
                         <div key={month.label} className="min-w-0">
                             <div className="text-xs text-slate-400 font-mono mb-2 tracking-wide">
                                 {month.label}
                             </div>
                             {/* Weekday headers */}
-                            <div className="grid grid-cols-7 gap-1 mb-1">
+                            <div className="grid grid-cols-7 gap-1.5 sm:gap-1 mb-1">
                                 {WEEKDAYS.map(wd => (
-                                    <div key={wd} className="text-[9px] text-slate-600 text-center font-mono">
+                                    <div key={wd} className="text-[10px] sm:text-[9px] text-slate-600 text-center font-mono">
                                         {wd}
                                     </div>
                                 ))}
                             </div>
                             {/* Day cells */}
                             {month.weeks.map((week, wi) => (
-                                <div key={wi} className="grid grid-cols-7 gap-1 mb-1">
+                                <div key={wi} className="grid grid-cols-7 gap-1.5 sm:gap-1 mb-1">
                                     {week.map((day, di) => {
                                         if (!day) {
                                             return <div key={`empty-${di}`} className="aspect-square" />;
@@ -201,10 +201,11 @@ export default function CashflowHeatCalendar() {
                                                 key={day.date}
                                                 onClick={() => setSelectedDay(isSelected ? null : day)}
                                                 className={`
-                                                    aspect-square rounded-md border text-[10px] font-mono
+                                                    aspect-square rounded-md border text-xs sm:text-[10px] font-mono
                                                     flex flex-col items-center justify-center gap-0.5
                                                     transition-all duration-200 cursor-pointer relative
                                                     hover:scale-110 hover:z-10 hover:shadow-lg
+                                                    min-h-[36px] sm:min-h-0
                                                     ${getHeatColor(day.balance, minBal, maxBal)}
                                                     ${day.is_today
                                                         ? "ring-2 ring-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] z-10"
