@@ -158,7 +158,7 @@ export default function DashboardLayout() {
             )}
 
             {/* MAIN AREA */}
-            <main className="flex-1 flex flex-col min-w-0 bg-transparent relative overflow-y-auto">
+            <main className="flex-1 flex flex-col min-w-0 bg-transparent relative">
                 {/* Ambient glow */}
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5 pointer-events-none dark:opacity-100 opacity-30" />
 
@@ -190,7 +190,7 @@ export default function DashboardLayout() {
                 </header>
 
                 {/* SCROLLABLE CONTENT */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}>
                     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
                     </div>
