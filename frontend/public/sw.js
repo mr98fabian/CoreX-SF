@@ -1,5 +1,5 @@
 // KoreX Service Worker — Cache-first for static assets, network-first for API
-const CACHE_NAME = 'korex-v1';
+const CACHE_NAME = 'korex-v2';
 const STATIC_ASSETS = [
     '/',
     '/korex-icon.png',
@@ -32,7 +32,11 @@ self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (request.method !== 'GET') return;
 
-    // API calls: network-first (always try live data)
+    // ── CRITICAL: Never intercept cross-origin requests (API backend, CDNs, etc.)
+    // The SW can't add CORS headers, so intercepting these breaks everything.
+    if (url.origin !== self.location.origin) return;
+
+    // API calls (same-origin only): network-first (always try live data)
     if (url.pathname.startsWith('/api/')) {
         event.respondWith(
             fetch(request)
@@ -44,7 +48,10 @@ self.addEventListener('fetch', (event) => {
                     }
                     return response;
                 })
-                .catch(() => caches.match(request))
+                .catch(() => caches.match(request).then((r) => r || new Response('{"error":"offline"}', {
+                    status: 503,
+                    headers: { 'Content-Type': 'application/json' },
+                })))
         );
         return;
     }
