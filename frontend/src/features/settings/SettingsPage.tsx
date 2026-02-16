@@ -52,6 +52,80 @@ const TECH_STACK = [
     { name: "SheetJS", color: "text-green-400 bg-green-500/10 border-green-500/20" },
 ];
 
+// ─── Subscription Constants (module-level to avoid re-creation on re-render) ───
+const hashCode = (s: string) => s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
+const DEV_CODE_HASH = -1642204995; // hash of 'KOREX-DEV-UNLIMITED'
+
+const PROMO_CODES: Record<string, { plan: string; label: string; discount?: string }> = {
+    // Add future promo codes here:
+    // 'LAUNCH50': { plan: 'velocity', label: '50% off Velocity', discount: '50%' },
+};
+
+const SUBSCRIPTION_PLANS = [
+    {
+        id: 'starter',
+        name: 'Starter',
+        iconKey: 'zap' as const,
+        accounts: 2,
+        monthly: 0,
+        annual: 0,
+        color: 'from-slate-500 to-slate-600',
+        borderColor: 'border-slate-300 dark:border-slate-700',
+        iconBg: 'bg-slate-500/10',
+        iconColor: 'text-slate-500',
+        badge: null as string | null,
+        popular: false,
+    },
+    {
+        id: 'velocity',
+        name: 'Velocity',
+        iconKey: 'zap' as const,
+        accounts: 6,
+        monthly: 20,
+        annual: 97,
+        color: 'from-amber-500 to-orange-500',
+        borderColor: 'border-amber-300 dark:border-amber-700',
+        iconBg: 'bg-amber-500/10',
+        iconColor: 'text-amber-500',
+        badge: null as string | null,
+        popular: false,
+    },
+    {
+        id: 'accelerator',
+        name: 'Accelerator',
+        iconKey: 'rocket' as const,
+        accounts: 12,
+        monthly: 35,
+        annual: 197,
+        color: 'from-purple-500 to-indigo-500',
+        borderColor: 'border-purple-400 dark:border-purple-600',
+        iconBg: 'bg-purple-500/10',
+        iconColor: 'text-purple-500',
+        badge: 'MOST POPULAR' as string | null,
+        popular: true,
+    },
+    {
+        id: 'freedom',
+        name: 'Freedom',
+        iconKey: 'crown' as const,
+        accounts: Infinity,
+        monthly: 55,
+        annual: 347,
+        color: 'from-amber-400 to-yellow-500',
+        borderColor: 'border-yellow-400 dark:border-yellow-600',
+        iconBg: 'bg-yellow-500/10',
+        iconColor: 'text-yellow-500',
+        badge: null as string | null,
+        popular: false,
+    },
+];
+
+const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
+    zap: <Zap className="h-5 w-5" />,
+    rocket: <Rocket className="h-5 w-5" />,
+    crown: <Crown className="h-5 w-5" />,
+};
+
 // ═══════════════════════════════════════════════════════════════════
 //  SETTINGS PAGE
 // ═══════════════════════════════════════════════════════════════════
@@ -733,84 +807,13 @@ export default function SettingsPage() {
 
     // ─── Render Subscription ────────────────────────────────────
     function renderSubscription() {
-        const PLANS = [
-            {
-                id: 'starter',
-                name: 'Starter',
-                icon: <Zap className="h-5 w-5" />,
-                accounts: 2,
-                monthly: 0,
-                annual: 0,
-                color: 'from-slate-500 to-slate-600',
-                borderColor: 'border-slate-300 dark:border-slate-700',
-                iconBg: 'bg-slate-500/10',
-                iconColor: 'text-slate-500',
-                badge: null,
-                popular: false,
-            },
-            {
-                id: 'velocity',
-                name: 'Velocity',
-                icon: <Zap className="h-5 w-5" />,
-                accounts: 6,
-                monthly: 20,
-                annual: 97,
-                color: 'from-amber-500 to-orange-500',
-                borderColor: 'border-amber-300 dark:border-amber-700',
-                iconBg: 'bg-amber-500/10',
-                iconColor: 'text-amber-500',
-                badge: null,
-                popular: false,
-            },
-            {
-                id: 'accelerator',
-                name: 'Accelerator',
-                icon: <Rocket className="h-5 w-5" />,
-                accounts: 12,
-                monthly: 35,
-                annual: 197,
-                color: 'from-purple-500 to-indigo-500',
-                borderColor: 'border-purple-400 dark:border-purple-600',
-                iconBg: 'bg-purple-500/10',
-                iconColor: 'text-purple-500',
-                badge: 'MOST POPULAR',
-                popular: true,
-            },
-            {
-                id: 'freedom',
-                name: 'Freedom',
-                icon: <Crown className="h-5 w-5" />,
-                accounts: Infinity,
-                monthly: 55,
-                annual: 347,
-                color: 'from-amber-400 to-yellow-500',
-                borderColor: 'border-yellow-400 dark:border-yellow-600',
-                iconBg: 'bg-yellow-500/10',
-                iconColor: 'text-yellow-500',
-                badge: null,
-                popular: false,
-            },
-        ];
-
-        // Promo code hash validation (simple hash to avoid plain-text exposure)
-        // Developer code: KOREX-DEV-UNLIMITED
-        const hashCode = (s: string) => s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0);
-        const DEV_CODE_HASH = -1642204995; // hash of 'KOREX-DEV-UNLIMITED'
-
-        const PROMO_CODES: Record<string, { plan: string; label: string; discount?: string }> = {
-            // Add future promo codes here:
-            // 'LAUNCH50': { plan: 'velocity', label: '50% off Velocity', discount: '50%' },
-        };
-
         const handleApplyPromo = () => {
             if (!promoCode.trim()) return;
             setPromoStatus('loading');
 
-            // Simulate quick validation delay
             setTimeout(() => {
                 const code = promoCode.trim().toUpperCase();
 
-                // Check developer code
                 if (hashCode(code) === DEV_CODE_HASH) {
                     setActivePlan('freedom-dev');
                     localStorage.setItem('corex-plan', 'freedom-dev');
@@ -821,7 +824,6 @@ export default function SettingsPage() {
                     return;
                 }
 
-                // Check regular promo codes
                 if (PROMO_CODES[code]) {
                     setActivePlan(PROMO_CODES[code].plan);
                     localStorage.setItem('corex-plan', PROMO_CODES[code].plan);
@@ -884,7 +886,7 @@ export default function SettingsPage() {
 
                 {/* Pricing Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {PLANS.map((plan) => {
+                    {SUBSCRIPTION_PLANS.map((plan) => {
                         const price = billingCycle === 'annual' ? plan.annual : plan.monthly;
                         const monthlyEquiv = billingCycle === 'annual' && plan.annual > 0
                             ? (plan.annual / 12).toFixed(2)
@@ -920,7 +922,7 @@ export default function SettingsPage() {
                                     {/* Plan Header */}
                                     <div className="flex items-center gap-3">
                                         <div className={`h-10 w-10 rounded-xl ${plan.iconBg} flex items-center justify-center ${plan.iconColor}`}>
-                                            {plan.icon}
+                                            {PLAN_ICON_MAP[plan.iconKey]}
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-lg">{plan.name}</h3>
