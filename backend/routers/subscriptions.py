@@ -283,9 +283,10 @@ async def get_subscription_status(
 
     plan_limits = {
         "starter": 2,
-        "velocity": 5,
-        "accelerator": 15,
+        "velocity": 6,
+        "accelerator": 12,
         "freedom": 999,  # "Unlimited"
+        "freedom-dev": 999,  # Developer license
     }
 
     return {

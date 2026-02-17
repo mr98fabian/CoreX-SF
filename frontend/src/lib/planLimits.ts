@@ -1,26 +1,46 @@
 /**
- * Subscription Plan Limits — Centralized plan → debt account limit mapping.
+ * Subscription Plan Limits — Single source of truth for the entire app.
  *
- * Reads the current plan from localStorage ('corex-plan').
- * Returns the max number of active debt accounts for that plan,
- * or undefined for unlimited (freedom plan).
+ * All plan → limit mappings live HERE.  Import from this file everywhere
+ * instead of hardcoding limits in individual components.
  */
 
-const PLAN_LIMITS: Record<string, number | undefined> = {
+import { apiFetch } from '@/lib/api';
+
+// ─── Canonical Plan Limits (accounts allowed) ──────────────────
+export const PLAN_LIMITS: Record<string, number> = {
     starter: 2,
-    velocity: 5,
-    accelerator: 10,
-    freedom: undefined,       // unlimited
-    'freedom-dev': undefined, // developer license
+    velocity: 6,
+    accelerator: 12,
+    freedom: Infinity,
+    'freedom-dev': Infinity,
 };
 
-/**
- * Get the debt account limit for the current subscription plan.
- * Returns `undefined` if the plan is unlimited.
- */
-export function getPlanLimit(): number | undefined {
-    const plan = localStorage.getItem('corex-plan') || 'starter';
-    return PLAN_LIMITS[plan];
+export const PLAN_NAMES: Record<string, string> = {
+    starter: 'Starter',
+    velocity: 'Velocity',
+    accelerator: 'Accelerator',
+    freedom: 'Freedom',
+    'freedom-dev': 'Freedom (Developer)',
+};
+
+// ─── Helpers ────────────────────────────────────────────────────
+
+/** Read the current plan from localStorage. Defaults to 'starter'. */
+export function getUserPlan(): string {
+    return localStorage.getItem('corex-plan') || 'starter';
+}
+
+/** Get the debt-account limit for the current (or given) plan. */
+export function getPlanLimit(plan?: string | null): number {
+    const currentPlan = plan || getUserPlan();
+    return PLAN_LIMITS[currentPlan] ?? 2;
+}
+
+/** Get the display name for the current (or given) plan. */
+export function getPlanName(plan?: string | null): string {
+    const currentPlan = plan || getUserPlan();
+    return PLAN_NAMES[currentPlan] ?? 'Starter';
 }
 
 /**
@@ -29,7 +49,7 @@ export function getPlanLimit(): number | undefined {
  */
 export function getPlanLimitParam(): string {
     const limit = getPlanLimit();
-    return limit !== undefined ? `plan_limit=${limit}` : '';
+    return limit !== Infinity && limit !== undefined ? `plan_limit=${limit}` : '';
 }
 
 /**
@@ -41,4 +61,30 @@ export function withPlanLimit(url: string): string {
     if (!param) return url;
     const separator = url.includes('?') ? '&' : '?';
     return `${url}${separator}${param}`;
+}
+
+// ─── Backend Sync ───────────────────────────────────────────────
+
+interface SubStatus {
+    plan: string;
+    status: string;
+    accounts_limit: number;
+}
+
+/**
+ * Fetch the real subscription plan from the backend and persist
+ * it into localStorage.  Call this on app mount / after login.
+ *
+ * Silently no-ops if the fetch fails (user stays on cached plan).
+ */
+export async function syncPlanFromBackend(): Promise<string> {
+    try {
+        const data = await apiFetch<SubStatus>('/api/subscriptions/status');
+        const plan = data.plan || 'starter';
+        localStorage.setItem('corex-plan', plan);
+        return plan;
+    } catch {
+        // Network error / not authenticated — keep cached value
+        return getUserPlan();
+    }
 }

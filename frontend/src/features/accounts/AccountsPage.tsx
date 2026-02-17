@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { getUserPlan, getPlanLimit, getPlanName, syncPlanFromBackend } from '@/lib/planLimits';
 import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -146,14 +147,13 @@ export default function AccountsPage() {
 
     useEffect(() => {
         fetchAccounts();
+        syncPlanFromBackend(); // Sync plan from backend on mount
     }, []);
 
     const onSubmit = async (values: AccountFormValues) => {
         // Guard: check account limit for debt accounts
         if (values.type === 'debt') {
-            const currentPlan = localStorage.getItem('corex-plan') || 'starter';
-            const limit: Record<string, number> = { starter: 2, velocity: 6, accelerator: 12, freedom: Infinity, 'freedom-dev': Infinity };
-            const max = limit[currentPlan] ?? 2;
+            const max = getPlanLimit();
             if (debts.length >= max) {
                 setErrorMsg(`Account limit reached (${debts.length}/${max}). Upgrade your plan in Settings → Subscription.`);
                 return;
@@ -209,24 +209,10 @@ export default function AccountsPage() {
     const debts = accounts.filter(a => a.type === 'debt');
     const assets = accounts.filter(a => ['checking', 'savings', 'investment'].includes(a.type));
 
-    // ─── Plan Limit Logic ─────────────────────────────────────────
-    const PLAN_LIMITS: Record<string, number> = {
-        starter: 2,
-        velocity: 6,
-        accelerator: 12,
-        freedom: Infinity,
-        'freedom-dev': Infinity,
-    };
-    const PLAN_NAMES: Record<string, string> = {
-        starter: 'Starter',
-        velocity: 'Velocity',
-        accelerator: 'Accelerator',
-        freedom: 'Freedom',
-        'freedom-dev': 'Freedom (Developer)',
-    };
-    const userPlan = localStorage.getItem('corex-plan') || 'starter';
-    const planLimit = PLAN_LIMITS[userPlan] ?? 2;
-    const planName = PLAN_NAMES[userPlan] ?? 'Starter';
+    // ─── Plan Limit Logic (from centralized planLimits.ts) ─────────
+    const userPlan = getUserPlan();
+    const planLimit = getPlanLimit(userPlan);
+    const planName = getPlanName(userPlan);
     const debtCount = debts.length;
     const isAtLimit = debtCount >= planLimit;
     const isNearLimit = planLimit !== Infinity && debtCount >= Math.floor(planLimit * 0.8);
