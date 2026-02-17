@@ -81,7 +81,7 @@ interface PDFTranslations {
 
 const TRANSLATIONS: Record<'en' | 'es', PDFTranslations> = {
     en: {
-        title: 'CoreX Financial Report',
+        title: 'KoreX Financial Report',
         subtitle: 'Monthly Financial Summary',
         generated: 'Generated on',
         financialSummary: 'Financial Summary',
@@ -105,12 +105,12 @@ const TRANSLATIONS: Record<'en' | 'es', PDFTranslations> = {
         amount: 'Amount',
         debt: 'Debt',
         asset: 'Asset',
-        footer: 'CoreX Financial System — Velocity Banking Engine',
+        footer: 'KoreX Financial System — Velocity Banking Engine',
         noAccounts: 'No accounts found.',
         noTransactions: 'No recent transactions found.',
     },
     es: {
-        title: 'Reporte Financiero CoreX',
+        title: 'Reporte Financiero KoreX',
         subtitle: 'Resumen Financiero Mensual',
         generated: 'Generado el',
         financialSummary: 'Resumen Financiero',
@@ -134,7 +134,7 @@ const TRANSLATIONS: Record<'en' | 'es', PDFTranslations> = {
         amount: 'Monto',
         debt: 'Deuda',
         asset: 'Activo',
-        footer: 'CoreX Financial System — Motor de Velocity Banking',
+        footer: 'KoreX Financial System — Motor de Velocity Banking',
         noAccounts: 'No se encontraron cuentas.',
         noTransactions: 'No se encontraron transacciones recientes.',
     },
@@ -433,6 +433,6 @@ export async function generateMonthlyReport(
 
     // ── 9. Save ───────────────────────────────────────────
     const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now);
-    const filename = `CoreX_Report_${monthName}_${now.getFullYear()}.pdf`;
+    const filename = `KoreX_Report_${monthName}_${now.getFullYear()}.pdf`;
     doc.save(filename);
 }

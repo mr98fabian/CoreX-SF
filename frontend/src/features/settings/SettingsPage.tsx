@@ -274,7 +274,7 @@ export default function SettingsPage() {
                 XLSX.utils.book_append_sheet(wb, wsEmpty, "Info");
             }
 
-            XLSX.writeFile(wb, `CoreX_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            XLSX.writeFile(wb, `KoreX_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
         } catch (err) {
             console.error("Export failed:", err);
         } finally {
@@ -295,7 +295,7 @@ export default function SettingsPage() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = `CoreX_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.download = `KoreX_Backup_${new Date().toISOString().slice(0, 10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
         } catch (err) {
@@ -320,7 +320,7 @@ export default function SettingsPage() {
         ]);
         XLSX.utils.book_append_sheet(wb, transTemplate, "Transactions Template");
 
-        XLSX.writeFile(wb, "CoreX_Import_Template.xlsx");
+        XLSX.writeFile(wb, "KoreX_Import_Template.xlsx");
     };
 
     const handleImportExcel = async () => {
@@ -379,7 +379,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="flex-1">
                             <h3 className="text-lg font-semibold text-white dark:text-slate-100">Carlos Mendoza</h3>
-                            <p className="text-sm text-slate-400 dark:text-slate-500">carlos@demo.corex.io</p>
+                            <p className="text-sm text-slate-400 dark:text-slate-500">carlos@demo.korex.io</p>
                             <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
                                 {t("settings.profile.demoAccount")}
                             </Badge>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email" className="text-slate-300 dark:text-slate-300">{t("settings.profile.email")}</Label>
-                            <Input id="email" defaultValue="carlos@demo.corex.io" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
+                            <Input id="email" defaultValue="carlos@demo.korex.io" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
                         </div>
                     </div>
 
@@ -728,7 +728,7 @@ export default function SettingsPage() {
                             </span>
                         </div>
                         <h2 className="text-4xl font-bold text-white tracking-tight">
-                            CoreX <span className="text-blue-400">v{__APP_VERSION__}</span>
+                            KoreX <span className="text-blue-400">v{__APP_VERSION__}</span>
                         </h2>
                         <p className="text-sm text-slate-400 dark:text-slate-500 max-w-md mx-auto">
                             {t("settings.about.tagline")}
@@ -1096,7 +1096,7 @@ export default function SettingsPage() {
                                                                 {displaySavings} in interest
                                                             </span>
                                                             <span className="text-xs text-emerald-500/70 leading-snug">
-                                                                saved each {billingCycle === 'monthly' ? 'month' : 'year'} using CoreX
+                                                                saved each {billingCycle === 'monthly' ? 'month' : 'year'} using KoreX
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1400,7 +1400,7 @@ export default function SettingsPage() {
                         <div className="pt-6 mt-4 border-t border-slate-800 dark:border-slate-700">
                             <div className="flex items-center justify-center gap-2 py-2">
                                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] text-slate-600 font-mono">CoreX v{__APP_VERSION__}</span>
+                                <span className="text-[10px] text-slate-600 font-mono">KoreX v{__APP_VERSION__}</span>
                             </div>
                         </div>
                     </div>

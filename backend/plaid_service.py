@@ -58,7 +58,7 @@ def create_link_token(user_id: str = "corex_user_001") -> dict:
         
         request = LinkTokenCreateRequest(
             products=[Products("transactions")],
-            client_name="CoreX Financial System",
+            client_name="KoreX Financial System",
             country_codes=[CountryCode("US")],
             language="en",
             user=LinkTokenCreateRequestUser(client_user_id=user_id)

@@ -19,7 +19,7 @@ interface FreedomData {
 }
 
 /**
- * FreedomClock — The heartbeat of CoreX.
+ * FreedomClock — The heartbeat of KoreX.
  * Now featuring Velocity Intelligence: Score, Time Saved, and Simulation.
  */
 export default function FreedomClock() {

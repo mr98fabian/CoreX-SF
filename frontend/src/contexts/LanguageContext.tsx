@@ -15,7 +15,7 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.settings": { en: "Settings", es: "Configuración" },
     "nav.analytics": { en: "Analytics", es: "Analíticas" },
     "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
-    "nav.coreX": { en: "CoreX", es: "CoreX" },
+    "nav.coreX": { en: "KoreX", es: "KoreX" },
 
     // ═══════════════════════════════════════════════════════════════════
     //  DASHBOARD PAGE
@@ -361,7 +361,7 @@ const translations: Record<string, Record<Language, string>> = {
 
     // Appearance section
     "settings.appearance.title": { en: "Appearance & Language", es: "Apariencia e Idioma" },
-    "settings.appearance.subtitle": { en: "Customize how CoreX looks and communicates.", es: "Personaliza cómo se ve y comunica CoreX." },
+    "settings.appearance.subtitle": { en: "Customize how KoreX looks and communicates.", es: "Personaliza cómo se ve y comunica KoreX." },
     "settings.appearance.language": { en: "Language", es: "Idioma" },
     "settings.appearance.languageDesc": { en: "Select your preferred language", es: "Selecciona tu idioma preferido" },
     "settings.appearance.currency": { en: "Currency Format", es: "Formato de Moneda" },
@@ -402,7 +402,7 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.notifications.weeklyReportDesc": { en: "Sunday summary of your week's financial progress.", es: "Resumen dominical del progreso financiero semanal." },
     "settings.notifications.save": { en: "Save Preferences", es: "Guardar Preferencias" },
     "settings.notifications.enable": { en: "Enable Browser Notifications", es: "Activar Notificaciones del Navegador" },
-    "settings.notifications.enableDesc": { en: "Allow CoreX to send you browser notifications for important alerts.", es: "Permite que CoreX te envíe notificaciones del navegador para alertas importantes." },
+    "settings.notifications.enableDesc": { en: "Allow KoreX to send you browser notifications for important alerts.", es: "Permite que KoreX te envíe notificaciones del navegador para alertas importantes." },
     "settings.notifications.granted": { en: "Notifications Enabled ✓", es: "Notificaciones Activadas ✓" },
     "settings.notifications.denied": { en: "Notifications Blocked — Check browser settings", es: "Notificaciones Bloqueadas — Revisa la configuración del navegador" },
 
@@ -429,13 +429,13 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.data.dangerZone": { en: "Danger Zone", es: "Zona de Peligro" },
 
     // About section
-    "settings.about.title": { en: "About CoreX", es: "Acerca de CoreX" },
+    "settings.about.title": { en: "About KoreX", es: "Acerca de KoreX" },
     "settings.about.subtitle": { en: "System information and credits.", es: "Información del sistema y créditos." },
     "settings.about.version": { en: "Version", es: "Versión" },
     "settings.about.build": { en: "Build", es: "Compilación" },
     "settings.about.engine": { en: "Engine", es: "Motor" },
     "settings.about.techStack": { en: "Technology Stack", es: "Stack Tecnológico" },
-    "settings.about.madeWith": { en: "Made with ⚡ by CoreX Team", es: "Hecho con ⚡ por el Equipo CoreX" },
+    "settings.about.madeWith": { en: "Made with ⚡ by KoreX Team", es: "Hecho con ⚡ por el Equipo KoreX" },
     "settings.about.financialSystem": { en: "Financial System", es: "Sistema Financiero" },
     "settings.about.tagline": { en: "Next-generation Velocity Banking engine for financial freedom.", es: "Motor de Velocity Banking de próxima generación para la libertad financiera." },
 

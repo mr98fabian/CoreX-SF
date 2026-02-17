@@ -49,7 +49,7 @@ def update_shield_target(data: dict):
     with Session(engine) as session:
         user = session.exec(select(User)).first()
         if not user:
-            user = User(email="user@corex.io", shield_target=Decimal(str(target)))
+            user = User(email="user@korex.io", shield_target=Decimal(str(target)))
             session.add(user)
         else:
             user.shield_target = Decimal(str(target))

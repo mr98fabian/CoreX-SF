@@ -10,7 +10,7 @@ interface Props {
     streak: StreakData;
 }
 
-// Animated counter hook (CoreX UI Magic — "Money Count" effect)
+// Animated counter hook (KoreX UI Magic — "Money Count" effect)
 function useAnimatedNumber(target: number, duration = 1500) {
     const [current, setCurrent] = useState(0);
     const frameRef = useRef<number | undefined>(undefined);

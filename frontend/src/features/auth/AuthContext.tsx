@@ -39,7 +39,7 @@ async function seedDemoData(): Promise<void> {
         });
     } catch (err) {
         // Seed failure is non-blocking — user can still explore with existing data
-        console.warn('[CoreX] Demo seed failed (non-blocking):', err);
+        console.warn('[KoreX] Demo seed failed (non-blocking):', err);
     }
 }
 
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Seed only happens on login (LoginPage) and signOut (cleanup)
             const demoUser = {
                 id: DEMO_USER_ID,
-                email: 'carlos@demo.corex.io',
+                email: 'carlos@demo.korex.io',
                 user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
             } as unknown as User;
             setUser(demoUser);
@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Create a synthetic user object for the frontend
         const demoUser = {
             id: DEMO_USER_ID,
-            email: 'carlos@demo.corex.io',
+            email: 'carlos@demo.korex.io',
             user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
         } as unknown as User;
 

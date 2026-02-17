@@ -42,7 +42,7 @@ ALLOWED_ORIGINS = [
 ]
 
 # ── App ──────────────────────────────────────────────────────
-app = FastAPI(title="CoreX Financial System", version="2.0.0")
+app = FastAPI(title="KoreX Financial System", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -116,7 +116,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 def on_startup():
     create_db_and_tables()
     seed_data()
-    logger.info("✅ CoreX API ready — tables verified, seed data loaded.")
+    logger.info("✅ KoreX API ready — tables verified, seed data loaded.")
 
 
 # ── Health Check ─────────────────────────────────────────────
