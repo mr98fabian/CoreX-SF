@@ -33,8 +33,9 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",     # Vite dev server
     "http://localhost:5174",     # Vite fallback port
     "http://localhost:3000",     # Alternative dev port
-    "http://localhost",          # Capacitor Android WebView
-    "capacitor://localhost",    # Capacitor iOS WebView
+    "http://localhost",          # Capacitor Android (legacy)
+    "https://localhost",         # Capacitor Android WebView (v5+ default scheme)
+    "capacitor://localhost",     # Capacitor iOS WebView
     "https://korexf.com",       # Production domain
     "https://www.korexf.com",   # Production domain (www)
     FRONTEND_URL,               # Env-var override (if different)
