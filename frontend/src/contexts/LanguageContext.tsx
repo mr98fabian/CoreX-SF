@@ -475,6 +475,93 @@ const translations: Record<string, Record<Language, string>> = {
     "common.success": { en: "Success!", es: "¡Éxito!" },
     "common.error": { en: "Something went wrong", es: "Algo salió mal" },
     "common.close": { en: "Close", es: "Cerrar" },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  UPGRADE / SUBSCRIPTION
+    // ═══════════════════════════════════════════════════════════════════
+    "upgrade.title": { en: "Upgrade Your Plan", es: "Mejora Tu Plan" },
+    "upgrade.defaultReason": { en: "Unlock more accounts and accelerate your debt freedom.", es: "Desbloquea más cuentas y acelera tu libertad de deuda." },
+    "upgrade.unlockAll": { en: "Unlock All — Upgrade Now", es: "Desbloquear Todo — Mejora Ahora" },
+    "upgrade.toAddMore": { en: "Upgrade to Add More", es: "Mejora para Agregar Más" },
+    "upgrade.toManage": { en: "Upgrade to manage this account", es: "Mejora para administrar esta cuenta" },
+    "upgrade.viewPlans": { en: "View Plans", es: "Ver Planes" },
+    "upgrade.viewUpgradePlans": { en: "View Upgrade Plans", es: "Ver Planes de Mejora" },
+    "upgrade.runningOutSlots": { en: "You're running out of slots! Upgrade for more debt accounts.", es: "¡Te estás quedando sin espacios! Mejora para más cuentas de deuda." },
+    "upgrade.button": { en: "Upgrade", es: "Mejorar" },
+    "upgrade.getStarted": { en: "Get Started", es: "Comenzar" },
+    "upgrade.downgrade": { en: "Downgrade", es: "Bajar Plan" },
+    "upgrade.active": { en: "✓ Active", es: "✓ Activo" },
+    "upgrade.processing": { en: "Processing...", es: "Procesando..." },
+    "upgrade.unlockPower": { en: "🚀 Unlock Full Power", es: "🚀 Desbloquear Todo el Poder" },
+    "upgrade.debtsUnmonitored": { en: "⚠️ Debts Going Unmonitored", es: "⚠️ Deudas Sin Monitorear" },
+    "upgrade.premiumDesc": { en: "Upgrade to unlock premium debt acceleration features and eliminate interest faster.", es: "Mejora para desbloquear funciones premium de aceleración de deuda y eliminar intereses más rápido." },
+    "upgrade.moreAccountsDesc": { en: "Upgrade your plan to unlock more accounts and accelerate your debt freedom.", es: "Mejora tu plan para desbloquear más cuentas y acelerar tu libertad de deuda." },
+    "upgrade.starterNudge": { en: "You're on Starter — upgrade to track more debts and save thousands in interest.", es: "Estás en Starter — mejora para rastrear más deudas y ahorrar miles en intereses." },
+    "upgrade.lockedNudge": { en: "Some of your debts are locked and bleeding interest. Upgrade to cover them all.", es: "Algunas de tus deudas están bloqueadas y pierden intereses. Mejora para cubrirlas todas." },
+    "upgrade.unlockAllReason": { en: "Unlock all your debt accounts so CoreX can monitor and optimize every dollar.", es: "Desbloquea todas tus cuentas de deuda para que CoreX monitoree y optimice cada dólar." },
+    "upgrade.unlockAllReasonAction": { en: "Unlock all your debt accounts so KoreX can optimize every dollar of interest.", es: "Desbloquea todas tus cuentas de deuda para que KoreX optimice cada dólar de interés." },
+    "upgrade.monthly": { en: "Monthly", es: "Mensual" },
+    "upgrade.annual": { en: "Annual", es: "Anual" },
+    "upgrade.save": { en: "Save", es: "Ahorra" },
+    "upgrade.mostPopular": { en: "Most Popular", es: "Más Popular" },
+    "upgrade.current": { en: "Current", es: "Actual" },
+    "upgrade.free": { en: "Free", es: "Gratis" },
+    "upgrade.year": { en: "year", es: "año" },
+    "upgrade.accounts": { en: "accounts", es: "cuentas" },
+    "upgrade.unlimited": { en: "∞ Unlimited", es: "∞ Ilimitado" },
+    "upgrade.allDebtsOptimized": { en: "All debts optimized", es: "Todas las deudas optimizadas" },
+    "upgrade.topDebtsOptimized": { en: "Top {n} debts optimized", es: "Top {n} deudas optimizadas" },
+    "upgrade.noLimits": { en: "no limits", es: "sin límites" },
+    "upgrade.futureDebtsCovered": { en: "every future debt automatically covered", es: "cada deuda futura cubierta automáticamente" },
+    "upgrade.inInterest": { en: "in interest", es: "en intereses" },
+    "upgrade.savedEachMonth": { en: "saved each month using CoreX", es: "ahorrado cada mes usando CoreX" },
+    "upgrade.savedEachYear": { en: "saved each year using CoreX", es: "ahorrado cada año usando CoreX" },
+    "upgrade.netGain": { en: "💰 Net gain:", es: "💰 Ganancia neta:" },
+    "upgrade.afterPlanCost": { en: "after plan cost", es: "después del costo del plan" },
+    "upgrade.paysForItself": { en: "Pays for itself in", es: "Se paga solo en" },
+    "upgrade.days": { en: "days", es: "días" },
+    "upgrade.checkoutOpened": { en: "🍋 Checkout opened!", es: "🍋 ¡Checkout abierto!" },
+    "upgrade.checkoutOpenedDesc": { en: "Complete your payment in the new tab. Your plan will update automatically.", es: "Completa tu pago en la nueva pestaña. Tu plan se actualizará automáticamente." },
+    "upgrade.checkoutFailed": { en: "Checkout failed", es: "Fallo en el checkout" },
+    "upgrade.checkoutFailedDesc": { en: "Could not open checkout. Please try again or contact support.", es: "No se pudo abrir el checkout. Inténtalo de nuevo o contacta soporte." },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  UPGRADE — PLAN FEATURES
+    // ═══════════════════════════════════════════════════════════════════
+    "upgrade.feature.debtAccounts2": { en: "2 debt accounts", es: "2 cuentas de deuda" },
+    "upgrade.feature.basicVelocity": { en: "Basic velocity engine", es: "Motor velocity básico" },
+    "upgrade.feature.monthlyProjections": { en: "Monthly projections", es: "Proyecciones mensuales" },
+    "upgrade.feature.debtAccounts6": { en: "6 debt accounts", es: "6 cuentas de deuda" },
+    "upgrade.feature.fullVelocity": { en: "Full velocity engine", es: "Motor velocity completo" },
+    "upgrade.feature.actionPlanGPS": { en: "Action Plan GPS", es: "GPS de Plan de Acción" },
+    "upgrade.feature.prioritySupport": { en: "Priority support", es: "Soporte prioritario" },
+    "upgrade.feature.debtAccounts12": { en: "12 debt accounts", es: "12 cuentas de deuda" },
+    "upgrade.feature.accelerationSim": { en: "Acceleration simulator", es: "Simulador de aceleración" },
+    "upgrade.feature.advancedAnalytics": { en: "Advanced analytics", es: "Analíticas avanzadas" },
+    "upgrade.feature.pdfReports": { en: "PDF reports", es: "Reportes PDF" },
+    "upgrade.feature.unlimitedAccounts": { en: "Unlimited accounts", es: "Cuentas ilimitadas" },
+    "upgrade.feature.allAccelerator": { en: "All Accelerator features", es: "Todas las funciones Accelerator" },
+    "upgrade.feature.apiAccess": { en: "API access", es: "Acceso a API" },
+    "upgrade.feature.whiteGlove": { en: "White-glove onboarding", es: "Onboarding personalizado" },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  ACCOUNTS — SUBSCRIPTION GATING
+    // ═══════════════════════════════════════════════════════════════════
+    "accounts.lifetime": { en: "LIFETIME", es: "DE POR VIDA" },
+    "accounts.debtAccountsUsed": { en: "debt accounts used", es: "cuentas de deuda usadas" },
+    "accounts.debtUnlimited": { en: "debt accounts • Unlimited", es: "cuentas de deuda • Ilimitado" },
+    "accounts.accountsLocked": { en: "account(s) locked", es: "cuenta(s) bloqueada(s)" },
+    "accounts.unmonitored": { en: "Unmonitored", es: "Sin Monitorear" },
+    "accounts.inUnmonitoredDebt": { en: "in unmonitored debt", es: "en deuda sin monitorear" },
+    "accounts.dayDraining": { en: "/day draining", es: "/día drenando" },
+    "accounts.notMonitored": { en: "Not monitored — losing ~", es: "Sin monitoreo — perdiendo ~" },
+    "accounts.perDayInterest": { en: "/day in interest", es: "/día en intereses" },
+    "accounts.lockedBadge": { en: "LOCKED", es: "BLOQUEADO" },
+    "accounts.limitReached": { en: "Account limit reached", es: "Límite de cuentas alcanzado" },
+    "accounts.limitReachedDesc": { en: "Upgrade your plan in Settings → Subscription.", es: "Mejora tu plan en Configuración → Suscripción." },
+
+    // Dashboard — subscription gating
+    "dashboard.unmonitoredDebt": { en: "Unmonitored Debt", es: "Deuda Sin Monitorear" },
 };
 
 // ─── Context ────────────────────────────────────────────────────────

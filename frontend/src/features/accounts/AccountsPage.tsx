@@ -155,7 +155,7 @@ export default function AccountsPage() {
         if (values.type === 'debt') {
             const max = getPlanLimit();
             if (debts.length >= max) {
-                setErrorMsg(`Account limit reached (${debts.length}/${max}). Upgrade your plan in Settings → Subscription.`);
+                setErrorMsg(`${t('accounts.limitReached')} (${debts.length}/${max}). ${t('accounts.limitReachedDesc')}`);
                 return;
             }
         }
@@ -358,7 +358,7 @@ export default function AccountsPage() {
                                     }}
                                 >
                                     <Lock className="mr-2 h-4 w-4" strokeWidth={2} />
-                                    Upgrade to Add More
+                                    {t('upgrade.toAddMore')}
                                     <ArrowUpRight className="ml-1 h-3 w-3" />
                                 </Button>
                             ) : (
@@ -566,14 +566,14 @@ export default function AccountsPage() {
                             <span className="text-sm font-semibold">{planName}</span>
                             {isDevLicense && (
                                 <span className="text-[10px] font-bold bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded-full">
-                                    LIFETIME
+                                    {t('accounts.lifetime')}
                                 </span>
                             )}
                         </div>
                         <p className="text-xs text-muted-foreground">
                             {planLimit === Infinity
-                                ? `${debtCount} debt accounts • Unlimited`
-                                : `${debtCount}/${planLimit} debt accounts used`}
+                                ? `${debtCount} ${t('accounts.debtUnlimited')}`
+                                : `${debtCount}/${planLimit} ${t('accounts.debtAccountsUsed')}`}
                         </p>
                     </div>
                 </div>
@@ -597,7 +597,7 @@ export default function AccountsPage() {
                                 onClick={() => setShowUpgradeModal(true)}
                                 className="text-xs font-semibold text-amber-500 hover:text-amber-400 transition-colors whitespace-nowrap flex items-center gap-1"
                             >
-                                Upgrade <ArrowUpRight size={12} />
+                                {t('upgrade.button')} <ArrowUpRight size={12} />
                             </button>
                         )}
                     </div>
@@ -610,11 +610,11 @@ export default function AccountsPage() {
                     <div className="flex items-center gap-2">
                         <Crown size={14} className="text-amber-500" />
                         <span className="text-xs text-amber-500 font-medium">
-                            You're running out of slots! Upgrade for more debt accounts.
+                            {t('upgrade.runningOutSlots')}
                         </span>
                     </div>
                     <button onClick={() => setShowUpgradeModal(true)} className="text-xs font-bold text-amber-500 hover:text-amber-400 underline">
-                        View Plans
+                        {t('upgrade.viewPlans')}
                     </button>
                 </div>
             )}
@@ -632,17 +632,17 @@ export default function AccountsPage() {
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                                     <span className="text-sm font-bold text-rose-400">
-                                        {lockedDebts.length} account{lockedDebts.length > 1 ? 's' : ''} locked
+                                        {lockedDebts.length} {t('accounts.accountsLocked')}
                                     </span>
                                     <span className="text-[10px] font-bold bg-rose-500/10 text-rose-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                        Unmonitored
+                                        {t('accounts.unmonitored')}
                                     </span>
                                 </div>
                                 <p className="text-[11px] sm:text-xs text-rose-300/70 mt-0.5 leading-snug">
-                                    {formatMoney(lockedTotalDebt)} in unmonitored debt
+                                    {formatMoney(lockedTotalDebt)} {t('accounts.inUnmonitoredDebt')}
                                     <span className="hidden sm:inline"> • </span>
                                     <br className="sm:hidden" />
-                                    ~{formatMoney(lockedDailyInterest)}/day draining
+                                    ~{formatMoney(lockedDailyInterest)}{t('accounts.dayDraining')}
                                 </p>
                             </div>
                         </div>
@@ -651,7 +651,7 @@ export default function AccountsPage() {
                             className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-lg shadow-rose-900/30 hover:shadow-rose-900/50"
                         >
                             <Lock size={12} />
-                            Unlock All — Upgrade Now
+                            {t('upgrade.unlockAll')}
                             <ArrowUpRight size={12} />
                         </button>
                     </div>
@@ -709,7 +709,7 @@ export default function AccountsPage() {
                                                 <div className="h-12 w-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2">
                                                     <Lock size={20} className="text-rose-400" />
                                                 </div>
-                                                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Locked</span>
+                                                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">{t('accounts.lockedBadge')}</span>
                                             </div>
                                         )}
 
@@ -745,7 +745,7 @@ export default function AccountsPage() {
                                                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/15 mb-4 pointer-events-none">
                                                     <Flame size={14} className="text-rose-500 animate-pulse" />
                                                     <span className="text-[11px] font-semibold text-rose-400">
-                                                        Not monitored — losing ~{formatMoney(dailyLoss)}/day in interest
+                                                        {t('accounts.notMonitored')}{formatMoney(dailyLoss)}{t('accounts.perDayInterest')}
                                                     </span>
                                                 </div>
                                             )}
@@ -765,7 +765,7 @@ export default function AccountsPage() {
                                             {isLocked ? (
                                                 <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-100 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 text-xs font-medium pointer-events-none">
                                                     <Lock size={12} />
-                                                    Upgrade to manage this account
+                                                    {t('upgrade.toManage')}
                                                 </div>
                                             ) : (
                                                 <div className="flex gap-2">

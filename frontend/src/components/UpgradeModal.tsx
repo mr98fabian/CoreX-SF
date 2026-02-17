@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Zap, Rocket, Crown, Check, Sparkles, TrendingDown, Infinity as InfinityIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ─── Savings estimate shape from backend ───
 interface PlanSavings {
@@ -26,6 +27,7 @@ interface SavingsEstimate {
 }
 
 // ─── Plans Data (single source of truth) ───
+// Feature keys reference LanguageContext translations
 const PLANS = [
     {
         id: 'starter',
@@ -36,7 +38,7 @@ const PLANS = [
         annual: 0,
         color: 'slate',
         gradient: 'from-slate-500 to-slate-600',
-        features: ['2 debt accounts', 'Basic velocity engine', 'Monthly projections'],
+        featureKeys: ['upgrade.feature.debtAccounts2', 'upgrade.feature.basicVelocity', 'upgrade.feature.monthlyProjections'],
     },
     {
         id: 'velocity',
@@ -47,7 +49,7 @@ const PLANS = [
         annual: 97,
         color: 'amber',
         gradient: 'from-amber-500 to-orange-500',
-        features: ['6 debt accounts', 'Full velocity engine', 'Action Plan GPS', 'Priority support'],
+        featureKeys: ['upgrade.feature.debtAccounts6', 'upgrade.feature.fullVelocity', 'upgrade.feature.actionPlanGPS', 'upgrade.feature.prioritySupport'],
     },
     {
         id: 'accelerator',
@@ -59,7 +61,7 @@ const PLANS = [
         color: 'purple',
         gradient: 'from-purple-500 to-indigo-500',
         popular: true,
-        features: ['12 debt accounts', 'Acceleration simulator', 'Advanced analytics', 'PDF reports', 'Priority support'],
+        featureKeys: ['upgrade.feature.debtAccounts12', 'upgrade.feature.accelerationSim', 'upgrade.feature.advancedAnalytics', 'upgrade.feature.pdfReports', 'upgrade.feature.prioritySupport'],
     },
     {
         id: 'freedom',
@@ -70,7 +72,7 @@ const PLANS = [
         annual: 347,
         color: 'yellow',
         gradient: 'from-amber-400 to-yellow-500',
-        features: ['Unlimited accounts', 'All Accelerator features', 'API access', 'White-glove onboarding'],
+        featureKeys: ['upgrade.feature.unlimitedAccounts', 'upgrade.feature.allAccelerator', 'upgrade.feature.apiAccess', 'upgrade.feature.whiteGlove'],
     },
 ] as const;
 
@@ -85,6 +87,7 @@ interface UpgradeModalProps {
 
 export default function UpgradeModal({ open, onOpenChange, reason, currentPlan = 'starter' }: UpgradeModalProps) {
     const { toast } = useToast();
+    const { t } = useLanguage();
     const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const [savings, setSavings] = useState<SavingsEstimate | null>(null);
@@ -117,14 +120,14 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
             window.open(checkoutUrl, '_blank');
 
             toast({
-                title: '🍋 Checkout opened!',
-                description: 'Complete your payment in the new tab. Your plan will update automatically.',
+                title: t('upgrade.checkoutOpened'),
+                description: t('upgrade.checkoutOpenedDesc'),
             });
             onOpenChange(false);
         } catch {
             toast({
-                title: 'Checkout failed',
-                description: 'Could not open checkout. Please try again or contact support.',
+                title: t('upgrade.checkoutFailed'),
+                description: t('upgrade.checkoutFailedDesc'),
                 variant: 'destructive',
             });
         } finally {
@@ -143,11 +146,11 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                         <div className="flex items-center gap-2 mb-1">
                             <Sparkles size={22} className="text-emerald-400" />
                             <DialogTitle className="text-xl font-bold text-white">
-                                Upgrade Your Plan
+                                {t('upgrade.title')}
                             </DialogTitle>
                         </div>
                         <DialogDescription className="text-sm sm:text-base text-zinc-400">
-                            {reason || 'Unlock more accounts and accelerate your debt freedom.'}
+                            {reason || t('upgrade.defaultReason')}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -160,7 +163,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
-                            Monthly
+                            {t('upgrade.monthly')}
                         </button>
                         <button
                             onClick={() => setBilling('annual')}
@@ -169,7 +172,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
-                            Annual <span className="text-emerald-400 ml-1">Save 60%</span>
+                            {t('upgrade.annual')} <span className="text-emerald-400 ml-1">{t('upgrade.save')} 60%</span>
                         </button>
                     </div>
                 </div>
@@ -199,14 +202,14 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 {/* Popular Badge */}
                                 {isPopular && !isCurrent && (
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-purple-500 text-white shadow-lg">
-                                        Most Popular
+                                        {t('upgrade.mostPopular')}
                                     </div>
                                 )}
 
                                 {/* Current Badge */}
                                 {isCurrent && (
                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500 text-white">
-                                        Current
+                                        {t('upgrade.current')}
                                     </div>
                                 )}
 
@@ -221,7 +224,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 {/* Price */}
                                 <div className="mb-3">
                                     {plan.monthly === 0 ? (
-                                        <div className="text-3xl font-black text-white">Free</div>
+                                        <div className="text-3xl font-black text-white">{t('upgrade.free')}</div>
                                     ) : (
                                         <>
                                             <div className="flex items-baseline gap-1">
@@ -230,7 +233,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                             </div>
                                             {billing === 'annual' && (
                                                 <p className="text-xs text-zinc-500 mt-1">
-                                                    ${price}/year · <span className="text-emerald-400 font-semibold">Save ${plan.monthly * 12 - plan.annual}</span>
+                                                    ${price}/{t('upgrade.year')} · <span className="text-emerald-400 font-semibold">{t('upgrade.save')} ${plan.monthly * 12 - plan.annual}</span>
                                                 </p>
                                             )}
                                         </>
@@ -239,12 +242,12 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
 
                                 {/* Accounts */}
                                 <div className="text-sm text-zinc-400 mb-2 font-medium">
-                                    {plan.accounts === Infinity ? '∞ Unlimited' : plan.accounts} accounts
+                                    {plan.accounts === Infinity ? t('upgrade.unlimited') : plan.accounts} {t('upgrade.accounts')}
                                     {savings?.has_data && savings.plans[plan.id] && (
                                         <span className="text-zinc-500 ml-1">
                                             · {plan.accounts === Infinity
-                                                ? 'All debts optimized'
-                                                : `Top ${savings.plans[plan.id].accounts_used} debts optimized`}
+                                                ? t('upgrade.allDebtsOptimized')
+                                                : t('upgrade.topDebtsOptimized').replace('{n}', String(savings.plans[plan.id].accounts_used))}
                                         </span>
                                     )}
                                 </div>
@@ -268,10 +271,10 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                                     </div>
                                                     <div>
                                                         <span className="text-sm font-bold text-amber-300 block leading-snug">
-                                                            {displaySavings} + no limits
+                                                            {displaySavings} + {t('upgrade.noLimits')}
                                                         </span>
                                                         <span className="text-xs text-amber-400/70 leading-snug">
-                                                            every future debt automatically covered
+                                                            {t('upgrade.futureDebtsCovered')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -280,10 +283,10 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                                     <TrendingDown size={16} className="text-emerald-400 flex-shrink-0" />
                                                     <div>
                                                         <span className="text-sm font-bold text-emerald-400 block leading-snug">
-                                                            {displaySavings} in interest
+                                                            {displaySavings} {t('upgrade.inInterest')}
                                                         </span>
                                                         <span className="text-xs text-emerald-500/70 leading-snug">
-                                                            saved each {billing === 'monthly' ? 'month' : 'year'} using CoreX
+                                                            {billing === 'monthly' ? t('upgrade.savedEachMonth') : t('upgrade.savedEachYear')}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -291,9 +294,9 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                             {/* Net ROI for paid plans */}
                                             {s.plan_cost_annual > 0 && netGain > 0 && (
                                                 <p className="text-xs text-zinc-500 pl-1 leading-snug">
-                                                    💰 Net gain: <span className={`${isUnlimited ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> after plan cost
+                                                    {t('upgrade.netGain')} <span className={`${isUnlimited ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> {t('upgrade.afterPlanCost')}
                                                     {s.roi_days > 0 && s.roi_days < 365 && (
-                                                        <> · Pays for itself in <span className="text-white font-semibold">{s.roi_days} days</span></>
+                                                        <> · {t('upgrade.paysForItself')} <span className="text-white font-semibold">{s.roi_days} {t('upgrade.days')}</span></>
                                                     )}
                                                 </p>
                                             )}
@@ -303,10 +306,10 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
 
                                 {/* Features */}
                                 <ul className="space-y-2 mb-5 flex-1">
-                                    {plan.features.map((f, i) => (
+                                    {plan.featureKeys.map((fk, i) => (
                                         <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                                            {f}
+                                            {t(fk)}
                                         </li>
                                     ))}
                                 </ul>
@@ -326,14 +329,14 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                         }`}
                                 >
                                     {upgrading === plan.id
-                                        ? 'Processing...'
+                                        ? t('upgrade.processing')
                                         : isCurrent
-                                            ? '✓ Active'
+                                            ? t('upgrade.active')
                                             : isDowngrade
-                                                ? 'Downgrade'
+                                                ? t('upgrade.downgrade')
                                                 : plan.monthly === 0
-                                                    ? 'Get Started'
-                                                    : 'Upgrade'
+                                                    ? t('upgrade.getStarted')
+                                                    : t('upgrade.button')
                                     }
                                 </Button>
                             </div>

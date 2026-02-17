@@ -263,20 +263,20 @@ export default function DashboardPage() {
                                 <div className="absolute top-0 right-0 w-20 h-20 bg-rose-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
                                     <CardTitle className="text-xs font-medium text-rose-400/80 flex items-center gap-1">
-                                        <Lock size={10} /> Unmonitored Debt
+                                        <Lock size={10} /> {t('dashboard.unmonitoredDebt')}
                                     </CardTitle>
                                     <span className="text-[9px] font-mono bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded-full">
-                                        {lockedCount} locked
+                                        {lockedCount} {t('accounts.lockedBadge').toLowerCase()}
                                     </span>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4 pt-0">
                                     <div className="text-xl md:text-2xl font-bold text-rose-500 tracking-tight">{formatMoney(unmonitoredDebt)}</div>
                                     {extraMonths > 0 ? (
                                         <p className="text-[10px] text-rose-400/60 mt-0.5 flex items-center gap-1">
-                                            <Calendar size={9} /> +{extraMonths} extra {extraMonths === 1 ? 'month' : 'months'} · Upgrade to accelerate freedom
+                                            <Calendar size={9} /> +{extraMonths} {t('dashboard.extraMonths')} · {t('dashboard.upgradeAccelerate')}
                                         </p>
                                     ) : (
-                                        <p className="text-[10px] text-rose-400/60 mt-0.5">Upgrade to track all debts</p>
+                                        <p className="text-[10px] text-rose-400/60 mt-0.5">{t('dashboard.upgradeTrackAll')}</p>
                                     )}
                                 </CardContent>
                             </Card>
@@ -357,7 +357,7 @@ export default function DashboardPage() {
             <UpgradeModal
                 open={showUpgradeModal}
                 onOpenChange={setShowUpgradeModal}
-                reason="Unlock all your debt accounts so CoreX can monitor and optimize every dollar."
+                reason={t('upgrade.moreAccountsDesc')}
             />
         </>
     );

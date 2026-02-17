@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Lock, ArrowUpRight, X, AlertTriangle, Crown } from 'lucide-react';
 import UpgradeModal from '@/components/UpgradeModal';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 /**
  * UpgradeNudge — Floating CTA toast that slides in after a delay.
@@ -13,6 +14,7 @@ import UpgradeModal from '@/components/UpgradeModal';
  * Appears after 30 seconds to avoid interrupting the user's flow.
  */
 export default function UpgradeNudge() {
+    const { t } = useLanguage();
     const [visible, setVisible] = useState(false);
     const [dismissed, setDismissed] = useState(false);
     const [showUpgrade, setShowUpgrade] = useState(false);
@@ -51,8 +53,8 @@ export default function UpgradeNudge() {
             open={showUpgrade}
             onOpenChange={setShowUpgrade}
             reason={isFree
-                ? "Upgrade to unlock premium debt acceleration features and eliminate interest faster."
-                : "Upgrade your plan to unlock more accounts and accelerate your debt freedom."
+                ? t('upgrade.premiumDesc')
+                : t('upgrade.moreAccountsDesc')
             }
         />
     );
@@ -96,14 +98,14 @@ export default function UpgradeNudge() {
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-bold text-white">
                                     {isFree
-                                        ? '🚀 Unlock Full Power'
-                                        : '⚠️ Debts Going Unmonitored'
+                                        ? t('upgrade.unlockPower')
+                                        : t('upgrade.debtsUnmonitored')
                                     }
                                 </p>
                                 <p className="text-[11px] text-slate-400 leading-snug">
                                     {isFree
-                                        ? 'You\'re on Starter — upgrade to track more debts and save thousands in interest.'
-                                        : 'Some of your debts are locked and bleeding interest. Upgrade to cover them all.'
+                                        ? t('upgrade.starterNudge')
+                                        : t('upgrade.lockedNudge')
                                     }
                                 </p>
                             </div>
@@ -115,7 +117,7 @@ export default function UpgradeNudge() {
                             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-xs font-bold transition-all shadow-lg shadow-amber-900/30 hover:shadow-amber-900/50 group"
                         >
                             <Lock size={12} />
-                            View Upgrade Plans
+                            {t('upgrade.viewUpgradePlans')}
                             <ArrowUpRight size={12} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </button>
                     </div>
@@ -127,8 +129,8 @@ export default function UpgradeNudge() {
                 open={showUpgrade}
                 onOpenChange={setShowUpgrade}
                 reason={isFree
-                    ? "Upgrade to unlock premium debt acceleration features and eliminate interest faster."
-                    : "Upgrade your plan to unlock more accounts and accelerate your debt freedom."
+                    ? t('upgrade.premiumDesc')
+                    : t('upgrade.moreAccountsDesc')
                 }
             />
 

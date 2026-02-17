@@ -1113,7 +1113,7 @@ export default function ActionPlanPage() {
             <UpgradeModal
                 open={showUpgrade}
                 onOpenChange={setShowUpgrade}
-                reason="Unlock all your debt accounts so KoreX can optimize every dollar of interest."
+                reason={t('upgrade.moreAccountsDesc')}
             />
         </>
     );
