@@ -6,7 +6,6 @@ import AccountsPage from "@/features/accounts/AccountsPage";
 import ActionPlanPage from "@/features/actionplan/ActionPlanPage";
 import AnalyticsPage from "@/features/analytics/AnalyticsPage";
 
-
 import SettingsPage from "@/features/settings/SettingsPage";
 import LoginPage from "@/features/auth/LoginPage";
 import TermsOfServicePage from "@/features/legal/TermsOfServicePage";
@@ -20,47 +19,58 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 import { Toaster } from "@/components/ui/toaster";
+import { useCapacitor } from "@/hooks/useCapacitor";
+
+/** Inner shell — lives inside BrowserRouter so hooks like useNavigate work */
+function AppShell() {
+  // Initialize native Capacitor behavior (no-op on web)
+  useCapacitor();
+
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <Suspense fallback={<LoadingScreen />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+
+                {/* Protected routes */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<DashboardPage />} />
+                  <Route path="action-plan" element={<ActionPlanPage />} />
+                  <Route path="accounts" element={<AccountsPage />} />
+                  <Route path="analytics" element={<AnalyticsPage />} />
+
+                  <Route path="settings" element={<SettingsPage />} />
+                </Route>
+
+                {/* 404 — Raccoon says hi 🦝 */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </Suspense>
+            <Toaster />
+          </NotificationProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <Suspense fallback={<LoadingScreen />}>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/terms" element={<TermsOfServicePage />} />
-                  <Route path="/privacy" element={<PrivacyPolicyPage />} />
-
-                  {/* Protected routes */}
-                  <Route
-                    path="/"
-                    element={
-                      <ProtectedRoute>
-                        <DashboardLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<DashboardPage />} />
-                    <Route path="action-plan" element={<ActionPlanPage />} />
-                    <Route path="accounts" element={<AccountsPage />} />
-                    <Route path="analytics" element={<AnalyticsPage />} />
-
-                    <Route path="settings" element={<SettingsPage />} />
-                  </Route>
-
-                  {/* 404 — Raccoon says hi 🦝 */}
-                  <Route path="*" element={<NotFoundPage />} />
-                </Routes>
-              </Suspense>
-              <Toaster />
-            </NotificationProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
+      <AppShell />
     </BrowserRouter>
   );
 }

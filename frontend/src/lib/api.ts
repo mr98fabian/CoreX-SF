@@ -1,8 +1,17 @@
 import { supabase } from './supabase';
+import { Capacitor } from '@capacitor/core';
 
-// Backend base URL: In production, Vercel proxies /api/* to Railway (same-origin, no CORS).
-// In dev, connect directly to local backend.
-const API_BASE = import.meta.env.DEV ? 'http://localhost:8000' : '';
+// Backend base URL:
+// - Dev: connect directly to local backend
+// - Capacitor (native app): connect directly to Railway (no Vercel proxy available)
+// - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
+const RAILWAY_URL = 'https://corex-sf-production.up.railway.app';
+
+const API_BASE = import.meta.env.DEV
+    ? 'http://localhost:8000'
+    : Capacitor.isNativePlatform()
+        ? RAILWAY_URL
+        : '';
 
 // Demo Mode constants
 const DEMO_TOKEN_KEY = 'corex_demo_token';
