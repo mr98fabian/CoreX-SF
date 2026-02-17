@@ -647,7 +647,107 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.profile.saveChanges": { en: "Save Changes", es: "Guardar Cambios" },
     "settings.profile.saved": { en: "Profile saved", es: "Perfil guardado" },
     "settings.profile.savedDesc": { en: "Your display name has been updated.", es: "Tu nombre para mostrar ha sido actualizado." },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  SETTINGS — SUBSCRIPTION
+    // ═══════════════════════════════════════════════════════════════════
+    "sub.title": { en: "Subscription", es: "Suscripción" },
+    "sub.subtitle": { en: "Choose the plan that fits your financial journey.", es: "Elige el plan que se adapte a tu camino financiero." },
+    // Interest banner
+    "sub.interestBurning": { en: "Interest burning right now", es: "Intereses quemándose ahora mismo" },
+    "sub.sinceOpened": { en: "since you opened this page", es: "desde que abriste esta página" },
+    "sub.perDay": { en: "Per Day", es: "Por Día" },
+    "sub.perMonth": { en: "Per Month", es: "Por Mes" },
+    "sub.perYear": { en: "Per Year", es: "Por Año" },
+    // Comparison section
+    "sub.withoutKorex": { en: "🏦 Without KoreX", es: "🏦 Sin KoreX" },
+    "sub.withKorex": { en: "⚡ With KoreX Velocity", es: "⚡ Con KoreX Velocity" },
+    "sub.years": { en: "years", es: "años" },
+    "sub.toPayOff": { en: "to pay off your debt", es: "para pagar tu deuda" },
+    "sub.toFreedom": { en: "to financial freedom", es: "hacia la libertad financiera" },
+    "sub.totalInterest": { en: "total interest paid", es: "total de intereses pagados" },
+    "sub.youKeep": { en: "You keep", es: "Te ahorras" },
+    "sub.goneToBank": { en: "that would have gone to the bank", es: "que habrían ido al banco" },
+    // Billing toggle
+    "sub.monthly": { en: "Monthly", es: "Mensual" },
+    "sub.annual": { en: "Annual", es: "Anual" },
+    "sub.saveUpTo": { en: "SAVE UP TO 60%", es: "AHORRA HASTA 60%" },
+    // Plan cards
+    "sub.accounts": { en: "accounts", es: "cuentas" },
+    "sub.unlimited": { en: "Unlimited", es: "Ilimitadas" },
+    "sub.upTo": { en: "Up to", es: "Hasta" },
+    "sub.free": { en: "Free", es: "Gratis" },
+    "sub.mo": { en: "/mo", es: "/mes" },
+    "sub.off": { en: "OFF", es: "DESC." },
+    "sub.billed": { en: "Billed", es: "Facturado" },
+    "sub.year": { en: "/year", es: "/año" },
+    "sub.mostPopular": { en: "⭐ MOST POPULAR", es: "⭐ MÁS POPULAR" },
+    "sub.yourPlan": { en: "YOUR CURRENT PLAN", es: "TU PLAN ACTUAL" },
+    // Savings badges
+    "sub.inInterest": { en: "in interest", es: "en intereses" },
+    "sub.noLimits": { en: "+ no limits", es: "+ sin límites" },
+    "sub.futureDebt": { en: "every future debt automatically covered", es: "toda deuda futura cubierta automáticamente" },
+    "sub.savedEach": { en: "saved each", es: "ahorrados cada" },
+    "sub.monthWord": { en: "month", es: "mes" },
+    "sub.yearWord": { en: "year", es: "año" },
+    "sub.usingKorex": { en: "using KoreX", es: "usando KoreX" },
+    "sub.netGain": { en: "Net gain:", es: "Ganancia neta:" },
+    "sub.afterPlanCost": { en: "after plan cost", es: "después del costo del plan" },
+    "sub.paysItself": { en: "Pays for itself in", es: "Se paga solo en" },
+    "sub.days": { en: "days", es: "días" },
+    // Features list
+    "sub.debtAccounts": { en: "debt accounts", es: "cuentas de deuda" },
+    "sub.allFeatures": { en: "All features included", es: "Todas las funciones incluidas" },
+    "sub.freedomClock": { en: "Freedom Clock & Action Plan", es: "Reloj de Libertad y Plan de Acción" },
+    "sub.pdfReports": { en: "PDF Reports & Exports", es: "Reportes PDF y Exportaciones" },
+    "sub.velocitySim": { en: "Velocity Simulations", es: "Simulaciones de Velocidad" },
+    // Price anchors
+    "sub.anchor.velocity": { en: "☕ Less than 2 lattes/month", es: "☕ Menos que 2 cafés al mes" },
+    "sub.anchor.accelerator": { en: "🍕 Less than a pizza delivery", es: "🍕 Menos que una pizza a domicilio" },
+    "sub.anchor.freedom": { en: "🚗 One Uber ride per month", es: "🚗 Un viaje en Uber al mes" },
+    // CTA buttons
+    "sub.active": { en: "✓ Active", es: "✓ Activo" },
+    "sub.downgrade": { en: "Downgrade", es: "Reducir" },
+    "sub.upgradeNow": { en: "Upgrade Now", es: "Subir de Plan" },
+    "sub.getStarted": { en: "Get Started", es: "Comenzar" },
+    "sub.processing": { en: "Processing...", es: "Procesando..." },
+    // Social proof
+    "sub.accountsMonitored": { en: "Accounts Monitored", es: "Cuentas Monitoreadas" },
+    "sub.debtOptimized": { en: "Debt Being Optimized", es: "Deuda Optimizándose" },
+    "sub.fasterThanBanks": { en: "Faster Than Banks", es: "Más Rápido que Bancos" },
+    "sub.avgInterestSaved": { en: "Avg Interest Saved", es: "Ahorro Promedio en Intereses" },
+    // Trust section (NO trial — user confirmed)
+    "sub.cancelAnytime": { en: "Cancel Anytime", es: "Cancela Cuando Quieras" },
+    "sub.cancelAnytimeDesc": { en: "No contracts, no hidden fees. Downgrade whenever you want.", es: "Sin contratos ni cargos ocultos. Baja de plan cuando quieras." },
+    "sub.allFeaturesIncluded": { en: "All Features Included", es: "Todas las Funciones Incluidas" },
+    "sub.allFeaturesDesc": { en: "Every plan gets full access. Only the account limit changes.", es: "Todos los planes tienen acceso completo. Solo cambia el límite de cuentas." },
+    "sub.securePlatform": { en: "Secure Platform", es: "Plataforma Segura" },
+    "sub.securePlatformDesc": { en: "Your data is encrypted and protected at all times.", es: "Tus datos están encriptados y protegidos en todo momento." },
+    // Promo code
+    "sub.promoCode": { en: "Promo Code", es: "Código Promocional" },
+    "sub.promoCodeDesc": { en: "Have a discount or special access code?", es: "¿Tienes un código de descuento o acceso especial?" },
+    "sub.promoPlaceholder": { en: "Enter code (e.g. LAUNCH50)", es: "Ingresa código (ej. LAUNCH50)" },
+    "sub.apply": { en: "Apply", es: "Aplicar" },
+    "sub.remove": { en: "Remove", es: "Quitar" },
+    "sub.devLicense": { en: "👑 Developer License — Unlimited Forever", es: "👑 Licencia Developer — Ilimitada para Siempre" },
+    "sub.activePlan": { en: "Active:", es: "Activo:" },
+    "sub.connectionError": { en: "Connection error. Please try again.", es: "Error de conexión. Intenta de nuevo." },
+    // Manage/Cancel
+    "sub.manageSub": { en: "Manage Subscription", es: "Gestionar Suscripción" },
+    "sub.devPermanent": { en: "Developer license is permanent and cannot be cancelled.", es: "La licencia developer es permanente y no se puede cancelar." },
+    "sub.cancelOrChange": { en: "Cancel or change your current subscription plan.", es: "Cancela o cambia tu plan de suscripción actual." },
+    "sub.cancelSub": { en: "Cancel Subscription", es: "Cancelar Suscripción" },
+    "sub.cancelDesc": { en: "You will be downgraded to the Starter plan (2 accounts).", es: "Serás cambiado al plan Starter (2 cuentas)." },
+    "sub.cancelPlan": { en: "Cancel Plan", es: "Cancelar Plan" },
+    "sub.cancelConfirm": { en: "Are you sure you want to cancel your subscription? You will be downgraded to the Starter plan.", es: "¿Estás seguro de que quieres cancelar tu suscripción? Serás cambiado al plan Starter." },
+    "sub.devLifetime": { en: "Lifetime developer access — no expiration, no limits.", es: "Acceso developer de por vida — sin expiración, sin límites." },
+    // Checkout toasts
+    "sub.checkoutOpened": { en: "🍋 Checkout opened!", es: "🍋 ¡Checkout abierto!" },
+    "sub.checkoutDesc": { en: "Complete your payment in the new tab. Your plan will update automatically.", es: "Completa tu pago en la nueva pestaña. Tu plan se actualizará automáticamente." },
+    "sub.checkoutFailed": { en: "Checkout failed", es: "Error en el checkout" },
+    "sub.checkoutFailedDesc": { en: "Could not open checkout. Please try again or contact support.", es: "No se pudo abrir el checkout. Intenta de nuevo o contacta soporte." },
 };
+
 
 // ─── Context ────────────────────────────────────────────────────────
 interface LanguageContextType {

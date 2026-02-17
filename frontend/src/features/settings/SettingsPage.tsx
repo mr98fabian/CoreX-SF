@@ -56,11 +56,7 @@ const TECH_STACK = [
 ];
 
 // ─── Subscription Constants ───
-const PRICE_ANCHORS: Record<string, string> = {
-    velocity: '☕ Less than 2 lattes/month',
-    accelerator: '🍕 Less than a pizza delivery',
-    freedom: '🚗 One Uber ride per month',
-};
+// Price anchors are now translated via t() — see sub.anchor.* keys
 
 interface SavingsData {
     has_data: boolean;
@@ -868,7 +864,7 @@ export default function SettingsPage() {
                 }
             } catch {
                 setPromoStatus('error');
-                setPromoMessage('Connection error. Please try again.');
+                setPromoMessage(t('sub.connectionError'));
             }
         };
 
@@ -889,8 +885,8 @@ export default function SettingsPage() {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 <SectionHeader
-                    title="Subscription"
-                    subtitle="Choose the plan that fits your financial journey."
+                    title={t('sub.title')}
+                    subtitle={t('sub.subtitle')}
                     icon={<CreditCard className="h-5 w-5 text-amber-400" />}
                 />
 
@@ -905,29 +901,29 @@ export default function SettingsPage() {
                                         <Flame className="h-6 w-6 text-red-400" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-medium text-red-300/80 uppercase tracking-wider">Interest burning right now</p>
+                                        <p className="text-xs font-medium text-red-300/80 uppercase tracking-wider">{t('sub.interestBurning')}</p>
                                         <div className="flex items-baseline gap-2">
                                             <span className="text-2xl font-black text-red-400 font-mono tabular-nums">
                                                 ${(interestTick).toFixed(4)}
                                             </span>
-                                            <span className="text-xs text-red-400/60">since you opened this page</span>
+                                            <span className="text-xs text-red-400/60">{t('sub.sinceOpened')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6 text-center">
                                     <div>
                                         <p className="text-lg font-bold text-red-400 font-mono">${sd.daily_interest_all.toFixed(2)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">Per Day</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perDay')}</p>
                                     </div>
                                     <div className="h-8 w-px bg-red-500/20" />
                                     <div>
                                         <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 30).toFixed(0)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">Per Month</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perMonth')}</p>
                                     </div>
                                     <div className="h-8 w-px bg-red-500/20" />
                                     <div>
                                         <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 365).toFixed(0)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">Per Year</p>
+                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perYear')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -941,23 +937,23 @@ export default function SettingsPage() {
                         <CardContent className="p-0">
                             <div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-white/5">
                                 <div className="p-5 text-center bg-red-500/5">
-                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">🏦 Without KoreX</p>
-                                    <p className="text-2xl font-black text-red-400">{sd.plans.freedom.years_without} years</p>
-                                    <p className="text-xs text-muted-foreground mt-1">to pay off your debt</p>
+                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">{t('sub.withoutKorex')}</p>
+                                    <p className="text-2xl font-black text-red-400">{sd.plans.freedom.years_without} {t('sub.years')}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{t('sub.toPayOff')}</p>
                                     <p className="text-sm font-bold text-red-400 mt-2">${sd.plans.freedom.total_interest_without.toLocaleString()}</p>
-                                    <p className="text-[10px] text-red-400/60">total interest paid</p>
+                                    <p className="text-[10px] text-red-400/60">{t('sub.totalInterest')}</p>
                                 </div>
                                 <div className="p-5 text-center bg-emerald-500/5">
-                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">⚡ With KoreX Velocity</p>
-                                    <p className="text-2xl font-black text-emerald-400">{sd.plans.freedom.years_with} years</p>
-                                    <p className="text-xs text-muted-foreground mt-1">to financial freedom</p>
+                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">{t('sub.withKorex')}</p>
+                                    <p className="text-2xl font-black text-emerald-400">{sd.plans.freedom.years_with} {t('sub.years')}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{t('sub.toFreedom')}</p>
                                     <p className="text-sm font-bold text-emerald-400 mt-2">${sd.plans.freedom.total_interest_with.toLocaleString()}</p>
-                                    <p className="text-[10px] text-emerald-400/60">total interest paid</p>
+                                    <p className="text-[10px] text-emerald-400/60">{t('sub.totalInterest')}</p>
                                 </div>
                             </div>
                             <div className="bg-emerald-500/10 px-5 py-2.5 text-center border-t border-emerald-500/10">
                                 <span className="text-sm font-bold text-emerald-400">
-                                    💰 You keep ${(sd.plans.freedom.total_interest_without - sd.plans.freedom.total_interest_with).toLocaleString()} that would have gone to the bank
+                                    💰 {t('sub.youKeep')} ${(sd.plans.freedom.total_interest_without - sd.plans.freedom.total_interest_with).toLocaleString()} {t('sub.goneToBank')}
                                 </span>
                             </div>
                         </CardContent>
@@ -973,7 +969,7 @@ export default function SettingsPage() {
                             : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        Monthly
+                        {t('sub.monthly')}
                     </button>
                     <button
                         onClick={() => setBillingCycle('annual')}
@@ -982,9 +978,9 @@ export default function SettingsPage() {
                             : 'text-muted-foreground hover:text-foreground'
                             }`}
                     >
-                        Annual
+                        {t('sub.annual')}
                         <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
-                            SAVE UP TO 60%
+                            {t('sub.saveUpTo')}
                         </span>
                     </button>
                 </div>
@@ -1019,13 +1015,13 @@ export default function SettingsPage() {
                                 if (!data.checkout_url) throw new Error('No checkout URL returned');
                                 window.open(data.checkout_url, '_blank');
                                 toast({
-                                    title: '🍋 Checkout opened!',
-                                    description: 'Complete your payment in the new tab. Your plan will update automatically.',
+                                    title: t('sub.checkoutOpened'),
+                                    description: t('sub.checkoutDesc'),
                                 });
                             } catch {
                                 toast({
-                                    title: 'Checkout failed',
-                                    description: 'Could not open checkout. Please try again or contact support.',
+                                    title: t('sub.checkoutFailed'),
+                                    description: t('sub.checkoutFailedDesc'),
                                     variant: 'destructive',
                                 });
                             } finally {
@@ -1046,14 +1042,14 @@ export default function SettingsPage() {
                                 {/* Popular Badge */}
                                 {plan.popular && !isCurrent && (
                                     <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
-                                        ⭐ MOST POPULAR
+                                        {t('sub.mostPopular')}
                                     </div>
                                 )}
 
                                 {/* Current Plan Badge */}
                                 {isCurrent && (
                                     <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-bold text-center py-1 tracking-wider">
-                                        YOUR CURRENT PLAN
+                                        {t('sub.yourPlan')}
                                     </div>
                                 )}
 
@@ -1066,7 +1062,7 @@ export default function SettingsPage() {
                                         <div>
                                             <h3 className="font-bold text-lg text-white">{plan.name}</h3>
                                             <p className="text-xs text-zinc-500">
-                                                {isUnlimitedPlan ? 'Unlimited' : plan.accounts} accounts
+                                                {isUnlimitedPlan ? t('sub.unlimited') : plan.accounts} {t('sub.accounts')}
                                             </p>
                                         </div>
                                     </div>
@@ -1074,14 +1070,14 @@ export default function SettingsPage() {
                                     {/* Pricing */}
                                     <div className="space-y-1">
                                         {price === 0 ? (
-                                            <div className="text-3xl font-black text-white">Free</div>
+                                            <div className="text-3xl font-black text-white">{t('sub.free')}</div>
                                         ) : (
                                             <>
                                                 <div className="flex items-baseline gap-1">
                                                     <span className="text-3xl font-black text-white">
                                                         ${billingCycle === 'annual' ? monthlyEquiv : price}
                                                     </span>
-                                                    <span className="text-sm text-zinc-500">/mo</span>
+                                                    <span className="text-sm text-zinc-500">{t('sub.mo')}</span>
                                                 </div>
                                                 {billingCycle === 'annual' && (
                                                     <div className="flex items-center gap-2">
@@ -1089,13 +1085,13 @@ export default function SettingsPage() {
                                                             ${plan.monthly}/mo
                                                         </span>
                                                         <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
-                                                            {saving}% OFF
+                                                            {saving}% {t('sub.off')}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {billingCycle === 'annual' && (
                                                     <p className="text-xs text-zinc-500">
-                                                        Billed ${plan.annual}/year
+                                                        {t('sub.billed')} ${plan.annual}{t('sub.year')}
                                                     </p>
                                                 )}
                                             </>
@@ -1119,10 +1115,10 @@ export default function SettingsPage() {
                                                         </div>
                                                         <div>
                                                             <span className="text-sm font-bold text-amber-300 block leading-snug">
-                                                                {displaySavings} + no limits
+                                                                {displaySavings} {t('sub.noLimits')}
                                                             </span>
                                                             <span className="text-xs text-amber-400/70 leading-snug">
-                                                                every future debt automatically covered
+                                                                {t('sub.futureDebt')}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1131,10 +1127,10 @@ export default function SettingsPage() {
                                                         <TrendingDown size={16} className="text-emerald-400 flex-shrink-0" />
                                                         <div>
                                                             <span className="text-sm font-bold text-emerald-400 block leading-snug">
-                                                                {displaySavings} in interest
+                                                                {displaySavings} {t('sub.inInterest')}
                                                             </span>
                                                             <span className="text-xs text-emerald-500/70 leading-snug">
-                                                                saved each {billingCycle === 'monthly' ? 'month' : 'year'} using KoreX
+                                                                {t('sub.savedEach')} {billingCycle === 'monthly' ? t('sub.monthWord') : t('sub.yearWord')} {t('sub.usingKorex')}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1142,9 +1138,9 @@ export default function SettingsPage() {
                                                 {/* Net ROI for paid plans */}
                                                 {s.plan_cost_annual > 0 && netGain > 0 && (
                                                     <p className="text-xs text-zinc-500 pl-1 leading-snug">
-                                                        💰 Net gain: <span className={`${isUnlimitedPlan ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> after plan cost
+                                                        💰 {t('sub.netGain')} <span className={`${isUnlimitedPlan ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> {t('sub.afterPlanCost')}
                                                         {s.roi_days > 0 && s.roi_days < 365 && (
-                                                            <> · Pays for itself in <span className="text-white font-semibold">{s.roi_days} days</span></>
+                                                            <> · {t('sub.paysItself')} <span className="text-white font-semibold">{s.roi_days} {t('sub.days')}</span></>
                                                         )}
                                                     </p>
                                                 )}
@@ -1156,30 +1152,30 @@ export default function SettingsPage() {
                                     <ul className="space-y-2">
                                         <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{isUnlimitedPlan ? 'Unlimited' : `Up to ${plan.accounts}`} debt accounts</span>
+                                            <span>{isUnlimitedPlan ? t('sub.unlimited') : `${t('sub.upTo')} ${plan.accounts}`} {t('sub.debtAccounts')}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>All features included</span>
+                                            <span>{t('sub.allFeatures')}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>Freedom Clock & Action Plan</span>
+                                            <span>{t('sub.freedomClock')}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>PDF Reports & Exports</span>
+                                            <span>{t('sub.pdfReports')}</span>
                                         </li>
                                         <li className="flex items-center gap-2 text-sm text-zinc-400">
                                             <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>Velocity Simulations</span>
+                                            <span>{t('sub.velocitySim')}</span>
                                         </li>
                                     </ul>
 
                                     {/* ☕ NEUROMARKETING: Price Reframe */}
-                                    {plan.id !== 'starter' && PRICE_ANCHORS[plan.id] && (
+                                    {plan.id !== 'starter' && (
                                         <p className="text-[11px] text-center text-zinc-500 italic">
-                                            {PRICE_ANCHORS[plan.id]}
+                                            {t(`sub.anchor.${plan.id}`)}
                                         </p>
                                     )}
 
@@ -1187,11 +1183,11 @@ export default function SettingsPage() {
                                     {isCurrent ? (
                                         <Button disabled className="w-full bg-emerald-900/30 text-emerald-400 cursor-default border border-emerald-500/20" variant="outline">
                                             <CheckCircle size={14} className="mr-2" />
-                                            ✓ Active
+                                            {t('sub.active')}
                                         </Button>
                                     ) : isDowngrade ? (
                                         <Button disabled className="w-full bg-zinc-800/50 text-zinc-600 cursor-not-allowed" variant="outline">
-                                            Downgrade
+                                            {t('sub.downgrade')}
                                         </Button>
                                     ) : (
                                         <Button
@@ -1205,8 +1201,8 @@ export default function SettingsPage() {
                                             onClick={handleCheckout}
                                         >
                                             {upgrading === plan.id
-                                                ? <><RefreshCw size={14} className="mr-2 animate-spin" /> Processing...</>
-                                                : price === 0 ? 'Get Started' : 'Upgrade Now'}
+                                                ? <><RefreshCw size={14} className="mr-2 animate-spin" /> {t('sub.processing')}</>
+                                                : price === 0 ? t('sub.getStarted') : t('sub.upgradeNow')}
                                         </Button>
                                     )}
                                 </CardContent>
@@ -1222,19 +1218,19 @@ export default function SettingsPage() {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                                 <div>
                                     <p className="text-2xl font-black text-blue-400">{sd.social_proof.total_accounts_monitored}</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Accounts Monitored</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.accountsMonitored')}</p>
                                 </div>
                                 <div>
                                     <p className="text-2xl font-black text-purple-400">${(sd.total_debt / 1000).toFixed(0)}K</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Debt Being Optimized</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.debtOptimized')}</p>
                                 </div>
                                 <div>
                                     <p className="text-2xl font-black text-emerald-400">3.2x</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Faster Than Banks</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.fasterThanBanks')}</p>
                                 </div>
                                 <div>
                                     <p className="text-2xl font-black text-amber-400">40%</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Avg Interest Saved</p>
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.avgInterestSaved')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -1247,18 +1243,18 @@ export default function SettingsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                             <div className="space-y-2">
                                 <Shield className="h-6 w-6 text-emerald-500 mx-auto" />
-                                <h4 className="text-sm font-semibold">14-Day Free Trial</h4>
-                                <p className="text-xs text-muted-foreground">Try any paid plan risk-free. No credit card required.</p>
+                                <h4 className="text-sm font-semibold">{t('sub.securePlatform')}</h4>
+                                <p className="text-xs text-muted-foreground">{t('sub.securePlatformDesc')}</p>
                             </div>
                             <div className="space-y-2">
                                 <RefreshCw className="h-6 w-6 text-blue-500 mx-auto" />
-                                <h4 className="text-sm font-semibold">Cancel Anytime</h4>
-                                <p className="text-xs text-muted-foreground">No contracts, no hidden fees. Downgrade whenever you want.</p>
+                                <h4 className="text-sm font-semibold">{t('sub.cancelAnytime')}</h4>
+                                <p className="text-xs text-muted-foreground">{t('sub.cancelAnytimeDesc')}</p>
                             </div>
                             <div className="space-y-2">
                                 <Sparkles className="h-6 w-6 text-amber-500 mx-auto" />
-                                <h4 className="text-sm font-semibold">All Features Included</h4>
-                                <p className="text-xs text-muted-foreground">Every plan gets full access. Only the account limit changes.</p>
+                                <h4 className="text-sm font-semibold">{t('sub.allFeaturesIncluded')}</h4>
+                                <p className="text-xs text-muted-foreground">{t('sub.allFeaturesDesc')}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -1272,8 +1268,8 @@ export default function SettingsPage() {
                                 <Tag className="h-4 w-4 text-amber-500" />
                             </div>
                             <div>
-                                <h4 className="text-sm font-semibold">Promo Code</h4>
-                                <p className="text-xs text-muted-foreground">Have a discount or special access code?</p>
+                                <h4 className="text-sm font-semibold">{t('sub.promoCode')}</h4>
+                                <p className="text-xs text-muted-foreground">{t('sub.promoCodeDesc')}</p>
                             </div>
                         </div>
 
@@ -1286,7 +1282,7 @@ export default function SettingsPage() {
                                 <div className="flex items-center gap-2">
                                     {isDevLicense ? <Crown size={14} className="text-amber-500" /> : <CheckCircle size={14} className="text-emerald-500" />}
                                     <span className="text-sm font-medium">
-                                        {isDevLicense ? '👑 Developer License — Unlimited Forever' : `Active: ${planLabel || activePlan}`}
+                                        {isDevLicense ? t('sub.devLicense') : `${t('sub.activePlan')} ${planLabel || activePlan}`}
                                     </span>
                                 </div>
                                 {!isDevLicense && (
@@ -1294,7 +1290,7 @@ export default function SettingsPage() {
                                         onClick={handleCancelSubscription}
                                         className="text-xs text-red-400 hover:text-red-300 transition-colors"
                                     >
-                                        Remove
+                                        {t('sub.remove')}
                                     </button>
                                 )}
                             </div>
@@ -1308,7 +1304,7 @@ export default function SettingsPage() {
                                     setPromoCode(e.target.value.toUpperCase());
                                     if (promoStatus !== 'idle') setPromoStatus('idle');
                                 }}
-                                placeholder="Enter code (e.g. LAUNCH50)"
+                                placeholder={t('sub.promoPlaceholder')}
                                 className="flex-1 font-mono tracking-wider uppercase text-sm"
                                 onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
                             />
@@ -1320,7 +1316,7 @@ export default function SettingsPage() {
                                 {promoStatus === 'loading' ? (
                                     <RefreshCw size={14} className="animate-spin" />
                                 ) : (
-                                    'Apply'
+                                    t('sub.apply')
                                 )}
                             </Button>
                         </div>
@@ -1348,11 +1344,11 @@ export default function SettingsPage() {
                                     <XCircle className="h-4 w-4 text-red-400" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-semibold">Manage Subscription</h4>
+                                    <h4 className="text-sm font-semibold">{t('sub.manageSub')}</h4>
                                     <p className="text-xs text-muted-foreground">
                                         {isDevLicense
-                                            ? 'Developer license is permanent and cannot be cancelled.'
-                                            : 'Cancel or change your current subscription plan.'}
+                                            ? t('sub.devPermanent')
+                                            : t('sub.cancelOrChange')}
                                     </p>
                                 </div>
                             </div>
@@ -1360,20 +1356,20 @@ export default function SettingsPage() {
                             {!isDevLicense && (
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
                                     <div>
-                                        <p className="text-sm font-medium">Cancel Subscription</p>
-                                        <p className="text-xs text-muted-foreground">You will be downgraded to the Starter plan (2 accounts).</p>
+                                        <p className="text-sm font-medium">{t('sub.cancelSub')}</p>
+                                        <p className="text-xs text-muted-foreground">{t('sub.cancelDesc')}</p>
                                     </div>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                                         onClick={() => {
-                                            if (window.confirm('Are you sure you want to cancel your subscription? You will be downgraded to the Starter plan.')) {
+                                            if (window.confirm(t('sub.cancelConfirm'))) {
                                                 handleCancelSubscription();
                                             }
                                         }}
                                     >
-                                        Cancel Plan
+                                        {t('sub.cancelPlan')}
                                     </Button>
                                 </div>
                             )}
@@ -1382,7 +1378,7 @@ export default function SettingsPage() {
                                 <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
                                     <Crown size={14} className="text-amber-500" />
                                     <span className="text-xs text-amber-500 font-medium">
-                                        Lifetime developer access — no expiration, no limits.
+                                        {t('sub.devLifetime')}
                                     </span>
                                 </div>
                             )}
