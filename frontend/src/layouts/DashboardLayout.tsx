@@ -9,6 +9,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import UpgradeNudge from '@/components/UpgradeNudge';
+import InstallPrompt from '@/components/InstallPrompt';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 export default function DashboardLayout() {
     const isMobile = useIsMobile();
@@ -198,6 +200,8 @@ export default function DashboardLayout() {
             </main>
             <FeedbackWidget />
             <UpgradeNudge />
+            <InstallPrompt />
+            <OfflineIndicator />
         </div>
     );
 }

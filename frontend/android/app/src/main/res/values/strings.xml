@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KoreX</string>
+    <string name="title_activity_main">KoreX</string>
+    <string name="package_name">com.korexf.app</string>
+    <string name="custom_url_scheme">com.korexf.app</string>
+</resources>

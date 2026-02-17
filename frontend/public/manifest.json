@@ -3,22 +3,65 @@
     "short_name": "KoreX",
     "description": "Velocity Banking Intelligence Platform. Take control of your finances.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#020617",
     "theme_color": "#f59e0b",
     "orientation": "portrait-primary",
+    "id": "com.korexf.app",
     "icons": [
         {
-            "src": "/korex-icon.png",
+            "src": "/korex-app-icon.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
-            "src": "/korex-icon.png",
+            "src": "/korex-app-icon.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
+        },
+        {
+            "src": "/korex-app-icon-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "url": "/",
+            "icons": [
+                {
+                    "src": "/korex-app-icon.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Accounts",
+            "short_name": "Accounts",
+            "url": "/accounts",
+            "icons": [
+                {
+                    "src": "/korex-app-icon.png",
+                    "sizes": "192x192"
+                }
+            ]
+        },
+        {
+            "name": "Action Plan",
+            "short_name": "Plan",
+            "url": "/action-plan",
+            "icons": [
+                {
+                    "src": "/korex-app-icon.png",
+                    "sizes": "192x192"
+                }
+            ]
         }
     ],
     "categories": [

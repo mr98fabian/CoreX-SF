@@ -1,9 +1,10 @@
 // KoreX Service Worker — Cache-first for static assets, network-first for API
-const CACHE_NAME = 'korex-v2';
+const CACHE_NAME = 'korex-v3';
 const STATIC_ASSETS = [
     '/',
-    '/korex-icon.png',
+    '/korex-app-icon.png',
     '/manifest.json',
+    '/offline.html',
 ];
 
 // Install: pre-cache critical static assets
@@ -52,6 +53,25 @@ self.addEventListener('fetch', (event) => {
                     status: 503,
                     headers: { 'Content-Type': 'application/json' },
                 })))
+        );
+        return;
+    }
+
+    // Navigation requests: network-first with offline fallback page
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response.ok) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+                    }
+                    return response;
+                })
+                .catch(() =>
+                    caches.match(request)
+                        .then((cached) => cached || caches.match('/offline.html'))
+                )
         );
         return;
     }
