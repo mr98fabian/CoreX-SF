@@ -20,11 +20,15 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 
 import { Toaster } from "@/components/ui/toaster";
 import { useCapacitor } from "@/hooks/useCapacitor";
+import { useVersionCheck } from "@/hooks/useVersionCheck";
 
 /** Inner shell — lives inside BrowserRouter so hooks like useNavigate work */
 function AppShell() {
   // Initialize native Capacitor behavior (no-op on web)
   useCapacitor();
+
+  // Poll for new app versions and prompt reload when stale (prod only)
+  useVersionCheck();
 
   return (
     <ThemeProvider>
