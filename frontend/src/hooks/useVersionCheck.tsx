@@ -1,7 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { ToastAction } from '@/components/ui/toast';
-import React from 'react';
+import { toast } from '@/components/ui/use-toast';
 
 // ─── Build‑time version injected by Vite (vite.config.ts → define) ──
 declare const __APP_VERSION__: string;
@@ -23,19 +21,7 @@ const CHECK_INTERVAL_MS = 60_000; // every 60 seconds
  *    serve the fresh assets because Vite uses content‑hashed filenames).
  */
 export function useVersionCheck() {
-    const { toast } = useToast();
     const hasNotified = useRef(false);
-
-    const handleUpdate = useCallback(() => {
-        // Clear service worker cache if registered
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then((regs) => {
-                regs.forEach((r) => r.unregister());
-            });
-        }
-        // Hard reload — bypasses browser disk cache
-        window.location.reload();
-    }, []);
 
     const checkVersion = useCallback(async () => {
         // Skip in development — version.json doesn't exist
@@ -61,23 +47,14 @@ export function useVersionCheck() {
                 hasNotified.current = true;
                 toast({
                     title: '🚀 Nueva Versión Disponible',
-                    description: `v${serverVersion} está lista. Actualiza para obtener las últimas mejoras.`,
-                    duration: Infinity, // persist until user acts
-                    action: React.createElement(
-                        ToastAction,
-                        {
-                            altText: 'Actualizar ahora',
-                            onClick: handleUpdate,
-                            className: 'bg-emerald-600 hover:bg-emerald-500 text-white border-0',
-                        },
-                        'Actualizar'
-                    ),
+                    description: `v${serverVersion} está lista. Recarga la página para obtener las últimas mejoras.`,
+                    duration: Infinity, // persist until user dismisses
                 });
             }
         } catch {
             // Network error — not critical, skip silently
         }
-    }, [toast, handleUpdate]);
+    }, []);
 
     useEffect(() => {
         // Initial check after a short delay (let the app boot first)

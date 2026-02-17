@@ -343,20 +343,10 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.title": { en: "Settings", es: "Configuración" },
     "settings.subtitle": { en: "Manage your profile, preferences, and system configuration.", es: "Administra tu perfil, preferencias y configuración del sistema." },
 
-    // Sidebar nav
-    "settings.nav.profile": { en: "Profile", es: "Perfil" },
-    "settings.nav.appearance": { en: "Appearance", es: "Apariencia" },
+    // Sidebar nav (unique keys only — rest defined in SETTINGS — NAVIGATION + PROFILE section)
     "settings.nav.algorithm": { en: "Algorithm", es: "Algoritmo" },
-    "settings.nav.notifications": { en: "Notifications", es: "Notificaciones" },
-    "settings.nav.data": { en: "Data Management", es: "Gestión de Datos" },
-    "settings.nav.subscription": { en: "Subscription", es: "Suscripción" },
-    "settings.nav.about": { en: "About", es: "Acerca de" },
 
-    // Profile section
-    "settings.profile.title": { en: "Profile Information", es: "Información del Perfil" },
-    "settings.profile.subtitle": { en: "Manage your personal details and account identity.", es: "Administra tus datos personales e identidad de cuenta." },
-    "settings.profile.displayName": { en: "Display Name", es: "Nombre para Mostrar" },
-    "settings.profile.email": { en: "Email Address", es: "Correo Electrónico" },
+    // Profile save (unique key)
     "settings.profile.save": { en: "Save Profile", es: "Guardar Perfil" },
 
     // Appearance section
@@ -439,11 +429,6 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.about.financialSystem": { en: "Financial System", es: "Sistema Financiero" },
     "settings.about.tagline": { en: "Next-generation Velocity Banking engine for financial freedom.", es: "Motor de Velocity Banking de próxima generación para la libertad financiera." },
 
-    // Profile — security
-    "settings.profile.security": { en: "Security", es: "Seguridad" },
-    "settings.profile.twoFactor": { en: "Two-Factor Authentication", es: "Autenticación de Dos Factores" },
-    "settings.profile.twoFactorDesc": { en: "Secure your account with 2FA.", es: "Asegura tu cuenta con 2FA." },
-    "settings.profile.demoAccount": { en: "Demo Account", es: "Cuenta Demo" },
 
     // Algorithm — paycheck frequency
     "settings.algorithm.weekly": { en: "Weekly", es: "Semanal" },
