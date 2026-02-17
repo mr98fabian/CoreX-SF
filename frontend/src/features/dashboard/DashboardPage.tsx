@@ -104,7 +104,7 @@ export default function DashboardPage() {
             })
             .catch(err => {
                 console.error("Error connecting to Engine:", err);
-                toast({ title: 'Connection Error', description: 'Failed to load dashboard data. Retrying automatically...', variant: 'destructive' });
+                toast({ title: t('dashboard.connectionError'), description: t('dashboard.connectionErrorDesc'), variant: 'destructive' });
                 setLoading(false);
             });
     }, []);
@@ -317,9 +317,9 @@ export default function DashboardPage() {
                         ) : (
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-6 text-center h-full flex flex-col items-center justify-center">
                                 <Zap className="h-8 w-8 text-slate-400 dark:text-slate-700 mx-auto mb-2" />
-                                <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">No Attack Available</h3>
+                                <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">{t('dashboard.noAttackTitle')}</h3>
                                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                                    Your Peace Shield needs reinforcement first, or no active debts were found.
+                                    {t('dashboard.noAttackDesc')}
                                 </p>
                             </div>
                         )}
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-lg text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
-                                <TrendingDown className="text-emerald-500" /> Burndown Projection
+                                <TrendingDown className="text-emerald-500" /> {t('dashboard.burndownTitle')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex-1 pl-0">

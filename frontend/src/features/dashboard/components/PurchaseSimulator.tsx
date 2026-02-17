@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ const PRESETS = [
  * a purchase delays financial freedom.
  */
 export default function PurchaseSimulator() {
+    const { t } = useLanguage();
     const [amount, setAmount] = useState<string>('');
     const [result, setResult] = useState<SimulationResult | null>(null);
     const [loading, setLoading] = useState(false);
@@ -53,7 +55,7 @@ export default function PurchaseSimulator() {
             });
             setResult(data);
         } catch {
-            setError('Could not connect to the KoreX engine.');
+            setError(t('purchaseSim.error'));
         } finally {
             setLoading(false);
         }
@@ -90,9 +92,9 @@ export default function PurchaseSimulator() {
                     <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-900/30">
                         <Calculator size={16} className="text-amber-400" strokeWidth={1.5} />
                     </div>
-                    Purchase Simulator
+                    {t('purchaseSim.title')}
                     <span className="text-[10px] text-slate-500 font-mono ml-auto">
-                        "What does this REALLY cost?"
+                        {t('purchaseSim.subtitle')}
                     </span>
                 </CardTitle>
             </CardHeader>
@@ -110,7 +112,7 @@ export default function PurchaseSimulator() {
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            placeholder="Enter purchase amount..."
+                            placeholder={t('purchaseSim.placeholder')}
                             className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-900 border border-zinc-800 text-white placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 font-mono text-sm"
                             min="1"
                             step="0.01"
@@ -121,7 +123,7 @@ export default function PurchaseSimulator() {
                         disabled={loading || !amount}
                         className="bg-blue-600 hover:bg-slate-800 text-white px-6"
                     >
-                        {loading ? <Loader2 size={16} className="animate-spin" /> : 'Analyze'}
+                        {loading ? <Loader2 size={16} className="animate-spin" /> : t('purchaseSim.analyze')}
                     </Button>
                 </form>
 
@@ -158,16 +160,16 @@ export default function PurchaseSimulator() {
                                 {result.days_delayed === 0 ? (
                                     <div className="flex items-center justify-center gap-2">
                                         <CheckCircle size={28} strokeWidth={1.5} />
-                                        <span>Safe</span>
+                                        <span>{t('purchaseSim.safe')}</span>
                                     </div>
                                 ) : (
-                                    <>+{result.days_delayed} days</>
+                                    <>+{result.days_delayed} {t('purchaseSim.days')}</>
                                 )}
                             </div>
                             <p className="text-xs text-slate-400 mt-1.5">
                                 {result.days_delayed > 0
-                                    ? 'added to your debt-free timeline'
-                                    : 'Minimal impact on your freedom date'}
+                                    ? t('purchaseSim.addedTimeline')
+                                    : t('purchaseSim.minimalImpact')}
                             </p>
                         </div>
 
@@ -177,18 +179,18 @@ export default function PurchaseSimulator() {
                                 <div className="text-center p-2 rounded-lg bg-black/20">
                                     <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
                                         <Clock size={10} strokeWidth={1.5} />
-                                        Time Delay
+                                        {t('purchaseSim.timeDelay')}
                                     </div>
                                     <div className="text-sm font-bold text-zinc-200 mt-0.5">
                                         {result.months_delayed > 0
-                                            ? `${result.months_delayed} mo, ${result.days_delayed % 30} days`
-                                            : `${result.days_delayed} days`}
+                                            ? `${result.months_delayed} ${t('purchaseSim.mo')}, ${result.days_delayed % 30} ${t('purchaseSim.days')}`
+                                            : `${result.days_delayed} ${t('purchaseSim.days')}`}
                                     </div>
                                 </div>
                                 <div className="text-center p-2 rounded-lg bg-black/20">
                                     <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
                                         <DollarSign size={10} strokeWidth={1.5} />
-                                        Extra Interest
+                                        {t('purchaseSim.extraInterest')}
                                     </div>
                                     <div className="text-sm font-bold text-rose-400 mt-0.5">
                                         {formatMoney(result.cost_in_interest)}

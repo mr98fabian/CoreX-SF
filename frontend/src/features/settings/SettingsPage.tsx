@@ -20,6 +20,8 @@ import {
 import { generateMonthlyReport } from "@/lib/PDFReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/features/auth/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from "xlsx";
@@ -153,6 +155,34 @@ const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
 export default function SettingsPage() {
     usePageTitle("Settings");
     const { t, language, setLanguage } = useLanguage();
+    const { user, isDemo } = useAuth();
+
+    // ─── Profile data from auth ────────────────────────────────
+    const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+    const userEmail = user?.email || '';
+    const userInitials = userName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+    const [displayName, setDisplayName] = useState(userName);
+    const [profileSaving, setProfileSaving] = useState(false);
+
+    // Update displayName when user changes (e.g. after initial load)
+    useEffect(() => { setDisplayName(userName); }, [userName]);
+
+    const handleSaveProfile = async () => {
+        if (isDemo) {
+            toast({ title: t('settings.profile.demoAccount'), description: t('settings.profile.demoCannotEdit'), variant: 'destructive' });
+            return;
+        }
+        setProfileSaving(true);
+        try {
+            const { error } = await supabase.auth.updateUser({ data: { full_name: displayName } });
+            if (error) throw error;
+            toast({ title: t('settings.profile.saved'), description: t('settings.profile.savedDesc') });
+        } catch {
+            toast({ title: 'Error', description: 'Could not update profile.', variant: 'destructive' });
+        } finally {
+            setProfileSaving(false);
+        }
+    };
 
     // ─── Local state ────────────────────────────────────────────
     const [activeSection, setActiveSection] = useState<Section>("profile");
@@ -375,14 +405,16 @@ export default function SettingsPage() {
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white dark:text-white shrink-0">
-                            CM
+                            {userInitials}
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white dark:text-slate-100">Carlos Mendoza</h3>
-                            <p className="text-sm text-slate-400 dark:text-slate-500">carlos@demo.korex.io</p>
-                            <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
-                                {t("settings.profile.demoAccount")}
-                            </Badge>
+                            <h3 className="text-lg font-semibold text-white dark:text-slate-100">{userName}</h3>
+                            <p className="text-sm text-slate-400 dark:text-slate-500">{userEmail}</p>
+                            {isDemo && (
+                                <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
+                                    {t("settings.profile.demoAccount")}
+                                </Badge>
+                            )}
                         </div>
                     </div>
 
@@ -392,12 +424,18 @@ export default function SettingsPage() {
                     <div className="grid gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name" className="text-slate-300 dark:text-slate-300">{t("settings.profile.displayName")}</Label>
-                            <Input id="name" defaultValue="Carlos Mendoza" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
+                            <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isDemo} className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="email" className="text-slate-300 dark:text-slate-300">{t("settings.profile.email")}</Label>
-                            <Input id="email" defaultValue="carlos@demo.korex.io" className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
+                            <Input id="email" value={userEmail} disabled className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50 opacity-60" />
                         </div>
+                        {!isDemo && (
+                            <Button onClick={handleSaveProfile} disabled={profileSaving || displayName === userName} variant="premium" className="w-full mt-2">
+                                {profileSaving ? <RefreshCw size={16} className="animate-spin mr-2" /> : <CheckCircle size={16} className="mr-2" />}
+                                {t('settings.profile.saveChanges')}
+                            </Button>
+                        )}
                     </div>
 
                     {/* Security */}
