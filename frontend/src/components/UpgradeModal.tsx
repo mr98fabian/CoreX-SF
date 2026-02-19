@@ -149,9 +149,20 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 {t('upgrade.title')}
                             </DialogTitle>
                         </div>
-                        <DialogDescription className="text-sm sm:text-base text-zinc-400">
-                            {reason || t('upgrade.defaultReason')}
-                        </DialogDescription>
+                        {reason === 'rank_boost' ? (
+                            <DialogDescription asChild>
+                                <div className="flex items-center gap-2.5 mt-1 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg px-3.5 py-2">
+                                    <Crown size={18} className="text-amber-400 shrink-0" />
+                                    <span className="text-sm font-semibold text-amber-300">
+                                        {t('upgrade.rankBoostReason')}
+                                    </span>
+                                </div>
+                            </DialogDescription>
+                        ) : (
+                            <DialogDescription className="text-sm sm:text-base text-zinc-400">
+                                {reason || t('upgrade.defaultReason')}
+                            </DialogDescription>
+                        )}
                     </DialogHeader>
 
                     {/* Billing Toggle */}

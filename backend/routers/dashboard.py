@@ -165,6 +165,13 @@ async def get_dashboard_metrics(
         # --- DEBT ALERTS (Phase 4 integration) ---
         debt_alerts = detect_debt_alerts(debt_objects) if debt_objects else []
 
+        # --- TOTAL DAILY INTEREST (for DailyInterestTicker) ---
+        total_daily_interest = sum(
+            float(acc.balance * (acc.interest_rate / Decimal("100")) / Decimal("365"))
+            for acc in active_debts
+            if acc.interest_rate and acc.interest_rate > 0
+        )
+
         return {
             "total_debt": total_debt,
             "liquid_cash": liquid_cash,
@@ -178,6 +185,7 @@ async def get_dashboard_metrics(
             "unmonitored_debt": float(unmonitored_debt),
             "locked_account_count": len(all_debts) - len(active_debts),
             "debt_alerts": debt_alerts,
+            "total_daily_interest": round(total_daily_interest, 2),
         }
 
 

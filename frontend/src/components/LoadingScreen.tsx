@@ -50,13 +50,17 @@ export default function LoadingScreen() {
 
             {/* Status text */}
             <p className="relative z-10 text-slate-500 text-xs mt-4 font-mono tracking-wider">
-                {progress < 30
-                    ? 'Initializing KoreX Engine...'
-                    : progress < 70
-                        ? 'Loading financial modules...'
-                        : progress < 95
-                            ? 'Preparing dashboard...'
-                            : 'Ready'}
+                {progress < 20
+                    ? 'Initializing KoreX Intelligence Engine...'
+                    : progress < 40
+                        ? 'Scanning financial landscape...'
+                        : progress < 60
+                            ? 'Calculating your attack vectors...'
+                            : progress < 80
+                                ? 'Preparing your command dashboard...'
+                                : progress < 95
+                                    ? 'Deploying strategic defenses...'
+                                    : '⚡ Ready, Commander'}
             </p>
 
             {/* Animations */}

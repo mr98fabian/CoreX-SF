@@ -354,51 +354,36 @@ export default function CashflowHeatCalendar() {
                     ))}
                 </div>
 
-                {/* --- Desktop: Inline Day Detail Panel --- */}
-                {selectedDay && (
-                    <div className="hidden sm:block rounded-xl border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl animate-in slide-in-from-bottom-3 duration-300">
-                        <DayDetailContent
-                            selectedDay={selectedDay}
-                            minBal={minBal}
-                            maxBal={maxBal}
-                            getPrevDay={getPrevDay}
-                            onClose={() => setSelectedDay(null)}
-                        />
-                    </div>
-                )}
-
-                {/* --- Mobile: Bottom Sheet Modal --- */}
+                {/* --- Centered Modal for Day Detail (all screen sizes) --- */}
                 {selectedDay && (
                     <>
                         {/* Backdrop overlay */}
                         <div
-                            className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
                             onClick={() => setSelectedDay(null)}
                         />
-                        {/* Bottom sheet */}
-                        <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-slate-700/50 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-5 duration-300 max-h-[70vh] overflow-y-auto">
-                            {/* Drag handle */}
-                            <div className="flex justify-center pt-3 pb-1 sticky top-0">
-                                <div className="w-10 h-1 rounded-full bg-slate-600" />
+                        {/* Centered modal card */}
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+                            <div className="w-full max-w-lg pointer-events-auto rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300 max-h-[80vh] overflow-y-auto">
+                                {/* Accent bar */}
+                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-500 rounded-t-2xl" />
+                                <DayDetailContent
+                                    selectedDay={selectedDay}
+                                    minBal={minBal}
+                                    maxBal={maxBal}
+                                    getPrevDay={getPrevDay}
+                                    onClose={() => setSelectedDay(null)}
+                                />
                             </div>
-                            <DayDetailContent
-                                selectedDay={selectedDay}
-                                minBal={minBal}
-                                maxBal={maxBal}
-                                getPrevDay={getPrevDay}
-                                onClose={() => setSelectedDay(null)}
-                            />
-                            {/* Safe area bottom padding for iPhones with home indicator */}
-                            <div className="h-6" />
                         </div>
                     </>
                 )}
 
                 {/* Balance range footer */}
-                <div className="flex items-center justify-between text-[10px] text-slate-600 pt-1 border-t border-slate-800/50">
-                    <span>Min: <span className="font-mono text-slate-400">{formatMoneyShort(minBal)}</span></span>
-                    <span>Today: <span className="font-mono text-amber-400">{formatMoneyShort(data.start_balance)}</span></span>
-                    <span>Max: <span className="font-mono text-slate-400">{formatMoneyShort(maxBal)}</span></span>
+                <div className="flex items-center justify-between text-sm text-slate-500 pt-3 border-t border-slate-800/50">
+                    <span>Min: <span className="font-mono font-semibold text-slate-300">{formatMoneyShort(minBal)}</span></span>
+                    <span>Today: <span className="font-mono font-semibold text-amber-400">{formatMoneyShort(data.start_balance)}</span></span>
+                    <span>Max: <span className="font-mono font-semibold text-slate-300">{formatMoneyShort(maxBal)}</span></span>
                 </div>
             </CardContent>
         </Card>

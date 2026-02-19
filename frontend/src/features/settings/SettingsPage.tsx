@@ -25,6 +25,7 @@ import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from "xlsx";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 // ─── Types ──────────────────────────────────────────────────────────
 type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "about";
@@ -152,6 +153,7 @@ export default function SettingsPage() {
     usePageTitle("Settings");
     const { t, language, setLanguage } = useLanguage();
     const { user, isDemo } = useAuth();
+    const onboarding = useOnboarding();
 
     // ─── Profile data from auth ────────────────────────────────
     const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
@@ -696,6 +698,35 @@ export default function SettingsPage() {
                                 <p className="text-[10px] text-slate-600 mt-2">.xlsx, .xls, .csv</p>
                             </div>
                         )}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Restart Tutorial */}
+            <Card className="border-blue-500/20 bg-slate-950/50 dark:border-blue-500/30 dark:bg-slate-900/60">
+                <CardContent className="pt-5 pb-5">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <Sparkles className="h-4 w-4 text-blue-400" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-slate-200">{t('settings.restartTutorial')}</p>
+                                <p className="text-xs text-slate-500">{t('settings.restartTutorialDesc')}</p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                                await onboarding.restart();
+                                window.location.href = '/';
+                            }}
+                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                        >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            {t('settings.restartBtn')}
+                        </Button>
                     </div>
                 </CardContent>
             </Card>

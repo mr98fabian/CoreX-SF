@@ -5,6 +5,7 @@ import DashboardPage from "@/features/dashboard/DashboardPage";
 import AccountsPage from "@/features/accounts/AccountsPage";
 import ActionPlanPage from "@/features/actionplan/ActionPlanPage";
 import AnalyticsPage from "@/features/analytics/AnalyticsPage";
+import RankingsPage from "@/features/rankings/RankingsPage";
 
 import SettingsPage from "@/features/settings/SettingsPage";
 import LoginPage from "@/features/auth/LoginPage";
@@ -55,6 +56,7 @@ function AppShell() {
                   <Route path="action-plan" element={<ActionPlanPage />} />
                   <Route path="accounts" element={<AccountsPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="rankings" element={<RankingsPage />} />
 
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>

@@ -99,6 +99,13 @@ class Subscription(SQLModel, table=True):
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)
 
+class UserSettings(SQLModel, table=True):
+    __tablename__ = "user_settings"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
+    onboarding_complete: bool = Field(default=False)
+
+
 class TransactionCreate(SQLModel):
     account_id: int
     amount: Decimal

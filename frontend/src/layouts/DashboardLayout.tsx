@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,12 @@ import FeedbackWidget from '@/components/FeedbackWidget';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
+import { OnboardingResumePopup } from '@/components/OnboardingResumePopup';
+import DemoWelcomeModal from '@/components/DemoWelcomeModal';
+import { useCelebration } from '@/hooks/useCelebration';
+import { CommanderBadge } from '@/components/CommanderBadge';
 
 export default function DashboardLayout() {
     const isMobile = useIsMobile();
@@ -19,6 +25,8 @@ export default function DashboardLayout() {
     const { user, signOut } = useAuth();
     const { t } = useLanguage();
     const { isDark, toggleTheme } = useTheme();
+    const onboarding = useOnboarding();
+    const { celebrate } = useCelebration();
 
     // Auto-close sidebar on mobile when route changes
     useEffect(() => {
@@ -40,6 +48,7 @@ export default function DashboardLayout() {
         { path: '/', icon: LayoutDashboard, label: t("nav.dashboard") },
         { path: '/action-plan', icon: ListChecks, label: t("nav.actionPlan") },
         { path: '/accounts', icon: Wallet, label: t("nav.accounts") },
+        { path: '/rankings', icon: Trophy, label: t("nav.rankings") },
         { path: '/settings', icon: Settings, label: t("nav.settings") },
     ];
 
@@ -108,6 +117,10 @@ export default function DashboardLayout() {
                         </div>
                     </div>
                 )}
+                {/* Commander Rank compact badge in sidebar */}
+                <div className="px-2">
+                    <CommanderBadge isPaid={(localStorage.getItem('corex-plan') || 'starter') !== 'starter'} compact />
+                </div>
                 <Button
                     variant="ghost"
                     className="w-full justify-start gap-2 text-rose-500 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20"
@@ -202,6 +215,32 @@ export default function DashboardLayout() {
             <UpgradeNudge />
             <InstallPrompt />
             <OfflineIndicator />
+            <DemoWelcomeModal />
+
+            {/* ═══ ONBOARDING WIZARD (fullscreen modal) ═══ */}
+            {!onboarding.isLoading && !onboarding.hasCompleted && (
+                <OnboardingWizard
+                    onComplete={async () => {
+                        await onboarding.complete();
+                        celebrate('epic'); // Dopamine reward — Skill: neuroventa §7
+                    }}
+                    onSkip={async () => {
+                        // Mark complete so wizard closes, but flag as skipped
+                        await onboarding.complete();
+                        localStorage.setItem('corex_onboarding_skipped', 'true');
+                    }}
+                />
+            )}
+
+            {/* Resume popup — only shown if user skipped the tutorial */}
+            {onboarding.hasCompleted && (
+                <OnboardingResumePopup
+                    onResume={async () => {
+                        localStorage.removeItem('corex_onboarding_skipped');
+                        await onboarding.restart();
+                    }}
+                />
+            )}
         </div>
     );
 }

@@ -11,6 +11,7 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.dashboard": { en: "Dashboard", es: "Panel" },
     "nav.actionPlan": { en: "Action Plan", es: "Plan de Acción" },
     "nav.accounts": { en: "My Accounts", es: "Mis Cuentas" },
+    "nav.rankings": { en: "Rankings", es: "Rangos" },
 
     "nav.settings": { en: "Settings", es: "Configuración" },
     "nav.analytics": { en: "Analytics", es: "Analíticas" },
@@ -466,6 +467,7 @@ const translations: Record<string, Record<Language, string>> = {
     // ═══════════════════════════════════════════════════════════════════
     "upgrade.title": { en: "Upgrade Your Plan", es: "Mejora Tu Plan" },
     "upgrade.defaultReason": { en: "Unlock more accounts and accelerate your debt freedom.", es: "Desbloquea más cuentas y acelera tu libertad de deuda." },
+    "upgrade.rankBoostReason": { en: "👑 Go VIP and rank up faster!", es: "👑 ¡Hazte VIP y avanza más rápido en tu rango!" },
     "upgrade.unlockAll": { en: "Unlock All — Upgrade Now", es: "Desbloquear Todo — Mejora Ahora" },
     "upgrade.toAddMore": { en: "Upgrade to Add More", es: "Mejora para Agregar Más" },
     "upgrade.toManage": { en: "Upgrade to manage this account", es: "Mejora para administrar esta cuenta" },
@@ -588,6 +590,7 @@ const translations: Record<string, Record<Language, string>> = {
     "cashflow.fixed": { en: "Fixed", es: "Fijos" },
     "cashflow.debt": { en: "Debt", es: "Deuda" },
     "cashflow.debtDrain": { en: "Debt Drain", es: "Drenaje de Deuda" },
+    "cashflow.attackPower": { en: "Attack Power", es: "Poder de Ataque" },
     "cashflow.recurringTransactions": { en: "Recurring Transactions", es: "Transacciones Recurrentes" },
     "cashflow.addRecurring": { en: "Add Recurring", es: "Agregar Recurrente" },
     "cashflow.addRecurringItem": { en: "Add Recurring Item", es: "Agregar Item Recurrente" },
@@ -746,6 +749,91 @@ const translations: Record<string, Record<Language, string>> = {
     "sub.checkoutDesc": { en: "Complete your payment in the new tab. Your plan will update automatically.", es: "Completa tu pago en la nueva pestaña. Tu plan se actualizará automáticamente." },
     "sub.checkoutFailed": { en: "Checkout failed", es: "Error en el checkout" },
     "sub.checkoutFailedDesc": { en: "Could not open checkout. Please try again or contact support.", es: "No se pudo abrir el checkout. Intenta de nuevo o contacta soporte." },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  ONBOARDING WIZARD
+    // ═══════════════════════════════════════════════════════════════════
+    "onboarding.welcomeTitle": { en: "Welcome to KoreX! 🚀", es: "¡Bienvenido a KoreX! 🚀" },
+    "onboarding.welcomeDesc": { en: "Let's set up your financial command center in 4 quick steps. Your data is saved securely as you go.", es: "Configuremos tu centro de comando financiero en 4 pasos rápidos. Tus datos se guardan de forma segura." },
+    "onboarding.feature1": { en: "Track Income", es: "Rastrear Ingresos" },
+    "onboarding.feature2": { en: "Crush Debt", es: "Destruir Deuda" },
+    "onboarding.feature3": { en: "Cut Expenses", es: "Reducir Gastos" },
+    "onboarding.feature4": { en: "Build Wealth", es: "Crear Riqueza" },
+
+    // Step titles & descriptions
+    "onboarding.stepIncome": { en: "Step 1 — Income", es: "Paso 1 — Ingresos" },
+    "onboarding.incomeTitle": { en: "Your Income Sources", es: "Tus Fuentes de Ingreso" },
+    "onboarding.incomeDesc": { en: "Add every income stream — salary, freelance, etc.", es: "Agrega cada fuente de ingreso — salario, freelance, etc." },
+    "onboarding.stepExpenses": { en: "Step 2 — Expenses", es: "Paso 2 — Gastos" },
+    "onboarding.expensesTitle": { en: "Your Recurring Expenses", es: "Tus Gastos Recurrentes" },
+    "onboarding.expensesDesc": { en: "Add monthly bills, subscriptions, and regular costs.", es: "Agrega facturas mensuales, suscripciones y costos regulares." },
+    "onboarding.stepAssets": { en: "Step 3 — Assets", es: "Paso 3 — Activos" },
+    "onboarding.assetsTitle": { en: "Your Bank Accounts", es: "Tus Cuentas Bancarias" },
+    "onboarding.assetsDesc": { en: "Add checking and savings accounts with current balances.", es: "Agrega cuentas de cheques y ahorro con saldos actuales." },
+    "onboarding.stepDebts": { en: "Step 4 — Debts", es: "Paso 4 — Deudas" },
+    "onboarding.debtsTitle": { en: "Your Debts & Liabilities", es: "Tus Deudas y Pasivos" },
+    "onboarding.debtsDesc": { en: "Add credit cards, loans, and any debt you want to crush.", es: "Agrega tarjetas de crédito, préstamos y cualquier deuda que quieras eliminar." },
+
+    // Buttons & actions
+    "onboarding.letsGo": { en: "Let's Go!", es: "¡Comenzar!" },
+    "onboarding.continue": { en: "Continue", es: "Continuar" },
+    "onboarding.back": { en: "Back", es: "Atrás" },
+    "onboarding.addItem": { en: "Add Item", es: "Agregar Item" },
+    "onboarding.goToDashboard": { en: "Go to Dashboard", es: "Ir al Dashboard" },
+    "onboarding.quickSelect": { en: "Quick Select", es: "Selección Rápida" },
+    "onboarding.minOneRequired": { en: "⚠ At least one item is required to continue.", es: "⚠ Se requiere al menos un item para continuar." },
+
+    // Progress labels
+    "onboarding.progressWelcome": { en: "Start", es: "Inicio" },
+    "onboarding.progressIncome": { en: "Income", es: "Ingresos" },
+    "onboarding.progressExpenses": { en: "Expenses", es: "Gastos" },
+    "onboarding.progressAssets": { en: "Assets", es: "Activos" },
+    "onboarding.progressDebts": { en: "Debts", es: "Deudas" },
+    "onboarding.progressDone": { en: "Done!", es: "¡Listo!" },
+
+    // Success screen
+    "onboarding.successTitle": { en: "You're All Set! 🎉", es: "¡Todo Listo! 🎉" },
+    "onboarding.successDesc": { en: "Your financial command center is ready. Here's a summary of what you entered:", es: "Tu centro de comando financiero está listo. Aquí tienes un resumen:" },
+    "onboarding.summaryIncome": { en: "Total Income", es: "Ingreso Total" },
+    "onboarding.summaryExpenses": { en: "Total Expenses", es: "Gastos Totales" },
+    "onboarding.summaryAssets": { en: "Total Assets", es: "Activos Totales" },
+    "onboarding.summaryDebts": { en: "Total Debt", es: "Deuda Total" },
+
+    // Settings — restart
+    "settings.restartTutorial": { en: "Restart Tutorial", es: "Reiniciar Tutorial" },
+    "settings.restartTutorialDesc": { en: "Re-run the onboarding wizard to update your financial data.", es: "Vuelve a ejecutar el asistente de configuración para actualizar tus datos financieros." },
+    "settings.restartBtn": { en: "Restart", es: "Reiniciar" },
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  WIDGET HELP SYSTEM
+    // ═══════════════════════════════════════════════════════════════════
+    "help.peaceShield.title": { en: "Peace Shield", es: "Escudo de Paz" },
+    "help.peaceShield.desc": { en: "Your emergency fund progress — shows how protected you are against unexpected expenses.", es: "Tu progreso de fondo de emergencia — muestra qué tan protegido estás contra gastos inesperados." },
+    "help.peaceShield.location": { en: "📍 Manage: Settings → Profile → Shield Target", es: "📍 Gestionar: Configuración → Perfil → Meta del Escudo" },
+    "help.freedomClock.title": { en: "Freedom Clock", es: "Reloj de Libertad" },
+    "help.freedomClock.desc": { en: "Countdown to your projected debt-free date using velocity banking acceleration.", es: "Cuenta regresiva hacia tu fecha estimada libre de deudas usando aceleración de velocity banking." },
+    "help.freedomClock.location": { en: "📍 Data: Calculated from your debts & cashflow", es: "📍 Datos: Calculado desde tus deudas y flujo de caja" },
+    "help.burndown.title": { en: "Burndown Projection", es: "Proyección de Liquidación" },
+    "help.burndown.desc": { en: "A visual chart showing the projected payoff timeline for your debts over time.", es: "Un gráfico visual que muestra la línea de tiempo proyectada de pagos de tus deudas." },
+    "help.burndown.location": { en: "📍 Data: Accounts Page → Liabilities", es: "📍 Datos: Página de Cuentas → Pasivos" },
+    "help.actionPlan.title": { en: "Action Plan", es: "Plan de Acción" },
+    "help.actionPlan.desc": { en: "Step-by-step instructions for your next velocity banking move — which debt to attack and when.", es: "Instrucciones paso a paso para tu próximo movimiento de velocity banking — qué deuda atacar y cuándo." },
+    "help.actionPlan.location": { en: "📍 Data: Strategy Page → GPS", es: "📍 Datos: Página de Estrategia → GPS" },
+    "help.cashflowHeat.title": { en: "Cashflow Heat Calendar", es: "Calendario de Calor de Flujo de Caja" },
+    "help.cashflowHeat.desc": { en: "A heatmap calendar showing your daily cash balance projections for the next 6 months.", es: "Un calendario de calor mostrando las proyecciones diarias de tu saldo de caja para los próximos 6 meses." },
+    "help.cashflowHeat.location": { en: "📍 Data: Cashflow Page → Income & Expenses", es: "📍 Datos: Página de Flujo → Ingresos y Gastos" },
+    "help.debtSnapshot.title": { en: "Debt Snapshot", es: "Resumen de Deudas" },
+    "help.debtSnapshot.desc": { en: "Quick overview of your total debt balance, interest rate, and monthly minimum payments.", es: "Visión rápida de tu saldo total de deuda, tasa de interés y pagos mínimos mensuales." },
+    "help.debtSnapshot.location": { en: "📍 Manage: Accounts Page → Liabilities", es: "📍 Gestionar: Página de Cuentas → Pasivos" },
+    "help.netWorth.title": { en: "Net Worth", es: "Patrimonio Neto" },
+    "help.netWorth.desc": { en: "Your total assets minus total liabilities — the true measure of financial health.", es: "Tus activos totales menos tus pasivos totales — la medida real de salud financiera." },
+    "help.netWorth.location": { en: "📍 Data: Accounts Page → All Accounts", es: "📍 Datos: Página de Cuentas → Todas las Cuentas" },
+    "help.purchaseSim.title": { en: "Purchase Simulator", es: "Simulador de Compras" },
+    "help.purchaseSim.desc": { en: "See the REAL cost of a purchase — how many extra days of debt and extra interest it costs you.", es: "Ve el costo REAL de una compra — cuántos días extra de deuda e interés adicional te cuesta." },
+    "help.purchaseSim.location": { en: "📍 Use: Enter any amount to simulate", es: "📍 Uso: Ingresa cualquier monto para simular" },
+    "help.cashflowSummary.title": { en: "Cashflow Summary", es: "Resumen de Flujo de Caja" },
+    "help.cashflowSummary.desc": { en: "Your monthly income vs expenses breakdown — shows your net surplus available for debt acceleration.", es: "Desglose de ingresos vs gastos mensuales — muestra tu excedente neto disponible para acelerar deudas." },
+    "help.cashflowSummary.location": { en: "📍 Manage: Cashflow Page", es: "📍 Gestionar: Página de Flujo de Caja" },
 };
 
 

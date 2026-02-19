@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, DollarSign } from "lucide-react";
 import { apiFetch } from '@/lib/api';
+import { WidgetHelp } from '@/components/WidgetHelp';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +71,8 @@ export function TransactionDialog({
     const [open, setOpen] = useState(false);
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [loading, setLoading] = useState(false);
+    const { language } = useLanguage();
+    const isEs = language === 'es';
 
     // Use any to bypass strict resolver type mismatch
     const form = useForm<any>({
@@ -153,20 +157,21 @@ export function TransactionDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800 text-white">
-                <DialogHeader>
-                    <DialogTitle>Add Transaction</DialogTitle>
+                <DialogHeader className="relative group">
+                    <WidgetHelp helpKey="addTransaction" />
+                    <DialogTitle>{isEs ? 'Registrar Transacción' : 'Add Transaction'}</DialogTitle>
                     <DialogDescription className="text-slate-500">
-                        Manually record a transaction to update your cash position.
+                        {isEs ? 'Registra un movimiento manualmente para actualizar tu posición de efectivo.' : 'Manually record a transaction to update your cash position.'}
                     </DialogDescription>
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
                     <TabsList className="grid w-full grid-cols-2 bg-slate-900">
                         <TabsTrigger value="income" className="data-[state=active]:bg-emerald-950 data-[state=active]:text-emerald-400">
-                            Income
+                            {isEs ? 'Ingreso' : 'Income'}
                         </TabsTrigger>
                         <TabsTrigger value="expense" className="data-[state=active]:bg-rose-950 data-[state=active]:text-rose-400">
-                            Expense
+                            {isEs ? 'Gasto' : 'Expense'}
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>
@@ -179,7 +184,7 @@ export function TransactionDialog({
                             name="amount"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Amount</FormLabel>
+                                    <FormLabel>{isEs ? 'Monto' : 'Amount'}</FormLabel>
                                     <FormControl>
                                         <div className="relative">
                                             <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
@@ -202,9 +207,9 @@ export function TransactionDialog({
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel>{isEs ? 'Descripción' : 'Description'}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Grocery, Salary, etc." className="bg-slate-900 border-slate-800" {...field} />
+                                        <Input placeholder={isEs ? 'Supermercado, Salario, etc.' : 'Grocery, Salary, etc.'} className="bg-slate-900 border-slate-800" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -216,11 +221,11 @@ export function TransactionDialog({
                             name="account_id"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Account</FormLabel>
+                                    <FormLabel>{isEs ? 'Cuenta' : 'Account'}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger className="bg-slate-900 border-slate-800 text-white">
-                                                <SelectValue placeholder="Select account" />
+                                                <SelectValue placeholder={isEs ? 'Seleccionar cuenta' : 'Select account'} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent className="bg-slate-900 border-slate-800 text-white">
@@ -241,9 +246,9 @@ export function TransactionDialog({
                             name="category"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Category (Optional)</FormLabel>
+                                    <FormLabel>{isEs ? 'Categoría (Opcional)' : 'Category (Optional)'}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Food, Rent, Crypto" className="bg-slate-900 border-slate-800" {...field} />
+                                        <Input placeholder={isEs ? 'Comida, Renta, Crypto' : 'Food, Rent, Crypto'} className="bg-slate-900 border-slate-800" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -253,7 +258,7 @@ export function TransactionDialog({
                         <DialogFooter>
                             <Button type="submit" disabled={loading} className={activeTab === 'income' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {activeTab === 'income' ? 'Add Income' : 'Add Expense'}
+                                {activeTab === 'income' ? (isEs ? 'Registrar Ingreso' : 'Add Income') : (isEs ? 'Registrar Gasto' : 'Add Expense')}
                             </Button>
                         </DialogFooter>
                     </form>

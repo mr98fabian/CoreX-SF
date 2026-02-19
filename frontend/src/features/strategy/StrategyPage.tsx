@@ -1,4 +1,5 @@
 import { RefreshCw, Loader2, AlertTriangle, Zap } from "lucide-react";
+import { WidgetHelp } from '@/components/WidgetHelp';
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from "@/components/ui/use-toast";
@@ -128,10 +129,13 @@ export default function StrategyPage() {
                 {/* Left Column — Morning Briefing (takes 2 cols) */}
                 <div className="lg:col-span-2 space-y-6">
                     {data.morning_briefing ? (
-                        <MorningBriefing
-                            data={data.morning_briefing}
-                            onExecute={handleExecute}
-                        />
+                        <div className="relative group">
+                            <WidgetHelp helpKey="morningBriefing" />
+                            <MorningBriefing
+                                data={data.morning_briefing}
+                                onExecute={handleExecute}
+                            />
+                        </div>
                     ) : (
                         <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-8 text-center">
                             <Zap className="h-10 w-10 text-slate-700 mx-auto mb-3" />
@@ -146,27 +150,39 @@ export default function StrategyPage() {
                     )}
 
                     {/* Confidence Meter */}
-                    <ConfidenceMeter data={data.confidence_meter} />
+                    <div className="relative group">
+                        <WidgetHelp helpKey="confidenceMeter" />
+                        <ConfidenceMeter data={data.confidence_meter} />
+                    </div>
                 </div>
 
                 {/* Right Column — Freedom Counter + Decision Helper */}
                 <div className="space-y-6">
-                    <FreedomCounter
-                        freedom={data.freedom_counter}
-                        streak={data.streak}
-                    />
+                    <div className="relative group">
+                        <WidgetHelp helpKey="freedomCounter" />
+                        <FreedomCounter
+                            freedom={data.freedom_counter}
+                            streak={data.streak}
+                        />
+                    </div>
 
                     {data.decision_options && (
-                        <AttackDecisionHelper
-                            data={data.decision_options}
-                            onSelect={handleDecisionSelect}
-                        />
+                        <div className="relative group">
+                            <WidgetHelp helpKey="attackDecision" />
+                            <AttackDecisionHelper
+                                data={data.decision_options}
+                                onSelect={handleDecisionSelect}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
 
             {/* Tactical Cashflow Map — full width */}
-            <TacticalCashflowMap />
+            <div className="relative group">
+                <WidgetHelp helpKey="tacticalMap" />
+                <TacticalCashflowMap />
+            </div>
         </div>
     );
 }

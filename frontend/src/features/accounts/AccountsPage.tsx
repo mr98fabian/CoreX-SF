@@ -11,6 +11,7 @@ import { CashflowManager } from './components/CashflowManager';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import UpgradeModal from '@/components/UpgradeModal';
+import { WidgetHelp } from '@/components/WidgetHelp';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -661,8 +662,9 @@ export default function AccountsPage() {
             {/* Content Grid */}
             <div className="space-y-12">
                 {/* Liabilities */}
-                <div className="space-y-6">
+                <div className="space-y-6 relative group">
                     <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                        <WidgetHelp helpKey="liabilitiesSection" />
                         <div className="p-2 bg-rose-500/10 rounded-lg">
                             <CreditCard size={24} className="text-rose-500" strokeWidth={1.5} />
                         </div>
@@ -678,7 +680,7 @@ export default function AccountsPage() {
                     </div>
 
                     {debts.length === 0 ? (
-                        <div className="p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-950/30">
+                        <div className="p-6 sm:p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-950/30">
                             <CreditCard size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">{t("accounts.noDebts")}</p>
                             <p className="text-sm opacity-60">{t("accounts.noDebtsHint")}</p>
@@ -800,8 +802,9 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Assets */}
-                <div className="space-y-6">
+                <div className="space-y-6 relative group">
                     <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                        <WidgetHelp helpKey="assetsSection" />
                         <div className="p-2 bg-emerald-500/10 rounded-lg">
                             <Landmark size={24} className="text-emerald-500" strokeWidth={1.5} />
                         </div>
@@ -881,7 +884,8 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Cashflow Section */}
-                <div className="pt-12 border-t border-slate-200 dark:border-white/5">
+                <div className="pt-12 border-t border-slate-200 dark:border-white/5 relative group">
+                    <WidgetHelp helpKey="cashflowOverview" />
                     <CashflowManager refreshKey={cashflowRefreshKey} lockedIds={lockedIds} onUpgrade={() => setShowUpgradeModal(true)} />
                 </div>
             </div>

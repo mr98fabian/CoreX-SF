@@ -140,14 +140,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const signOut = useCallback(async () => {
-        // If demo mode: reset sandbox data first, then clear state
+        // If demo mode: clear state instantly, re-seed in background
         if (isDemo) {
-            // Re-seed to restore original data for the next visitor
-            await seedDemoData();
             clearDemoToken();
             setIsDemo(false);
             setUser(null);
             setSession(null);
+            // Fire-and-forget: restore original data for the next demo visitor
+            seedDemoData().catch(() => { });
             return;
         }
         const { error } = await supabase.auth.signOut();

@@ -144,6 +144,18 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         <p className="text-xs text-slate-500 mt-1 capitalize">
                             {t('cashflow.available')} {t(`cashflow.${currentTimeframe === 'annually' ? 'yearly' : currentTimeframe}`).toLowerCase()}
                         </p>
+                        {stats.surplus > 0 && (
+                            <div className="flex flex-col gap-0.5 mt-1.5">
+                                {currentTimeframe !== 'annually' && (
+                                    <span className="text-xs text-amber-400 font-semibold">
+                                        ⚡ {formatMoney(stats.surplus * (currentTimeframe === 'daily' ? 365.25 : currentTimeframe === 'weekly' ? 52.14 : 12))}/año
+                                    </span>
+                                )}
+                                <span className="text-xs text-amber-400/80 font-medium">
+                                    🎯 {((stats.surplus / stats.income) * 100).toFixed(0)}% {t('cashflow.attackPower') || 'Poder de Ataque'}
+                                </span>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>

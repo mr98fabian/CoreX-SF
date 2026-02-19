@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
+import { WidgetHelp } from '@/components/WidgetHelp';
 import UpgradeModal from '@/components/UpgradeModal';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '../auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { TrendingDown, Wallet, PiggyBank, Calendar, Zap, Lock } from 'lucide-react';
+import { TrendingDown, Wallet, PiggyBank, Calendar, Zap, Lock, Flame } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -21,12 +22,28 @@ import PeaceShield from './components/PeaceShield';
 import PurchaseSimulator from './components/PurchaseSimulator';
 import { TransactionDialog } from './components/TransactionDialog';
 import CashflowHeatCalendar from './components/CashflowHeatCalendar';
+import { DailyInterestTicker } from './components/DailyInterestTicker';
+import { AnimatedCurrency } from '@/components/AnimatedCurrency';
+import { TimeMachineCard } from './components/TimeMachineCard';
 
 // Strategy Components (shared)
 import MorningBriefing from '../strategy/components/MorningBriefing';
 import DebtAlertBanner from '../strategy/components/DebtAlertBanner';
 
 import { useStrategyData } from '../strategy/hooks/useStrategyData';
+
+// Enhancement hooks — Skills: neuroventa, neuromarketing-conversion, ui-magic
+import { useMotivationalQuote } from '@/hooks/useMotivationalQuote';
+import { useLoginStreak } from '@/hooks/useLoginStreak';
+import { useCelebration } from '@/hooks/useCelebration';
+import { getCommanderRank, getEffectiveScore } from '@/hooks/useCommanderRank';
+import { CommanderBadge } from '@/components/CommanderBadge';
+import { useSessionTimer } from '@/hooks/useSessionTimer';
+import { useWeeklyDigest } from '@/hooks/useWeeklyDigest';
+import { DebtFreeCountdown } from './components/DebtFreeCountdown';
+import { HealthScoreGauge } from './components/HealthScoreGauge';
+import { AchievementWall } from '@/components/AchievementWall';
+import { BeforeAfterCard, recordStartingDebt } from './components/BeforeAfterCard';
 
 interface VelocityTarget {
     name: string;
@@ -62,6 +79,7 @@ interface DashboardData {
     unmonitored_debt?: number;
     locked_account_count?: number;
     debt_alerts?: DebtAlertData[];
+    total_daily_interest?: number;
 }
 
 interface VelocityProjections {
@@ -76,7 +94,7 @@ interface VelocityProjections {
 export default function DashboardPage() {
     usePageTitle('Dashboard');
     const { user } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.name?.split(' ')[0] || 'there';
@@ -88,8 +106,19 @@ export default function DashboardPage() {
     // Strategy data (for Morning Briefing)
     const { data: strategyData } = useStrategyData();
 
+    // Enhancement hooks
+    const motivationalQuote = useMotivationalQuote(language as 'en' | 'es');
+    const streak = useLoginStreak();
+    const { celebrate } = useCelebration();
+    const sessionTimer = useSessionTimer();
+    const weeklyDigest = useWeeklyDigest(data?.total_daily_interest ? data.total_daily_interest * 7 : undefined);
+
     const refreshDashboard = () => {
-        window.location.reload();
+        // Increment streak only when a transaction is registered — Skill: streak-v3
+        streak.incrementStreakOnTransaction();
+        // Celebrate the transaction — Skill: neuroventa §7
+        celebrate('spark');
+        setTimeout(() => window.location.reload(), 800);
     };
 
     useEffect(() => {
@@ -100,6 +129,10 @@ export default function DashboardPage() {
             .then(([dashboardData, velocityData]) => {
                 setData(dashboardData as any);
                 setProjections(velocityData as any);
+                // Snapshot starting debt for Before/After card (first visit only)
+                if ((dashboardData as any)?.total_debt) {
+                    recordStartingDebt((dashboardData as any).total_debt);
+                }
                 setLoading(false);
             })
             .catch(err => {
@@ -175,31 +208,133 @@ export default function DashboardPage() {
 
     return (
         <>
+            {/* ═══ LOGIN STREAK POPUP — Show on new day, dismiss on click/timeout ═══ */}
+            {streak.showLoginPopup && !streak.hasTransactionToday && (
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500 w-[calc(100%-2rem)] max-w-lg">
+                    <div className="relative bg-gradient-to-r from-orange-500/90 via-amber-500/90 to-orange-600/90 backdrop-blur-xl text-white rounded-2xl px-5 py-4 shadow-2xl shadow-orange-900/30 border border-orange-400/30">
+                        <button
+                            onClick={streak.dismissPopup}
+                            className="absolute top-2 right-3 text-white/60 hover:text-white text-lg transition-colors"
+                        >✕</button>
+                        <div className="flex items-center gap-3">
+                            <div className="text-3xl animate-bounce">🔥</div>
+                            <div>
+                                <p className="font-bold text-sm tracking-wide">
+                                    {language === 'es'
+                                        ? `¡Racha activa: ${streak.score} puntos!`
+                                        : `Active streak: ${streak.score} points!`}
+                                </p>
+                                <p className="text-[11px] text-white/80 mt-0.5">
+                                    {language === 'es'
+                                        ? 'Registra un ingreso o gasto hoy para sumar a tu racha 💪'
+                                        : 'Log an income or expense today to grow your streak 💪'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-4 pb-16 animate-in fade-in duration-700">
                 {/* ═══════════════════════════════════════════════════════════
                  1. HEADER — Greeting + Action Buttons
                ═══════════════════════════════════════════════════════════ */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end px-1">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">{greeting}, {userName}.</h1>
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/30 px-3 py-1 rounded-full w-fit border border-emerald-300 dark:border-emerald-500/20 backdrop-blur-sm">
-                            <span className="relative flex h-2 w-2">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                            </span>
-                            <span className="text-xs font-mono tracking-wider">{t('dashboard.engineOnline')}</span>
+                        {/* Commander Rank greeting — Skill: neuroventa §2 */}
+                        {(() => {
+                            const plan = localStorage.getItem('corex-plan') || 'starter';
+                            const isPaidUser = plan !== 'starter';
+                            const effectiveScore = getEffectiveScore(streak.score, isPaidUser);
+                            const cmdRank = getCommanderRank(effectiveScore);
+                            const rankDisplay = language === 'es' ? cmdRank.fullDisplayEs : cmdRank.fullDisplayEn;
+                            return (
+                                <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">
+                                    {greeting}, <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${cmdRank.material.color}, ${cmdRank.material.color}99)` }}>{rankDisplay}</span> {userName}{isPaidUser && <span title="VIP Member" className="ml-1 text-amber-400 animate-pulse">👑</span>}.
+                                </h1>
+                            );
+                        })()}
+                        {/* Motivational quote rotation — Skill: neuroventa §6 */}
+                        {motivationalQuote && (
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic mb-2 max-w-md animate-in fade-in duration-1000">
+                                "{motivationalQuote}"
+                            </p>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/30 px-3 py-1 rounded-full w-fit border border-emerald-300 dark:border-emerald-500/20 backdrop-blur-sm">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                                </span>
+                                <span className="text-xs font-mono tracking-wider">{t('dashboard.engineOnline')}</span>
+                            </div>
+                            {/* Login streak badge — Skill: monetization §5 */}
+                            {streak.score >= 2 && (
+                                <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-2.5 py-1 rounded-full border border-orange-300 dark:border-orange-500/20 backdrop-blur-sm">
+                                    <Flame size={12} className="fill-orange-500" />
+                                    <span className="text-xs font-bold tabular-nums">{streak.rawStreak}</span>
+                                    <span className="text-[10px] font-mono">{language === 'es' ? 'días' : 'days'}</span>
+                                    {streak.score !== streak.rawStreak && (
+                                        <span className="text-[9px] text-orange-500/50">({streak.score} pts)</span>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div className="flex gap-2 items-center">
-                        <TransactionDialog defaultType="income" onSuccess={refreshDashboard}>
-                            <Button variant="outline" size="sm" className="border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-500 dark:hover:text-emerald-300 backdrop-blur-sm">{t('dashboard.income')}</Button>
-                        </TransactionDialog>
+                    <div className="flex flex-col items-end gap-1">
+                        <div className="flex gap-2 items-center relative group">
+                            <TransactionDialog defaultType="income" onSuccess={refreshDashboard}>
+                                <Button variant="outline" size="sm" className="border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-500 dark:hover:text-emerald-300 backdrop-blur-sm">{t('dashboard.income')}</Button>
+                            </TransactionDialog>
 
-                        <TransactionDialog defaultType="expense" onSuccess={refreshDashboard}>
-                            <Button variant="destructive" size="sm" className="shadow-lg shadow-rose-900/20">{t('dashboard.expense')}</Button>
-                        </TransactionDialog>
+                            <TransactionDialog defaultType="expense" onSuccess={refreshDashboard}>
+                                <Button variant="destructive" size="sm" className="shadow-lg shadow-rose-900/20">{t('dashboard.expense')}</Button>
+                            </TransactionDialog>
+                            <WidgetHelp helpKey="quickTransactions" />
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+                            {language === 'es'
+                                ? 'Registra ingresos o gastos no planificados'
+                                : 'Log unplanned income or expenses'}
+                        </p>
                     </div>
                 </div>
+
+                {/* Commander Rank Badge — Full visual widget */}
+                <div className="relative group">
+                    <WidgetHelp helpKey="commanderBadge" />
+                    <CommanderBadge isPaid={(localStorage.getItem('corex-plan') || 'starter') !== 'starter'} />
+                </div>
+
+                {/* Debt-Free Countdown — Phase 2 Quick Win */}
+                <div className="relative group">
+                    <WidgetHelp helpKey="debtFreeCountdown" />
+                    <DebtFreeCountdown
+                        debtFreeDate={projections?.velocity_debt_free_date}
+                        totalDebt={data?.total_debt}
+                    />
+                </div>
+
+                {/* Session Timer — shows after 5+ min */}
+                {sessionTimer.minutes >= 5 && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/5 border border-indigo-500/10 text-[11px] text-indigo-400">
+                        <span>⏱️</span>
+                        <span>{sessionTimer.message}</span>
+                    </div>
+                )}
+
+                {/* Weekly Progress Digest Toast */}
+                {weeklyDigest.shouldShow && (
+                    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/15 text-xs">
+                        <span className="text-slate-300">{weeklyDigest.message}</span>
+                        <button onClick={weeklyDigest.dismiss} className="text-slate-500 hover:text-white text-[10px] shrink-0">✕</button>
+                    </div>
+                )}
+
+                {/* Daily Interest Ticker — Skill: neuromarketing-conversion */}
+                {data?.total_daily_interest && data.total_daily_interest > 0 && (
+                    <DailyInterestTicker dailyInterest={data.total_daily_interest} />
+                )}
 
                 {/* ═══════════════════════════════════════════════════════════
                  1.5. DEBT ALERTS — Above the grid for critical visibility
@@ -214,14 +349,17 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-12 gap-4">
 
                     {/* A. Freedom Clock (8 cols) + Peace Shield / Attack Equity (4 cols) */}
-                    <div className="col-span-12 lg:col-span-8">
+                    <div className="col-span-12 lg:col-span-8 relative group">
+                        <WidgetHelp helpKey="velocityClock" />
                         <FreedomClock />
                     </div>
                     <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
-                        <div className="flex-1">
+                        <div className="flex-1 relative group">
+                            <WidgetHelp helpKey="peaceShield" />
                             <PeaceShield />
                         </div>
                         <div className="flex-1 relative group">
+                            <WidgetHelp helpKey="attackEquity" />
                             <div className="absolute inset-0 bg-gold-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                             {data && (
                                 <AttackEquityCard
@@ -236,13 +374,14 @@ export default function DashboardPage() {
                     </div>
 
                     {/* B. KPI Cards — 4x3 cols, compact */}
-                    <Card className="col-span-6 lg:col-span-3 hover:border-rose-500/40 transition-all group">
+                    <Card className="col-span-6 lg:col-span-3 hover:border-rose-500/40 transition-all group relative">
+                        <WidgetHelp helpKey="kpiCards" />
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-4 px-4">
                             <CardTitle className="text-xs font-medium text-muted-foreground group-hover:text-rose-400 transition-colors">{t('dashboard.totalDebt')}</CardTitle>
                             <TrendingDown className="h-3.5 w-3.5 text-rose-500 group-hover:scale-110 transition-transform" />
                         </CardHeader>
                         <CardContent className="px-4 pb-4 pt-0">
-                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(totalDebt)}</div>
+                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><AnimatedCurrency value={totalDebt} /></div>
                             <p className="text-[10px] text-zinc-500 mt-0.5">{t('dashboard.totalDebtDesc')}</p>
                         </CardContent>
                     </Card>
@@ -289,7 +428,7 @@ export default function DashboardPage() {
                             <Wallet className="h-3.5 w-3.5 text-emerald-500 group-hover:scale-110 transition-transform" />
                         </CardHeader>
                         <CardContent className="px-4 pb-4 pt-0">
-                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{formatMoney(liquidCash)}</div>
+                            <div className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight"><AnimatedCurrency value={liquidCash} /></div>
                             <p className="text-[10px] text-emerald-500 mt-0.5 flex items-center gap-1">
                                 <Zap size={10} className="fill-emerald-500" /> {t('dashboard.liquidCashDesc')}
                             </p>
@@ -302,14 +441,15 @@ export default function DashboardPage() {
                             <PiggyBank className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 transition-transform" />
                         </CardHeader>
                         <CardContent className="px-4 pb-4 pt-0">
-                            <div className="text-xl md:text-2xl font-bold text-amber-500 tracking-tight">{formatMoney(interestSaved)}</div>
+                            <div className="text-xl md:text-2xl font-bold text-amber-500 tracking-tight"><AnimatedCurrency value={interestSaved} /></div>
                             <p className="text-[10px] text-zinc-500 mt-0.5">{t('dashboard.interestSavedDesc')}</p>
                         </CardContent>
                     </Card>
 
 
                     {/* C. Morning Briefing — Full Width (no more Freedom Counter beside it) */}
-                    <div className="col-span-12">
+                    <div className="col-span-12 relative group">
+                        <WidgetHelp helpKey="morningBriefing" />
                         {strategyData?.morning_briefing ? (
                             <MorningBriefing
                                 data={strategyData.morning_briefing}
@@ -326,12 +466,54 @@ export default function DashboardPage() {
                     </div>
 
                     {/* D. Cashflow Heat Calendar — Full Width (User's favorite tool) */}
-                    <div className="col-span-12">
+                    <div className="col-span-12 relative group">
+                        <WidgetHelp helpKey="heatCalendar" />
                         <CashflowHeatCalendar />
                     </div>
 
+                    {/* ═══ PHASE 3: ENGAGEMENT ROW ══════════════════════════ */}
+                    <div className="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Health Score Gauge */}
+                        <div className="relative group h-full">
+                            <WidgetHelp helpKey="healthScore" />
+                            <HealthScoreGauge
+                                shieldFillPercent={data ? Math.min(100, (data.liquid_cash / Math.max(1, data.shield_target)) * 100) : 0}
+                                totalDebt={data?.total_debt ?? 0}
+                                liquidCash={data?.liquid_cash ?? 0}
+                                streakScore={streak.score}
+                                commanderLevel={getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('corex-plan') || 'starter') !== 'starter')).level}
+                            />
+                        </div>
+
+                        {/* Achievement Wall */}
+                        <div className="relative group h-full">
+                            <WidgetHelp helpKey="achievementWall" />
+                            <AchievementWall
+                                context={{
+                                    streakRaw: streak.rawStreak,
+                                    streakScore: streak.score,
+                                    commanderLevel: getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('corex-plan') || 'starter') !== 'starter')).level,
+                                    shieldPercent: data ? Math.min(100, (data.liquid_cash / Math.max(1, data.shield_target)) * 100) : 0,
+                                    totalDebt: data?.total_debt ?? 0,
+                                    debtsEliminated: 0,
+                                    accountCount: 0,
+                                    interestSaved: interestSaved ?? 0,
+                                }}
+                            />
+                        </div>
+
+                        {/* Before vs After */}
+                        <div className="relative group">
+                            <WidgetHelp helpKey="beforeAfter" />
+                            <BeforeAfterCard
+                                currentDebt={data?.total_debt ?? 0}
+                            />
+                        </div>
+                    </div>
+
                     {/* E. Debt Burndown Chart — Full Width */}
-                    <Card className="col-span-12 flex flex-col relative overflow-hidden min-h-[380px]">
+                    <Card className="col-span-12 flex flex-col relative overflow-hidden min-h-[380px] group">
+                        <WidgetHelp helpKey="burndownChart" />
                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                         <CardHeader className="pb-2 pt-4 px-4">
                             <CardTitle className="text-lg text-zinc-700 dark:text-zinc-200 flex items-center gap-2">
@@ -343,15 +525,25 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
+                    {/* Time Machine Regret Trigger — Skill: neuromarketing-conversion §5 */}
+                    {data?.total_daily_interest && data.total_daily_interest > 0 && (
+                        <TimeMachineCard
+                            dailyInterest={data.total_daily_interest}
+                            registrationDate={user?.created_at}
+                        />
+                    )}
+
                     {/* F. Tools Row: Purchase Simulator (4 cols) + Recent Transactions (8 cols) */}
-                    <div className="col-span-12 lg:col-span-4">
+                    <div className="col-span-12 lg:col-span-4 relative group">
+                        <WidgetHelp helpKey="purchaseSimulator" />
                         <PurchaseSimulator />
                     </div>
-                    <div className="col-span-12 lg:col-span-8">
+                    <div className="col-span-12 lg:col-span-8 relative group">
+                        <WidgetHelp helpKey="recentTransactions" />
                         <RecentTransactions />
                     </div>
-                </div>
 
+                </div>
             </div>
 
             <UpgradeModal
@@ -362,3 +554,4 @@ export default function DashboardPage() {
         </>
     );
 }
+

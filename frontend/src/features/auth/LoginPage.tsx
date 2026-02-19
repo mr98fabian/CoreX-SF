@@ -342,7 +342,7 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-4">
+        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-6 py-8">
             <BackgroundOrbs />
             <Styles />
 
@@ -355,19 +355,19 @@ export default function LoginPage() {
                 style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
             />
 
-            <div className="relative z-10 w-full max-w-md">
+            <div className="relative z-10 w-full max-w-[380px] sm:max-w-md">
                 {/* KoreX Brand Logo */}
                 <div className="text-center mb-8">
                     <img
                         src="/korex-imagotipo.png"
                         alt="KoreX"
-                        className="h-20 mx-auto mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
+                        className="h-14 sm:h-20 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
                     <p className="text-slate-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
+                <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
                     {/* Tabs */}
                     {view !== 'forgot' && (
                         <div className="flex bg-slate-800/60 rounded-xl p-1 mb-6">
@@ -627,33 +627,6 @@ export default function LoginPage() {
                                 Continue with Google
                             </button>
 
-                            {/* Demo Mode Button */}
-                            <button
-                                type="button"
-                                onClick={handleDemoLogin}
-                                disabled={isDemoLoading || isSubmitting}
-                                className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
-                                    bg-gradient-to-r from-violet-600/20 to-purple-600/20
-                                    border border-violet-400/20 text-violet-300 text-sm font-medium
-                                    hover:from-violet-600/30 hover:to-purple-600/30 hover:border-violet-400/40
-                                    hover:text-violet-200 hover:shadow-lg hover:shadow-violet-500/10
-                                    transition-all duration-300 active:scale-[0.98]
-                                    disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-                            >
-                                {isDemoLoading ? (
-                                    <span className="inline-flex items-center gap-2">
-                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-violet-400 border-t-transparent" />
-                                        Loading demo data...
-                                    </span>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                        Enter Demo Mode
-                                    </>
-                                )}
-                            </button>
                         </>
                     )}
                 </div>
@@ -667,8 +640,26 @@ export default function LoginPage() {
                         </svg>
                         Secured by Supabase Auth • Google OAuth 2.0
                     </p>
-                    <p className="text-xs text-slate-600 mt-2">
-                        KoreX Financial System v1.0 — Your data stays private.
+                    <p className="text-xs text-slate-600 mt-2 flex items-center justify-center gap-1.5">
+                        KoreX Financial System v1.0
+                        <span className="text-slate-700">·</span>
+                        <button
+                            type="button"
+                            onClick={handleDemoLogin}
+                            disabled={isDemoLoading || isSubmitting}
+                            className="text-slate-500 hover:text-amber-400 transition-colors duration-300
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                                underline underline-offset-2 decoration-slate-700 hover:decoration-amber-400/50"
+                        >
+                            {isDemoLoading ? (
+                                <span className="inline-flex items-center gap-1">
+                                    <span className="h-3 w-3 animate-spin rounded-full border border-amber-400 border-t-transparent" />
+                                    Loading...
+                                </span>
+                            ) : (
+                                'Try Demo'
+                            )}
+                        </button>
                     </p>
                 </div>
             </div>

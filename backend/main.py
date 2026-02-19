@@ -135,6 +135,7 @@ from routers.demo import router as demo_router
 from routers.analytics import router as analytics_router
 from routers.subscriptions import router as subscriptions_router
 from routers.notifications import router as notifications_router
+from routers.settings_api import router as settings_router
 
 app.include_router(accounts_router)
 app.include_router(cashflow_router)
@@ -145,4 +146,5 @@ app.include_router(demo_router)
 app.include_router(analytics_router)
 app.include_router(subscriptions_router)
 app.include_router(notifications_router)
+app.include_router(settings_router)
 

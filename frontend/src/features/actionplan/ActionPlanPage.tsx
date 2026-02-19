@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import UpgradeModal from '@/components/UpgradeModal';
+import { WidgetHelp } from '@/components/WidgetHelp';
 import {
     Select,
     SelectContent,
@@ -566,9 +567,10 @@ export default function ActionPlanPage() {
                 </div>
 
                 {/* ────── ACTION QUEUE TABLE ────── */}
-                <Card className="relative overflow-hidden border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950/60 backdrop-blur-xl">
+                <Card className="relative overflow-hidden border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950/60 backdrop-blur-xl group">
                     {/* Ambient glow */}
                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    <WidgetHelp helpKey="actionPlanTable" />
 
                     <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-slate-800 dark:text-zinc-200 flex items-center gap-2">
