@@ -8,7 +8,7 @@
 
 type CelebrationLevel = 'spark' | 'burst' | 'epic';
 
-let confettiModule: typeof import('canvas-confetti') | null = null;
+let confettiModule: any = null;
 
 // Lazy-load canvas-confetti to avoid blocking initial bundle
 async function getConfetti() {
