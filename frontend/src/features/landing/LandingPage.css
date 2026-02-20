@@ -1994,21 +1994,169 @@
     transform: translateY(-3px);
 }
 
-/* ─── Responsive: Reduce effects on mobile ────────────────────────── */
+/* ─── Responsive: Mobile layout + reduce effects ───────────────────── */
 @media (max-width: 768px) {
     .lp-scroll-progress { height: 2px; }
     .lp-counter-pulse::before,
     .lp-counter-pulse::after { display: none; }
     .lp-shine-card::after { display: none; }
     .lp-tilt-card:hover { transform: none; }
+
+    /* ── Sections: reduce padding ── */
+    .lp-section {
+        padding: 4rem 1.25rem;
+    }
+
+    .lp-solution,
+    .lp-problem {
+        padding-top: 5rem;
+        padding-bottom: 4rem;
+    }
+
+    /* ── Section titles: center on mobile ── */
+    .lp-section-title {
+        font-size: clamp(2rem, 8vw, 3rem);
+        text-align: center;
+    }
+
+    .lp-section-subtitle {
+        text-align: center;
+        font-size: 0.9rem;
+        padding: 0 0.5rem;
+    }
+
+    .lp-section-label {
+        text-align: center;
+    }
+
+    /* ── Split layout: stack vertically ── */
+    .lp-split {
+        flex-direction: column !important;
+        gap: 2rem;
+        padding: 0 0.5rem;
+    }
+
+    .lp-split-media {
+        width: 100%;
+        max-width: 280px;
+        order: -1;   /* Image on top */
+    }
+
+    .lp-split-text {
+        text-align: center;
+    }
+
+    /* ── Explainer: center on mobile ── */
+    .lp-solution-explainer {
+        padding: 0;
+    }
+
+    .lp-explainer-heading {
+        text-align: center;
+    }
+
+    .lp-explainer-step {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .lp-explainer-insight {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    /* ── Counter ── */
+    .lp-counter {
+        text-align: center;
+    }
+
+    .lp-counter-label {
+        text-align: center;
+    }
+
+    /* ── Hero ── */
+    .lp-hero-content {
+        text-align: center;
+        align-items: center;
+    }
+
+    .lp-hero-title {
+        text-align: center;
+        font-size: clamp(2.5rem, 10vw, 4rem);
+    }
+
+    .lp-hero-subtitle {
+        text-align: center;
+        font-size: 0.95rem;
+    }
+
+    .lp-hero-split {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .lp-hero-split-text {
+        text-align: center;
+        align-items: center;
+    }
+
+    .lp-hero-split-media {
+        max-width: 90%;
+    }
+
+    .lp-hero-cta-row {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* ── Navbar ── */
+    .lp-navbar {
+        padding: 0.75rem 1rem;
+    }
+
+    .lp-nav-links {
+        gap: 0.75rem;
+    }
+
+    .lp-nav-link {
+        display: none;
+    }
+
+    /* ── Comparison ── */
+    .lp-compare-grid {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .lp-compare-banner {
+        padding: 1.5rem 1rem;
+    }
+
+    /* ── Stats ── */
+    .lp-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    /* ── Pricing ── */
     .lp-pricing-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
+
     .lp-plan-card.popular {
         transform: none;
     }
+
     .lp-plan-card.popular:hover {
         transform: none;
+    }
+
+    /* ── Final CTA ── */
+    .lp-final-headline {
+        font-size: clamp(2rem, 8vw, 3.5rem);
+        text-align: center;
     }
 }
