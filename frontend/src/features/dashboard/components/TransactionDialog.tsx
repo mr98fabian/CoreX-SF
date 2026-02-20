@@ -40,7 +40,7 @@ const formSchema = z.object({
     account_id: z.string().min(1, "Account is required"),
     amount: z.coerce.number().min(0.01, "Amount must be greater than 0"),
     description: z.string().min(2, "Description must be at least 2 characters"),
-    category: z.string().min(1, "Category is required"),
+    category: z.string().optional().default(""),
     type: z.enum(["income", "expense"]),
 });
 
@@ -241,19 +241,7 @@ export function TransactionDialog({
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="category"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>{isEs ? 'Categoría (Opcional)' : 'Category (Optional)'}</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder={isEs ? 'Comida, Renta, Crypto' : 'Food, Rent, Crypto'} className="bg-slate-900 border-slate-800" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+
 
                         <DialogFooter>
                             <Button type="submit" disabled={loading} className={activeTab === 'income' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}>

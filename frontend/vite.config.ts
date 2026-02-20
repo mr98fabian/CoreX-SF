@@ -45,6 +45,9 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(buildDate),
   },
+  build: {
+    sourcemap: false, // Security: don't expose source code in production
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

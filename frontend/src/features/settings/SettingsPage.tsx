@@ -26,6 +26,7 @@ import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import * as XLSX from "xlsx";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { ReferralProgram } from "@/components/ReferralProgram";
 
 // ─── Types ──────────────────────────────────────────────────────────
 type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "about";
@@ -477,7 +478,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "es")}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
@@ -501,7 +502,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={currency} onValueChange={handleCurrencyChange}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
@@ -531,7 +532,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <Select value={dateFormat} onValueChange={handleDateFormatChange}>
-                            <SelectTrigger className="w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
@@ -1416,6 +1417,9 @@ export default function SettingsPage() {
                         </CardContent>
                     </Card>
                 )}
+
+                {/* ─── Referral Program ─── */}
+                <ReferralProgram />
             </div>
         );
     }

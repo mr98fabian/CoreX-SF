@@ -141,7 +141,7 @@ export default function UpgradeNudge() {
                                 {/* CTA Button */}
                                 <button
                                     onClick={handleUpgrade}
-                                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-sm font-extrabold transition-all shadow-xl shadow-amber-900/40 hover:shadow-amber-900/60 hover:scale-[1.02] active:scale-[0.98] group"
+                                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-sm font-extrabold transition-all shadow-xl shadow-amber-900/40 hover:shadow-amber-900/60 hover:scale-[1.02] active:scale-[0.98] group animate-pulse"
                                 >
                                     <Sparkles size={16} />
                                     {t('upgrade.viewUpgradePlans')}
@@ -153,7 +153,7 @@ export default function UpgradeNudge() {
                                     onClick={handleDismiss}
                                     className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
                                 >
-                                    Ahora no, gracias
+                                    {t('upgrade.dismissShame')}
                                 </button>
                             </div>
                         </div>

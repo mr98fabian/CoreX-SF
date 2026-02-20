@@ -210,7 +210,7 @@ export default function DashboardPage() {
         <>
             {/* ═══ LOGIN STREAK POPUP — Show on new day, dismiss on click/timeout ═══ */}
             {streak.showLoginPopup && !streak.hasTransactionToday && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500 w-[calc(100%-2rem)] max-w-lg">
+                <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500 w-[calc(100%-2rem)] max-w-lg">
                     <div className="relative bg-gradient-to-r from-orange-500/90 via-amber-500/90 to-orange-600/90 backdrop-blur-xl text-white rounded-2xl px-5 py-4 shadow-2xl shadow-orange-900/30 border border-orange-400/30">
                         <button
                             onClick={streak.dismissPopup}
@@ -282,7 +282,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                        <div className="flex gap-2 items-center relative group">
+                        <div className="flex gap-2 items-center">
                             <TransactionDialog defaultType="income" onSuccess={refreshDashboard}>
                                 <Button variant="outline" size="sm" className="border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-500 dark:hover:text-emerald-300 backdrop-blur-sm">{t('dashboard.income')}</Button>
                             </TransactionDialog>
@@ -290,7 +290,6 @@ export default function DashboardPage() {
                             <TransactionDialog defaultType="expense" onSuccess={refreshDashboard}>
                                 <Button variant="destructive" size="sm" className="shadow-lg shadow-rose-900/20">{t('dashboard.expense')}</Button>
                             </TransactionDialog>
-                            <WidgetHelp helpKey="quickTransactions" />
                         </div>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">
                             {language === 'es'

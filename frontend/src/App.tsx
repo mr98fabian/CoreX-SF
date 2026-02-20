@@ -9,6 +9,7 @@ import RankingsPage from "@/features/rankings/RankingsPage";
 
 import SettingsPage from "@/features/settings/SettingsPage";
 import LoginPage from "@/features/auth/LoginPage";
+import LandingGate from "@/features/landing/LandingGate";
 import TermsOfServicePage from "@/features/legal/TermsOfServicePage";
 import PrivacyPolicyPage from "@/features/legal/PrivacyPolicyPage";
 import NotFoundPage from "@/features/error/NotFoundPage";
@@ -38,14 +39,17 @@ function AppShell() {
           <NotificationProvider>
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
+                {/* Landing page — web only, redirects native/auth users */}
+                <Route path="/" element={<LandingGate />} />
+
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
-                {/* Protected routes */}
+                {/* Protected dashboard routes */}
                 <Route
-                  path="/"
+                  path="/dashboard"
                   element={
                     <ProtectedRoute>
                       <DashboardLayout />
@@ -57,7 +61,6 @@ function AppShell() {
                   <Route path="accounts" element={<AccountsPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="rankings" element={<RankingsPage />} />
-
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
 
@@ -82,4 +85,3 @@ function App() {
 }
 
 export default App;
-

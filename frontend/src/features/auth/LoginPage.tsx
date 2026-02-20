@@ -178,7 +178,7 @@ export default function LoginPage() {
     const strength = useMemo(() => getPasswordStrength(password), [password]);
     const requirements = useMemo(() => getPasswordRequirements(password), [password]);
 
-    if (user && !loading) return <Navigate to="/" replace />;
+    if (user && !loading) return <Navigate to="/dashboard" replace />;
 
     const clearForm = () => {
         setEmail(''); setConfirmEmail('');

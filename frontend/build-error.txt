@@ -1,0 +1,121 @@
+﻿[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 2500 modules transformed.
+
+  Γ£à version.json written ΓåÆ v1.1.0
+
+node.exe : 
+[31mΓ£ù[39m Build 
+failed in 4.09s
+At line:1 char:1
++ & "C:\Program Files\
+nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ([31mΓ£ù[   
+ 39m Build failed     
+in 4.09s:String)     
+[], RemoteExcepti    
+on
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+[31merror during 
+build:
+[31m[vite]: Rollup 
+failed to resolve 
+import "react-is" 
+from "C:/Users/Khine/D
+esktop/CoreX 
+Financial System/front
+end/node_modules/recha
+rts/es6/util/ReactUtil
+s.js".
+This is most likely 
+unintended because it 
+can break your 
+application at 
+runtime.
+If you do want to 
+externalize this 
+module explicitly add 
+it to
+`build.rollupOptions.e
+xternal`[31m
+    at viteLog (file:/
+//C:/Users/Khine/Deskt
+op/CoreX%20Financial%2
+0System/frontend/node_
+modules/vite/dist/node
+/chunks/config.js:3363
+5:57)
+    at file:///C:/User
+s/Khine/Desktop/CoreX%
+20Financial%20System/f
+rontend/node_modules/v
+ite/dist/node/chunks/c
+onfig.js:33669:73
+    at onwarn (file://
+/C:/Users/Khine/Deskto
+p/CoreX%20Financial%20
+System/frontend/node_m
+odules/@vitejs/plugin-
+react/dist/index.js:76
+:7)
+    at file:///C:/User
+s/Khine/Desktop/CoreX%
+20Financial%20System/f
+rontend/node_modules/v
+ite/dist/node/chunks/c
+onfig.js:33669:28
+    at onRollupLog (fi
+le:///C:/Users/Khine/D
+esktop/CoreX%20Financi
+al%20System/frontend/n
+ode_modules/vite/dist/
+node/chunks/config.js:
+33664:63)
+    at onLog (file:///
+C:/Users/Khine/Desktop
+/CoreX%20Financial%20S
+ystem/frontend/node_mo
+dules/vite/dist/node/c
+hunks/config.js:33467:
+4)
+    at file:///C:/User
+s/Khine/Desktop/CoreX%
+20Financial%20System/f
+rontend/node_modules/r
+ollup/dist/es/shared/n
+ode-entry.js:20958:32
+    at Object.logger 
+[as onLog] (file:///C:
+/Users/Khine/Desktop/C
+oreX%20Financial%20Sys
+tem/frontend/node_modu
+les/rollup/dist/es/sha
+red/node-entry.js:2294
+5:9)
+    at ModuleLoader.ha
+ndleInvalidResolvedId 
+(file:///C:/Users/Khin
+e/Desktop/CoreX%20Fina
+ncial%20System/fronten
+d/node_modules/rollup/
+dist/es/shared/node-en
+try.js:21689:26)
+    at file:///C:/User
+s/Khine/Desktop/CoreX%
+20Financial%20System/f
+rontend/node_modules/r
+ollup/dist/es/shared/n
+ode-entry.js:21647:26
+[39m

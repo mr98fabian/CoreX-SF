@@ -164,7 +164,7 @@ export default function FeedbackWidget() {
             {/* ─── Expanded Panel ─────────────────────────────── */}
             <div
                 className={cn(
-                    'w-[360px] max-h-[85vh] overflow-y-auto rounded-2xl border shadow-2xl transition-all duration-300 origin-bottom-right',
+                    'w-[calc(100vw-2.5rem)] sm:w-[360px] max-h-[85vh] overflow-y-auto rounded-2xl border shadow-2xl transition-all duration-300 origin-bottom-right',
                     'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10',
                     'shadow-black/10 dark:shadow-black/40',
                     isOpen

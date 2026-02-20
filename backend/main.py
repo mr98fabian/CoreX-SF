@@ -15,6 +15,9 @@ import traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from database import create_db_and_tables, seed_data
 from exceptions import CoreXError
@@ -42,7 +45,24 @@ ALLOWED_ORIGINS = [
 ]
 
 # ── App ──────────────────────────────────────────────────────
-app = FastAPI(title="KoreX Financial System", version="2.0.0")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+IS_DEV = ENVIRONMENT == "development"
+
+# ── Rate Limiter ─────────────────────────────────────────────
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["60/minute"],  # Global: 60 req/min per IP
+)
+
+app = FastAPI(
+    title="KoreX Financial System",
+    version="2.0.0",
+    docs_url="/docs" if IS_DEV else None,      # Security: hide API docs in production
+    redoc_url="/redoc" if IS_DEV else None,     # Security: hide redoc in production
+    openapi_url="/openapi.json" if IS_DEV else None,
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,6 +79,27 @@ app.add_middleware(
     expose_headers=["X-Process-Time", "X-Request-Id"],
     max_age=600,
 )
+
+
+# ── Security Headers Middleware ──────────────────────────────
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if not IS_DEV:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://app.lemonsqueezy.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https://*.supabase.co https://api.lemonsqueezy.com https://*.plaid.com; "
+            "frame-src https://app.lemonsqueezy.com https://cdn.plaid.com;"
+        )
+    return response
 
 
 # ── Request ID + Process Time Middleware ─────────────────────

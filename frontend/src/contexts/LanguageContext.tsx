@@ -511,6 +511,7 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.checkoutOpenedDesc": { en: "Complete your payment in the new tab. Your plan will update automatically.", es: "Completa tu pago en la nueva pestaña. Tu plan se actualizará automáticamente." },
     "upgrade.checkoutFailed": { en: "Checkout failed", es: "Fallo en el checkout" },
     "upgrade.checkoutFailedDesc": { en: "Could not open checkout. Please try again or contact support.", es: "No se pudo abrir el checkout. Inténtalo de nuevo o contacta soporte." },
+    "upgrade.dismissShame": { en: "I'll keep losing money", es: "Seguiré perdiendo dinero" },
 
     // ═══════════════════════════════════════════════════════════════════
     //  UPGRADE — PLAN FEATURES

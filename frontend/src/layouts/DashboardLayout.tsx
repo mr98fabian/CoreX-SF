@@ -9,8 +9,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import UpgradeNudge from '@/components/UpgradeNudge';
+import { InterestBleedBanner } from '@/components/InterestBleedBanner';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
+import { SessionTimeoutWarning } from '@/components/SessionTimeoutWarning';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { OnboardingResumePopup } from '@/components/OnboardingResumePopup';
@@ -40,16 +42,16 @@ export default function DashboardLayout() {
     }, [isMobile]);
 
     const isActive = (path: string) => {
-        if (path === '/') return location.pathname === '/';
+        if (path === '/dashboard') return location.pathname === '/dashboard';
         return location.pathname.startsWith(path);
     };
 
     const navLinks = [
-        { path: '/', icon: LayoutDashboard, label: t("nav.dashboard") },
-        { path: '/action-plan', icon: ListChecks, label: t("nav.actionPlan") },
-        { path: '/accounts', icon: Wallet, label: t("nav.accounts") },
-        { path: '/rankings', icon: Trophy, label: t("nav.rankings") },
-        { path: '/settings', icon: Settings, label: t("nav.settings") },
+        { path: '/dashboard', icon: LayoutDashboard, label: t("nav.dashboard") },
+        { path: '/dashboard/action-plan', icon: ListChecks, label: t("nav.actionPlan") },
+        { path: '/dashboard/accounts', icon: Wallet, label: t("nav.accounts") },
+        { path: '/dashboard/rankings', icon: Trophy, label: t("nav.rankings") },
+        { path: '/dashboard/settings', icon: Settings, label: t("nav.settings") },
     ];
 
     const sidebarContent = (
@@ -213,8 +215,10 @@ export default function DashboardLayout() {
             </main>
             <FeedbackWidget />
             <UpgradeNudge />
+            <InterestBleedBanner />
             <InstallPrompt />
             <OfflineIndicator />
+            <SessionTimeoutWarning />
             <DemoWelcomeModal />
 
             {/* ═══ ONBOARDING WIZARD (fullscreen modal) ═══ */}

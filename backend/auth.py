@@ -15,6 +15,7 @@ SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 # Demo mode constants
 DEMO_TOKEN = "demo-stress-test-token"
 DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
+DEMO_MODE_ENABLED = os.getenv("DEMO_MODE_ENABLED", "false").lower() == "true"
 
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
@@ -24,8 +25,8 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
 
     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
 
-    # -- Demo Mode Bypass (dev/testing only) --
-    if token == DEMO_TOKEN:
+    # -- Demo Mode Bypass (only when explicitly enabled via env var) --
+    if DEMO_MODE_ENABLED and token == DEMO_TOKEN:
         return DEMO_USER_ID
 
     if not SUPABASE_URL:

@@ -1213,7 +1213,7 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
             <SheetTrigger asChild>
                 <Button variant="outline" size="sm" className="w-full text-xs h-9 border-slate-300 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-zinc-300">{t("accounts.history")}</Button>
             </SheetTrigger>
-            <SheetContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-[400px] sm:w-[540px]">
+            <SheetContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-full sm:w-[540px]">
                 <SheetHeader>
                     <SheetTitle className="text-slate-900 dark:text-white">{t("accounts.transactions")} {account.name}</SheetTitle>
                     <SheetDescription className="text-slate-500 dark:text-slate-400">

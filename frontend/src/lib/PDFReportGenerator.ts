@@ -415,9 +415,30 @@ export async function generateMonthlyReport(
 
     // ── 8. Footer on all pages ────────────────────────────
     const totalPages = doc.getNumberOfPages();
+    const plan = typeof window !== 'undefined' ? localStorage.getItem('corex-plan') || 'starter' : 'starter';
+    const isFree = plan === 'starter';
+
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         const pageH = doc.internal.pageSize.getHeight();
+
+        // ── FREE PLAN watermark (diagonal across every page) ──
+        if (isFree) {
+            doc.saveGraphicsState();
+            // @ts-ignore — setGState is available in jsPDF
+            doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
+            doc.setTextColor(150, 0, 0);
+            doc.setFontSize(72);
+            doc.setFont('helvetica', 'bold');
+            // Rotate 45° at center of page
+            const cx = pageW / 2;
+            const cy = pageH / 2;
+            doc.text('FREE PLAN', cx, cy, {
+                align: 'center',
+                angle: 45,
+            });
+            doc.restoreGraphicsState();
+        }
 
         // Footer line
         doc.setDrawColor(...COLORS.light);

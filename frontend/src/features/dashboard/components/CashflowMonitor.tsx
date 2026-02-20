@@ -83,7 +83,7 @@ export default function CashflowMonitor() {
                     }
                 </div>
 
-                <Tabs defaultValue="monthly" className="w-[400px]" onValueChange={(v) => setTimeframe(v as any)}>
+                <Tabs defaultValue="monthly" className="w-full" onValueChange={(v) => setTimeframe(v as any)}>
                     <TabsList className="grid w-full grid-cols-4 bg-zinc-800/50 h-8">
                         <TabsTrigger value="daily" className="text-xs data-[state=active]:bg-zinc-700 data-[state=active]:text-white h-6">1D</TabsTrigger>
                         <TabsTrigger value="weekly" className="text-xs data-[state=active]:bg-zinc-700 data-[state=active]:text-white h-6">7D</TabsTrigger>
