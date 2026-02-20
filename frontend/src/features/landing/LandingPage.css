@@ -45,6 +45,20 @@
     overflow: hidden;
 }
 
+/* Smooth gradient fade between sections — eliminates hard dividing lines */
+.lp-section::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, var(--lp-bg-section), transparent);
+    z-index: 1;
+    pointer-events: none;
+    will-change: transform;       /* GPU-composited layer */
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    HERO — Full-Bleed Cinematic (GTA VI Style)
    ═══════════════════════════════════════════════════════════════════════ */
@@ -314,6 +328,50 @@
     z-index: 1;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   SPLIT LAYOUT — Shared by Problem & Solution sections
+   ═══════════════════════════════════════════════════════════════════════ */
+.lp-split {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Text-left variant: text on left, media on right */
+.lp-split--text-left {
+    flex-direction: row;
+}
+
+/* Image-left variant: media on left, text on right */
+.lp-split--img-left {
+    flex-direction: row;
+}
+
+.lp-split-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.lp-split-media {
+    flex: 0 0 auto;
+    width: 340px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lp-split-img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    object-fit: cover;
+    filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
+}
+
 .lp-counter {
     font-family: 'Oswald', sans-serif;
     font-size: clamp(4rem, 12vw, 8rem);
@@ -338,10 +396,21 @@
    SOLUTION SECTION — Feature cards + floating preview
    ═══════════════════════════════════════════════════════════════════════ */
 .lp-solution {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 8rem;
+    padding-bottom: 6rem;
     background:
         radial-gradient(ellipse 70% 60% at 60% 30%,
             rgba(52, 211, 153, 0.04) 0%, transparent 70%),
         var(--lp-bg-section);
+}
+
+.lp-problem {
+    min-height: auto;
+    justify-content: flex-start;
+    padding-top: 8rem;
+    padding-bottom: 6rem;
 }
 
 .lp-solution-content {
@@ -368,10 +437,10 @@
 .lp-feature-card {
     padding: 2rem;
     border-radius: 4px;
-    background: rgba(255,255,255,0.02);
+    background: rgba(10, 12, 20, 0.85);
     border: 1px solid rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    /* backdrop-filter removed — GPU perf killer during scroll */
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.5s ease;
     position: relative;
     overflow: hidden;
 }
@@ -441,6 +510,94 @@
     transform: translateY(-12px) scale(1.03);
 }
 
+/* ── Solution Nerd-Mode Explainer ────────────────────────────────── */
+.lp-solution-explainer {
+    padding: 0 1rem;
+}
+
+.lp-explainer-heading {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--lp-accent-emerald);
+    margin-bottom: 2rem;
+}
+
+.lp-explainer-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.lp-explainer-step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.lp-step-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--lp-accent-violet), var(--lp-accent-emerald));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 2px;
+}
+
+.lp-explainer-step strong {
+    display: block;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--lp-text-primary);
+    margin-bottom: 0.3rem;
+}
+
+.lp-explainer-step p {
+    font-size: 0.88rem;
+    color: var(--lp-text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 300;
+}
+
+.lp-explainer-insight {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 4px;
+    background: rgba(52, 211, 153, 0.06);
+    border: 1px solid rgba(52, 211, 153, 0.15);
+    border-left: 3px solid var(--lp-accent-emerald);
+}
+
+.lp-insight-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.lp-explainer-insight p {
+    font-size: 0.85rem;
+    color: var(--lp-text-secondary);
+    line-height: 1.65;
+    margin: 0;
+    font-weight: 400;
+    font-style: italic;
+}
 /* ═══════════════════════════════════════════════════════════════════════
    COMPARISON — Split-screen dramatic
    ═══════════════════════════════════════════════════════════════════════ */
@@ -818,12 +975,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: background 0.4s cubic-bezier(0.23, 1, 0.32, 1), padding 0.4s ease;
 }
 
 .lp-navbar.scrolled {
-    background: rgba(3, 5, 8, 0.92);
-    backdrop-filter: blur(30px);
+    background: rgba(3, 5, 8, 0.97);
+    /* backdrop-filter removed — kills scroll perf */
     border-bottom: 1px solid rgba(255,255,255,0.04);
     padding: 0.75rem 2.5rem;
 }
@@ -975,14 +1132,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem 2.5rem;
-    transition: all 0.4s ease;
+    transition: background 0.4s ease, padding 0.4s ease;
     background: transparent;
 }
 
 .lp-navbar.scrolled {
-    background: rgba(3, 5, 8, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(3, 5, 8, 0.97);
+    /* backdrop-filter removed — major scroll jank source */
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -1060,9 +1216,10 @@
     font-weight: 400;
     letter-spacing: 0.25em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.75);
     margin: 0.5rem 0 2rem;
     max-width: 450px;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
 .lp-hero-buttons {
@@ -1321,4 +1478,537 @@
     .lp-stats-row { gap: 1.5rem; }
     .lp-hero-logo-img { max-width: 200px; }
     .lp-nav-logo-img { height: 20px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   3D & 2D ANIMATION ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ─── Scroll Progress Bar ────────────────────────────────────────── */
+.lp-scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--lp-accent-gold), var(--lp-accent-emerald), var(--lp-accent-violet));
+    z-index: 99999;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+}
+
+/* ─── 3D Tilt Card — glow overlay follows mouse ─────────────────── */
+.lp-tilt-card {
+    will-change: transform;
+    transform-style: preserve-3d;
+}
+
+.lp-tilt-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--tilt-glow, none);
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.2s ease;
+}
+
+/* ─── Shine Sweep — diagonal light sweep on hover ────────────────── */
+.lp-shine-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.lp-shine-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.04) 45%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.04) 55%,
+        transparent 60%
+    );
+    transform: translateX(-100%);
+    transition: none;
+    pointer-events: none;
+}
+
+.lp-shine-card:hover::after {
+    animation: lp-shine-sweep 0.8s ease-out forwards;
+}
+
+@keyframes lp-shine-sweep {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ─── Icon Float — sinusoidal bobbing ─────────────────────────────── */
+.lp-icon-float {
+    animation: lp-icon-bob 3s ease-in-out infinite;
+}
+
+@keyframes lp-icon-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+/* ─── Counter Pulse Rings ─────────────────────────────────────────── */
+.lp-counter-pulse {
+    position: relative;
+}
+
+.lp-counter-pulse::before,
+.lp-counter-pulse::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    border-radius: 50%;
+    border: 1px solid rgba(251, 113, 133, 0.15);
+    transform: translate(-50%, -50%) scale(0.8);
+    animation: lp-pulse-ring 3s ease-out infinite;
+    pointer-events: none;
+}
+
+.lp-counter-pulse::after {
+    animation-delay: 1.5s;
+}
+
+@keyframes lp-pulse-ring {
+    0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 0.6; }
+    100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* ─── Animated Stats — glow in on scroll ──────────────────────────── */
+.lp-stat-animated {
+    animation: lp-stat-glow 1s ease-out both;
+}
+
+@keyframes lp-stat-glow {
+    from {
+        text-shadow: none;
+        filter: brightness(0.7);
+    }
+    to {
+        text-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
+        filter: brightness(1);
+    }
+}
+
+/* ─── Shimmer Text — moving highlight across gradient text ────────── */
+.lp-shimmer-text {
+    background-size: 200% 100% !important;
+    animation: lp-shimmer-move 3s ease-in-out infinite !important;
+}
+
+@keyframes lp-shimmer-move {
+    0%   { background-position: 100% 50%; }
+    50%  { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* ─── Animated Gradient Border — popular pricing card ─────────────── */
+.lp-animated-border {
+    position: relative;
+    z-index: 0;
+}
+
+.lp-animated-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 6px;
+    background: linear-gradient(
+        135deg,
+        var(--lp-accent-gold),
+        var(--lp-accent-violet),
+        var(--lp-accent-emerald),
+        var(--lp-accent-gold)
+    );
+    background-size: 300% 300%;
+    animation: lp-border-rotate 4s ease infinite;
+    z-index: -1;
+    opacity: 0.6;
+}
+
+/* Inner fill to create border effect */
+.lp-animated-border::after {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 4px;
+    background: var(--lp-bg-section);
+    z-index: -1;
+}
+
+@keyframes lp-border-rotate {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ─── Spotlight Mouse-Follow — pricing cards ──────────────────────── */
+.lp-spotlight-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.lp-spotlight-card::before {
+    content: '';
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(251, 191, 36, 0.06) 0%,
+        transparent 70%
+    );
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.lp-spotlight-card:hover::before {
+    opacity: 1;
+}
+
+/* ─── Magnetic Button ─────────────────────────────────────────────── */
+.lp-magnetic-btn {
+    will-change: transform;
+}
+
+/* ─── Enhanced Section Transitions ────────────────────────────────── */
+.lp-problem::before,
+.lp-solution::before,
+.lp-comparison::before,
+.lp-proof::before,
+.lp-pricing::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 0;
+    right: 0;
+    height: 160px;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        var(--lp-bg-section) 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ─── Image Hover Tilt (CSS-based for all section images) ──────── */
+.lp-tilt-card {
+    will-change: transform;
+    transform-style: preserve-3d;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.lp-tilt-card:hover {
+    transform: perspective(800px) rotateY(3deg) rotateX(2deg) scale(1.03);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.15),
+                0 0 40px rgba(251, 191, 36, 0.08);
+}
+
+/* ─── Hero text readability ────────────────────────────────────── */
+.lp-hero-logo-img {
+    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.6));
+}
+
+.lp-hero-split-content {
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* ═══ PRICING CARDS ════════════════════════════════════════════════ */
+.lp-pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 3.5rem auto 0;
+    padding: 0 1rem;
+}
+
+.lp-plan-card {
+    position: relative;
+    background: rgba(15, 18, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 1.25rem;
+    padding: 2.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    /* backdrop-filter removed — GPU perf killer */
+    transition: transform 0.4s ease, border-color 0.4s ease;
+    will-change: transform;
+}
+
+.lp-plan-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.35),
+        0 0 40px rgba(139, 92, 246, 0.06);
+}
+
+/* ── Popular card: lifted + animated border ── */
+.lp-plan-card.popular {
+    background: linear-gradient(
+        160deg,
+        rgba(139, 92, 246, 0.12) 0%,
+        rgba(15, 18, 35, 0.85) 40%,
+        rgba(251, 191, 36, 0.08) 100%
+    );
+    border-color: rgba(139, 92, 246, 0.35);
+    transform: scale(1.05);
+    box-shadow:
+        0 16px 48px rgba(139, 92, 246, 0.15),
+        0 0 60px rgba(139, 92, 246, 0.06);
+    z-index: 2;
+}
+
+.lp-plan-card.popular:hover {
+    transform: scale(1.07) translateY(-6px);
+    box-shadow:
+        0 28px 72px rgba(139, 92, 246, 0.2),
+        0 0 80px rgba(139, 92, 246, 0.1);
+}
+
+/* ── Animated border glow for popular ── */
+.lp-plan-card.popular::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 1.25rem;
+    padding: 1px;
+    background: linear-gradient(
+        135deg, 
+        rgba(139, 92, 246, 0.6), 
+        rgba(251, 191, 36, 0.4),
+        rgba(139, 92, 246, 0.6)
+    );
+    background-size: 200% 200%;
+    animation: lp-border-shine 4s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+@keyframes lp-border-shine {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* ── Badge ── */
+.lp-plan-badge {
+    position: absolute;
+    top: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    color: #fff;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    padding: 0.35rem 1.2rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    text-transform: uppercase;
+}
+
+/* ── Plan accounts ── */
+.lp-plan-accounts {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.15rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Plan name ── */
+.lp-plan-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.25rem;
+}
+
+/* ── Price row ── */
+.lp-plan-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.15rem;
+    margin-bottom: 0.25rem;
+}
+
+/* ── Price ── */
+.lp-plan-price {
+    font-family: 'Oswald', sans-serif;
+    font-size: 3.2rem;
+    font-weight: 700;
+    color: #fbbf24;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.lp-plan-period {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.35);
+    margin-left: 0.15rem;
+}
+
+/* ── Original price + discount ── */
+.lp-plan-original-price {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.15rem;
+}
+
+.lp-plan-strikethrough {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.3);
+    text-decoration: line-through;
+}
+
+.lp-plan-discount {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #22c55e;
+    letter-spacing: 0.05em;
+}
+
+.lp-plan-billed {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.25);
+    margin-bottom: 0.75rem;
+}
+
+/* ── Savings box ── */
+.lp-plan-savings-box {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.05));
+    border: 1px solid rgba(34, 197, 94, 0.15);
+    margin: 0.75rem 0;
+    text-align: center;
+}
+
+.lp-plan-savings-value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #22c55e;
+    letter-spacing: 0.02em;
+}
+
+.lp-plan-roi {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    color: rgba(251, 191, 36, 0.7);
+    text-align: center;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+/* ── Feature list ── */
+.lp-plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    width: 100%;
+    text-align: left;
+}
+
+.lp-plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.lp-plan-features li:last-child {
+    border-bottom: none;
+}
+
+/* ── CTA Button ── */
+.lp-plan-cta {
+    display: inline-block;
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    margin-top: auto;
+    font-family: 'Oswald', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.lp-plan-cta:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.lp-plan-cta.primary {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+}
+
+.lp-plan-cta.primary:hover {
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.45);
+    transform: translateY(-3px);
+}
+
+/* ─── Responsive: Reduce effects on mobile ────────────────────────── */
+@media (max-width: 768px) {
+    .lp-scroll-progress { height: 2px; }
+    .lp-counter-pulse::before,
+    .lp-counter-pulse::after { display: none; }
+    .lp-shine-card::after { display: none; }
+    .lp-tilt-card:hover { transform: none; }
+    .lp-pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .lp-plan-card.popular {
+        transform: none;
+    }
+    .lp-plan-card.popular:hover {
+        transform: none;
+    }
 }

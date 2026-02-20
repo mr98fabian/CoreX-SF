@@ -10,12 +10,16 @@
  *
  * 7 sections: Hero → Problem → Solution → Comparison → Proof → Pricing → Final CTA
  */
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { use3DTilt } from './use3DTilt';
 import './LandingPage.css';
+
+// Lazy-load the WebGL 3D scene to avoid blocking initial paint
+const HeroScene3D = lazy(() => import('./HeroScene3D'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -38,12 +42,12 @@ const copy = {
             es: 'Mientras lees esto, tu deuda acaba de crecer',
         },
         subtitle: {
-            en: 'Banks designed the system to keep you paying for 30 years. On average, you\'ll pay $284,000 in interest on a $200,000 mortgage.',
-            es: 'Los bancos diseñaron el sistema para mantenerte pagando por 30 años. En promedio, pagarás $284,000 en intereses por una hipoteca de $200,000.',
+            en: 'Banks designed the system to keep you paying for 30 years. Between your mortgage, 2 car loans, credit cards, and student loans — the average American household hemorrhages over $23,000/year in interest alone.',
+            es: 'Los bancos diseñaron el sistema para mantenerte pagando por 30 años. Entre hipoteca, 2 autos, tarjetas de crédito y préstamos — el hogar promedio americano pierde más de $23,000/año solo en intereses.',
         },
         counterLabel: {
-            en: 'lost in interest every day by the average American household',
-            es: 'perdidos en intereses diariamente por el hogar promedio',
+            en: 'lost in interest EVERY MONTH by the average American household',
+            es: 'perdidos en intereses CADA MES por el hogar promedio americano',
         },
     },
     solution: {
@@ -131,51 +135,83 @@ const copy = {
     },
     pricing: {
         label: { en: 'PRICING', es: 'PRECIOS' },
-        title: { en: 'Less Than A Coffee A Day', es: 'Menos Que Un Café Al Día' },
+        title: { en: 'From $0.27/Day', es: 'Desde $0.27/Día' },
         subtitle: {
-            en: 'Your daily interest loss is 10x more than any plan below.',
-            es: 'Tu pérdida diaria en intereses es 10x más que cualquier plan.',
+            en: 'You lose ~$65/day in interest. Protect yourself for less than a pack of gum.',
+            es: 'Pierdes ~$65/día en intereses. Protégete por menos que un chicle.',
         },
         plans: [
             {
                 name: 'Starter',
-                price: '$0',
-                period: { en: '/forever', es: '/siempre' },
+                price: { en: 'Free', es: 'Gratis' },
+                period: { en: '', es: '' },
                 popular: false,
                 cta: { en: 'Start Free', es: 'Empieza Gratis' },
+                savings: { en: '~$1,296/yr in interest saved', es: '~$1,296/año en intereses ahorrados' },
+                accounts: { en: '2 debt accounts', es: '2 cuentas de deuda' },
                 features: [
-                    { en: '3 accounts', es: '3 cuentas' },
-                    { en: 'Basic dashboard', es: 'Dashboard básico' },
-                    { en: 'Monthly PDF report', es: 'Reporte PDF mensual' },
+                    { en: 'All features included', es: 'Todas las funciones' },
+                    { en: 'Freedom Clock & Action Plan', es: 'Reloj de Libertad y Plan de Acción' },
+                    { en: 'PDF Reports & Exports', es: 'Reportes PDF y Exportación' },
+                    { en: 'Velocity Simulations', es: 'Simulaciones Velocity' },
                 ],
             },
             {
-                name: 'Estratega',
-                price: '$8',
-                period: { en: '/month', es: '/mes' },
+                name: 'Velocity',
+                price: '$8.08',
+                period: { en: '/mo', es: '/mes' },
+                originalPrice: '$20',
+                discount: { en: '60% OFF', es: '60% OFF' },
+                billedNote: { en: 'Billed $97/year', es: 'Facturado $97/año' },
+                popular: false,
+                cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
+                savings: { en: '~$3,240/yr in interest saved', es: '~$3,240/año en intereses ahorrados' },
+                roi: { en: 'Net gain: $3,143/yr · Pays for itself in 11 days', es: 'Ganancia neta: $3,143/año · Se paga solo en 11 días' },
+                accounts: { en: '6 debt accounts', es: '6 cuentas de deuda' },
+                features: [
+                    { en: 'All features included', es: 'Todas las funciones' },
+                    { en: 'Freedom Clock & Action Plan', es: 'Reloj de Libertad y Plan de Acción' },
+                    { en: 'PDF Reports & Exports', es: 'Reportes PDF y Exportación' },
+                    { en: 'Velocity Simulations', es: 'Simulaciones Velocity' },
+                ],
+            },
+            {
+                name: 'Accelerator',
+                price: '$16.42',
+                period: { en: '/mo', es: '/mes' },
+                originalPrice: '$35',
+                discount: { en: '53% OFF', es: '53% OFF' },
+                billedNote: { en: 'Billed $197/year', es: 'Facturado $197/año' },
                 popular: true,
                 badge: { en: 'MOST POPULAR', es: 'MÁS POPULAR' },
-                cta: { en: 'Stop Losing Money', es: 'Deja de Perder Dinero' },
+                cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
+                savings: { en: '~$4,860/yr in interest saved', es: '~$4,860/año en intereses ahorrados' },
+                roi: { en: 'Net gain: $4,663/yr · Pays for itself in 15 days', es: 'Ganancia neta: $4,663/año · Se paga solo en 15 días' },
+                accounts: { en: '12 debt accounts', es: '12 cuentas de deuda' },
                 features: [
-                    { en: '10 accounts', es: '10 cuentas' },
-                    { en: 'Velocity Attack Engine', es: 'Motor de Ataque Velocity' },
-                    { en: 'Peace Shield', es: 'Escudo de Paz' },
-                    { en: 'Cashflow GPS', es: 'GPS de Cashflow' },
-                    { en: 'Priority support', es: 'Soporte prioritario' },
+                    { en: 'All features included', es: 'Todas las funciones' },
+                    { en: 'Freedom Clock & Action Plan', es: 'Reloj de Libertad y Plan de Acción' },
+                    { en: 'PDF Reports & Exports', es: 'Reportes PDF y Exportación' },
+                    { en: 'Velocity Simulations', es: 'Simulaciones Velocity' },
                 ],
             },
             {
-                name: 'Comandante',
-                price: '$29',
-                period: { en: '/month', es: '/mes' },
+                name: 'Freedom',
+                price: '$28.92',
+                period: { en: '/mo', es: '/mes' },
+                originalPrice: '$55',
+                discount: { en: '47% OFF', es: '47% OFF' },
+                billedNote: { en: 'Billed $347/year', es: 'Facturado $347/año' },
                 popular: false,
-                cta: { en: 'Take Full Control', es: 'Toma Control Total' },
+                cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
+                savings: { en: '~$6,480/yr + no limits', es: '~$6,480/año + sin límites' },
+                roi: { en: 'Net gain: $6,133/yr · Pays for itself in 20 days', es: 'Ganancia neta: $6,133/año · Se paga solo en 20 días' },
+                accounts: { en: 'Unlimited debt accounts', es: 'Cuentas de deuda ilimitadas' },
                 features: [
-                    { en: 'Unlimited accounts', es: 'Cuentas ilimitadas' },
-                    { en: 'Everything in Estratega', es: 'Todo en Estratega' },
-                    { en: 'Bank sync (Plaid)', es: 'Sincronización bancaria' },
-                    { en: 'Advanced analytics', es: 'Analytics avanzado' },
-                    { en: 'Custom strategies', es: 'Estrategias personalizadas' },
+                    { en: 'All features included', es: 'Todas las funciones' },
+                    { en: 'Freedom Clock & Action Plan', es: 'Reloj de Libertad y Plan de Acción' },
+                    { en: 'PDF Reports & Exports', es: 'Reportes PDF y Exportación' },
+                    { en: 'Velocity Simulations', es: 'Simulaciones Velocity' },
                 ],
             },
         ],
@@ -223,13 +259,55 @@ export default function LandingPage() {
 
     // ── State ──
     const [navScrolled, setNavScrolled] = useState(false);
-    const [interestCount, setInterestCount] = useState(0);
+    // Counter removed — now using static $1,975/month figure
+    const [scrollProgress, setScrollProgress] = useState(0);
 
-    // ── Navbar scroll detection ──
+    // ── 3D Tilt hook for dashboard mockup ──
+    const tiltRef = use3DTilt<HTMLImageElement>({ maxTilt: 12, scale: 1.03 });
+
+    // ── Magnetic button ref ──
+    const magneticCtaRef = useRef<HTMLButtonElement>(null);
+
+    // ── Navbar scroll detection + scroll progress (rAF-throttled) ──
     useEffect(() => {
-        const handleScroll = () => setNavScrolled(window.scrollY > 80);
+        let ticking = false;
+        const handleScroll = () => {
+            if (ticking) return;          // Skip if a frame is already queued
+            ticking = true;
+            requestAnimationFrame(() => {
+                setNavScrolled(window.scrollY > 80);
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                if (docHeight > 0) {
+                    setScrollProgress((window.scrollY / docHeight) * 100);
+                }
+                ticking = false;
+            });
+        };
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // ── Magnetic CTA button effect ──
+    useEffect(() => {
+        const btn = magneticCtaRef.current;
+        if (!btn) return;
+        const handleMove = (e: MouseEvent) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+        };
+        const handleLeave = () => {
+            btn.style.transition = 'transform 0.4s cubic-bezier(0.23, 1, 0.32, 1)';
+            btn.style.transform = 'translate(0, 0)';
+            setTimeout(() => { btn.style.transition = ''; }, 400);
+        };
+        btn.addEventListener('mousemove', handleMove, { passive: true });
+        btn.addEventListener('mouseleave', handleLeave);
+        return () => {
+            btn.removeEventListener('mousemove', handleMove);
+            btn.removeEventListener('mouseleave', handleLeave);
+        };
     }, []);
 
     // ── GSAP Cinematic Animations ──
@@ -288,27 +366,29 @@ export default function LandingPage() {
                 scale: 1.1,
             });
 
-            // ──── Problem section ────
-            ScrollTrigger.create({
-                trigger: problemRef.current,
-                start: 'top 70%',
-                onEnter: () => {
-                    // Average US household: ~$36/day in interest
-                    const dailyRate = 36.44;
-                    const perSecond = dailyRate / 86400;
-                    let count = 0;
-                    let lastUpdate = 0;
-                    const tick = (now: number) => {
-                        count += perSecond / 60; // ~60fps increments
-                        // Only push state update every 500ms to avoid flicker
-                        if (now - lastUpdate > 500) {
-                            lastUpdate = now;
-                            setInterestCount(count);
-                        }
-                        (window as any).__lp_raf = requestAnimationFrame(tick);
-                    };
-                    (window as any).__lp_raf = requestAnimationFrame(tick);
-                },
+            // ──── All section images — scroll reveal + parallax ────
+            gsap.utils.toArray<HTMLElement>('.lp-split-img').forEach((img) => {
+                gsap.from(img, {
+                    scrollTrigger: {
+                        trigger: img,
+                        start: 'top 85%',
+                    },
+                    y: 60,
+                    opacity: 0,
+                    scale: 0.95,
+                    duration: 1,
+                    ease: 'power3.out',
+                });
+                // Subtle parallax float on scroll
+                gsap.to(img, {
+                    scrollTrigger: {
+                        trigger: img,
+                        start: 'top bottom',
+                        end: 'bottom top',
+                        scrub: 1,
+                    },
+                    y: -30,
+                });
             });
 
             // Problem title dramatic reveal
@@ -347,16 +427,16 @@ export default function LandingPage() {
                 ease: 'back.out(2)',
             });
 
-            // ──── Solution — staggered cards ────
-            gsap.from('.lp-feature-card', {
+            // ──── Solution — staggered explainer steps ────
+            gsap.from('.lp-explainer-step', {
                 scrollTrigger: {
                     trigger: solutionRef.current,
                     start: 'top 70%',
                 },
-                y: 80,
+                x: 40,
                 opacity: 0,
-                stagger: 0.12,
-                duration: 0.8,
+                stagger: 0.15,
+                duration: 0.6,
                 ease: 'power3.out',
             });
 
@@ -476,18 +556,25 @@ export default function LandingPage() {
 
     const goAuth = useCallback(() => navigate('/login'), [navigate]);
 
-    // ── Particles — gold-tinted ──
-    const particles = Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        size: `${1.5 + Math.random() * 2.5}px`,
-        delay: `${Math.random() * 15}s`,
-        duration: `${12 + Math.random() * 18}s`,
-        opacity: 0.08 + Math.random() * 0.2,
-    }));
+    // ── Particles — gold-tinted (stable across re-renders) ──
+    const particlesRef = useRef<Array<{ id: number; left: string; size: string; delay: string; duration: string; opacity: number }> | null>(null);
+    if (particlesRef.current == null) {
+        particlesRef.current = Array.from({ length: 20 }, (_, i) => ({
+            id: i,
+            left: `${(i * 5 + (i * 17 % 7) * 9) % 100}%`,
+            size: `${1.5 + ((i * 13) % 10) * 0.25}px`,
+            delay: `${(i * 3) % 15}s`,
+            duration: `${12 + ((i * 7) % 18)}s`,
+            opacity: 0.08 + ((i * 11) % 10) * 0.02,
+        }));
+    }
+    const particles = particlesRef.current;
 
     return (
         <div className="landing-page" ref={containerRef}>
+            {/* ─── Scroll Progress Bar ──────────────────── */}
+            <div className="lp-scroll-progress" style={{ width: `${scrollProgress}%` }} />
+
             {/* ─── Cinematic Overlays ──────────────────────── */}
             <div className="lp-film-grain" />
             <div className="lp-letterbox lp-letterbox--top" />
@@ -520,6 +607,11 @@ export default function LandingPage() {
                     />
                 </div>
 
+                {/* ─── WebGL 3D Scene (behind content, above bg) ─── */}
+                <Suspense fallback={null}>
+                    <HeroScene3D />
+                </Suspense>
+
                 {/* Floating particles */}
                 <div className="lp-particles">
                     {particles.map((p) => (
@@ -540,13 +632,15 @@ export default function LandingPage() {
 
                 {/* Hero split: Mockup LEFT, Branding RIGHT */}
                 <div className="lp-hero-split">
-                    {/* Left: Dashboard mockup */}
+                    {/* Left: Dashboard mockup with 3D tilt */}
                     <div className="lp-hero-split-media">
                         <img
+                            ref={tiltRef}
                             src="/landing-assets/dashboard-desktop.png"
                             alt="KoreX Dashboard"
-                            className="lp-hero-mockup-img"
+                            className="lp-hero-mockup-img lp-tilt-card"
                             loading="eager"
+                            style={{ transformStyle: 'preserve-3d' }}
                         />
                     </div>
 
@@ -587,8 +681,8 @@ export default function LandingPage() {
                     <div className="lp-split-text">
                         <h2 className="lp-section-title" style={{ textAlign: 'left' }}>{copy.problem.title[L]}</h2>
                         <p className="lp-section-subtitle" style={{ textAlign: 'left' }}>{copy.problem.subtitle[L]}</p>
-                        <div className="lp-counter">
-                            ${interestCount.toFixed(2)}
+                        <div className="lp-counter lp-counter-pulse">
+                            $1,975
                         </div>
                         <p className="lp-counter-label">
                             {copy.problem.counterLabel[L]}
@@ -599,7 +693,8 @@ export default function LandingPage() {
                         <img
                             src="/landing-assets/hero-visual-debt.png"
                             alt="Debt visualization"
-                            className="lp-split-img"
+                            className="lp-split-img lp-tilt-card"
+                            style={{ transformStyle: 'preserve-3d' }}
                             loading="lazy"
                         />
                     </div>
@@ -618,22 +713,69 @@ export default function LandingPage() {
                         <img
                             src="/landing-assets/app-mobile-3d.png"
                             alt="KoreX Mobile App"
-                            className="lp-split-img lp-solution-preview-img"
+                            className="lp-split-img lp-solution-preview-img lp-tilt-card"
+                            style={{ transformStyle: 'preserve-3d' }}
                             loading="lazy"
                         />
                     </div>
-                    {/* Right: Feature cards */}
-                    <div className="lp-split-text">
-                        <div className="lp-features-grid">
-                            {copy.solution.features.map((f, i) => (
-                                <div className="lp-feature-card" key={i}>
-                                    <div className="lp-feature-icon" style={{ background: f.bg }}>
-                                        {f.icon}
-                                    </div>
-                                    <h3 className="lp-feature-title">{f.title[L]}</h3>
-                                    <p className="lp-feature-desc">{f.desc[L]}</p>
+                    {/* Right: Nerd-mode explanation */}
+                    <div className="lp-split-text lp-solution-explainer">
+                        <h3 className="lp-explainer-heading">
+                            {L === 'es' ? '¿Cómo funciona?' : 'How does it work?'}
+                        </h3>
+
+                        <div className="lp-explainer-steps">
+                            <div className="lp-explainer-step">
+                                <span className="lp-step-number">1</span>
+                                <div>
+                                    <strong>{L === 'es' ? '📊 GPS de Cashflow' : '📊 Cashflow GPS'}</strong>
+                                    <p>{L === 'es'
+                                        ? 'La IA analiza tus ingresos, gastos y balances de deuda para crear un mapa completo de tu flujo de dinero.'
+                                        : 'AI analyzes your income, expenses and debt balances to create a complete map of your money flow.'
+                                    }</p>
                                 </div>
-                            ))}
+                            </div>
+
+                            <div className="lp-explainer-step">
+                                <span className="lp-step-number">2</span>
+                                <div>
+                                    <strong>{L === 'es' ? '🛡️ Escudo de Paz' : '🛡️ Peace Shield'}</strong>
+                                    <p>{L === 'es'
+                                        ? 'Primero construye un buffer de emergencia de 2-3 meses. Nunca atacas deuda desde una posición de riesgo.'
+                                        : 'First builds a 2-3 month emergency buffer. You never attack debt from a position of risk.'
+                                    }</p>
+                                </div>
+                            </div>
+
+                            <div className="lp-explainer-step">
+                                <span className="lp-step-number">3</span>
+                                <div>
+                                    <strong>{L === 'es' ? '⚔️ Motor de Ataque' : '⚔️ Attack Engine'}</strong>
+                                    <p>{L === 'es'
+                                        ? 'Usa tu línea de crédito como arma: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada "ataque" puede ahorrarte $200-$2,000.'
+                                        : 'Uses your credit line as a weapon: deposit paycheck → pay debts with the line → reduce principal + interest. Each "attack" can save you $200-$2,000.'
+                                    }</p>
+                                </div>
+                            </div>
+
+                            <div className="lp-explainer-step">
+                                <span className="lp-step-number">4</span>
+                                <div>
+                                    <strong>{L === 'es' ? '🎖️ Libertad Financiera' : '🎖️ Financial Freedom'}</strong>
+                                    <p>{L === 'es'
+                                        ? 'Proyecciones a 90 días te muestran exactamente cuándo muere cada deuda. Verás tu fecha de libertad desde el día uno.'
+                                        : '90-day projections show you exactly when each debt dies. You\'ll see your freedom date from day one.'
+                                    }</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lp-explainer-insight">
+                            <span className="lp-insight-icon">💡</span>
+                            <p>{L === 'es'
+                                ? 'La clave: los bancos cobran interés sobre el capital. Al reducir el capital agresivamente con pagos chunk, el interés que pagas se desploma. Es la misma matemática que usan ellos — pero invertida.'
+                                : 'The key: banks charge interest on principal. By aggressively reducing principal with chunk payments, the interest you pay plummets. Same math they use — but reversed.'
+                            }</p>
                         </div>
                     </div>
                 </div>
@@ -675,19 +817,13 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </div>
-                    {/* Right: Images stacked */}
+                    {/* Right: Image */}
                     <div className="lp-split-media">
                         <img
                             src="/landing-assets/bank-vs-korex.png"
                             alt="The Bank's Plan vs KoreX Plan"
-                            className="lp-split-img lp-compare-banner-img"
-                            loading="lazy"
-                        />
-                        <img
-                            src="/landing-assets/chaos-vs-order.png"
-                            alt="Chaos vs Order"
-                            className="lp-split-img"
-                            style={{ marginTop: '1.5rem', opacity: 0.7 }}
+                            className="lp-split-img lp-compare-banner-img lp-tilt-card"
+                            style={{ transformStyle: 'preserve-3d' }}
                             loading="lazy"
                         />
                     </div>
@@ -699,7 +835,7 @@ export default function LandingPage() {
                 <span className="lp-section-label">{copy.proof.label[L]}</span>
                 <div className="lp-stats-row">
                     {copy.proof.stats.map((s, i) => (
-                        <div className="lp-stat" key={i}>
+                        <div className="lp-stat lp-stat-animated" key={i} style={{ animationDelay: `${i * 0.15}s` }}>
                             <div className="lp-stat-number">{s.value}</div>
                             <div className="lp-stat-label">{s.label[L]}</div>
                         </div>
@@ -715,19 +851,45 @@ export default function LandingPage() {
 
                 <div className="lp-pricing-grid">
                     {copy.pricing.plans.map((plan, i) => (
-                        <div className={`lp-plan-card ${plan.popular ? 'popular' : ''}`} key={i}>
+                        <div className={`lp-plan-card ${plan.popular ? 'popular lp-animated-border' : ''} lp-spotlight-card`} key={i}>
                             {plan.popular && plan.badge && (
                                 <div className="lp-plan-badge">{plan.badge[L]}</div>
                             )}
                             <div className="lp-plan-name">{plan.name}</div>
-                            <div style={{ margin: '1rem 0' }}>
-                                <span className="lp-plan-price">{plan.price}</span>
-                                <span className="lp-plan-period">{plan.period[L]}</span>
+                            <div className="lp-plan-accounts">{plan.accounts[L]}</div>
+                            <div className="lp-plan-price-row">
+                                <span className="lp-plan-price">
+                                    {typeof plan.price === 'string' ? plan.price : plan.price[L]}
+                                </span>
+                                {plan.period[L] && (
+                                    <span className="lp-plan-period">{plan.period[L]}</span>
+                                )}
                             </div>
+                            {plan.originalPrice && (
+                                <div className="lp-plan-original-price">
+                                    <span className="lp-plan-strikethrough">{plan.originalPrice}/mo</span>
+                                    {plan.discount && (
+                                        <span className="lp-plan-discount">{plan.discount[L]}</span>
+                                    )}
+                                </div>
+                            )}
+                            {plan.billedNote && (
+                                <div className="lp-plan-billed">{plan.billedNote[L]}</div>
+                            )}
+
+                            {/* Savings box */}
+                            <div className="lp-plan-savings-box">
+                                <div className="lp-plan-savings-value">{plan.savings[L]}</div>
+                            </div>
+
+                            {plan.roi && (
+                                <div className="lp-plan-roi">{plan.roi[L]}</div>
+                            )}
+
                             <ul className="lp-plan-features">
                                 {plan.features.map((feat, j) => (
                                     <li key={j}>
-                                        <span style={{ color: '#fbbf24' }}>✓</span>
+                                        <span style={{ color: '#22c55e' }}>✓</span>
                                         {feat[L]}
                                     </li>
                                 ))}
@@ -757,7 +919,7 @@ export default function LandingPage() {
                 <h2 className="lp-final-headline">
                     {copy.final.title[L][0]}
                     <br />
-                    <span className="lp-gradient-text">{copy.final.title[L][1]}</span>
+                    <span className="lp-gradient-text lp-shimmer-text">{copy.final.title[L][1]}</span>
                 </h2>
                 <div style={{
                     marginTop: '3rem',
@@ -766,7 +928,7 @@ export default function LandingPage() {
                     alignItems: 'center',
                     gap: '1.25rem',
                 }}>
-                    <button className="lp-hero-cta lp-pulse-glow" onClick={goAuth}>
+                    <button ref={magneticCtaRef} className="lp-hero-cta lp-pulse-glow lp-magnetic-btn" onClick={goAuth}>
                         {copy.final.cta[L]} →
                     </button>
                     <p className="lp-final-sub">
