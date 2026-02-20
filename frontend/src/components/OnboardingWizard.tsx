@@ -11,12 +11,13 @@ import { apiFetch } from '@/lib/api';
 import {
     Rocket, TrendingUp, TrendingDown, Wallet, CreditCard,
     CheckCircle, Plus, Trash2, ChevronRight, ChevronLeft,
-    DollarSign, Sparkles, Shield
+    DollarSign, Sparkles, Shield, Lightbulb
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BANK_NAMES, getCardsByBank, getNationalAverageAPR, type CardAPRInfo } from '@/lib/creditCardAPRs';
 
 // ── Types ──────────────────────────────────────────────────
 interface CashflowFormData {
@@ -39,6 +40,7 @@ interface AccountFormData {
     interest_rate: string;
     min_payment: string;
     debt_subtype: string;
+    credit_limit: string;
 }
 
 interface AddedItem {
@@ -141,8 +143,13 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
         interest_rate: '0',
         min_payment: '0',
         debt_subtype: 'credit_card',
+        credit_limit: '',
     };
     const [accountForm, setAccountForm] = useState<AccountFormData>(defaultAccount);
+
+    // APR suggestion state
+    const [showAPRSuggestions, setShowAPRSuggestions] = useState(false);
+    const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
     // ── Navigation ───────────────────────────────────────────
     const goNext = () => {
@@ -256,6 +263,10 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
             if (type === 'debt') {
                 payload.debt_subtype = accountForm.debt_subtype;
                 payload.interest_type = inferInterestType(accountForm.debt_subtype);
+                // Include credit_limit for revolving debt types
+                if (['credit_card', 'heloc'].includes(accountForm.debt_subtype) && accountForm.credit_limit) {
+                    payload.credit_limit = parseFloat(accountForm.credit_limit);
+                }
             }
 
             const result = await apiFetch<{ id: number }>('/api/accounts', {
@@ -917,6 +928,80 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                         </p>
                     </div>
                 </div>
+
+                {/* Credit Limit — only for revolving types */}
+                {['credit_card', 'heloc'].includes(accountForm.debt_subtype) && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                        <Label className="text-blue-400 text-xs font-semibold">{language === 'es' ? 'Límite de Crédito' : 'Credit Limit'}</Label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+                            <Input
+                                type="number" placeholder="5000" step="100"
+                                className="bg-slate-950/50 border-white/10 text-white pl-7 h-10 text-sm font-mono"
+                                value={accountForm.credit_limit}
+                                onChange={e => setAccountForm(prev => ({ ...prev, credit_limit: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* APR Suggestion — only for credit cards */}
+                {accountForm.debt_subtype === 'credit_card' && (
+                    <div className="animate-in fade-in slide-in-from-top-2">
+                        <button
+                            type="button"
+                            onClick={() => setShowAPRSuggestions(!showAPRSuggestions)}
+                            className="flex items-center gap-2 text-xs text-amber-500 hover:text-amber-400 transition-colors mb-1"
+                        >
+                            <Lightbulb size={13} />
+                            {showAPRSuggestions
+                                ? (language === 'es' ? 'Ocultar sugerencias APR' : 'Hide APR suggestions')
+                                : (language === 'es' ? '¿No sabes tu APR? Ver sugerencias por banco' : "Don't know your APR? See bank suggestions")
+                            }
+                        </button>
+                        {showAPRSuggestions && (
+                            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-2">
+                                <p className="text-[11px] text-slate-500 mb-1">
+                                    {language === 'es' ? 'Promedio nacional' : 'National avg'}: <span className="font-mono text-amber-400">{getNationalAverageAPR()}%</span>
+                                </p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {BANK_NAMES.map(bank => (
+                                        <button
+                                            key={bank}
+                                            type="button"
+                                            onClick={() => setSelectedBank(selectedBank === bank ? null : bank)}
+                                            className={`px-2 py-0.5 rounded text-[10px] font-medium transition-all ${selectedBank === bank
+                                                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                    : 'bg-slate-900/60 text-slate-400 border border-white/5 hover:bg-slate-800/80'
+                                                }`}
+                                        >
+                                            {bank}
+                                        </button>
+                                    ))}
+                                </div>
+                                {selectedBank && (
+                                    <div className="mt-1.5 space-y-1 max-h-28 overflow-y-auto">
+                                        {getCardsByBank(selectedBank).map((card: CardAPRInfo) => (
+                                            <button
+                                                key={`${card.bank}-${card.card}`}
+                                                type="button"
+                                                onClick={() => {
+                                                    setAccountForm(prev => ({ ...prev, interest_rate: card.aprTypical.toString() }));
+                                                    setShowAPRSuggestions(false);
+                                                    setSelectedBank(null);
+                                                }}
+                                                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-950/60 border border-white/5 hover:border-amber-500/30 transition-all text-left group"
+                                            >
+                                                <span className="text-[11px] font-medium text-white">{card.card}</span>
+                                                <span className="font-mono text-[11px] text-amber-400 group-hover:text-amber-300">{card.aprTypical}%</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Shield Amount Input */}

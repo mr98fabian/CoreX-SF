@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, DollarSign } from "lucide-react";
+import { Loader2, DollarSign, CreditCard, Landmark, Wallet } from "lucide-react";
 import { apiFetch } from '@/lib/api';
 import { WidgetHelp } from '@/components/WidgetHelp';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,12 +29,14 @@ import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
+    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner"; // Assuming sonner is installed, checks package.json
+import { toast } from "sonner";
 
 const formSchema = z.object({
     account_id: z.string().min(1, "Account is required"),
@@ -46,18 +48,55 @@ const formSchema = z.object({
 
 type TransactionFormValues = z.infer<typeof formSchema>;
 
-interface Account {
+interface AccountFull {
     id: number;
     name: string;
+    type: string;
+    debt_subtype?: string;
+    balance: number;
 }
 
 interface TransactionDialogProps {
     children?: React.ReactNode;
     defaultType?: "income" | "expense";
     onSuccess?: () => void;
-    defaultAccountId?: string; // Added prop for pre-selecting account
-    defaultAmount?: number;    // Added prop for pre-filling amount
-    defaultDescription?: string; // Added prop for pre-filling description
+    defaultAccountId?: string;
+    defaultAmount?: number;
+    defaultDescription?: string;
+}
+
+// ── Account grouping helper ──────────────────────────────────
+const CREDIT_CARD_SUBTYPES = ["credit_card", "heloc"];
+
+function groupAccounts(accounts: AccountFull[], isEs: boolean) {
+    const bankAccounts: AccountFull[] = [];
+    const creditCards: AccountFull[] = [];
+    const otherDebts: AccountFull[] = [];
+
+    for (const acc of accounts) {
+        if (acc.type === "debt") {
+            if (CREDIT_CARD_SUBTYPES.includes(acc.debt_subtype || "")) {
+                creditCards.push(acc);
+            } else {
+                otherDebts.push(acc);
+            }
+        } else {
+            bankAccounts.push(acc);
+        }
+    }
+
+    const groups: { label: string; icon: string; accounts: AccountFull[] }[] = [];
+    if (bankAccounts.length > 0) {
+        groups.push({ label: isEs ? '🏦 Cuentas Bancarias' : '🏦 Bank Accounts', icon: 'bank', accounts: bankAccounts });
+    }
+    if (creditCards.length > 0) {
+        groups.push({ label: isEs ? '💳 Tarjetas de Crédito' : '💳 Credit Cards', icon: 'cc', accounts: creditCards });
+    }
+    if (otherDebts.length > 0) {
+        groups.push({ label: isEs ? '📋 Otros Préstamos' : '📋 Other Loans', icon: 'loan', accounts: otherDebts });
+    }
+
+    return groups;
 }
 
 export function TransactionDialog({
@@ -69,12 +108,11 @@ export function TransactionDialog({
     defaultDescription
 }: TransactionDialogProps) {
     const [open, setOpen] = useState(false);
-    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [accounts, setAccounts] = useState<AccountFull[]>([]);
     const [loading, setLoading] = useState(false);
     const { language } = useLanguage();
     const isEs = language === 'es';
 
-    // Use any to bypass strict resolver type mismatch
     const form = useForm<any>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -86,10 +124,10 @@ export function TransactionDialog({
         },
     });
 
-    // Fetch accounts on open
+    // Fetch full account data on open (includes type & debt_subtype for grouping)
     useEffect(() => {
         if (open) {
-            apiFetch<Account[]>('/api/accounts')
+            apiFetch<AccountFull[]>('/api/accounts')
                 .then((data) => setAccounts(data))
                 .catch((err) => console.error("Error fetching accounts:", err));
         }
@@ -105,7 +143,6 @@ export function TransactionDialog({
         }
     }, [open, defaultType, defaultAccountId, defaultAmount, defaultDescription, form]);
 
-    // Update type when defaultType changes or tab changes
     const [activeTab, setActiveTab] = useState(defaultType);
 
     const onTabChange = (value: string) => {
@@ -113,6 +150,9 @@ export function TransactionDialog({
         setActiveTab(type);
         form.setValue("type", type);
     };
+
+    // Memoize grouped accounts to avoid re-calculating on every render
+    const accountGroups = useMemo(() => groupAccounts(accounts, isEs), [accounts, isEs]);
 
     async function onSubmit(values: TransactionFormValues) {
         setLoading(true);
@@ -216,6 +256,7 @@ export function TransactionDialog({
                             )}
                         />
 
+                        {/* ── Account Selector with Groups ── */}
                         <FormField
                             control={form.control}
                             name="account_id"
@@ -228,11 +269,30 @@ export function TransactionDialog({
                                                 <SelectValue placeholder={isEs ? 'Seleccionar cuenta' : 'Select account'} />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                            {accounts.map((acc) => (
-                                                <SelectItem key={acc.id} value={acc.id.toString()}>
-                                                    {acc.name}
-                                                </SelectItem>
+                                        <SelectContent className="bg-slate-900 border-slate-800 text-white max-h-64">
+                                            {accountGroups.map((group) => (
+                                                <SelectGroup key={group.label}>
+                                                    <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1.5">
+                                                        {group.label}
+                                                    </SelectLabel>
+                                                    {group.accounts.map((acc) => (
+                                                        <SelectItem
+                                                            key={acc.id}
+                                                            value={acc.id.toString()}
+                                                            className="pl-4"
+                                                        >
+                                                            <span className="flex items-center gap-2">
+                                                                {acc.type === 'debt'
+                                                                    ? CREDIT_CARD_SUBTYPES.includes(acc.debt_subtype || '')
+                                                                        ? <CreditCard size={12} className="text-purple-400 shrink-0" />
+                                                                        : <Wallet size={12} className="text-orange-400 shrink-0" />
+                                                                    : <Landmark size={12} className="text-emerald-400 shrink-0" />
+                                                                }
+                                                                {acc.name}
+                                                            </span>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -240,8 +300,6 @@ export function TransactionDialog({
                                 </FormItem>
                             )}
                         />
-
-
 
                         <DialogFooter>
                             <Button type="submit" disabled={loading} className={activeTab === 'income' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}>

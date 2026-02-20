@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw, Crown, Lock, ArrowUpRight, Flame, ShieldAlert } from 'lucide-react';
+import { Plus, CreditCard, Landmark, Trash2, Loader2, AlertCircle, RefreshCw, Crown, Lock, ArrowUpRight, Flame, ShieldAlert, Lightbulb } from 'lucide-react';
+import { BANK_NAMES, getCardsByBank, getNationalAverageAPR, type CardAPRInfo } from '@/lib/creditCardAPRs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CashflowManager } from './components/CashflowManager';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -49,6 +50,7 @@ const accountFormSchema = z.object({
     min_payment: z.coerce.number().min(0).default(0),
     due_day: z.coerce.number().min(1).max(31).optional(),
     closing_day: z.coerce.number().min(1).max(31).optional(),
+    credit_limit: z.coerce.number().min(0).optional(),
     // Loan Classification — interest_type is auto-inferred from debt_subtype
     debt_subtype: z.enum(["credit_card", "heloc", "auto_loan", "mortgage", "personal_loan", "student_loan"]).default("credit_card"),
 });
@@ -80,6 +82,7 @@ interface Account {
     original_amount?: number;
     loan_term_months?: number;
     remaining_months?: number;
+    credit_limit?: number;
 }
 
 interface Transaction {
@@ -93,7 +96,7 @@ interface Transaction {
 
 export default function AccountsPage() {
     usePageTitle('Accounts');
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const [accounts, setAccounts] = useState<Account[]>([]);
@@ -123,6 +126,12 @@ export default function AccountsPage() {
     });
 
     const watchType = form.watch("type");
+    const watchDebtSubtype = form.watch("debt_subtype");
+    const isRevolvingDebt = REVOLVING_SUBTYPES.includes(watchDebtSubtype);
+
+    // APR suggestion state
+    const [showAPRSuggestions, setShowAPRSuggestions] = useState(false);
+    const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
     // API Functions
     const fetchAccounts = async () => {
@@ -501,6 +510,96 @@ export default function AccountsPage() {
                                                 />
                                             </div>
 
+                                            {/* Credit Limit — only for revolving debt types (CC, HELOC) */}
+                                            {isRevolvingDebt && (
+                                                <FormField
+                                                    control={form.control}
+                                                    name="credit_limit"
+                                                    render={({ field }) => (
+                                                        <FormItem className="animate-in fade-in slide-in-from-top-2">
+                                                            <FormLabel className="text-blue-500 dark:text-blue-400 font-semibold">{t("accounts.creditLimit")}</FormLabel>
+                                                            <FormControl>
+                                                                <div className="relative">
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-600">$</span>
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="100"
+                                                                        placeholder="5,000"
+                                                                        {...field}
+                                                                        className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-blue-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
+                                                                    />
+                                                                </div>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            )}
+
+                                            {/* APR Suggestion Panel — only for credit cards */}
+                                            {watchDebtSubtype === 'credit_card' && (
+                                                <div className="animate-in fade-in slide-in-from-top-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowAPRSuggestions(!showAPRSuggestions)}
+                                                        className="flex items-center gap-2 text-xs text-amber-500 hover:text-amber-400 transition-colors mb-2"
+                                                    >
+                                                        <Lightbulb size={14} />
+                                                        {showAPRSuggestions ? t('accounts.hideAPRSuggestions') : t('accounts.showAPRSuggestions')}
+                                                    </button>
+                                                    {showAPRSuggestions && (
+                                                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-2">
+                                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">
+                                                                {t('accounts.aprSuggestionHint')} — Avg: <span className="font-mono text-amber-400">{getNationalAverageAPR()}%</span>
+                                                            </p>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {BANK_NAMES.map(bank => (
+                                                                    <button
+                                                                        key={bank}
+                                                                        type="button"
+                                                                        onClick={() => setSelectedBank(selectedBank === bank ? null : bank)}
+                                                                        className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${selectedBank === bank
+                                                                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                                                            : 'bg-slate-100 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-slate-800/80'
+                                                                            }`}
+                                                                    >
+                                                                        {bank}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                            {selectedBank && (
+                                                                <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                                                                    {getCardsByBank(selectedBank).map((card: CardAPRInfo) => (
+                                                                        <button
+                                                                            key={`${card.bank}-${card.card}`}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                form.setValue('interest_rate', card.aprTypical);
+                                                                                setShowAPRSuggestions(false);
+                                                                                setSelectedBank(null);
+                                                                            }}
+                                                                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 hover:border-amber-500/30 transition-all text-left group"
+                                                                        >
+                                                                            <div>
+                                                                                <span className="text-xs font-medium text-slate-700 dark:text-white">{card.card}</span>
+                                                                                <span className="ml-2 text-[10px] text-slate-400 uppercase">{card.category.replace('_', ' ')}</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <span className="font-mono text-xs text-amber-500 group-hover:text-amber-400">
+                                                                                    {card.aprLow}%–{card.aprHigh}%
+                                                                                </span>
+                                                                                <span className="text-[10px] text-slate-500">→</span>
+                                                                                <span className="font-mono text-xs font-bold text-amber-400">{card.aprTypical}%</span>
+                                                                            </div>
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <div className="grid grid-cols-2 gap-5 animate-in fade-in slide-in-from-top-2">
                                                 <FormField
                                                     control={form.control}
@@ -740,7 +839,79 @@ export default function AccountsPage() {
                                             <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
                                                 {formatMoney(acc.balance)}
                                             </div>
-                                            <p className="text-xs text-rose-500 dark:text-rose-400/80 font-medium uppercase tracking-wider mb-4">{t("accounts.outstandingBalance")}</p>
+                                            <p className="text-xs text-rose-500 dark:text-rose-400/80 font-medium uppercase tracking-wider mb-2">{t("accounts.outstandingBalance")}</p>
+
+                                            {/* 📊 Credit Utilization Bar — only for revolving debts with a credit limit */}
+                                            {acc.credit_limit && acc.credit_limit > 0 && ['credit_card', 'heloc'].includes(acc.debt_subtype || '') && (() => {
+                                                const utilPct = Math.min(100, Math.round((acc.balance / acc.credit_limit) * 100));
+                                                const utilColor = utilPct <= 30
+                                                    ? 'bg-emerald-500' : utilPct <= 50
+                                                        ? 'bg-amber-500' : utilPct <= 70
+                                                            ? 'bg-orange-500' : 'bg-rose-500';
+                                                const utilTextColor = utilPct <= 30
+                                                    ? 'text-emerald-500' : utilPct <= 50
+                                                        ? 'text-amber-500' : utilPct <= 70
+                                                            ? 'text-orange-500' : 'text-rose-500';
+                                                const utilLabel = utilPct <= 30
+                                                    ? (language === 'es' ? 'Excelente' : 'Excellent')
+                                                    : utilPct <= 50
+                                                        ? (language === 'es' ? 'Moderado' : 'Moderate')
+                                                        : utilPct <= 70
+                                                            ? (language === 'es' ? 'Alto' : 'High')
+                                                            : (language === 'es' ? 'Crítico' : 'Critical');
+
+                                                return (
+                                                    <div className="mb-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                        <div className="flex items-center justify-between text-[10px] mb-1">
+                                                            <span className="text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+                                                                {language === 'es' ? 'Utilización' : 'Utilization'}
+                                                            </span>
+                                                            <span className={`font-bold ${utilTextColor}`}>
+                                                                {utilPct}% · {utilLabel}
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all duration-700 ease-out ${utilColor}`}
+                                                                style={{ width: `${utilPct}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                                                            <span>{formatMoney(acc.balance)}</span>
+                                                            <span>{language === 'es' ? 'Límite' : 'Limit'}: {formatMoney(acc.credit_limit)}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* ⚡ Float Strategy Indicator — only for credit cards with a due_day */}
+                                            {acc.debt_subtype === 'credit_card' && acc.due_day && !isLocked && (() => {
+                                                const today = new Date();
+                                                const currentDay = today.getDate();
+                                                const dueDay = acc.due_day;
+                                                const daysUntilDue = dueDay >= currentDay
+                                                    ? dueDay - currentDay
+                                                    : (new Date(today.getFullYear(), today.getMonth() + 1, dueDay).getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+                                                const daysLeft = Math.ceil(daysUntilDue);
+                                                const isGracePeriod = daysLeft > 0 && daysLeft <= 25;
+
+                                                return isGracePeriod ? (
+                                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 mb-3">
+                                                        <span className="text-base">⚡</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
+                                                                {language === 'es' ? 'Período de Gracia' : 'Grace Period'}
+                                                            </span>
+                                                            <p className="text-[10px] text-blue-300/70 leading-tight">
+                                                                {language === 'es'
+                                                                    ? `${daysLeft} días antes del cierre. Paga el balance para evitar interés.`
+                                                                    : `${daysLeft} days until due. Pay balance to avoid interest charges.`
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : null;
+                                            })()}
 
                                             {/* 💧 Bleeding Money Badge — only on locked cards */}
                                             {isLocked && (

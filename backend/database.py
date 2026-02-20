@@ -43,6 +43,7 @@ def _migrate_account_columns():
         ("original_amount", "DECIMAL(14,2) DEFAULT NULL"),
         ("loan_term_months", "INTEGER DEFAULT NULL"),
         ("remaining_months", "INTEGER DEFAULT NULL"),
+        ("credit_limit", "DECIMAL(14,2) DEFAULT NULL"),
     ]
     with Session(engine) as session:
         for col_name, col_def in migrations:

@@ -18,6 +18,7 @@ export interface Account {
     original_amount?: number;
     loan_term_months?: number;
     remaining_months?: number;
+    credit_limit?: number;
 }
 
 // ─── Hooks ─────────────────────────────────────────────────
@@ -33,6 +34,7 @@ export function useAccounts() {
                 balance: Number(acc.balance),
                 interest_rate: Number(acc.interest_rate),
                 min_payment: Number(acc.min_payment),
+                credit_limit: acc.credit_limit != null ? Number(acc.credit_limit) : undefined,
             }));
         },
     });

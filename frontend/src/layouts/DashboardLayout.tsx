@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
+import { syncPlanFromBackend } from '@/lib/planLimits';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import { InterestBleedBanner } from '@/components/InterestBleedBanner';
 import InstallPrompt from '@/components/InstallPrompt';
@@ -29,6 +30,12 @@ export default function DashboardLayout() {
     const { isDark, toggleTheme } = useTheme();
     const onboarding = useOnboarding();
     const { celebrate } = useCelebration();
+
+    // Sync subscription plan from backend on every layout mount
+    // Ensures all pages (Dashboard, Settings, etc.) always have fresh plan data
+    useEffect(() => {
+        syncPlanFromBackend();
+    }, []);
 
     // Auto-close sidebar on mobile when route changes
     useEffect(() => {

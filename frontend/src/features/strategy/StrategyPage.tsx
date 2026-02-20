@@ -11,6 +11,9 @@ import ConfidenceMeter from "./components/ConfidenceMeter";
 import AttackDecisionHelper from "./components/AttackDecisionHelper";
 import TacticalCashflowMap from "./components/TacticalCashflowMap";
 import DebtAlertBanner from "./components/DebtAlertBanner";
+import FloatKillBanner from "./components/FloatKillBanner";
+import ClosingDayIntelPanel from "./components/ClosingDayIntelPanel";
+import ArbitrageAlertPanel from "./components/ArbitrageAlertPanel";
 
 
 
@@ -124,6 +127,11 @@ export default function StrategyPage() {
                 <DebtAlertBanner alerts={data.debt_alerts} />
             )}
 
+            {/* Float Kill Opportunities — Grace Period Priority */}
+            {data.float_kills?.length > 0 && (
+                <FloatKillBanner opportunities={data.float_kills} />
+            )}
+
             {/* Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Left Column — Morning Briefing (takes 2 cols) */}
@@ -175,6 +183,11 @@ export default function StrategyPage() {
                             />
                         </div>
                     )}
+
+                    {/* Arbitrage Alerts */}
+                    {data.arbitrage_alerts?.length > 0 && (
+                        <ArbitrageAlertPanel alerts={data.arbitrage_alerts} />
+                    )}
                 </div>
             </div>
 
@@ -183,6 +196,11 @@ export default function StrategyPage() {
                 <WidgetHelp helpKey="tacticalMap" />
                 <TacticalCashflowMap />
             </div>
+
+            {/* Closing Day Intelligence — full width */}
+            {data.closing_day_intelligence?.length > 0 && (
+                <ClosingDayIntelPanel intelligence={data.closing_day_intelligence} />
+            )}
         </div>
     );
 }

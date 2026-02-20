@@ -44,6 +44,8 @@ import { DebtFreeCountdown } from './components/DebtFreeCountdown';
 import { HealthScoreGauge } from './components/HealthScoreGauge';
 import { AchievementWall } from '@/components/AchievementWall';
 import { BeforeAfterCard, recordStartingDebt } from './components/BeforeAfterCard';
+import RecurringConfirmModal from './components/RecurringConfirmModal';
+import { useRecurringDueToday } from '@/hooks/useRecurringDueToday';
 
 interface VelocityTarget {
     name: string;
@@ -113,12 +115,26 @@ export default function DashboardPage() {
     const sessionTimer = useSessionTimer();
     const weeklyDigest = useWeeklyDigest(data?.total_daily_interest ? data.total_daily_interest * 7 : undefined);
 
+    // Recurring confirmation system
+    const recurring = useRecurringDueToday();
+
     const refreshDashboard = () => {
         // Increment streak only when a transaction is registered — Skill: streak-v3
         streak.incrementStreakOnTransaction();
         // Celebrate the transaction — Skill: neuroventa §7
         celebrate('spark');
         setTimeout(() => window.location.reload(), 800);
+    };
+
+    // Wrap recurring confirm to also trigger streak + celebration
+    const handleRecurringConfirm = async (itemId: number, actualAmount: number) => {
+        const result = await recurring.confirmItem(itemId, actualAmount);
+        if (result?.ok && !result.already_confirmed) {
+            // Confirming a recurring item counts as a transaction for streak
+            streak.incrementStreakOnTransaction();
+            celebrate('spark');
+        }
+        return result;
     };
 
     useEffect(() => {
@@ -208,6 +224,18 @@ export default function DashboardPage() {
 
     return (
         <>
+            {/* ═══ RECURRING CONFIRMATION MODAL — Show when items are due today ═══ */}
+            {recurring.showModal && (
+                <RecurringConfirmModal
+                    items={recurring.items}
+                    confirmedCount={recurring.confirmedCount}
+                    lastConfirmResult={recurring.lastConfirmResult}
+                    onConfirm={handleRecurringConfirm}
+                    onSnooze={recurring.snoozeItem}
+                    onDismiss={recurring.dismiss}
+                />
+            )}
+
             {/* ═══ LOGIN STREAK POPUP — Show on new day, dismiss on click/timeout ═══ */}
             {streak.showLoginPopup && !streak.hasTransactionToday && (
                 <div className="fixed top-[4.5rem] left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top-4 fade-in duration-500 w-[calc(100%-2rem)] max-w-lg">

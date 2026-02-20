@@ -44,6 +44,9 @@ def accounts_to_debt_objects(accounts) -> list[DebtAccount]:
             interest_rate=acc.interest_rate,
             min_payment=acc.min_payment if acc.min_payment else Decimal("50"),
             due_day=acc.due_day if acc.due_day else 15,
+            closing_day=acc.closing_day if acc.closing_day else 0,
+            debt_subtype=acc.debt_subtype if acc.debt_subtype else "",
+            credit_limit=acc.credit_limit if acc.credit_limit else Decimal("0"),
         )
         for acc in accounts
         if acc.type == "debt" and acc.balance > 0
@@ -76,6 +79,9 @@ def accounts_to_active_debt_objects(accounts, plan_limit: int | None = None) -> 
             interest_rate=acc.interest_rate,
             min_payment=acc.min_payment if acc.min_payment else Decimal("50"),
             due_day=acc.due_day if acc.due_day else 15,
+            closing_day=acc.closing_day if acc.closing_day else 0,
+            debt_subtype=acc.debt_subtype if acc.debt_subtype else "",
+            credit_limit=acc.credit_limit if acc.credit_limit else Decimal("0"),
         )
         for acc in active
     ]

@@ -24,6 +24,8 @@ from velocity_engine import (
     calculate_safe_attack_equity, simulate_freedom_path,
     generate_action_plan, calculate_purchase_time_cost,
     detect_debt_alerts,
+    detect_float_kill_opportunities, get_closing_day_intelligence,
+    get_hybrid_kill_target, detect_interest_rate_arbitrage,
     DEFAULT_PEACE_SHIELD,
 )
 from transaction_classifier import classify_transaction, classify_batch, get_cashflow_summary
@@ -495,6 +497,27 @@ async def get_strategy_command_center(
         # --- 10. Debt Health Alerts ---
         debt_alerts = detect_debt_alerts(debt_accounts)
 
+        # --- 11. Float Kill Opportunities (Credit Card Grace Period) ---
+        float_kills = detect_float_kill_opportunities(debt_accounts, attack_amount)
+
+        # --- 12. Closing Day Intelligence (Purchase Timing) ---
+        closing_intel = get_closing_day_intelligence(debt_accounts)
+
+        # --- 13. Hybrid Kill Analysis (Snowball + Avalanche) ---
+        hybrid_analysis = get_hybrid_kill_target(debt_accounts, attack_amount)
+
+        # --- 14. Interest Rate Arbitrage (Savings vs Debt) ---
+        savings_for_arbitrage = [
+            {
+                "name": acc.name,
+                "balance": float(acc.balance),
+                "apy": float(acc.apy) if acc.apy else 0.5,
+            }
+            for acc in accounts
+            if acc.type in ("checking", "savings") and acc.balance > 0
+        ]
+        arbitrage_alerts = detect_interest_rate_arbitrage(savings_for_arbitrage, debt_accounts)
+
         return {
             "morning_briefing": morning_briefing,
             "confidence_meter": confidence_meter,
@@ -502,5 +525,9 @@ async def get_strategy_command_center(
             "streak": streak,
             "decision_options": decision_options,
             "debt_alerts": debt_alerts,
+            "float_kills": float_kills,
+            "closing_day_intelligence": closing_intel,
+            "hybrid_kill_analysis": hybrid_analysis,
+            "arbitrage_alerts": arbitrage_alerts,
         }
 

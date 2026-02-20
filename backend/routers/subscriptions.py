@@ -281,6 +281,31 @@ async def get_subscription_status(
             "current_period_end": None,
         }
 
+    # ── Expiration guard: downgrade if period has ended ────────
+    # Protects against missed webhooks from Lemon Squeezy.
+    # Developer licenses (ls_subscription_id == "dev-license") never expire.
+    if (
+        sub.status == "active"
+        and sub.current_period_end
+        and sub.ls_subscription_id != "dev-license"
+    ):
+        try:
+            period_end = datetime.fromisoformat(
+                sub.current_period_end.replace("Z", "+00:00")
+            )
+            if datetime.now(period_end.tzinfo or None) > period_end:
+                # Period expired — fall back to starter until webhook renews
+                sub.status = "expired"
+                sub.plan = "starter"
+                session.add(sub)
+                session.commit()
+                logger.warning(
+                    f"Auto-expired subscription for user={user_id} "
+                    f"(period_end={sub.current_period_end})"
+                )
+        except (ValueError, TypeError):
+            pass  # Malformed date — skip check, don't block user
+
     plan_limits = {
         "starter": 2,
         "velocity": 6,
@@ -374,8 +399,8 @@ async def get_savings_estimate(
 
     plan_limits = {
         "starter": 2,
-        "velocity": 5,
-        "accelerator": 15,
+        "velocity": 6,
+        "accelerator": 12,
         "freedom": 999,
     }
     plan_costs_annual = {
@@ -480,11 +505,11 @@ async def apply_promo_code(
 
     # Developer code — grants unlimited access
     if code == "KOREX-DEV-UNLIMITED":
-        # Upsert subscription to freedom plan
+        # Upsert subscription to freedom-dev plan (consistent with frontend)
         _upsert_subscription(
             session=session,
             user_id=user_id,
-            plan="freedom",
+            plan="freedom-dev",
             status="active",
             ls_subscription_id="dev-license",
             ls_customer_id="developer",

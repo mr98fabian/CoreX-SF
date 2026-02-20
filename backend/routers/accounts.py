@@ -54,6 +54,7 @@ async def update_account(id: int, account_data: Account, user_id: str = Depends(
         account.min_payment = account_data.min_payment
         account.due_day = account_data.due_day
         account.closing_day = account_data.closing_day
+        account.credit_limit = account_data.credit_limit
 
         if account.type == "debt" and (account.min_payment is None or account.min_payment == 0):
             account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)

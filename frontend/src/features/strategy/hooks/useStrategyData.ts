@@ -87,6 +87,67 @@ export interface DebtAlert {
     recommendation: string;
 }
 
+export interface FloatKillOpportunity {
+    name: string;
+    balance: number;
+    days_until_due: number;
+    daily_interest_at_risk: number;
+    monthly_interest_at_risk: number;
+    can_kill: boolean;
+    apr: number;
+    priority: number;
+    reason: string;
+}
+
+export interface ClosingDayIntel {
+    name: string;
+    closing_day: number;
+    due_day: number;
+    grace_period_days: number;
+    cycle_position: string;
+    days_until_close: number;
+    days_until_due: number | null;
+    float_days_if_buy_today: number;
+    optimal_purchase_window: { start_day: number; end_day: number } | null;
+    tips: Array<string | { type: string; message: string }>;
+    credit_utilization: number | null;
+}
+
+export interface HybridKillAnalysis {
+    strategy: string;
+    kill_target_name?: string;
+    kill_target_balance?: number;
+    kill_target_apr?: number;
+    freed_min_payment?: number;
+    target_name?: string;
+    avalanche_target_name?: string;
+    remaining_equity_to_avalanche?: number;
+    avalanche_target_apr?: number;
+    benefit_monthly: number;
+    benefit_total: number;
+    avalanche_benefit_total?: number;
+    advantage?: number;
+    reasoning: string;
+}
+
+export interface ArbitrageAlert {
+    severity: string;
+    savings_account: string;
+    savings_balance: number;
+    savings_apy: number;
+    debt_name: string;
+    debt_apr: number;
+    debt_balance: number;
+    rate_spread: number;
+    transferable_amount: number;
+    monthly_net_loss: number;
+    annual_net_loss: number;
+    savings_earned_annually: number;
+    debt_cost_annually: number;
+    message: string;
+    recommendation: string;
+}
+
 export interface StrategyCommandData {
     morning_briefing: MorningBriefingData | null;
     confidence_meter: ConfidenceMeterData;
@@ -94,6 +155,10 @@ export interface StrategyCommandData {
     streak: StreakData;
     decision_options: DecisionOptionsData | null;
     debt_alerts: DebtAlert[];
+    float_kills: FloatKillOpportunity[];
+    closing_day_intelligence: ClosingDayIntel[];
+    hybrid_kill_analysis: HybridKillAnalysis | null;
+    arbitrage_alerts: ArbitrageAlert[];
 }
 
 // --- Hook ---

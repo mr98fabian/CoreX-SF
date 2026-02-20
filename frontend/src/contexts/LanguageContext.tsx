@@ -282,6 +282,8 @@ const translations: Record<string, Record<Language, string>> = {
     "accounts.personalLoan": { en: "💰 Personal Loan", es: "💰 Préstamo Personal" },
     "accounts.studentLoan": { en: "🎓 Student Loan", es: "🎓 Préstamo Estudiantil" },
     "accounts.heloc": { en: "🏦 HELOC", es: "🏦 HELOC" },
+    "accounts.showAPRSuggestions": { en: "Don't know your APR? See bank suggestions", es: "¿No sabes tu APR? Ver sugerencias por banco" },
+    "accounts.hideAPRSuggestions": { en: "Hide APR suggestions", es: "Ocultar sugerencias APR" },
 
     // Accounts — section headers
     "accounts.liabilities": { en: "Liabilities (Debt)", es: "Pasivos (Deuda)" },

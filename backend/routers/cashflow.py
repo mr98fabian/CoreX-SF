@@ -223,73 +223,264 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
 @router.post("/cashflow/auto-execute")
 async def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
     """
-    Checks all recurring CashflowItems and auto-creates Transaction records
-    for items due today that haven't been executed yet.
-    Called on Dashboard load (fire-and-forget).
+    LEGACY — Kept for backwards compatibility but now returns empty.
+    Replaced by /cashflow/due-today + /cashflow/{id}/confirm flow.
     """
+    return {"executed": [], "count": 0, "date": date.today().isoformat()}
+
+
+# ═══════════════════════════════════════════════════════════
+# RECURRING CONFIRMATION SYSTEM
+# Replaces silent auto-execute with user-controlled validation.
+# ═══════════════════════════════════════════════════════════
+
+
+def _item_triggers_today(item: CashflowItem, today: date) -> bool:
+    """Check if a CashflowItem is due today based on its frequency."""
+    freq = item.frequency
+    last_day = calendar.monthrange(today.year, today.month)[1]
+
+    if freq == "monthly":
+        dom = int(item.day_of_month) if item.day_of_month else 1
+        return today.day == min(dom, last_day)
+
+    elif freq == "semi_monthly":
+        d1 = int(item.date_specific_1) if item.date_specific_1 else 15
+        d2 = int(item.date_specific_2) if item.date_specific_2 else 30
+        return today.day == min(d1, last_day) or today.day == min(d2, last_day)
+
+    elif freq == "weekly":
+        dow = int(item.day_of_week) if item.day_of_week is not None else 0
+        return today.weekday() == dow
+
+    elif freq == "biweekly":
+        dow = int(item.day_of_week) if item.day_of_week is not None else 0
+        if today.weekday() != dow:
+            return False
+        epoch = date(2024, 1, 1)  # Stable biweekly reference point
+        week_num = (today - epoch).days // 7
+        return week_num % 2 == 0
+
+    elif freq == "annually":
+        target_month = int(item.month_of_year) if item.month_of_year else 1
+        dom = int(item.day_of_month) if item.day_of_month else 1
+        return today.month == target_month and today.day == dom
+
+    return False
+
+
+@router.get("/cashflow/due-today")
+async def get_due_today(user_id: str = Depends(get_current_user_id)):
+    """
+    Returns recurring items due TODAY that haven't been confirmed yet.
+    Filters out:
+      - Items already confirmed (last_executed_date == today)
+      - Items currently snoozed (snooze_until > now)
+    """
+    from datetime import datetime as dt
+
     today = date.today()
     today_str = today.isoformat()
+    now = dt.now()
 
     with Session(engine) as session:
         items = session.exec(
             select(CashflowItem).where(CashflowItem.user_id == user_id)
         ).all()
 
-        executed = []
+        due_items = []
         for item in items:
-            # Skip if already executed today
-            if getattr(item, "last_executed_date", None) == today_str:
+            # Skip if already confirmed today
+            if item.last_executed_date == today_str:
                 continue
+
+            # Skip if snoozed and snooze hasn't expired
+            if item.snooze_until:
+                try:
+                    snooze_dt = dt.fromisoformat(item.snooze_until)
+                    if now < snooze_dt:
+                        continue
+                except (ValueError, TypeError):
+                    pass  # Invalid snooze format — treat as expired
 
             # Check if this item triggers today
-            due_day = item.day_of_month
-            if due_day is None:
+            if not _item_triggers_today(item, today):
                 continue
 
-            last_day = calendar.monthrange(today.year, today.month)[1]
-            clamped_due = min(due_day, last_day)
+            # Fetch linked account name for UI display
+            account_name = None
+            if item.account_id:
+                account = session.get(Account, item.account_id)
+                if account:
+                    account_name = account.name
 
-            if today.day != clamped_due:
-                continue
-
-            # Skip if no linked account
-            if not item.account_id:
-                continue
-
-            account = session.get(Account, item.account_id)
-            if not account:
-                continue
-
-            # Create transaction
-            amount = Decimal(str(float(item.amount)))
-            tx = Transaction(
-                user_id=user_id,
-                account_id=item.account_id,
-                amount=amount,
-                type=item.category or ("income" if item.is_income else "expense"),
-                description=f"[Auto] {item.name}",
-                date=today_str,
-            )
-            with bypass_fk(session):
-                session.add(tx)
-
-            # Update last_executed_date to prevent duplicate execution
-            if hasattr(item, "last_executed_date"):
-                item.last_executed_date = today_str
-                session.add(item)
-
-            executed.append({
+            due_items.append({
+                "id": item.id,
                 "name": item.name,
-                "amount": float(amount),
-                "account": account.name,
+                "expected_amount": float(item.amount),
+                "category": item.category,
+                "is_income": item.category == "income" or item.is_income,
+                "frequency": item.frequency,
+                "account_id": item.account_id,
+                "account_name": account_name,
+                "is_variable": item.is_variable,
             })
 
-        if executed:
-            session.commit()
-            logger.info(f"Auto-executed {len(executed)} recurring transactions for user={user_id}")
+        return {
+            "date": today_str,
+            "due_count": len(due_items),
+            "items": due_items,
+        }
+
+
+@router.post("/cashflow/{item_id}/confirm")
+async def confirm_recurring(
+    item_id: int,
+    body: dict,
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Confirms a recurring cashflow item with the actual amount.
+    Creates a Transaction record and updates the linked account balance.
+
+    Body:
+        actual_amount: float — the real amount (may differ from expected)
+    """
+    actual_amount = body.get("actual_amount")
+    if actual_amount is None:
+        raise HTTPException(status_code=400, detail="actual_amount is required")
+
+    actual_amount = Decimal(str(actual_amount))
+    today_str = date.today().isoformat()
+
+    with Session(engine) as session:
+        item = session.exec(
+            select(CashflowItem).where(
+                CashflowItem.id == item_id,
+                CashflowItem.user_id == user_id,
+            )
+        ).first()
+
+        if not item:
+            raise HTTPException(status_code=404, detail="Cashflow item not found")
+
+        # Prevent double confirmation
+        if item.last_executed_date == today_str:
+            return {
+                "ok": True,
+                "already_confirmed": True,
+                "message": "Already confirmed today",
+            }
+
+        # Determine variance from expected amount
+        expected = item.amount
+        variance = float(actual_amount - expected)
+        variance_pct = float(
+            ((actual_amount - expected) / expected * 100) if expected > 0 else 0
+        )
+
+        # Create the transaction record
+        is_income = item.category == "income" or item.is_income
+        tx = Transaction(
+            user_id=user_id,
+            account_id=item.account_id,
+            amount=actual_amount,
+            type="income" if is_income else "expense",
+            description=f"[Confirmed] {item.name}",
+            date=today_str,
+            category=item.category or ("income" if is_income else "expense"),
+        )
+        with bypass_fk(session):
+            session.add(tx)
+
+        # Update account balance if linked
+        if item.account_id:
+            account = session.get(Account, item.account_id)
+            if account:
+                if is_income:
+                    account.balance += actual_amount
+                else:
+                    account.balance -= actual_amount
+                session.add(account)
+
+        # Mark as confirmed today and clear any snooze
+        item.last_executed_date = today_str
+        item.snooze_until = None
+        session.add(item)
+
+        session.commit()
+
+        logger.info(
+            f"Confirmed recurring '{item.name}' for user={user_id}, "
+            f"amount={actual_amount}, variance={variance:.2f}"
+        )
 
         return {
-            "executed": executed,
-            "count": len(executed),
-            "date": today_str,
+            "ok": True,
+            "already_confirmed": False,
+            "transaction_id": tx.id,
+            "item_name": item.name,
+            "expected_amount": float(expected),
+            "actual_amount": float(actual_amount),
+            "variance": round(variance, 2),
+            "variance_pct": round(variance_pct, 1),
+            "is_income": is_income,
         }
+
+
+@router.post("/cashflow/{item_id}/snooze")
+async def snooze_recurring(
+    item_id: int,
+    body: dict,
+    user_id: str = Depends(get_current_user_id),
+):
+    """
+    Postpones a recurring confirmation.
+
+    Body:
+        mode: "2h" | "tomorrow" | "skip_month"
+    """
+    from datetime import datetime as dt
+
+    mode = body.get("mode", "2h")
+    now = dt.now()
+
+    if mode == "2h":
+        snooze_until = (now + timedelta(hours=2)).isoformat()
+    elif mode == "tomorrow":
+        tomorrow = now.replace(hour=8, minute=0, second=0) + timedelta(days=1)
+        snooze_until = tomorrow.isoformat()
+    elif mode == "skip_month":
+        # Snooze until next month's 1st at midnight
+        if now.month == 12:
+            next_month = dt(now.year + 1, 1, 1)
+        else:
+            next_month = dt(now.year, now.month + 1, 1)
+        snooze_until = next_month.isoformat()
+    else:
+        raise HTTPException(status_code=400, detail="Invalid snooze mode")
+
+    with Session(engine) as session:
+        item = session.exec(
+            select(CashflowItem).where(
+                CashflowItem.id == item_id,
+                CashflowItem.user_id == user_id,
+            )
+        ).first()
+
+        if not item:
+            raise HTTPException(status_code=404, detail="Cashflow item not found")
+
+        item.snooze_until = snooze_until
+        session.add(item)
+        session.commit()
+
+        logger.info(f"Snoozed '{item.name}' until {snooze_until} for user={user_id}")
+
+        return {
+            "ok": True,
+            "item_name": item.name,
+            "snooze_until": snooze_until,
+            "mode": mode,
+        }
+

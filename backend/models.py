@@ -36,6 +36,10 @@ class Account(SQLModel, table=True):
     loan_term_months: Optional[int] = Field(default=None, description="Total loan term in months")
     remaining_months: Optional[int] = Field(default=None, description="Months remaining on the loan")
     
+    # Credit Card / Revolving Specific
+    credit_limit: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2, description="Credit limit for revolving accounts (credit cards, HELOCs)")
+    apy: Optional[Decimal] = Field(default=None, max_digits=5, decimal_places=2, description="Annual Percentage Yield for savings/checking accounts")
+    
     transactions: List["Transaction"] = Relationship(back_populates="account")
 
 class CashflowItem(SQLModel, table=True):
@@ -59,6 +63,7 @@ class CashflowItem(SQLModel, table=True):
     account_id: Optional[int] = Field(default=None, foreign_key="accounts.id")
     is_income: bool = Field(default=False)
     last_executed_date: Optional[str] = Field(default=None, description="ISO date of last auto-execution")
+    snooze_until: Optional[str] = Field(default=None, description="ISO datetime until which this item's confirmation is snoozed")
 
 class Transaction(SQLModel, table=True):
     __tablename__ = "transactions"
