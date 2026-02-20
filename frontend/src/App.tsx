@@ -13,6 +13,7 @@ import LandingGate from "@/features/landing/LandingGate";
 import TermsOfServicePage from "@/features/legal/TermsOfServicePage";
 import PrivacyPolicyPage from "@/features/legal/PrivacyPolicyPage";
 import NotFoundPage from "@/features/error/NotFoundPage";
+import ErrorBoundary from "@/features/error/ErrorBoundary";
 import LoadingScreen from "@/components/LoadingScreen";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
@@ -78,9 +79,11 @@ function AppShell() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppShell />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AppShell />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
