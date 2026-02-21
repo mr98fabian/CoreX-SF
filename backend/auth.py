@@ -15,7 +15,8 @@ SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 # Demo mode constants
 DEMO_TOKEN = "demo-stress-test-token"
 DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
-DEMO_MODE_ENABLED = os.getenv("DEMO_MODE_ENABLED", "false").lower() == "true"
+# Enabled by default — demo token only accesses a synthetic sandbox account
+DEMO_MODE_ENABLED = os.getenv("DEMO_MODE_ENABLED", "true").lower() == "true"
 
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
