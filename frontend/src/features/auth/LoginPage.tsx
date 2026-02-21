@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { apiFetch } from '@/lib/api';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -267,8 +266,16 @@ export default function LoginPage() {
         setError('');
         try {
             await signInAsDemo();
-            // Auto-seed stress test data for demo user
-            await apiFetch('/api/dev/seed-stress-test', { method: 'POST' });
+            // Fire-and-forget seed — uses raw fetch (NOT apiFetch) to avoid
+            // the 401 auto-signout handler which would kill the demo session.
+            const apiBase = import.meta.env.DEV ? 'http://localhost:8000' : '';
+            fetch(`${apiBase}/api/dev/seed-stress-test`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer demo-stress-test-token',
+                    'Content-Type': 'application/json',
+                },
+            }).catch(() => { /* non-blocking — dashboard still loads with existing data */ });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Demo mode failed');
             setIsDemoLoading(false);
