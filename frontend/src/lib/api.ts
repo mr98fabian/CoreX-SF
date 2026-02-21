@@ -43,6 +43,23 @@ export class ApiError extends Error {
     }
 }
 
+// ── Auto-signout on 401 ─────────────────────────────────────────
+// When the backend rejects a token, nuke the session and redirect
+// to login. Debounced so 20 parallel 401s don't fire 20 redirects.
+let _signingOut = false;
+
+async function handleUnauthorized() {
+    if (_signingOut) return;
+    _signingOut = true;
+
+    // Clear stale tokens
+    clearDemoToken();
+    await supabase.auth.signOut().catch(() => {/* best-effort */ });
+
+    // Hard redirect to login — avoids stale React state
+    window.location.replace('/login');
+}
+
 /** Retry config */
 const MAX_RETRIES = 2;
 const BASE_DELAY_MS = 800;
@@ -50,6 +67,7 @@ const BASE_DELAY_MS = 800;
 /**
  * Authenticated fetch wrapper for KoreX backend API.
  * - Attaches Supabase or demo token as Bearer header
+ * - Auto-signs out on 401 (expired / invalid token)
  * - Retries network errors and 5xx up to 2 times with exponential backoff
  * - Never retries 4xx (auth, validation, not found)
  */
@@ -87,6 +105,12 @@ export async function apiFetch<T = unknown>(
             if (!response.ok) {
                 const errorBody = await response.text().catch(() => '');
                 const error = new ApiError(response.status, errorBody);
+
+                // 401 = token expired/invalid → kill session, redirect to login
+                if (response.status === 401) {
+                    handleUnauthorized();
+                    throw error;
+                }
 
                 // Only retry 5xx — fail immediately on 4xx
                 if (!error.isRetryable) throw error;

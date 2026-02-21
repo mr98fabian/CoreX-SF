@@ -243,7 +243,7 @@ const copy = {
    Component
    ═══════════════════════════════════════════════════════ */
 export default function LandingPage() {
-    const { language } = useLanguage();
+    const { language, setLanguage } = useLanguage();
     const navigate = useNavigate();
     const L = language === 'es' ? 'es' : 'en';
 
@@ -589,6 +589,16 @@ export default function LandingPage() {
                     </button>
                     <button className="lp-nav-link desktop-only" onClick={() => scrollTo(pricingRef)}>
                         {copy.nav.pricing[L]}
+                    </button>
+                    <button
+                        className="lp-lang-toggle"
+                        onClick={() => setLanguage(L === 'en' ? 'es' : 'en')}
+                        aria-label="Toggle language"
+                        title={L === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+                    >
+                        <span className={L === 'en' ? 'active' : ''}>EN</span>
+                        <span className="lp-lang-divider">/</span>
+                        <span className={L === 'es' ? 'active' : ''}>ES</span>
                     </button>
                     <button className="lp-nav-cta" onClick={goAuth}>
                         {copy.hero.cta[L]}
