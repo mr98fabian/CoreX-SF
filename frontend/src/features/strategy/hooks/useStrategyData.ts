@@ -148,6 +148,20 @@ export interface ArbitrageAlert {
     recommendation: string;
 }
 
+export interface RiskyOpportunityData {
+    risk_amount: number;
+    destination: string;
+    destination_apr: number;
+    destination_balance: number;
+    source_account: string;
+    shield_before: number;
+    shield_after: number;
+    risk_level: 'moderate' | 'high' | 'critical';
+    interest_saved_monthly: number;
+    days_accelerated: number;
+    daily_cost_eliminated: number;
+}
+
 export interface StrategyCommandData {
     morning_briefing: MorningBriefingData | null;
     confidence_meter: ConfidenceMeterData;
@@ -159,6 +173,7 @@ export interface StrategyCommandData {
     closing_day_intelligence: ClosingDayIntel[];
     hybrid_kill_analysis: HybridKillAnalysis | null;
     arbitrage_alerts: ArbitrageAlert[];
+    risky_opportunity: RiskyOpportunityData | null;
 }
 
 // --- Hook ---

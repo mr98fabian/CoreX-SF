@@ -380,9 +380,9 @@ async def get_savings_estimate(
             "daily_interest_all": 0,
             "plans": {
                 "starter": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 0},
-                "velocity": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 97},
-                "accelerator": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 197},
-                "freedom": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 347},
+                "velocity": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 96.99},
+                "accelerator": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 196.99},
+                "freedom": {**empty_plan, "accounts_used": 0, "plan_cost_annual": 346.99},
             },
             "social_proof": {
                 "total_accounts_monitored": len(accounts),
@@ -405,9 +405,9 @@ async def get_savings_estimate(
     }
     plan_costs_annual = {
         "starter": 0,
-        "velocity": 97,
-        "accelerator": 197,
-        "freedom": 347,
+        "velocity": 96.99,
+        "accelerator": 196.99,
+        "freedom": 346.99,
     }
 
     # Velocity banking typically accelerates payoff by 35-60%

@@ -958,6 +958,101 @@ def calculate_safe_attack_equity(
 
 
 # ================================================================
+# RISKY OPPORTUNITY — "Shield Sacrifice for Acceleration"
+# ================================================================
+
+
+def calculate_risky_opportunity(
+    liquid_cash: Decimal,
+    shield_target: Decimal,
+    debts: List[DebtAccount],
+    source_account_name: str = "Checking",
+    max_sacrifice_pct: int = 90,
+) -> Optional[Dict]:
+    """
+    Calculates a risky opportunity where the user dips INTO
+    their Peace Shield to accelerate debt payoff.
+
+    Rules:
+    - Only triggers when shield is >= 100% (fully charged)
+    - Max sacrifice: 90% of shield (never below 10%)
+    - Must save at least $10/month in interest to be worth showing
+    - Targets the highest-APR debt (avalanche)
+
+    Returns None if no worthwhile opportunity exists.
+    """
+    if shield_target <= 0:
+        return None
+
+    # Shield must be fully charged to suggest risky moves
+    shield_pct = (min(liquid_cash, shield_target) / shield_target * Decimal('100'))
+    if shield_pct < Decimal('100'):
+        return None
+
+    # Need a debt target
+    target = get_velocity_target(debts)
+    if not target:
+        return None
+
+    # Calculate max sacrifice amount (up to 90% of shield)
+    max_sacrifice = (shield_target * Decimal(str(max_sacrifice_pct)) / Decimal('100')).quantize(
+        Decimal('0.01'), rounding=ROUND_HALF_UP
+    )
+
+    # Don't overpay the debt — cap at the debt balance
+    risk_amount = min(max_sacrifice, target.balance)
+    if risk_amount <= Decimal('0'):
+        return None
+
+    # Calculate new shield % after sacrifice
+    new_liquid = liquid_cash - risk_amount
+    new_shield_pct = (new_liquid / shield_target * Decimal('100')).quantize(
+        Decimal('0.1'), rounding=ROUND_HALF_UP
+    )
+
+    # Calculate interest savings
+    interest_saved_monthly = (risk_amount * (target.interest_rate / Decimal('100'))) / Decimal('12')
+    interest_saved_monthly = interest_saved_monthly.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    # Minimum threshold: must save at least $10/month to be worth showing
+    if interest_saved_monthly < Decimal('10'):
+        return None
+
+    # Daily cost eliminated
+    daily_cost = (risk_amount * (target.interest_rate / Decimal('100'))) / Decimal('365')
+    daily_cost = daily_cost.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    # Days accelerated
+    days_accelerated = 0
+    if target.min_payment > 0:
+        months_saved = risk_amount / target.min_payment
+        days_accelerated = int((months_saved * Decimal('30')).quantize(Decimal('1')))
+
+    # Risk level based on remaining shield %
+    new_pct_float = float(new_shield_pct)
+    if new_pct_float >= 70:
+        risk_level = "moderate"
+    elif new_pct_float >= 40:
+        risk_level = "high"
+    else:
+        risk_level = "critical"
+
+    return {
+        "risk_amount": float(risk_amount),
+        "destination": target.name,
+        "destination_apr": float(target.interest_rate),
+        "destination_balance": float(target.balance),
+        "source_account": source_account_name,
+        "shield_before": 100.0,
+        "shield_after": float(new_shield_pct),
+        "risk_level": risk_level,
+        "interest_saved_monthly": float(interest_saved_monthly),
+        "days_accelerated": days_accelerated,
+        "daily_cost_eliminated": float(daily_cost),
+    }
+
+
+# ================================================================
 # PURCHASE TIME-COST SIMULATOR — "The Cost of Living Future"
 # ================================================================
 

@@ -26,6 +26,7 @@ from velocity_engine import (
     detect_debt_alerts,
     detect_float_kill_opportunities, get_closing_day_intelligence,
     get_hybrid_kill_target, detect_interest_rate_arbitrage,
+    calculate_risky_opportunity,
     DEFAULT_PEACE_SHIELD,
 )
 from transaction_classifier import classify_transaction, classify_batch, get_cashflow_summary
@@ -518,6 +519,19 @@ async def get_strategy_command_center(
         ]
         arbitrage_alerts = detect_interest_rate_arbitrage(savings_for_arbitrage, debt_accounts)
 
+        # --- 15. Risky Opportunity (Shield Sacrifice) ---
+        # Only calculate when no safe attack is available
+        risky_opportunity = None
+        if morning_briefing is None:
+            # Find the best source account name for execution
+            asset_accounts = [acc for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0]
+            asset_accounts.sort(key=lambda x: x.balance, reverse=True)
+            source_name = asset_accounts[0].name if asset_accounts else "Checking"
+
+            risky_opportunity = calculate_risky_opportunity(
+                liquid_cash_dec, shield_target, debt_accounts, source_name
+            )
+
         return {
             "morning_briefing": morning_briefing,
             "confidence_meter": confidence_meter,
@@ -529,5 +543,6 @@ async def get_strategy_command_center(
             "closing_day_intelligence": closing_intel,
             "hybrid_kill_analysis": hybrid_analysis,
             "arbitrage_alerts": arbitrage_alerts,
+            "risky_opportunity": risky_opportunity,
         }
 
