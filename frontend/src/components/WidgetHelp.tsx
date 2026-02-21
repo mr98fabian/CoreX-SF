@@ -235,7 +235,7 @@ const HELP_CONTENT: Record<string, HelpContent> = {
             { icon: '🎯', text: 'Priority order: Highest APR always on top — that\'s the kill target', textEs: 'Orden de prioridad: Mayor APR siempre arriba — ese es el objetivo a eliminar' },
             { icon: '📊', text: 'Daily drain: Shows how much interest each debt costs you per day', textEs: 'Drenaje diario: Muestra cuánto interés te cuesta cada deuda por día' },
             { icon: '🔒', text: 'Locked accounts: Beyond your plan limit — upgrade to monitor them', textEs: 'Cuentas bloqueadas: Más allá del límite de tu plan — actualiza para monitorearlas' },
-            { icon: '➕', text: 'Add debts with the \"+ Add Account\" button at the top', textEs: 'Agrega deudas con el botón \"+ Agregar Cuenta\" en la parte superior' },
+            { icon: '➕', text: 'Add debts with the "+ Add Account" button at the top', textEs: 'Agrega deudas con el botón "+ Agregar Cuenta" en la parte superior' },
         ],
         location: '📍 Action: Make manual payments or record balance changes from each card',
         locationEs: '📍 Acción: Realiza pagos manuales o registra cambios de saldo desde cada tarjeta',
