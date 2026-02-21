@@ -385,7 +385,6 @@ async def confirm_recurring(
             user_id=user_id,
             account_id=item.account_id,
             amount=actual_amount,
-            type="income" if is_income else "expense",
             description=f"[Confirmed] {item.name}",
             date=today_str,
             category=item.category or ("income" if is_income else "expense"),

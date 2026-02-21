@@ -109,11 +109,13 @@ interface TacticalGPSResponse {
 
 /** Color & icon mapping by movement type */
 const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode; labelKey: string }> = {
-    attack: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.debtAttack' },
-    shield: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/30', icon: <Shield size={14} />, labelKey: 'actionPlan.payment' },
-    min_payment: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.payment' },
-    income: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/30', icon: <DollarSign size={14} />, labelKey: 'actionPlan.income' },
-    expense: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.transfer' },
+    attack: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeAttack' },
+    shield: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/30', icon: <Shield size={14} />, labelKey: 'actionPlan.badgeShield' },
+    min_payment: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.badgeMinPayment' },
+    income: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/30', icon: <DollarSign size={14} />, labelKey: 'actionPlan.badgeIncome' },
+    expense: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.badgeExpense' },
+    float_kill: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeFloatKill' },
+    hybrid_kill: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeHybridKill' },
 };
 
 const getTypeStyle = (type: string) =>
@@ -638,7 +640,7 @@ export default function ActionPlanPage() {
                                                     )}
                                                     <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5`}>
                                                         {style.icon}
-                                                        {t(`actionPlan.badge${m.type === 'min_payment' ? 'MinPayment' : m.type.charAt(0).toUpperCase() + m.type.slice(1)}`)}
+                                                        {t(style.labelKey)}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -758,7 +760,7 @@ export default function ActionPlanPage() {
                                             <div className="col-span-1 flex items-center justify-center">
                                                 <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5`}>
                                                     {style.icon}
-                                                    {t(`actionPlan.badge${m.type === 'min_payment' ? 'MinPayment' : m.type.charAt(0).toUpperCase() + m.type.slice(1)}`)}
+                                                    {t(style.labelKey)}
                                                 </span>
                                             </div>
 

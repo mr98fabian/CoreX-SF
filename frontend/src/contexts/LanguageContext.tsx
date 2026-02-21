@@ -228,6 +228,8 @@ const translations: Record<string, Record<Language, string>> = {
     "actionPlan.badgeMinPayment": { en: "Min", es: "Mín" },
     "actionPlan.badgeIncome": { en: "Inc", es: "Ing" },
     "actionPlan.badgeExpense": { en: "Tfr", es: "Trf" },
+    "actionPlan.badgeFloatKill": { en: "Float", es: "Float" },
+    "actionPlan.badgeHybridKill": { en: "Kill", es: "Kill" },
     "actionPlan.inInterest": { en: "in interest", es: "en intereses" },
     "actionPlan.lockedAccounts": { en: "locked accounts", es: "cuentas bloqueadas" },
     "actionPlan.upgradeToUnlock": { en: "Upgrade to unlock", es: "Mejora para desbloquear" },
