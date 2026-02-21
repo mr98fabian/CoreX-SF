@@ -47,7 +47,7 @@ interface DueTodayState {
     /** Whether modal should be visible */
     showModal: boolean;
     /** Confirm an item with actual amount */
-    confirmItem: (itemId: number, actualAmount: number) => Promise<ConfirmResult | null>;
+    confirmItem: (itemId: number, actualAmount: number, accountId?: number | null) => Promise<ConfirmResult | null>;
     /** Snooze an item */
     snoozeItem: (itemId: number, mode: '2h' | 'tomorrow' | 'skip_month') => Promise<boolean>;
     /** Dismiss the modal */
@@ -87,12 +87,15 @@ export function useRecurringDueToday(): DueTodayState {
         fetchDueToday();
     }, [fetchDueToday]);
 
-    const confirmItem = useCallback(async (itemId: number, actualAmount: number): Promise<ConfirmResult | null> => {
+    const confirmItem = useCallback(async (itemId: number, actualAmount: number, accountId?: number | null): Promise<ConfirmResult | null> => {
         try {
+            const payload: Record<string, unknown> = { actual_amount: actualAmount };
+            if (accountId != null) payload.account_id = accountId;
+
             const result = await apiFetch<ConfirmResult>(`/api/cashflow/${itemId}/confirm`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ actual_amount: actualAmount }),
+                body: JSON.stringify(payload),
             });
 
             if (result.ok && !result.already_confirmed) {

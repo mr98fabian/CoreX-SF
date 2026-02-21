@@ -81,11 +81,17 @@ def _seed_impl(user_id: str):
             acc_map[row[1]] = row[0]
 
         # ── 3. CASHFLOW ITEMS ──
+        # Link ALL cashflows to Chase Business Checking so Today's Check-In
+        # confirmations actually update the account balance.
+        checking_id = acc_map.get("Chase Business Checking")
+
         cf_insert = text("""
             INSERT INTO cashflow_items (user_id, name, amount, category, frequency,
-                is_variable, day_of_month, day_of_week, month_of_year)
+                is_variable, day_of_month, day_of_week, month_of_year,
+                account_id, is_income)
             VALUES (CAST(:uid AS uuid), :name, :amount, :category, :freq,
-                :is_var, :dom, :dow, :moy)
+                :is_var, :dom, :dow, :moy,
+                :acc_id, :is_inc)
         """)
 
         cashflows_data = [
@@ -110,9 +116,11 @@ def _seed_impl(user_id: str):
         ]
 
         for cf in cashflows_data:
+            is_income = cf[2] == "income"
             session.execute(cf_insert, {
                 "uid": uid, "name": cf[0], "amount": cf[1], "category": cf[2],
                 "freq": cf[3], "is_var": cf[4], "dom": cf[5], "dow": cf[6], "moy": cf[7],
+                "acc_id": checking_id, "is_inc": is_income,
             })
 
         # ── 4. HISTORICAL TRANSACTIONS ──

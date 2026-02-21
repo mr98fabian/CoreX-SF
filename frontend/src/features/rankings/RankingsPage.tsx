@@ -3,7 +3,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useLoginStreak } from '@/hooks/useLoginStreak';
 import { getCommanderRank, getEffectiveScore, MILITARY_RANKS, MATERIAL_TIERS } from '@/hooks/useCommanderRank';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Star, Shield, Flame, Zap, Crown, ChevronDown, ChevronUp, Lock, Rocket } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Trophy, Star, Shield, Flame, Zap, Crown, ChevronDown, ChevronUp, Lock, Rocket, Info } from 'lucide-react';
 import { useState } from 'react';
 import UpgradeModal from '@/components/UpgradeModal';
 
@@ -82,8 +83,20 @@ export default function RankingsPage() {
                     </div>
 
                     <div className="text-center md:text-left flex-1">
-                        <p className="text-xs text-slate-400 uppercase tracking-widest mb-1">
+                        <p className="text-xs text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
                             {es ? 'Tu Rango Actual' : 'Your Current Rank'}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Info size={12} className="text-slate-500 cursor-help hover:text-slate-300 transition-colors" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                                        {es
+                                            ? 'Tu rango se determina por los puntos de racha (XP) que acumulas al registrar transacciones diariamente. Los miembros VIP ganan 2x XP.'
+                                            : 'Your rank is determined by streak points (XP) accumulated by logging transactions daily. VIP members earn 2x XP.'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </p>
                         <h1 className="text-2xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent"
                             style={{ backgroundImage: `linear-gradient(135deg, ${currentRank.material.color}, ${currentRank.material.color}88, white)` }}>
@@ -149,6 +162,18 @@ export default function RankingsPage() {
                     <CardTitle className="text-base flex items-center gap-2">
                         <Shield size={18} className="text-blue-400" />
                         {es ? '¿Cómo Funciona?' : 'How Does It Work?'}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Info size={14} className="text-slate-500 cursor-help hover:text-slate-300 transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs text-xs">
+                                    {es
+                                        ? 'Estas 3 mecánicas son el motor del sistema de rangos. Registro diario de transacciones, penalización por inactividad, y bonus VIP determinan tu progreso.'
+                                        : 'These 3 mechanics power the ranking system. Daily transaction logging, inactivity penalties, and VIP bonus determine your progress.'}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-xs text-slate-400">
@@ -203,6 +228,18 @@ export default function RankingsPage() {
                     <CardTitle className="text-base flex items-center gap-2">
                         <Trophy size={18} className="text-amber-400" />
                         {es ? 'Tabla Completa de Rangos (90 Niveles)' : 'Full Rank Table (90 Levels)'}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Info size={14} className="text-slate-500 cursor-help hover:text-slate-300 transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs text-xs">
+                                    {es
+                                        ? 'El sistema tiene 10 materiales × 9 rangos militares = 90 niveles totales. Toca un material desbloqueado para ver sus rangos. Los niveles bloqueados se revelan al alcanzarlos.'
+                                        : 'The system has 10 materials × 9 military ranks = 90 total levels. Tap an unlocked material to see its ranks. Locked levels are revealed when you reach them.'}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -307,6 +344,18 @@ export default function RankingsPage() {
                     <CardTitle className="text-base flex items-center gap-2">
                         <Star size={18} className="text-purple-400" />
                         {es ? 'Beneficios por Rango' : 'Rank Benefits'}
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Info size={14} className="text-slate-500 cursor-help hover:text-slate-300 transition-colors" />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="max-w-xs text-xs">
+                                    {es
+                                        ? 'Conforme subes de rango desbloqueas beneficios tangibles: insignias, mejor puntaje de salud financiera, y el prestigio visual de tu material en toda la app.'
+                                        : 'As you rank up you unlock tangible benefits: badges, better financial health score, and the visual prestige of your material throughout the app.'}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>

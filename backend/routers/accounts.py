@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import List
 
 from database import engine
-from models import Account, Transaction, MovementLog
+from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
 from schemas import BalanceUpdate
 from helpers import bypass_fk
 from auth import get_current_user_id
@@ -109,20 +109,41 @@ async def delete_account(id: int, user_id: str = Depends(get_current_user_id)):
 
 @router.delete("/accounts")
 async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
-    """HARD RESET: Wipe all user's accounts, transactions, and movement logs."""
+    """HARD RESET: Wipe all user's financial data for a fresh start.
+
+    Clears: accounts, transactions, movement logs, cashflow items, onboarding state.
+    PRESERVES: subscription (a paying customer keeps their plan).
+    """
     try:
         with Session(engine) as session:
+            # 1. Movement logs (references transactions via FK)
             logs = session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
             for log in logs:
                 session.delete(log)
 
+            # 2. Transactions (references accounts via FK)
             transactions = session.exec(select(Transaction).where(Transaction.user_id == user_id)).all()
             for tx in transactions:
                 session.delete(tx)
 
+            # 3. Cashflow items (references accounts via FK)
+            cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+            for cf in cashflows:
+                session.delete(cf)
+
+            # 4. Accounts
             accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
             for acc in accounts:
                 session.delete(acc)
+
+            # 5. Reset onboarding so user goes through setup again
+            settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+            if settings:
+                settings.onboarding_complete = False
+                session.add(settings)
+
+            # NOTE: Subscription is intentionally NOT touched.
+            # A paying customer keeps their plan after reset.
 
             session.commit()
         return {"ok": True, "message": "System Hard Reset Complete"}

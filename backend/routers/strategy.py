@@ -199,12 +199,16 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
         # 2. Find Destination Account (e.g. "Amex Platinum Business")
         dest_acc = find_account(data.destination)
         if dest_acc:
-            dest_acc.balance -= amount
+            # Debt accounts: paying debt reduces balance (subtract)
+            # Non-debt accounts (checking/savings): receiving money increases balance (add)
             if dest_acc.type == "debt":
+                dest_acc.balance -= amount
                 dest_acc.min_payment = calculate_minimum_payment(
                     dest_acc.balance, dest_acc.interest_rate,
                     dest_acc.interest_type, dest_acc.remaining_months,
                 )
+            else:
+                dest_acc.balance += amount
             session.add(dest_acc)
 
         # 3. Validate at least one account was found

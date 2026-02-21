@@ -345,12 +345,15 @@ async def confirm_recurring(
 
     Body:
         actual_amount: float — the real amount (may differ from expected)
+        account_id: int (optional) — override which account to link & debit/credit.
+                    If provided, the cashflow item's account_id is updated persistently.
     """
     actual_amount = body.get("actual_amount")
     if actual_amount is None:
         raise HTTPException(status_code=400, detail="actual_amount is required")
 
     actual_amount = Decimal(str(actual_amount))
+    override_account_id = body.get("account_id")  # Optional account override
     today_str = date.today().isoformat()
 
     with Session(engine) as session:
@@ -372,6 +375,20 @@ async def confirm_recurring(
                 "message": "Already confirmed today",
             }
 
+        # If user selected a different account, persist it for future confirms
+        effective_account_id = item.account_id
+        if override_account_id is not None:
+            # Validate that the account belongs to this user
+            override_acc = session.exec(
+                select(Account).where(
+                    Account.id == override_account_id,
+                    Account.user_id == user_id,
+                )
+            ).first()
+            if override_acc:
+                effective_account_id = override_account_id
+                item.account_id = override_account_id  # Persist for next time
+
         # Determine variance from expected amount
         expected = item.amount
         variance = float(actual_amount - expected)
@@ -383,7 +400,7 @@ async def confirm_recurring(
         is_income = item.category == "income" or item.is_income
         tx = Transaction(
             user_id=user_id,
-            account_id=item.account_id,
+            account_id=effective_account_id,
             amount=actual_amount,
             description=f"[Confirmed] {item.name}",
             date=today_str,
@@ -393,8 +410,8 @@ async def confirm_recurring(
             session.add(tx)
 
         # Update account balance if linked
-        if item.account_id:
-            account = session.get(Account, item.account_id)
+        if effective_account_id:
+            account = session.get(Account, effective_account_id)
             if account:
                 if is_income:
                     account.balance += actual_amount
@@ -409,9 +426,17 @@ async def confirm_recurring(
 
         session.commit()
 
+        # Fetch account name for response
+        account_name = None
+        if effective_account_id:
+            acc = session.get(Account, effective_account_id)
+            if acc:
+                account_name = acc.name
+
         logger.info(
             f"Confirmed recurring '{item.name}' for user={user_id}, "
-            f"amount={actual_amount}, variance={variance:.2f}"
+            f"amount={actual_amount}, variance={variance:.2f}, "
+            f"account={account_name or 'N/A'}"
         )
 
         return {
@@ -424,6 +449,7 @@ async def confirm_recurring(
             "variance": round(variance, 2),
             "variance_pct": round(variance_pct, 1),
             "is_income": is_income,
+            "account_name": account_name,
         }
 
 
