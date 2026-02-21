@@ -1,4 +1,5 @@
 import { RefreshCw, Loader2, AlertTriangle, Zap } from "lucide-react";
+import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 import { WidgetHelp } from '@/components/WidgetHelp';
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -6,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { apiFetch } from '@/lib/api';
 import { useStrategyData } from "./hooks/useStrategyData";
 import MorningBriefing from "./components/MorningBriefing";
+import RiskyOpportunity from "./components/RiskyOpportunity";
 import FreedomCounter from "./components/FreedomCounter";
 import ConfidenceMeter from "./components/ConfidenceMeter";
 import AttackDecisionHelper from "./components/AttackDecisionHelper";
@@ -50,6 +52,7 @@ export default function StrategyPage() {
 
             // Refresh data to show updated state
             refresh();
+            emitDataChanged('strategy');
         } catch {
             toast({
                 title: "Execution Error",
@@ -58,6 +61,11 @@ export default function StrategyPage() {
             });
         }
     };
+
+    // Listen for data changes from Dashboard or Accounts pages
+    useDataSync('strategy', () => {
+        refresh();
+    });
 
     const handleDecisionSelect = (optionId: string) => {
         toast({
@@ -142,6 +150,14 @@ export default function StrategyPage() {
                             <MorningBriefing
                                 data={data.morning_briefing}
                                 onExecute={handleExecute}
+                            />
+                        </div>
+                    ) : data.risky_opportunity ? (
+                        <div className="relative group">
+                            <WidgetHelp helpKey="morningBriefing" />
+                            <RiskyOpportunity
+                                data={data.risky_opportunity}
+                                onExecuted={refresh}
                             />
                         </div>
                     ) : (

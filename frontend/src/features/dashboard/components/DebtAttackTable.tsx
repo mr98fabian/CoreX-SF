@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ArrowBigRight, ShieldCheck, Zap, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { TransactionDialog } from "./TransactionDialog";
 import { apiFetch } from '@/lib/api';
+import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 
 interface Account {
     id: number;
@@ -29,17 +30,23 @@ export default function DebtAttackTable() {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [velocityData, setVelocityData] = useState<VelocityProjections | null>(null);
 
-    useEffect(() => {
-        // Fetch Accounts using centralized apiFetch (handles auth + base URL)
+    const loadData = useCallback(() => {
         apiFetch<Account[]>("/api/accounts")
             .then((data) => setAccounts(data))
             .catch(() => setAccounts([]));
-
-        // Fetch Velocity Data
         apiFetch<VelocityProjections>("/api/velocity/projections")
             .then((data) => setVelocityData(data))
             .catch(() => setVelocityData(null));
     }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    // Listen for data changes from other pages
+    useDataSync('dashboard', () => {
+        loadData();
+    });
 
     const totalMinPayments = accounts
         .filter((acc) => acc.type === "debt")
@@ -120,7 +127,10 @@ export default function DebtAttackTable() {
                                         defaultAccountId={velocityTarget.id.toString()}
                                         defaultAmount={velocityTarget.min_payment + velocityAmount}
                                         defaultDescription={`Velocity Attack on ${velocityTarget.name}`}
-                                        onSuccess={() => window.location.reload()}
+                                        onSuccess={() => {
+                                            loadData();
+                                            emitDataChanged('dashboard');
+                                        }}
                                     >
                                         <Button className="bg-amber-600 hover:bg-slate-800 text-white font-bold shadow-lg shadow-amber-900/20 animate-pulse">
                                             PAY {formatMoney(velocityTarget.min_payment + velocityAmount)}

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { WidgetHelp } from '@/components/WidgetHelp';
 import UpgradeModal from '@/components/UpgradeModal';
 import { apiFetch } from '@/lib/api';
+import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 import { useAuth } from '../auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { TrendingDown, Wallet, PiggyBank, Calendar, Zap, Lock, Flame } from 'lucide-react';
@@ -28,6 +29,7 @@ import { TimeMachineCard } from './components/TimeMachineCard';
 
 // Strategy Components (shared)
 import MorningBriefing from '../strategy/components/MorningBriefing';
+import RiskyOpportunity from '../strategy/components/RiskyOpportunity';
 import DebtAlertBanner from '../strategy/components/DebtAlertBanner';
 
 import { useStrategyData } from '../strategy/hooks/useStrategyData';
@@ -106,7 +108,7 @@ export default function DashboardPage() {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     // Strategy data (for Morning Briefing)
-    const { data: strategyData } = useStrategyData();
+    const { data: strategyData, refresh: refreshStrategy } = useStrategyData();
 
     // Enhancement hooks
     const motivationalQuote = useMotivationalQuote(language as 'en' | 'es');
@@ -118,13 +120,38 @@ export default function DashboardPage() {
     // Recurring confirmation system
     const recurring = useRecurringDueToday();
 
+    // Reusable function to re-fetch all dashboard data without full page reload
+    const loadDashboardData = useCallback(async () => {
+        try {
+            const [dashboardData, velocityData] = await Promise.all([
+                apiFetch(withPlanLimit('/api/dashboard')),
+                apiFetch(withPlanLimit('/api/velocity/projections'))
+            ]);
+            setData(dashboardData as any);
+            setProjections(velocityData as any);
+        } catch (err) {
+            console.error('Dashboard refresh failed:', err);
+        }
+    }, []);
+
     const refreshDashboard = () => {
         // Increment streak only when a transaction is registered — Skill: streak-v3
         streak.incrementStreakOnTransaction();
         // Celebrate the transaction — Skill: neuroventa §7
         celebrate('spark');
-        setTimeout(() => window.location.reload(), 800);
+        // Re-fetch data and notify other pages
+        setTimeout(async () => {
+            await loadDashboardData();
+            refreshStrategy();
+            emitDataChanged('dashboard');
+        }, 800);
     };
+
+    // Listen for data changes from Accounts or Strategy pages
+    useDataSync('dashboard', () => {
+        loadDashboardData();
+        refreshStrategy();
+    });
 
     // Wrap recurring confirm to also trigger streak + celebration
     const handleRecurringConfirm = async (itemId: number, actualAmount: number) => {
@@ -133,6 +160,9 @@ export default function DashboardPage() {
             // Confirming a recurring item counts as a transaction for streak
             streak.incrementStreakOnTransaction();
             celebrate('spark');
+            // Re-fetch dashboard data and notify other pages
+            await loadDashboardData();
+            emitDataChanged('dashboard');
         }
         return result;
     };
@@ -474,12 +504,17 @@ export default function DashboardPage() {
                     </Card>
 
 
-                    {/* C. Morning Briefing — Full Width (no more Freedom Counter beside it) */}
+                    {/* C. Morning Briefing / Risky Opportunity — Full Width */}
                     <div className="col-span-12 relative group">
                         <WidgetHelp helpKey="morningBriefing" />
                         {strategyData?.morning_briefing ? (
                             <MorningBriefing
                                 data={strategyData.morning_briefing}
+                            />
+                        ) : strategyData?.risky_opportunity ? (
+                            <RiskyOpportunity
+                                data={strategyData.risky_opportunity}
+                                onExecuted={refreshStrategy}
                             />
                         ) : (
                             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-6 text-center h-full flex flex-col items-center justify-center">

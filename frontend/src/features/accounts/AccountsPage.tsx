@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 import { getUserPlan, getPlanLimit, getPlanName, syncPlanFromBackend } from '@/lib/planLimits';
 import { useForm } from 'react-hook-form';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -160,6 +161,11 @@ export default function AccountsPage() {
         syncPlanFromBackend(); // Sync plan from backend on mount
     }, []);
 
+    // Listen for data changes from Dashboard or Strategy pages
+    useDataSync('accounts', () => {
+        fetchAccounts();
+    });
+
     const onSubmit = async (values: AccountFormValues) => {
         // Guard: check account limit for debt accounts
         if (values.type === 'debt') {
@@ -185,6 +191,7 @@ export default function AccountsPage() {
             setIsDialogOpen(false);
             form.reset();
             toast({ title: t("accounts.accountCreated"), description: t("accounts.accountCreatedDesc") });
+            emitDataChanged('accounts');
         } catch (err) {
             console.error(err);
             setErrorMsg(t("accounts.failedCreate"));
@@ -199,6 +206,7 @@ export default function AccountsPage() {
             await apiFetch(`/api/accounts/${id}`, { method: 'DELETE' });
             setAccounts(prev => prev.filter(a => a.id !== id));
             toast({ title: t("accounts.accountDeleted"), variant: "destructive" });
+            emitDataChanged('accounts');
         } catch (e) {
             console.error("Delete failed", e);
         }
@@ -209,7 +217,7 @@ export default function AccountsPage() {
             await apiFetch('/api/accounts', { method: 'DELETE' });
             setAccounts([]);
             toast({ title: t("accounts.systemReset"), description: t("accounts.systemResetDesc") });
-            window.location.reload();
+            emitDataChanged('accounts');
         } catch (e) {
             console.error("Reset failed", e);
         }
