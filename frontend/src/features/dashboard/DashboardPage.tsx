@@ -79,7 +79,7 @@ interface DashboardData {
     attack_equity: number;
     reserved_for_bills?: number;
     velocity_target: VelocityTarget | null;
-    calendar?: any[];
+    calendar?: Record<string, unknown>[];
     unmonitored_debt?: number;
     locked_account_count?: number;
     debt_alerts?: DebtAlertData[];
@@ -124,11 +124,11 @@ export default function DashboardPage() {
     const loadDashboardData = useCallback(async () => {
         try {
             const [dashboardData, velocityData] = await Promise.all([
-                apiFetch(withPlanLimit('/api/dashboard')),
-                apiFetch(withPlanLimit('/api/velocity/projections'))
+                apiFetch<DashboardData>(withPlanLimit('/api/dashboard')),
+                apiFetch<VelocityProjections>(withPlanLimit('/api/velocity/projections'))
             ]);
-            setData(dashboardData as any);
-            setProjections(velocityData as any);
+            setData(dashboardData);
+            setProjections(velocityData);
         } catch (err) {
             console.error('Dashboard refresh failed:', err);
         }
@@ -169,15 +169,15 @@ export default function DashboardPage() {
 
     useEffect(() => {
         Promise.all([
-            apiFetch(withPlanLimit('/api/dashboard')),
-            apiFetch(withPlanLimit('/api/velocity/projections'))
+            apiFetch<DashboardData>(withPlanLimit('/api/dashboard')),
+            apiFetch<VelocityProjections>(withPlanLimit('/api/velocity/projections'))
         ])
             .then(([dashboardData, velocityData]) => {
-                setData(dashboardData as any);
-                setProjections(velocityData as any);
+                setData(dashboardData);
+                setProjections(velocityData);
                 // Snapshot starting debt for Before/After card (first visit only)
-                if ((dashboardData as any)?.total_debt) {
-                    recordStartingDebt((dashboardData as any).total_debt);
+                if (dashboardData?.total_debt) {
+                    recordStartingDebt(dashboardData.total_debt);
                 }
                 setLoading(false);
             })

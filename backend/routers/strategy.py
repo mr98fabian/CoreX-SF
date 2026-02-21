@@ -157,18 +157,47 @@ async def get_tactical_gps(
 
 @router.post("/strategy/execute")
 async def execute_movement(data: MovementExecute, user_id: str = Depends(get_current_user_id)):
-    """Executes a tactical movement by creating a transaction and UPDATING BALANCES."""
+    """Executes a tactical movement by creating a transaction and UPDATING BALANCES.
+
+    Includes fuzzy account name matching as fallback for cases where the
+    Action Plan generates slightly different names than what's stored in DB.
+    """
+    import logging
+    logger = logging.getLogger("corex.execute")
+
     with Session(engine) as session:
         amount = Decimal(str(data.amount))
 
-        # 1. Find Source Account (e.g. Chase) — scoped to user
-        source_acc = session.exec(select(Account).where(Account.name == data.source, Account.user_id == user_id)).first()
+        # Load ALL user accounts once for efficient matching
+        all_accounts = session.exec(
+            select(Account).where(Account.user_id == user_id)
+        ).all()
+
+        def find_account(name: str) -> Account | None:
+            """Try exact match first, then case-insensitive, then partial match."""
+            # 1. Exact match
+            for acc in all_accounts:
+                if acc.name == name:
+                    return acc
+            # 2. Case-insensitive match
+            name_lower = name.lower().strip()
+            for acc in all_accounts:
+                if acc.name.lower().strip() == name_lower:
+                    return acc
+            # 3. Partial match (name contains or is contained by)
+            for acc in all_accounts:
+                if name_lower in acc.name.lower() or acc.name.lower() in name_lower:
+                    return acc
+            return None
+
+        # 1. Find Source Account (e.g. "Marcus Savings (Investment)")
+        source_acc = find_account(data.source)
         if source_acc:
             source_acc.balance -= amount
             session.add(source_acc)
 
-        # 2. Find Destination Account (e.g. Credit Card) — scoped to user
-        dest_acc = session.exec(select(Account).where(Account.name == data.destination, Account.user_id == user_id)).first()
+        # 2. Find Destination Account (e.g. "Amex Platinum Business")
+        dest_acc = find_account(data.destination)
         if dest_acc:
             dest_acc.balance -= amount
             if dest_acc.type == "debt":
@@ -178,10 +207,24 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
                 )
             session.add(dest_acc)
 
-        # 3. Record Transaction
-        primary_account_id = source_acc.id if source_acc else (dest_acc.id if dest_acc else None)
-        if not primary_account_id:
-            raise HTTPException(status_code=400, detail="Execution Failed: Source nor Destination account found in DB.")
+        # 3. Validate at least one account was found
+        if not source_acc and not dest_acc:
+            available = [f"'{a.name}' ({a.type})" for a in all_accounts]
+            logger.warning(
+                f"Execute failed for user {user_id}: "
+                f"source='{data.source}' dest='{data.destination}' not found. "
+                f"Available: {available}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Neither source '{data.source}' nor destination '{data.destination}' "
+                    f"found in your accounts."
+                ),
+            )
+
+        # 4. Record Transaction
+        primary_account_id = source_acc.id if source_acc else dest_acc.id  # type: ignore[union-attr]
 
         try:
             tx = Transaction(
@@ -196,13 +239,21 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
             session.add(tx)
             with bypass_fk(session):
                 session.commit()
+
+            logger.info(
+                f"Movement executed: user={user_id} amount={amount} "
+                f"src={'✓' if source_acc else '✗'} dest={'✓' if dest_acc else '✗'}"
+            )
+
             return {
                 "status": "executed",
-                "new_balance_source": source_acc.balance if source_acc else "N/A",
+                "new_balance_source": float(source_acc.balance) if source_acc else "N/A",
+                "new_balance_dest": float(dest_acc.balance) if dest_acc else "N/A",
                 "source_found": bool(source_acc),
                 "dest_found": bool(dest_acc),
             }
         except Exception as e:
+            logger.error(f"Execute commit failed: user={user_id} error={e}")
             raise HTTPException(status_code=400, detail=f"Execution Failed: {str(e)}")
 
 

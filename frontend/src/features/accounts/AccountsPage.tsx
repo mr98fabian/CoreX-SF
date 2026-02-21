@@ -138,8 +138,8 @@ export default function AccountsPage() {
     const fetchAccounts = async () => {
         try {
             setErrorMsg(null);
-            const data = await apiFetch<any[]>('/api/accounts');
-            const safeData = data.map((acc: any) => ({
+            const data = await apiFetch<Account[]>('/api/accounts');
+            const safeData = data.map((acc) => ({
                 ...acc,
                 balance: Number(acc.balance),
                 interest_rate: Number(acc.interest_rate),
@@ -1339,6 +1339,7 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
 
     // Transaction Form
     const txForm = useForm<TransactionFormValues>({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolver: zodResolver(transactionFormSchema) as any,
         defaultValues: {
             description: "",
@@ -1351,7 +1352,7 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
     const fetchTransactions = async () => {
         setLoading(true);
         try {
-            const data = await apiFetch<any[]>(`/api/accounts/${account.id}/transactions`);
+            const data = await apiFetch<Transaction[]>(`/api/accounts/${account.id}/transactions`);
             setTransactions(data);
         } catch (e) {
             console.error("Failed to load transactions", e);
