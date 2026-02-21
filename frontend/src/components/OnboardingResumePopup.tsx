@@ -43,58 +43,73 @@ export function OnboardingResumePopup({ onResume }: OnboardingResumePopupProps) 
     return (
         <AnimatePresence>
             {visible && (
+                /* Overlay: centered on mobile, bottom-right on sm+ */
                 <motion.div
-                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                    className="fixed bottom-6 right-6 z-50 max-w-sm w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-end sm:justify-end sm:p-6"
                 >
-                    <div className="relative p-5 rounded-2xl bg-slate-950/95 border border-amber-500/20 shadow-2xl shadow-amber-500/10 backdrop-blur-xl">
-                        {/* Close button */}
-                        <button
-                            onClick={handleDismiss}
-                            className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
+                    {/* Backdrop — mobile only (tap-to-dismiss) */}
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm sm:bg-transparent sm:backdrop-blur-none"
+                        onClick={handleDismiss}
+                    />
 
-                        {/* Content */}
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
-                                <Rocket className="h-5 w-5 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-bold text-white mb-1">
-                                    {language === 'es'
-                                        ? '¿Listo para tu carrera millonaria? 🚀'
-                                        : 'Ready for your millionaire run? 🚀'}
-                                </h3>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                    {language === 'es'
-                                        ? 'Completa el tutorial para desbloquear todo el poder del motor de velocidad y acelerar tu libertad financiera.'
-                                        : 'Complete the tutorial to unlock the full power of the velocity engine and accelerate your financial freedom.'}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-2 mt-4">
-                            <Button
-                                onClick={handleResume}
-                                className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white text-xs h-8"
-                            >
-                                {language === 'es' ? '¡Empezar ahora!' : 'Start now!'}
-                            </Button>
-                            <Button
-                                variant="ghost"
+                    {/* Card */}
+                    <motion.div
+                        initial={{ y: 40, scale: 0.95 }}
+                        animate={{ y: 0, scale: 1 }}
+                        exit={{ y: 20, scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                        className="relative w-full max-w-sm"
+                    >
+                        <div className="relative p-5 rounded-2xl bg-slate-950/95 border border-amber-500/20 shadow-2xl shadow-amber-500/10 backdrop-blur-xl">
+                            {/* Close button */}
+                            <button
                                 onClick={handleDismiss}
-                                className="text-slate-500 hover:text-white text-xs h-8"
+                                className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors"
                             >
-                                {language === 'es' ? 'Después' : 'Later'}
-                            </Button>
+                                <X size={16} />
+                            </button>
+
+                            {/* Content */}
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-amber-500/20">
+                                    <Rocket className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-sm font-bold text-white mb-1">
+                                        {language === 'es'
+                                            ? '¿Listo para tu carrera millonaria? 🚀'
+                                            : 'Ready for your millionaire run? 🚀'}
+                                    </h3>
+                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                        {language === 'es'
+                                            ? 'Completa el tutorial para desbloquear todo el poder del motor de velocidad y acelerar tu libertad financiera.'
+                                            : 'Complete the tutorial to unlock the full power of the velocity engine and accelerate your financial freedom.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-2 mt-4">
+                                <Button
+                                    onClick={handleResume}
+                                    className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white text-xs h-8"
+                                >
+                                    {language === 'es' ? '¡Empezar ahora!' : 'Start now!'}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={handleDismiss}
+                                    className="text-slate-500 hover:text-white text-xs h-8"
+                                >
+                                    {language === 'es' ? 'Después' : 'Later'}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </motion.div>
             )}
         </AnimatePresence>

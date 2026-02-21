@@ -88,8 +88,8 @@ export function SessionTimeoutWarning() {
     if (!showWarning || !user) return null;
 
     return (
-        <div className="fixed bottom-4 right-4 z-[100] animate-in slide-in-from-bottom-4 fade-in duration-300 max-w-sm">
-            <div className="rounded-2xl border border-amber-500/30 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-amber-500/10 p-4 space-y-3">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:items-end sm:justify-end sm:p-4 pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="rounded-2xl border border-amber-500/30 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-amber-500/10 p-4 space-y-3 max-w-sm w-full pointer-events-auto">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 animate-pulse">
                         <Clock size={20} />
