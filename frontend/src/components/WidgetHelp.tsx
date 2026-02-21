@@ -427,7 +427,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
             {/* Subtle info icon — only visible on parent hover, positioned top-right */}
             <button
                 onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-                className="absolute top-2.5 right-2.5 z-10 p-1 rounded-full
+                className="absolute top-2.5 right-2.5 z-[1] p-1 rounded-full
                     text-slate-700/0 group-hover:text-slate-500 hover:!text-amber-400
                     hover:!bg-amber-400/10 transition-all duration-300 opacity-0
                     group-hover:opacity-100"
