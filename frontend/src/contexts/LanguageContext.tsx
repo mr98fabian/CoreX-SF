@@ -12,7 +12,8 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.actionPlan": { en: "Action Plan", es: "Plan de Acción" },
     "nav.accounts": { en: "My Accounts", es: "Mis Cuentas" },
     "nav.rankings": { en: "Rankings", es: "Rangos" },
-
+    "nav.strategy": { en: "Strategy", es: "Estrategia" },
+    "nav.signIn": { en: "Sign In", es: "Iniciar Sesión" },
     "nav.settings": { en: "Settings", es: "Configuración" },
     "nav.analytics": { en: "Analytics", es: "Analíticas" },
     "nav.signOut": { en: "Sign Out", es: "Cerrar Sesión" },
@@ -322,7 +323,7 @@ const translations: Record<string, Record<Language, string>> = {
     "accounts.noAssets": { en: "No assets connected.", es: "Sin activos conectados." },
     "accounts.availableCash": { en: "Available Cash", es: "Efectivo Disponible" },
     "accounts.history": { en: "History", es: "Historial" },
-    "accounts.deposit": { en: "Deposit", es: "Depósitar" },
+    "accounts.deposit": { en: "Deposit", es: "Depositar" },
     "accounts.spend": { en: "Spend", es: "Gastar" },
 
     // Accounts — action dialogs

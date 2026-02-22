@@ -9,8 +9,8 @@ import { useState } from 'react';
 import UpgradeModal from '@/components/UpgradeModal';
 
 export default function RankingsPage() {
-    usePageTitle('Rankings');
-    const { language } = useLanguage();
+    const { t, language } = useLanguage();
+    usePageTitle(t('nav.rankings'));
     const streak = useLoginStreak();
     const plan = localStorage.getItem('corex-plan') || 'starter';
     const isPaid = plan !== 'starter';

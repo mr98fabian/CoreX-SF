@@ -26,7 +26,7 @@ export default function DashboardLayout() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
     const location = useLocation();
     const { user, signOut } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { isDark, toggleTheme } = useTheme();
     const onboarding = useOnboarding();
     const { celebrate } = useCelebration();
@@ -207,7 +207,9 @@ export default function DashboardLayout() {
                         size="icon"
                         onClick={toggleTheme}
                         className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
-                        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        title={isDark
+                            ? (language === 'es' ? 'Cambiar a Modo Claro' : 'Switch to Light Mode')
+                            : (language === 'es' ? 'Cambiar a Modo Oscuro' : 'Switch to Dark Mode')}
                     >
                         {isDark ? <Sun size={18} strokeWidth={1.5} /> : <Moon size={18} strokeWidth={1.5} />}
                     </Button>

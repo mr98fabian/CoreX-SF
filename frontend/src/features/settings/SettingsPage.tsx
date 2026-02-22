@@ -151,8 +151,8 @@ const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
 //  SETTINGS PAGE
 // ═══════════════════════════════════════════════════════════════════
 export default function SettingsPage() {
-    usePageTitle("Settings");
     const { t, language, setLanguage } = useLanguage();
+    usePageTitle(t("nav.settings"));
     const { user, isDemo } = useAuth();
     const onboarding = useOnboarding();
 

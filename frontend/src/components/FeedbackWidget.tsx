@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Bug, X, Send, Loader2, CheckCircle2, Sparkles, AlertTriangle, Palette, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ─── Types ─────────────────────────────────────────────────
 type ReportType = 'bug' | 'feature' | 'ui' | 'other';
@@ -15,18 +16,18 @@ interface SystemContext {
     timestamp: string;
 }
 
-// ─── Report Type Options ───────────────────────────────────
-const REPORT_TYPES: { value: ReportType; icon: typeof Bug; label: string; color: string }[] = [
-    { value: 'bug', icon: Bug, label: 'Bug', color: 'text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
-    { value: 'feature', icon: Sparkles, label: 'Feature', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' },
-    { value: 'ui', icon: Palette, label: 'UI Issue', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
-    { value: 'other', icon: HelpCircle, label: 'Other', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20' },
+// ─── Bilingual Labels ──────────────────────────────────────
+const REPORT_TYPES_I18N: { value: ReportType; icon: typeof Bug; labelEn: string; labelEs: string; color: string }[] = [
+    { value: 'bug', icon: Bug, labelEn: 'Bug', labelEs: 'Bug', color: 'text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
+    { value: 'feature', icon: Sparkles, labelEn: 'Feature', labelEs: 'Función', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' },
+    { value: 'ui', icon: Palette, labelEn: 'UI Issue', labelEs: 'Error UI', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
+    { value: 'other', icon: HelpCircle, labelEn: 'Other', labelEs: 'Otro', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20' },
 ];
 
-const PRIORITIES: { value: Priority; emoji: string; label: string }[] = [
-    { value: 'low', emoji: '🟢', label: 'Low' },
-    { value: 'medium', emoji: '🟡', label: 'Medium' },
-    { value: 'high', emoji: '🔴', label: 'Critical' },
+const PRIORITIES_I18N: { value: Priority; emoji: string; labelEn: string; labelEs: string }[] = [
+    { value: 'low', emoji: '🟢', labelEn: 'Low', labelEs: 'Baja' },
+    { value: 'medium', emoji: '🟡', labelEn: 'Medium', labelEs: 'Media' },
+    { value: 'high', emoji: '🔴', labelEn: 'Critical', labelEs: 'Crítica' },
 ];
 
 // ─── Auto-detect system context ────────────────────────────
@@ -57,6 +58,8 @@ function getSystemContext(): SystemContext {
 // ─── Component ─────────────────────────────────────────────
 export default function FeedbackWidget() {
     const { toast } = useToast();
+    const { language } = useLanguage();
+    const isEs = language === 'es';
     const [isOpen, setIsOpen] = useState(false);
     const [isSent, setIsSent] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,6 +121,8 @@ export default function FeedbackWidget() {
         setIsSubmitting(true);
 
         const ctx = getSystemContext();
+        const reportType = REPORT_TYPES_I18N.find(r => r.value === type);
+        const priorityInfo = PRIORITIES_I18N.find(p => p.value === priority);
 
         try {
             const response = await fetch('https://formsubmit.co/ajax/mr98fabian@gmail.com', {
@@ -125,8 +130,8 @@ export default function FeedbackWidget() {
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({
                     _subject: `[KoreX ${type.toUpperCase()}] ${priority === 'high' ? '🔴 CRITICAL — ' : ''}${message.slice(0, 50)}`,
-                    type: `${REPORT_TYPES.find(r => r.value === type)?.label}`,
-                    priority: `${PRIORITIES.find(p => p.value === priority)?.emoji} ${PRIORITIES.find(p => p.value === priority)?.label}`,
+                    type: reportType ? (isEs ? reportType.labelEs : reportType.labelEn) : type,
+                    priority: `${priorityInfo?.emoji} ${isEs ? priorityInfo?.labelEs : priorityInfo?.labelEn}`,
                     email,
                     message,
                     _page: ctx.page,
@@ -142,8 +147,8 @@ export default function FeedbackWidget() {
             if (response.ok) {
                 setIsSent(true);
                 toast({
-                    title: '✅ Thanks for the feedback!',
-                    description: 'Your report has been sent successfully.',
+                    title: isEs ? '✅ ¡Gracias por tu comentario!' : '✅ Thanks for the feedback!',
+                    description: isEs ? 'Tu reporte fue enviado exitosamente.' : 'Your report has been sent successfully.',
                 });
             } else {
                 throw new Error('Send failed');
@@ -151,12 +156,19 @@ export default function FeedbackWidget() {
         } catch {
             toast({
                 title: 'Error',
-                description: 'Could not send your report. Please try again.',
+                description: isEs ? 'No se pudo enviar tu reporte. Intenta de nuevo.' : 'Could not send your report. Please try again.',
                 variant: 'destructive',
             });
         } finally {
             setIsSubmitting(false);
         }
+    }
+
+    // ─── Placeholder per type ──────────────────────────────
+    function getPlaceholder(): string {
+        if (type === 'bug') return isEs ? '¿Qué pasó? ¿Qué esperabas?' : 'What happened? What did you expect?';
+        if (type === 'feature') return isEs ? 'Describe la función que te gustaría ver...' : "Describe the feature you'd like to see...";
+        return isEs ? 'Cuéntanos lo que piensas...' : "Tell us what's on your mind...";
     }
 
     return (
@@ -178,15 +190,15 @@ export default function FeedbackWidget() {
                         <div className="mx-auto h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
                             <CheckCircle2 className="text-emerald-500" size={32} />
                         </div>
-                        <h3 className="text-lg font-semibold">Thanks! 🎉</h3>
+                        <h3 className="text-lg font-semibold">{isEs ? '¡Gracias! 🎉' : 'Thanks! 🎉'}</h3>
                         <p className="text-sm text-muted-foreground">
-                            Your feedback has been sent. We'll review it shortly.
+                            {isEs ? 'Tu comentario fue enviado. Lo revisaremos pronto.' : "Your feedback has been sent. We'll review it shortly."}
                         </p>
                         <button
                             onClick={() => setIsOpen(false)}
                             className="text-sm text-amber-500 hover:text-amber-400 font-medium transition-colors"
                         >
-                            Close
+                            {isEs ? 'Cerrar' : 'Close'}
                         </button>
                     </div>
                 ) : (
@@ -198,8 +210,8 @@ export default function FeedbackWidget() {
                                     <Bug size={16} className="text-amber-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-semibold">Send Feedback</h3>
-                                    <p className="text-[11px] text-muted-foreground">Help us improve KoreX</p>
+                                    <h3 className="text-sm font-semibold">{isEs ? 'Enviar Comentario' : 'Send Feedback'}</h3>
+                                    <p className="text-[11px] text-muted-foreground">{isEs ? 'Ayúdanos a mejorar KoreX' : 'Help us improve KoreX'}</p>
                                 </div>
                             </div>
                             <button
@@ -213,9 +225,9 @@ export default function FeedbackWidget() {
 
                         {/* Report Type Selector */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">Type</label>
+                            <label className="text-xs font-medium text-muted-foreground">{isEs ? 'Tipo' : 'Type'}</label>
                             <div className="grid grid-cols-4 gap-1.5">
-                                {REPORT_TYPES.map(({ value, icon: Icon, label, color }) => (
+                                {REPORT_TYPES_I18N.map(({ value, icon: Icon, labelEn, labelEs, color }) => (
                                     <button
                                         key={value}
                                         type="button"
@@ -228,7 +240,7 @@ export default function FeedbackWidget() {
                                         )}
                                     >
                                         <Icon size={16} />
-                                        {label}
+                                        {isEs ? labelEs : labelEn}
                                     </button>
                                 ))}
                             </div>
@@ -236,9 +248,9 @@ export default function FeedbackWidget() {
 
                         {/* Priority */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">Priority</label>
+                            <label className="text-xs font-medium text-muted-foreground">{isEs ? 'Prioridad' : 'Priority'}</label>
                             <div className="flex gap-1.5">
-                                {PRIORITIES.map(({ value, emoji, label }) => (
+                                {PRIORITIES_I18N.map(({ value, emoji, labelEn, labelEs }) => (
                                     <button
                                         key={value}
                                         type="button"
@@ -251,7 +263,7 @@ export default function FeedbackWidget() {
                                         )}
                                     >
                                         <span>{emoji}</span>
-                                        {label}
+                                        {isEs ? labelEs : labelEn}
                                     </button>
                                 ))}
                             </div>
@@ -259,13 +271,13 @@ export default function FeedbackWidget() {
 
                         {/* Email */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">Your Email</label>
+                            <label className="text-xs font-medium text-muted-foreground">{isEs ? 'Tu Correo' : 'Your Email'}</label>
                             <input
                                 type="email"
                                 required
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@email.com"
+                                placeholder={isEs ? 'tu@correo.com' : 'you@email.com'}
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border transition-colors',
                                     'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/5',
@@ -277,16 +289,12 @@ export default function FeedbackWidget() {
 
                         {/* Message */}
                         <div className="space-y-1.5">
-                            <label className="text-xs font-medium text-muted-foreground">Description</label>
+                            <label className="text-xs font-medium text-muted-foreground">{isEs ? 'Descripción' : 'Description'}</label>
                             <textarea
                                 required
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
-                                placeholder={type === 'bug'
-                                    ? 'What happened? What did you expect?'
-                                    : type === 'feature'
-                                        ? "Describe the feature you'd like to see..."
-                                        : "Tell us what's on your mind..."}
+                                placeholder={getPlaceholder()}
                                 rows={4}
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border resize-none transition-colors',
@@ -300,7 +308,9 @@ export default function FeedbackWidget() {
                         {/* Context info (auto-captured) */}
                         <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-600">
                             <AlertTriangle size={10} />
-                            Page, browser & device info will be included automatically.
+                            {isEs
+                                ? 'La página, navegador e info del dispositivo se incluirán automáticamente.'
+                                : 'Page, browser & device info will be included automatically.'}
                         </div>
 
                         {/* Submit */}
@@ -318,12 +328,12 @@ export default function FeedbackWidget() {
                             {isSubmitting ? (
                                 <>
                                     <Loader2 size={14} className="animate-spin" />
-                                    Sending...
+                                    {isEs ? 'Enviando...' : 'Sending...'}
                                 </>
                             ) : (
                                 <>
                                     <Send size={14} />
-                                    Send Report
+                                    {isEs ? 'Enviar Reporte' : 'Send Report'}
                                 </>
                             )}
                         </button>
@@ -334,7 +344,7 @@ export default function FeedbackWidget() {
             {/* ─── Floating Trigger Button ────────────────────── */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                aria-label="Report a bug or send feedback"
+                aria-label={isEs ? 'Reportar un bug o enviar comentario' : 'Report a bug or send feedback'}
                 className={cn(
                     'group relative h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto',
                     'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10',

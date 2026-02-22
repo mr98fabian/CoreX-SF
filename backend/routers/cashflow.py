@@ -409,22 +409,22 @@ async def confirm_recurring(
         with bypass_fk(session):
             session.add(tx)
 
-        # Update account balance if linked
-        if effective_account_id:
-            account = session.get(Account, effective_account_id)
-            if account:
-                if is_income:
-                    account.balance += actual_amount
-                else:
-                    account.balance -= actual_amount
-                session.add(account)
+            # Update account balance if linked
+            if effective_account_id:
+                account = session.get(Account, effective_account_id)
+                if account:
+                    if is_income:
+                        account.balance += actual_amount
+                    else:
+                        account.balance -= actual_amount
+                    session.add(account)
 
-        # Mark as confirmed today and clear any snooze
-        item.last_executed_date = today_str
-        item.snooze_until = None
-        session.add(item)
+            # Mark as confirmed today and clear any snooze
+            item.last_executed_date = today_str
+            item.snooze_until = None
+            session.add(item)
 
-        session.commit()
+            session.commit()
 
         # Fetch account name for response
         account_name = None

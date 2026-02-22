@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -155,7 +156,8 @@ function FormInput({
 type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 
 export default function LoginPage() {
-    usePageTitle('Sign In');
+    const { t } = useLanguage();
+    usePageTitle(t('nav.signIn'));
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword, signInAsDemo } = useAuth();
 
     const [view, setView] = useState<ViewState>('signin');

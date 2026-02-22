@@ -96,9 +96,9 @@ interface VelocityProjections {
 }
 
 export default function DashboardPage() {
-    usePageTitle('Dashboard');
     const { user } = useAuth();
     const { t, language } = useLanguage();
+    usePageTitle(t('nav.dashboard'));
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.user_metadata?.name?.split(' ')[0] || 'there';
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                 toast({ title: t('dashboard.connectionError'), description: t('dashboard.connectionErrorDesc'), variant: 'destructive' });
                 setLoading(false);
             });
-    }, []);
+    }, [t, toast]);
 
     // Greeting based on time of day
     const hour = new Date().getHours();

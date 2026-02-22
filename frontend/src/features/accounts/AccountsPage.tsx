@@ -96,8 +96,8 @@ interface Transaction {
 }
 
 export default function AccountsPage() {
-    usePageTitle('Accounts');
     const { t, language } = useLanguage();
+    usePageTitle(t('nav.accounts'));
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const [accounts, setAccounts] = useState<Account[]>([]);

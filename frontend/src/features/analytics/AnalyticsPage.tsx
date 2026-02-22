@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,7 +49,8 @@ function getCategoryColor(name: string): string {
 
 // ─── Component ─────────────────────────────────────────────
 export default function AnalyticsPage() {
-    usePageTitle('Analytics');
+    const { t } = useLanguage();
+    usePageTitle(t('nav.analytics'));
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
 

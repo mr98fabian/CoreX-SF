@@ -3,6 +3,7 @@ import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 import { WidgetHelp } from '@/components/WidgetHelp';
 import { Button } from "@/components/ui/button";
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from "@/components/ui/use-toast";
 import { apiFetch } from '@/lib/api';
 import { useStrategyData } from "./hooks/useStrategyData";
@@ -20,7 +21,8 @@ import ArbitrageAlertPanel from "./components/ArbitrageAlertPanel";
 
 
 export default function StrategyPage() {
-    usePageTitle('Strategy');
+    const { t } = useLanguage();
+    usePageTitle(t('nav.strategy'));
     const { data, loading, error, refresh } = useStrategyData();
     const { toast } = useToast();
 
