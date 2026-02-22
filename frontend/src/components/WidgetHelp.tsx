@@ -387,6 +387,54 @@ const HELP_CONTENT: Record<string, HelpContent> = {
         locationEs: '📍 Fuente de Datos: Foto de deuda inicial (primera visita) vs. saldo actual de Cuentas',
     },
 
+    // ── Rankings Page Widgets ────────────────────────────────────
+
+    rankHero: {
+        title: 'Your Commander Rank',
+        titleEs: 'Tu Rango de Comandante',
+        icon: '🎖️',
+        description: 'Your rank is determined by streak points (XP) accumulated by logging transactions daily. The ranking system has 90 total levels across 10 material tiers and 9 military ranks.',
+        descriptionEs: 'Tu rango se determina por los puntos de racha (XP) que acumulas al registrar transacciones diariamente. El sistema de rangos tiene 90 niveles totales en 10 materiales y 9 rangos militares.',
+        bullets: [
+            { icon: '🔥', text: 'Streak Points: Each daily transaction adds to your streak score', textEs: 'Puntos de Racha: Cada transacción diaria suma a tu puntaje de racha' },
+            { icon: '⚡', text: 'Effective XP: Your streak score with VIP multiplier applied', textEs: 'XP Efectivo: Tu puntaje de racha con el multiplicador VIP aplicado' },
+            { icon: '👑', text: 'VIP members earn 2x XP, reaching max rank twice as fast', textEs: 'Miembros VIP ganan 2x XP, alcanzando el rango máximo el doble de rápido' },
+            { icon: '📊', text: 'Progress bar shows your advancement to the next rank', textEs: 'La barra de progreso muestra tu avance al siguiente rango' },
+        ],
+        location: '📍 Boost: Register at least 1 transaction daily to increase your streak',
+        locationEs: '📍 Impulsar: Registra al menos 1 transacción diaria para aumentar tu racha',
+    },
+    howItWorks: {
+        title: 'How Ranking Works',
+        titleEs: 'Cómo Funciona el Sistema de Rangos',
+        icon: '🛡️',
+        description: 'Three core mechanics power the ranking system: daily transaction logging, inactivity penalties, and VIP bonus multipliers.',
+        descriptionEs: 'Tres mecánicas principales impulsan el sistema de rangos: registro diario de transacciones, penalización por inactividad, y multiplicadores de bonus VIP.',
+        bullets: [
+            { icon: '✅', text: 'Rank Up: Register at least 1 transaction daily to earn streak points', textEs: 'Sube de Rango: Registra al menos 1 transacción diaria para ganar puntos de racha' },
+            { icon: '⚠️', text: 'Penalty: Each missed day deducts 2 points from your streak', textEs: 'Penalización: Cada día sin registro resta 2 puntos de tu racha' },
+            { icon: '👑', text: 'VIP Boost: Paid members earn 2x XP per transaction logged', textEs: 'Boost VIP: Miembros pagados ganan 2x XP por transacción registrada' },
+            { icon: '🎯', text: 'Consistency is key — small daily habits build massive progress', textEs: 'La constancia es clave — pequeños hábitos diarios construyen progreso masivo' },
+        ],
+        location: '📍 Navigate: Rankings → Full Rank Table to see all 90 levels',
+        locationEs: '📍 Navegar: Rankings → Tabla Completa de Rangos para ver los 90 niveles',
+    },
+    rankBenefits: {
+        title: 'Rank Benefits',
+        titleEs: 'Beneficios por Rango',
+        icon: '⭐',
+        description: 'As you rank up you unlock tangible benefits: achievement badges, better financial health score, disciplined habits, and visual prestige throughout the app.',
+        descriptionEs: 'Conforme subes de rango desbloqueas beneficios tangibles: insignias de logro, mejor puntaje de salud financiera, hábitos disciplinados y prestigio visual en toda la app.',
+        bullets: [
+            { icon: '🏅', text: 'Achievement Badges: Unlock exclusive badges on your Achievement Wall', textEs: 'Insignias de Logro: Desbloquea insignias exclusivas en tu Muro de Logros' },
+            { icon: '💚', text: 'Financial Health: Your rank directly contributes to your Health Score', textEs: 'Salud Financiera: Tu rango contribuye directamente a tu Puntaje de Salud' },
+            { icon: '🎯', text: 'Discipline: Daily streaks build the most powerful financial habit', textEs: 'Disciplina: Las rachas diarias construyen el hábito financiero más poderoso' },
+            { icon: '✨', text: 'Visual Prestige: Your rank glows on Dashboard and sidebar', textEs: 'Prestigio Visual: Tu rango brilla en el Dashboard y la barra lateral' },
+        ],
+        location: '📍 Progress: Keep ranking up to unlock all badges and visual upgrades',
+        locationEs: '📍 Progreso: Sigue subiendo de rango para desbloquear todas las insignias y mejoras visuales',
+    },
+
     // ── Add Transaction Dialog (Dashboard) ─────────────────────────
     addTransaction: {
         title: 'How to Register a Transaction',
@@ -427,7 +475,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
             {/* Subtle info icon — only visible on parent hover, positioned top-right */}
             <button
                 onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-                className="absolute top-2.5 right-2.5 z-[1] p-1 rounded-full
+                className="absolute top-2.5 left-2.5 z-[1] p-1 rounded-full
                     text-slate-700/0 group-hover:text-slate-500 hover:!text-amber-400
                     hover:!bg-amber-400/10 transition-all duration-300 opacity-0
                     group-hover:opacity-100"

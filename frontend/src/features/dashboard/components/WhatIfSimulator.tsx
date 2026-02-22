@@ -40,10 +40,10 @@ export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfS
 
 
     return (
-        <Card className="border-white/10 bg-black/40 backdrop-blur-xl h-full flex flex-col">
+        <Card className="border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl h-full flex flex-col">
             <CardHeader className="pb-2 pt-4 px-4">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-white text-sm">
+                    <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-sm">
                         <Calculator className="h-4 w-4 text-purple-400" />
                         Simulador "What If?"
                     </CardTitle>

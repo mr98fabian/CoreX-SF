@@ -106,7 +106,26 @@ export function useRecurringDueToday(): DueTodayState {
             }
 
             return result;
-        } catch (err) {
+        } catch (err: unknown) {
+            // Re-throw INSUFFICIENT_FUNDS so the caller can show a popup
+            let isInsufficientFunds = false;
+            try {
+                const errObj = err as Record<string, unknown>;
+                // Try .detail directly (plain object)
+                const directDetail = errObj?.detail as Record<string, unknown> | undefined;
+                if (directDetail?.code === "INSUFFICIENT_FUNDS") {
+                    isInsufficientFunds = true;
+                } else if (errObj?.message && typeof errObj.message === 'string') {
+                    // ApiError: parse JSON body from .message
+                    const parsed = JSON.parse(errObj.message);
+                    if (parsed?.detail?.code === "INSUFFICIENT_FUNDS") {
+                        isInsufficientFunds = true;
+                    }
+                }
+            } catch { /* not parseable */ }
+            if (isInsufficientFunds) {
+                throw err;
+            }
             console.error('Failed to confirm recurring item:', err);
             return null;
         }

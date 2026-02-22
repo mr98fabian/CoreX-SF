@@ -78,13 +78,13 @@ export default function RecurringConfirmModal({
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/40 animate-in zoom-in-95 fade-in duration-300 overflow-hidden">
+            <div className="relative w-full max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 animate-in zoom-in-95 fade-in duration-300 overflow-hidden">
                 {/* Header — gradient accent bar */}
                 <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500" />
 
                 <div className="px-6 pt-5 pb-2 flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <Sparkles size={18} className="text-amber-400" />
                             {isEs ? 'Confirmación del Día' : "Today's Check-In"}
                         </h2>
@@ -96,7 +96,7 @@ export default function RecurringConfirmModal({
                     </div>
                     <button
                         onClick={onDismiss}
-                        className="text-slate-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+                        className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
                         <X size={18} />
                     </button>
@@ -106,7 +106,7 @@ export default function RecurringConfirmModal({
                 {totalItems > 0 && (
                     <div className="px-6 pb-3">
                         <div className="flex items-center gap-3">
-                            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
                                     style={{ width: `${progress}%` }}
@@ -149,7 +149,7 @@ export default function RecurringConfirmModal({
                                     relative rounded-xl border transition-all duration-300
                                     ${isItemJustConfirmed
                                         ? 'border-emerald-500/40 bg-emerald-500/10 scale-[0.98]'
-                                        : 'border-slate-700/50 bg-slate-800/50 hover:border-slate-600/50'
+                                        : 'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-600/50'
                                     }
                                 `}
                             >
@@ -167,7 +167,7 @@ export default function RecurringConfirmModal({
                                                 {item.is_income ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-white">{item.name}</p>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{item.name}</p>
                                                 <p className="text-[10px] text-slate-500">
                                                     {item.account_name || (isEs ? 'Sin cuenta vinculada' : 'No linked account')}
                                                     {' · '}
@@ -199,7 +199,7 @@ export default function RecurringConfirmModal({
                                                 onChange={(e) =>
                                                     setEditingAmounts(prev => ({ ...prev, [item.id]: e.target.value }))
                                                 }
-                                                className="w-full pl-7 pr-3 py-2 text-sm font-mono bg-slate-900/80 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all"
+                                                className="w-full pl-7 pr-3 py-2 text-sm font-mono bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/50 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-cyan-500/40 focus:border-cyan-500/40 transition-all"
                                                 disabled={isItemConfirming}
                                             />
                                             {item.is_variable && (
@@ -231,21 +231,21 @@ export default function RecurringConfirmModal({
                                                 <button
                                                     onClick={() => handleSnooze(item.id, '2h')}
                                                     disabled={isItemSnoozing}
-                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all"
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/50 text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
                                                 >
                                                     <Clock size={10} /> 2h
                                                 </button>
                                                 <button
                                                     onClick={() => handleSnooze(item.id, 'tomorrow')}
                                                     disabled={isItemSnoozing}
-                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-[10px] text-slate-400 hover:text-white transition-all"
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700/50 text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
                                                 >
                                                     <ArrowRight size={10} /> {isEs ? 'Mañana' : 'Tomorrow'}
                                                 </button>
                                                 <button
                                                     onClick={() => handleSnooze(item.id, 'skip_month')}
                                                     disabled={isItemSnoozing}
-                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-800 hover:bg-rose-900/30 border border-slate-700/50 text-[10px] text-slate-400 hover:text-rose-400 transition-all"
+                                                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-900/30 border border-slate-200 dark:border-slate-700/50 text-[10px] text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
                                                 >
                                                     <CalendarOff size={10} /> {isEs ? 'Saltar mes' : 'Skip month'}
                                                 </button>
@@ -290,7 +290,7 @@ export default function RecurringConfirmModal({
                         </p>
                         <button
                             onClick={onDismiss}
-                            className="mt-4 px-6 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm text-white transition-colors"
+                            className="mt-4 px-6 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm text-slate-700 dark:text-white transition-colors"
                         >
                             {isEs ? 'Cerrar' : 'Close'}
                         </button>
@@ -298,7 +298,7 @@ export default function RecurringConfirmModal({
                 )}
 
                 {/* Footer — disclaimer */}
-                <div className="px-6 py-3 border-t border-slate-800/50 bg-slate-900/50">
+                <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
                     <p className="text-[10px] text-slate-600 text-center">
                         {isEs
                             ? 'Confirmar registra la transacción y actualiza tu saldo automáticamente'

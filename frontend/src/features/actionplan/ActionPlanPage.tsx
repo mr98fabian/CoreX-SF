@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import UpgradeModal from '@/components/UpgradeModal';
 import { WidgetHelp } from '@/components/WidgetHelp';
+import { InsufficientFundsDialog } from '@/components/InsufficientFundsDialog';
+import { useInsufficientFundsDialog } from '@/hooks/useInsufficientFundsDialog';
 import {
     Select,
     SelectContent,
@@ -116,6 +118,7 @@ const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; ic
     expense: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.badgeExpense' },
     float_kill: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeFloatKill' },
     hybrid_kill: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeHybridKill' },
+    velocity_chunk: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30', icon: <Zap size={14} className="fill-purple-400" />, labelKey: 'actionPlan.badgeVelocityChunk' },
 };
 
 const getTypeStyle = (type: string) =>
@@ -145,6 +148,7 @@ export default function ActionPlanPage() {
     const { formatMoney } = useFormatMoney();
     usePageTitle(t('actionPlan.title'));
     const { toast } = useToast();
+    const fundsDialog = useInsufficientFundsDialog();
 
     // ── State ────────────────────────────────────────────────
     const [movements, setMovements] = useState<TacticalMovement[]>([]);
@@ -347,21 +351,38 @@ export default function ActionPlanPage() {
                 description: `${formatMoney(movement.amount)} ${t('actionPlan.moved')}: ${movement.source} → ${movement.destination}`,
             });
             await fetchData();
-        } catch (err: any) {
-            // Extract backend detail if available for better debugging
-            let errorDetail = t('actionPlan.executionFailedDesc');
-            try {
-                if (err?.detail) {
-                    errorDetail = err.detail;
-                } else if (err?.message) {
-                    errorDetail = err.message;
-                }
-            } catch { /* use default */ }
-            toast({
-                title: t('actionPlan.executionFailed'),
-                description: errorDetail,
-                variant: 'destructive',
-            });
+        } catch (err: unknown) {
+            // Check for INSUFFICIENT_FUNDS and show dedicated popup
+            if (fundsDialog.showIfInsufficientFunds(err)) {
+                // Handled by popup
+            } else {
+                // Fallback: generic error toast
+                let errorDetail = t('actionPlan.executionFailedDesc');
+                try {
+                    const errObj = err as Record<string, unknown>;
+                    const rawMsg = (errObj?.message as string) ?? '';
+                    // ApiError.message is the raw JSON body — try to parse it
+                    try {
+                        const parsed = JSON.parse(rawMsg);
+                        const detail = parsed?.detail;
+                        if (typeof detail === 'string') {
+                            errorDetail = detail;
+                        } else if (detail?.message) {
+                            errorDetail = String(detail.message);
+                        }
+                    } catch {
+                        // Not JSON — use the raw message if it's not empty
+                        if (rawMsg && rawMsg.length < 200) {
+                            errorDetail = rawMsg;
+                        }
+                    }
+                } catch { /* use default */ }
+                toast({
+                    title: t('actionPlan.executionFailed'),
+                    description: errorDetail,
+                    variant: 'destructive',
+                });
+            }
         } finally {
             setExecutingKey(null);
         }
@@ -617,7 +638,7 @@ export default function ActionPlanPage() {
                                         <div
                                             key={`${m.date}-${m.title}-${i}`}
                                             className={`
-                                            rounded-lg p-4 space-y-3 transition-all duration-200
+                                            rounded-lg p-3 space-y-3 transition-all duration-200 overflow-hidden
                                             ${isToday
                                                     ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
                                                     : isPast
@@ -627,33 +648,33 @@ export default function ActionPlanPage() {
                                         `}
                                         >
                                             {/* Row 1: Date + Type + Execute */}
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-                                                    <span className={`text-sm font-mono ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-1.5 min-w-0 overflow-hidden flex-wrap">
+                                                    {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
+                                                    <span className={`text-xs font-mono shrink-0 ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>
                                                         {m.display_date}
                                                     </span>
                                                     {isToday && (
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
                                                             {t('actionPlan.today')}
                                                         </span>
                                                     )}
-                                                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5`}>
+                                                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5 shrink-0`}>
                                                         {style.icon}
                                                         {t(style.labelKey)}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`text-sm font-bold ${style.text}`}>{formatMoney(m.amount)}</span>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <span className={`text-sm font-bold whitespace-nowrap ${style.text}`}>{formatMoney(m.amount)}</span>
                                                     {isPast ? (
-                                                        <Clock size={14} className="text-slate-400 dark:text-slate-600" />
+                                                        <Clock size={14} className="text-slate-400 dark:text-slate-600 shrink-0" />
                                                     ) : (
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
                                                             disabled={isExecuting}
                                                             onClick={() => handleRequestExecute(m)}
-                                                            className={`h-7 w-7 p-0 rounded-full transition-all ${isToday
+                                                            className={`h-7 w-7 p-0 rounded-full transition-all shrink-0 ${isToday
                                                                 ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 border border-emerald-500/30'
                                                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
                                                                 }`}
@@ -1119,6 +1140,7 @@ export default function ActionPlanPage() {
                 onOpenChange={setShowUpgrade}
                 reason={t('upgrade.moreAccountsDesc')}
             />
+            <InsufficientFundsDialog data={fundsDialog.errorData} onClose={fundsDialog.dismiss} />
         </>
     );
 }

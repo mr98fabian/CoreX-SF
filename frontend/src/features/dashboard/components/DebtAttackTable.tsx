@@ -59,14 +59,14 @@ export default function DebtAttackTable() {
     const velocityAmount = velocityData?.velocity_amount || 0;
 
     return (
-        <Card className="border-slate-800 bg-slate-950/50 backdrop-blur-xl">
+        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-xl">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="space-y-1">
-                    <CardTitle className="text-xl text-white flex items-center gap-2">
+                    <CardTitle className="text-xl text-slate-900 dark:text-white flex items-center gap-2">
                         <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
                         Debt Attack Strategy
                     </CardTitle>
-                    <CardDescription className="text-slate-400">
+                    <CardDescription className="text-slate-500 dark:text-slate-400">
                         Avalanche Method: Highest interest debts first.
                     </CardDescription>
                 </div>
@@ -92,11 +92,11 @@ export default function DebtAttackTable() {
                                         <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1 flex items-center gap-1">
                                             <AlertTriangle className="h-3 w-3" /> Priority Target
                                         </div>
-                                        <h3 className="text-lg font-bold text-white">{velocityTarget.name}</h3>
-                                        <div className="text-sm text-slate-400">{velocityTarget.apr}% APR</div>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{velocityTarget.name}</h3>
+                                        <div className="text-sm text-slate-500 dark:text-slate-400">{velocityTarget.apr}% APR</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-lg font-bold text-white">{formatMoney(velocityTarget.balance)}</div>
+                                        <div className="text-lg font-bold text-slate-900 dark:text-white">{formatMoney(velocityTarget.balance)}</div>
                                         <div className="text-xs text-zinc-500">Remaining Balance</div>
                                     </div>
                                 </div>
@@ -104,12 +104,12 @@ export default function DebtAttackTable() {
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex-1 space-y-1">
                                         <div className="flex justify-between text-xs">
-                                            <span className="text-slate-400">Attack Progress</span>
+                                            <span className="text-slate-500 dark:text-slate-400">Attack Progress</span>
                                             <span className="text-amber-400 font-mono">
                                                 {velocityAmount > 0 ? 'ACCELERATED' : 'STANDARD'}
                                             </span>
                                         </div>
-                                        <Progress value={35} className="h-2 bg-slate-900" indicatorClassName="bg-amber-500" />
+                                        <Progress value={35} className="h-2 bg-slate-200 dark:bg-slate-900" indicatorClassName="bg-amber-500" />
                                     </div>
 
                                     <TransactionDialog
@@ -142,28 +142,28 @@ export default function DebtAttackTable() {
                         )}
 
                         {/* TABLE OF OTHERS */}
-                        <div className="rounded-lg border border-zinc-800 overflow-hidden">
+                        <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
                             <table className="w-full text-sm">
-                                <thead className="bg-slate-900/50 text-zinc-400">
-                                    <tr className="border-b border-zinc-800">
+                                <thead className="bg-slate-100/80 dark:bg-slate-900/50 text-slate-500 dark:text-zinc-400">
+                                    <tr className="border-b border-slate-200 dark:border-zinc-800">
                                         <th className="py-3 px-4 text-left font-medium">Debt Name</th>
                                         <th className="py-3 px-4 text-left font-medium">APR</th>
                                         <th className="py-3 px-4 text-right font-medium">Balance</th>
                                         <th className="py-3 px-4 text-right font-medium">Min Pay</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-zinc-800/50">
+                                <tbody className="divide-y divide-slate-200 dark:divide-zinc-800/50">
                                     {consolidatedDebts.map((account) => (
-                                        <tr key={account.id} className="group hover:bg-slate-900/50 transition-colors">
-                                            <td className="py-3 px-4 text-white font-medium flex items-center gap-2">
+                                        <tr key={account.id} className="group hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                                            <td className="py-3 px-4 text-slate-900 dark:text-white font-medium flex items-center gap-2">
                                                 {account.id === velocityTarget?.id && <Zap className="h-3 w-3 text-amber-500" />}
                                                 {account.name}
                                             </td>
-                                            <td className="py-3 px-4 text-zinc-300">{account.apr}%</td>
-                                            <td className="py-3 px-4 text-right text-zinc-300 font-mono">
+                                            <td className="py-3 px-4 text-slate-600 dark:text-zinc-300">{account.apr}%</td>
+                                            <td className="py-3 px-4 text-right text-slate-600 dark:text-zinc-300 font-mono">
                                                 {formatMoney(account.balance)}
                                             </td>
-                                            <td className="py-3 px-4 text-right text-zinc-400">
+                                            <td className="py-3 px-4 text-right text-slate-400 dark:text-zinc-400">
                                                 {formatMoney(account.min_payment)}
                                             </td>
                                         </tr>

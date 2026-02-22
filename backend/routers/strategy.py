@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
 
 from velocity_engine import (
-    DebtAccount, CashflowTactical,
+    DebtAccount, CashflowTactical, VelocityWeapon,
     get_projections, get_velocity_target, get_peace_shield_status,
     calculate_safe_attack_equity, simulate_freedom_path,
     generate_action_plan, calculate_purchase_time_cost,
@@ -140,7 +140,35 @@ async def get_tactical_gps(
         user = session.exec(select(User)).first()
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
-        movements = generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target)
+        # Detect Velocity Weapons (HELOCs/UILs with available credit)
+        weapons = [
+            VelocityWeapon(
+                name=acc.name,
+                balance=Decimal(str(acc.balance)),
+                credit_limit=Decimal(str(acc.credit_limit or 0)),
+                interest_rate=Decimal(str(acc.interest_rate)),
+                weapon_type=acc.debt_subtype or "heloc",
+            )
+            for acc in accounts
+            if acc.type == "debt"
+            and acc.debt_subtype in ("heloc", "uil")
+            and (acc.credit_limit or 0) > acc.balance
+        ]
+
+        movements = generate_action_plan(debts, cf_tactical, checking_balance, funding_name, shield_target, weapons)
+
+        # Velocity weapons summary for frontend
+        weapons_summary = [
+            {
+                "name": w.name,
+                "weapon_type": w.weapon_type,
+                "balance": float(w.balance),
+                "credit_limit": float(w.credit_limit),
+                "available_credit": float(w.available_credit),
+                "interest_rate": float(w.interest_rate),
+            }
+            for w in weapons
+        ]
 
         # Freedom date projections (reuse existing engine function)
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
@@ -148,6 +176,7 @@ async def get_tactical_gps(
 
         return {
             "movements": movements,
+            "velocity_weapons": weapons_summary,
             "freedom_date_velocity": projections.get("velocity_debt_free_date"),
             "freedom_date_standard": projections.get("standard_debt_free_date"),
             "months_saved": projections.get("months_saved", 0),
@@ -193,6 +222,18 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
         # 1. Find Source Account (e.g. "Marcus Savings (Investment)")
         source_acc = find_account(data.source)
         if source_acc:
+            # Guard: prevent negative balance on source account
+            if source_acc.balance < amount:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "code": "INSUFFICIENT_FUNDS",
+                        "message": f"Fondos insuficientes. {source_acc.name} tiene ${source_acc.balance:.2f}, no se puede deducir ${amount:.2f}.",
+                        "account_name": source_acc.name,
+                        "current_balance": float(source_acc.balance),
+                        "requested_amount": float(amount),
+                    },
+                )
             source_acc.balance -= amount
             session.add(source_acc)
 
@@ -202,10 +243,11 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
             # Debt accounts: paying debt reduces balance (subtract)
             # Non-debt accounts (checking/savings): receiving money increases balance (add)
             if dest_acc.type == "debt":
-                dest_acc.balance -= amount
+                # Cap debt payment at outstanding balance
+                capped_amount = min(amount, dest_acc.balance)
+                dest_acc.balance -= capped_amount
                 dest_acc.min_payment = calculate_minimum_payment(
                     dest_acc.balance, dest_acc.interest_rate,
-                    dest_acc.interest_type, dest_acc.remaining_months,
                 )
             else:
                 dest_acc.balance += amount
@@ -238,7 +280,6 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
                 category="Debt Payment" if dest_acc else "Transfer",
                 account_id=primary_account_id,
                 user_id=user_id,
-                is_manual=False,
             )
             session.add(tx)
             with bypass_fk(session):

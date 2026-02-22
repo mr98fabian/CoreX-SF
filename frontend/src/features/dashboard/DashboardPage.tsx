@@ -26,6 +26,8 @@ import CashflowHeatCalendar from './components/CashflowHeatCalendar';
 import { DailyInterestTicker } from './components/DailyInterestTicker';
 import { AnimatedCurrency } from '@/components/AnimatedCurrency';
 import { TimeMachineCard } from './components/TimeMachineCard';
+import { InsufficientFundsDialog } from '@/components/InsufficientFundsDialog';
+import { useInsufficientFundsDialog } from '@/hooks/useInsufficientFundsDialog';
 
 // Strategy Components (shared)
 import MorningBriefing from '../strategy/components/MorningBriefing';
@@ -60,6 +62,27 @@ interface VelocityTarget {
     shield_note?: string;
     daily_interest_saved?: number;
     next_payday?: string;
+    recommended_source?: {
+        type: 'cash' | 'uil' | 'heloc' | 'combined' | 'multi';
+        source_name: string;
+        amount: number;
+        reason_es: string;
+        interest_spread: number;
+        allocation_plan?: Array<{
+            source_name: string;
+            source_type: string;
+            amount: number;
+            balance_after?: number;
+        }>;
+        weapon_allocations?: Array<{
+            source_name: string;
+            source_type: string;
+            amount: number;
+            apr?: number;
+            spread?: number;
+        }>;
+    } | null;
+    checking_account_name?: string;
 }
 
 interface DebtAlertData {
@@ -79,6 +102,14 @@ interface DashboardData {
     attack_equity: number;
     reserved_for_bills?: number;
     velocity_target: VelocityTarget | null;
+    velocity_weapons?: Array<{
+        name: string;
+        weapon_type: string;
+        balance: number;
+        credit_limit: number;
+        available_credit: number;
+        interest_rate: number;
+    }>;
     calendar?: Record<string, unknown>[];
     unmonitored_debt?: number;
     locked_account_count?: number;
@@ -106,6 +137,7 @@ export default function DashboardPage() {
     const [projections, setProjections] = useState<VelocityProjections | null>(null);
     const [loading, setLoading] = useState(true);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [executingAttack, setExecutingAttack] = useState(false);
 
     // Strategy data (for Morning Briefing)
     const { data: strategyData, refresh: refreshStrategy } = useStrategyData();
@@ -147,24 +179,90 @@ export default function DashboardPage() {
         }, 800);
     };
 
+    // ── Attack Equity Execute Handler (Multi-Account) ──────────
+    const handleExecuteAttack = async (transfers: Array<{ source: string; dest: string; amount: number; title: string }>) => {
+        setExecutingAttack(true);
+        let totalExecuted = 0;
+        try {
+            // Execute each transfer sequentially
+            for (const tx of transfers) {
+                await apiFetch('/api/strategy/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        movement_key: `attack-equity-${Date.now()}-${tx.source.replace(/\s/g, '')}`,
+                        title: tx.title,
+                        amount: tx.amount,
+                        date_planned: new Date().toISOString().split('T')[0],
+                        source: tx.source,
+                        destination: tx.dest,
+                    }),
+                });
+                totalExecuted += tx.amount;
+            }
+            toast({
+                title: '⚡ Ataque ejecutado',
+                description: `$${totalExecuted.toLocaleString()} enviados a ${transfers[0]?.dest} desde ${transfers.length} cuenta(s). Balances actualizados.`,
+            });
+            // Re-fetch everything
+            streak.incrementStreakOnTransaction();
+            celebrate('spark');
+            setTimeout(async () => {
+                await loadDashboardData();
+                refreshStrategy();
+                emitDataChanged('dashboard');
+            }, 800);
+        } catch (err: unknown) {
+            // Check for INSUFFICIENT_FUNDS
+            if (fundsDialog.showIfInsufficientFunds(err)) return;
+            // Generic error — parse JSON body for a readable message
+            let msg = 'Error desconocido';
+            try {
+                const rawMsg = err instanceof Error ? err.message : '';
+                const parsed = JSON.parse(rawMsg);
+                const detail = parsed?.detail;
+                if (typeof detail === 'string') {
+                    msg = detail;
+                } else if (detail?.message) {
+                    msg = String(detail.message);
+                }
+            } catch {
+                if (err instanceof Error && err.message.length < 200) {
+                    msg = err.message;
+                }
+            }
+            toast({ title: 'Error al ejecutar', description: msg, variant: 'destructive' });
+        } finally {
+            setExecutingAttack(false);
+        }
+    };
+
     // Listen for data changes from Accounts or Strategy pages
     useDataSync('dashboard', () => {
         loadDashboardData();
         refreshStrategy();
     });
 
+    // ── Insufficient Funds popup ──────────────────────────────
+    const fundsDialog = useInsufficientFundsDialog();
+
     // Wrap recurring confirm to also trigger streak + celebration
     const handleRecurringConfirm = async (itemId: number, actualAmount: number) => {
-        const result = await recurring.confirmItem(itemId, actualAmount);
-        if (result?.ok && !result.already_confirmed) {
-            // Confirming a recurring item counts as a transaction for streak
-            streak.incrementStreakOnTransaction();
-            celebrate('spark');
-            // Re-fetch dashboard data and notify other pages
-            await loadDashboardData();
-            emitDataChanged('dashboard');
+        try {
+            const result = await recurring.confirmItem(itemId, actualAmount);
+            if (result?.ok && !result.already_confirmed) {
+                // Confirming a recurring item counts as a transaction for streak
+                streak.incrementStreakOnTransaction();
+                celebrate('spark');
+                // Re-fetch dashboard data and notify other pages
+                await loadDashboardData();
+                emitDataChanged('dashboard');
+            }
+            return result;
+        } catch (err: unknown) {
+            if (fundsDialog.showIfInsufficientFunds(err)) return null;
+            throw err;
         }
-        return result;
     };
 
     useEffect(() => {
@@ -425,6 +523,9 @@ export default function DashboardPage() {
                                     shieldTarget={data.shield_target}
                                     reservedForBills={data.reserved_for_bills}
                                     velocityTarget={data.velocity_target}
+                                    velocityWeapons={data.velocity_weapons}
+                                    onExecuteAttack={handleExecuteAttack}
+                                    executingAttack={executingAttack}
                                 />
                             )}
                         </div>
@@ -510,6 +611,9 @@ export default function DashboardPage() {
                         {strategyData?.morning_briefing ? (
                             <MorningBriefing
                                 data={strategyData.morning_briefing}
+                                recommendedSource={data?.velocity_target?.recommended_source}
+                                onExecuteAttack={handleExecuteAttack}
+                                executingAttack={executingAttack}
                             />
                         ) : strategyData?.risky_opportunity ? (
                             <RiskyOpportunity
@@ -613,6 +717,7 @@ export default function DashboardPage() {
                 onOpenChange={setShowUpgradeModal}
                 reason={t('upgrade.moreAccountsDesc')}
             />
+            <InsufficientFundsDialog data={fundsDialog.errorData} onClose={fundsDialog.dismiss} />
         </>
     );
 }

@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { InsufficientFundsDialog } from '@/components/InsufficientFundsDialog';
+import { useInsufficientFundsDialog } from '@/hooks/useInsufficientFundsDialog';
 
 const formSchema = z.object({
     account_id: z.string().min(1, "Account is required"),
@@ -112,6 +114,7 @@ export function TransactionDialog({
     const [loading, setLoading] = useState(false);
     const { language } = useLanguage();
     const isEs = language === 'es';
+    const fundsDialog = useInsufficientFundsDialog();
 
     const form = useForm<any>({
         resolver: zodResolver(formSchema),
@@ -185,9 +188,11 @@ export function TransactionDialog({
             setOpen(false);
             if (onSuccess) onSuccess();
 
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to save transaction");
+        } catch (error: unknown) {
+            if (!fundsDialog.showIfInsufficientFunds(error)) {
+                console.error(error);
+                toast.error(isEs ? "Error al guardar la transacción" : "Failed to save transaction");
+            }
         } finally {
             setLoading(false);
         }
@@ -196,7 +201,7 @@ export function TransactionDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-950 border-slate-800 text-white">
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                 <DialogHeader className="relative group">
                     <WidgetHelp helpKey="addTransaction" />
                     <DialogTitle>{isEs ? 'Registrar Transacción' : 'Add Transaction'}</DialogTitle>
@@ -206,7 +211,7 @@ export function TransactionDialog({
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-900">
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-900">
                         <TabsTrigger value="income" className="data-[state=active]:bg-emerald-950 data-[state=active]:text-emerald-400">
                             {isEs ? 'Ingreso' : 'Income'}
                         </TabsTrigger>
@@ -231,7 +236,7 @@ export function TransactionDialog({
                                             <Input
                                                 type="number"
                                                 step="0.01"
-                                                className="pl-8 bg-slate-900 border-slate-800"
+                                                className="pl-8 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800"
                                                 placeholder="0.00"
                                                 {...field}
                                             />
@@ -249,7 +254,7 @@ export function TransactionDialog({
                                 <FormItem>
                                     <FormLabel>{isEs ? 'Descripción' : 'Description'}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder={isEs ? 'Supermercado, Salario, etc.' : 'Grocery, Salary, etc.'} className="bg-slate-900 border-slate-800" {...field} />
+                                        <Input placeholder={isEs ? 'Supermercado, Salario, etc.' : 'Grocery, Salary, etc.'} className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -265,11 +270,11 @@ export function TransactionDialog({
                                     <FormLabel>{isEs ? 'Cuenta' : 'Account'}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
-                                            <SelectTrigger className="bg-slate-900 border-slate-800 text-white">
+                                            <SelectTrigger className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white">
                                                 <SelectValue placeholder={isEs ? 'Seleccionar cuenta' : 'Select account'} />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent className="bg-slate-900 border-slate-800 text-white max-h-64">
+                                        <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white max-h-64">
                                             {accountGroups.map((group) => (
                                                 <SelectGroup key={group.label}>
                                                     <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1.5">
@@ -310,6 +315,7 @@ export function TransactionDialog({
                     </form>
                 </Form>
             </DialogContent>
+            <InsufficientFundsDialog data={fundsDialog.errorData} onClose={fundsDialog.dismiss} />
         </Dialog>
     );
 }

@@ -29,11 +29,11 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="p-8 bg-zinc-950 text-white h-screen overflow-auto">
+                <div className="p-8 bg-white dark:bg-zinc-950 text-slate-900 dark:text-white h-screen overflow-auto">
                     <h1 className="text-2xl font-bold text-red-500 mb-4">Something went wrong.</h1>
                     <div className="mb-4">
                         <h2 className="text-xl font-semibold">Error:</h2>
-                        <pre className="mt-2 p-4 bg-zinc-900 rounded text-red-300 whitespace-pre-wrap">
+                        <pre className="mt-2 p-4 bg-slate-100 dark:bg-zinc-900 rounded text-red-500 dark:text-red-300 whitespace-pre-wrap">
                             {this.state.error?.toString()}
                         </pre>
                     </div>
@@ -42,7 +42,7 @@ class ErrorBoundary extends Component<Props, State> {
                         <div className="mt-2 text-zinc-400 text-sm">
                             Check the console for the full stack trace.
                         </div>
-                        <pre className="mt-2 p-4 bg-zinc-900 rounded text-zinc-500 whitespace-pre-wrap text-xs overflow-x-auto">
+                        <pre className="mt-2 p-4 bg-slate-100 dark:bg-zinc-900 rounded text-slate-500 dark:text-zinc-500 whitespace-pre-wrap text-xs overflow-x-auto">
                             {this.state.errorInfo?.componentStack}
                         </pre>
                     </div>

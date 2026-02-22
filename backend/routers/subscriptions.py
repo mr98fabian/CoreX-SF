@@ -307,7 +307,7 @@ async def get_subscription_status(
             pass  # Malformed date — skip check, don't block user
 
     plan_limits = {
-        "starter": 2,
+        "starter": 12,
         "velocity": 6,
         "accelerator": 12,
         "freedom": 999,  # "Unlimited"
@@ -398,7 +398,7 @@ async def get_savings_estimate(
     )
 
     plan_limits = {
-        "starter": 2,
+        "starter": 12,
         "velocity": 6,
         "accelerator": 12,
         "freedom": 999,

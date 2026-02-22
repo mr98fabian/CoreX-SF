@@ -19,12 +19,12 @@ function DayTooltip({ day, delta, position }: { day: ProjectionDay; delta: numbe
 
     return (
         <div
-            className="fixed z-50 pointer-events-none px-4 py-3 rounded-xl border border-slate-700/60 bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-black/40 min-w-[220px] max-w-[280px]"
+            className="fixed z-50 pointer-events-none px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/40 min-w-[220px] max-w-[280px]"
             style={{ left: position.x, top: position.y - 10, transform: "translate(-50%, -100%)" }}
         >
             {/* Full date + zone badge */}
             <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="text-xs text-slate-300 font-medium">
+                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                     {new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
                         weekday: "long", month: "short", day: "numeric", year: "numeric",
                     })}
@@ -36,7 +36,7 @@ function DayTooltip({ day, delta, position }: { day: ProjectionDay; delta: numbe
 
             {/* Balance + Delta */}
             <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-xl font-bold text-white font-mono">
+                <span className="text-xl font-bold text-slate-900 dark:text-white font-mono">
                     {formatMoney(day.balance)}
                 </span>
                 {delta !== null && delta !== 0 && (
@@ -48,7 +48,7 @@ function DayTooltip({ day, delta, position }: { day: ProjectionDay; delta: numbe
 
             {/* Events */}
             {day.events.length > 0 && (
-                <div className="space-y-1 border-t border-slate-800 pt-2">
+                <div className="space-y-1 border-t border-slate-200 dark:border-slate-800 pt-2">
                     {day.events.map((ev, i) => (
                         <div key={i} className="flex items-center justify-between text-xs gap-2">
                             <span className="text-slate-400 truncate max-w-[140px]">{ev.name}</span>
@@ -71,7 +71,7 @@ export default function TacticalCashflowMap() {
 
     if (loading) {
         return (
-            <Card className="border-slate-800 bg-slate-950/50 backdrop-blur-sm">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
                 <CardContent className="p-6">
                     <div className="h-48 flex items-center justify-center">
                         <div className="animate-pulse text-slate-600 text-sm">Loading projection...</div>
@@ -83,7 +83,7 @@ export default function TacticalCashflowMap() {
 
     if (error || !data) {
         return (
-            <Card className="border-slate-800 bg-slate-950/50 backdrop-blur-sm">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
                 <CardContent className="p-6">
                     <div className="h-48 flex items-center justify-center text-rose-400 text-sm">
                         {error || "No projection data"}
@@ -141,9 +141,9 @@ export default function TacticalCashflowMap() {
     };
 
     return (
-        <Card className="border-slate-800 bg-slate-950/50 backdrop-blur-sm overflow-hidden">
+        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-white text-base">
+                <CardTitle className="flex items-center justify-between text-slate-900 dark:text-white text-base">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-400" />
                         Tactical Cashflow Map
@@ -254,11 +254,11 @@ export default function TacticalCashflowMap() {
                 </div>
 
                 {/* Summary stats row */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-800/50">
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-slate-800/50">
                     <div className="flex items-center gap-4">
                         <div className="text-xs text-slate-500">
                             Balance today:{" "}
-                            <span className="text-white font-mono font-semibold">
+                            <span className="text-slate-900 dark:text-white font-mono font-semibold">
                                 {formatMoney(data.start_balance)}
                             </span>
                         </div>

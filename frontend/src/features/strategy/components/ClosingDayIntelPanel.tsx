@@ -45,7 +45,7 @@ export default function ClosingDayIntelPanel({ intelligence }: Props) {
                                 rounded-lg border transition-all duration-200 cursor-pointer
                                 ${isOpen
                                     ? 'border-violet-500/40 bg-violet-500/10'
-                                    : 'border-slate-700/50 bg-slate-900/40 hover:border-violet-500/20'
+                                    : 'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/40 hover:border-violet-400 dark:hover:border-violet-500/20'
                                 }
                             `}
                             onClick={() => setExpanded(isOpen ? null : card.name)}
@@ -54,7 +54,7 @@ export default function ClosingDayIntelPanel({ intelligence }: Props) {
                             <div className="flex items-center gap-3 p-3">
                                 <CreditCard className="h-4 w-4 text-violet-400 shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-medium text-white truncate block">{card.name}</span>
+                                    <span className="text-sm font-medium text-slate-900 dark:text-white truncate block">{card.name}</span>
                                     <div className="flex items-center gap-3 text-[10px] text-slate-500 mt-0.5">
                                         <span>Closes: Day {card.closing_day}</span>
                                         {card.due_day > 0 && <span>Due: Day {card.due_day}</span>}
@@ -86,14 +86,14 @@ export default function ClosingDayIntelPanel({ intelligence }: Props) {
 
                             {/* Expanded Details */}
                             {isOpen && (
-                                <div className="px-3 pb-3 pt-1 border-t border-slate-700/50 space-y-3 animate-in slide-in-from-top-1 duration-200">
+                                <div className="px-3 pb-3 pt-1 border-t border-slate-200 dark:border-slate-700/50 space-y-3 animate-in slide-in-from-top-1 duration-200">
                                     {/* Timing Grid */}
                                     <div className="grid grid-cols-2 gap-2">
-                                        <div className="p-2 rounded-lg bg-black/20 text-center">
+                                        <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
                                             <p className="text-[10px] text-slate-500 uppercase">Days to Close</p>
                                             <p className="text-lg font-bold text-violet-300">{card.days_until_close}</p>
                                         </div>
-                                        <div className="p-2 rounded-lg bg-black/20 text-center">
+                                        <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
                                             <p className="text-[10px] text-slate-500 uppercase">Grace Period</p>
                                             <p className="text-lg font-bold text-slate-300">{card.grace_period_days}d</p>
                                         </div>

@@ -31,15 +31,15 @@ interface FreedomPathCalendarProps {
 export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalendarProps) {
     if (isLoading) {
         return (
-            <Card className="h-full border-white/10 bg-black/40 backdrop-blur-xl">
+            <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
                 <CardHeader>
-                    <div className="h-6 w-48 animate-pulse rounded bg-white/10" />
-                    <div className="mt-2 h-4 w-32 animate-pulse rounded bg-white/5" />
+                    <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
+                    <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-white/5" />
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-24 animate-pulse rounded-xl bg-white/5" />
+                            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-white/5" />
                         ))}
                     </div>
                 </CardContent>
@@ -50,9 +50,9 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
     // Defensive check: ensure timeline exists and is an array
     if (!simulation || !Array.isArray(simulation.timeline) || simulation.timeline.length === 0) {
         return (
-            <Card className="h-full border-white/10 bg-black/40 backdrop-blur-xl">
+            <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
                 <CardHeader>
-                    <CardTitle className="text-xl text-white">Camino a la Libertad</CardTitle>
+                    <CardTitle className="text-xl text-slate-900 dark:text-white">Camino a la Libertad</CardTitle>
                     <CardDescription>No hay datos de simulación disponibles.</CardDescription>
                 </CardHeader>
             </Card>
@@ -62,15 +62,15 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
     const { timeline, freedom_date, total_months, total_interest_paid } = simulation;
 
     return (
-        <Card className="h-full border-white/10 bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-emerald-500/20">
+        <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-emerald-400 dark:hover:border-emerald-500/20">
             <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle className="flex items-center gap-2 text-xl font-bold text-white">
+                        <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
                             <Flag className="h-5 w-5 text-emerald-400" />
                             Camino a la Libertad
                         </CardTitle>
-                        <CardDescription className="text-slate-400">
+                        <CardDescription className="text-slate-500 dark:text-slate-400">
                             Tu mapa mensual hacia la vida Sin Deudas.
                         </CardDescription>
                     </div>
@@ -79,7 +79,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                             {total_months} Meses
                         </div>
                         <div className="text-xs text-slate-500">
-                            Fecha Final: <span className="text-slate-300">{new Date(freedom_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                            Fecha Final: <span className="text-slate-700 dark:text-slate-300">{new Date(freedom_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
                         </div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
 
             <CardContent>
                 <ScrollArea className="h-[400px] w-full pr-4">
-                    <div className="relative border-l border-white/10 pl-6 space-y-8">
+                    <div className="relative border-l border-slate-200 dark:border-white/10 pl-6 space-y-8">
                         {timeline.map((month, index) => {
                             const isLast = index === timeline.length - 1;
                             const previousBalance = index > 0 ? timeline[index - 1].total_balance : month.total_balance; // Approx for first month
@@ -103,15 +103,15 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                                     className="relative"
                                 >
                                     {/* Timeline Dot */}
-                                    <div className={`absolute -left-[29px] top-1 flex h-4 w-4 items-center justify-center rounded-full border border-black ring-4 ring-black ${isLast ? "bg-emerald-500" :
-                                        displayEvents.length > 0 ? "bg-amber-400" : "bg-slate-700"
+                                    <div className={`absolute -left-[29px] top-1 flex h-4 w-4 items-center justify-center rounded-full border border-white dark:border-black ring-4 ring-white dark:ring-black ${isLast ? "bg-emerald-500" :
+                                        displayEvents.length > 0 ? "bg-amber-400" : "bg-slate-300 dark:bg-slate-700"
                                         }`}>
-                                        {isLast && <Flag className="h-2 w-2 text-black fill-current" />}
+                                        {isLast && <Flag className="h-2 w-2 text-white dark:text-black fill-current" />}
                                     </div>
 
-                                    <div className="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:border-white/10 hover:bg-white/10">
+                                    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-4 transition-colors hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-200 uppercase tracking-wider text-sm">
+                                            <h4 className="font-medium text-slate-700 dark:text-slate-200 uppercase tracking-wider text-sm">
                                                 {month.month_display}
                                             </h4>
                                             <span className="text-xs font-mono text-slate-500">
@@ -122,7 +122,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div className="flex flex-col">
                                                 <span className="text-xs text-slate-500">Balance Restante</span>
-                                                <span className="font-bold text-white font-mono">
+                                                <span className="font-bold text-slate-900 dark:text-white font-mono">
                                                     ${month.total_balance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                 </span>
                                             </div>
@@ -158,7 +158,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                     <ScrollBar orientation="vertical" />
                 </ScrollArea>
 
-                <div className="mt-6 flex justify-between rounded-xl bg-slate-950 p-4 border border-white/5">
+                <div className="mt-6 flex justify-between rounded-xl bg-slate-100 dark:bg-slate-950 p-4 border border-slate-200 dark:border-white/5">
                     <div className="flex flex-col">
                         <span className="text-xs text-slate-500 uppercase tracking-widest">Interés Total Pagado</span>
                         <span className="text-xl font-bold text-rose-400 font-mono">

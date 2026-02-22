@@ -416,6 +416,18 @@ async def confirm_recurring(
                     if is_income:
                         account.balance += actual_amount
                     else:
+                        # Guard: prevent negative balance on non-debt accounts
+                        if account.type != "debt" and account.balance < actual_amount:
+                            raise HTTPException(
+                                status_code=400,
+                                detail={
+                                    "code": "INSUFFICIENT_FUNDS",
+                                    "message": f"Fondos insuficientes. {account.name} tiene ${account.balance:.2f}, no se puede deducir ${actual_amount:.2f}.",
+                                    "account_name": account.name,
+                                    "current_balance": float(account.balance),
+                                    "requested_amount": float(actual_amount),
+                                },
+                            )
                         account.balance -= actual_amount
                     session.add(account)
 

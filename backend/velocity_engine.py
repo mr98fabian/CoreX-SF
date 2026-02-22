@@ -63,8 +63,72 @@ class DebtAccount:
     
     @property
     def is_revolving(self) -> bool:
-        """True for credit cards and HELOCs (have grace periods)."""
-        return self.debt_subtype in ("credit_card", "heloc")
+        """True for credit cards, HELOCs, and UILs (have grace periods)."""
+        return self.debt_subtype in ("credit_card", "heloc", "uil")
+
+@dataclass
+class VelocityWeapon:
+    """A credit line (HELOC/UIL) used offensively to attack higher-APR debt."""
+    name: str
+    balance: Decimal
+    credit_limit: Decimal
+    interest_rate: Decimal  # APR as percentage (e.g., 8.75)
+    weapon_type: str        # "heloc" or "uil"
+
+    @property
+    def available_credit(self) -> Decimal:
+        return max(self.credit_limit - self.balance, Decimal('0'))
+
+    @property
+    def daily_rate(self) -> Decimal:
+        return self.interest_rate / Decimal('100') / Decimal('365')
+
+
+def calculate_chunk_benefit(
+    weapon: VelocityWeapon,
+    target: DebtAccount,
+    monthly_net_cashflow: Decimal = Decimal('0'),
+) -> Optional[Dict]:
+    """
+    Calculate the financial benefit of deploying a velocity chunk.
+    Only profitable if weapon APR < target APR (interest arbitrage).
+    Returns None if chunk would lose money.
+    """
+    # Guard: no arbitrage if weapon costs more than target
+    if weapon.interest_rate >= target.interest_rate:
+        return None
+    if weapon.available_credit <= Decimal('0') or target.balance <= Decimal('0'):
+        return None
+
+    # Optimal chunk: min(available credit, 80% monthly cashflow, target balance)
+    cashflow_limit = monthly_net_cashflow * Decimal('0.80') if monthly_net_cashflow > 0 else weapon.available_credit
+    optimal_chunk = min(
+        weapon.available_credit,
+        cashflow_limit,
+        target.balance,
+    )
+    # Floor: at least $500 to be worth the effort
+    if optimal_chunk < Decimal('500'):
+        return None
+
+    # Net daily savings = (target_daily_rate - weapon_daily_rate) * chunk_amount
+    target_daily_rate = target.interest_rate / Decimal('100') / Decimal('365')
+    weapon_daily_rate = weapon.daily_rate
+    net_daily_savings = (target_daily_rate - weapon_daily_rate) * optimal_chunk
+    annual_savings = net_daily_savings * Decimal('365')
+
+    return {
+        "weapon_name": weapon.name,
+        "weapon_type": weapon.weapon_type,
+        "weapon_apr": float(weapon.interest_rate),
+        "target_name": target.name,
+        "target_apr": float(target.interest_rate),
+        "chunk_amount": float(optimal_chunk.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
+        "net_daily_savings": float(net_daily_savings.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
+        "annual_savings": float(annual_savings.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
+        "arbitrage_spread": float(target.interest_rate - weapon.interest_rate),
+    }
+
 
 @dataclass
 class FreedomMilestone:
@@ -404,7 +468,8 @@ def generate_action_plan(
     cashflows: List[CashflowTactical],
     checking_balance: Decimal,
     funding_account_name: str = "Chase Cuenta",
-    shield_target: Decimal = DEFAULT_PEACE_SHIELD
+    shield_target: Decimal = DEFAULT_PEACE_SHIELD,
+    weapons: Optional[List[VelocityWeapon]] = None,
 ) -> List[Dict]:
     """
     Generates a 2-month action plan by simulating day-by-day cashflow.
@@ -428,9 +493,23 @@ def generate_action_plan(
             name=d.name, balance=d.balance,
             interest_rate=d.interest_rate,
             min_payment=d.min_payment,
-            due_day=d.due_day
+            due_day=d.due_day,
+            debt_subtype=d.debt_subtype,
+            credit_limit=d.credit_limit,
         ) for d in debts if d.balance > 0
     ]
+    
+    # Clone weapons so simulation doesn't mutate originals
+    sim_weapons = [
+        VelocityWeapon(
+            name=w.name, balance=w.balance, credit_limit=w.credit_limit,
+            interest_rate=w.interest_rate, weapon_type=w.weapon_type,
+        ) for w in (weapons or [])
+        if w.available_credit > Decimal('500')  # Only weapons with meaningful credit
+    ]
+    
+    # Track which income days trigger chunk deployments (first income of each month)
+    chunk_deployed_months: set = set()
     
     # Sort by interest rate for avalanche attacks
     sim_debts.sort(key=lambda x: x.interest_rate, reverse=True)
@@ -504,7 +583,86 @@ def generate_action_plan(
                 })
                 sim_balance += inc.amount
         
-        # ─── 3. ATTACK OPPORTUNITY — 3-Phase Priority ─────────
+        # ─── 3. VELOCITY CHUNK — Phase 0 (credit line deployment) ──
+        # On income days, deploy chunks from low-APR weapons to high-APR debts
+        month_key = (current.year, current.month)
+        income_today = any(inc.day_of_month == day_num for inc in incomes)
+        
+        if sim_weapons and income_today and month_key not in chunk_deployed_months:
+            # One chunk deployment per month to keep it manageable
+            for weapon in sorted(sim_weapons, key=lambda w: w.interest_rate):
+                if weapon.available_credit < Decimal('500'):
+                    continue
+                
+                # Find best target: highest APR debt that's more expensive than weapon
+                eligible_targets = [
+                    d for d in sim_debts
+                    if d.balance > Decimal('0')
+                    and d.interest_rate > weapon.interest_rate
+                    and d.debt_subtype not in ('heloc', 'uil')  # Don't chunk weapon-to-weapon
+                ]
+                if not eligible_targets:
+                    continue
+                
+                target = max(eligible_targets, key=lambda d: d.interest_rate)
+                
+                # Calculate optimal chunk
+                chunk_amount = min(
+                    weapon.available_credit,
+                    target.balance,
+                    Decimal('15000'),  # Cap per chunk to manage risk
+                )
+                if chunk_amount < Decimal('500'):
+                    continue
+                
+                # Calculate arbitrage benefit
+                target_daily = target.interest_rate / Decimal('100') / Decimal('365')
+                weapon_daily = weapon.daily_rate
+                net_daily_savings = float(
+                    ((target_daily - weapon_daily) * chunk_amount)
+                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                )
+                annual_savings = round(net_daily_savings * 365, 2)
+                
+                bal_before = float(target.balance)
+                new_target_bal = float(target.balance - chunk_amount)
+                orig = original_balances.get(target.name, bal_before)
+                progress = round((1 - max(new_target_bal, 0) / orig) * 100, 1) if orig > 0 else 100.0
+                
+                movements.append({
+                    "day": day_num,
+                    "date": iso,
+                    "display_date": display,
+                    "title": f"⚡ VELOCITY CHUNK: {target.name}",
+                    "description": (
+                        f"Deploy ${float(chunk_amount):,.2f} from {weapon.name} ({float(weapon.interest_rate)}% APR) "
+                        f"→ {target.name} ({float(target.interest_rate)}% APR). "
+                        f"Net arbitrage: ${net_daily_savings}/day (${annual_savings}/yr)"
+                    ),
+                    "amount": float(chunk_amount),
+                    "type": "velocity_chunk",
+                    "source": weapon.name,
+                    "destination": target.name,
+                    "daily_interest_saved": net_daily_savings,
+                    "days_shortened": 0,
+                    "balance_before": bal_before,
+                    "balance_after": new_target_bal,
+                    "total_interest_saved": annual_savings,
+                    "funding_balance_after": float(sim_balance),  # Checking unchanged
+                    "debt_progress_pct": progress,
+                    "weapon_name": weapon.name,
+                    "weapon_apr": float(weapon.interest_rate),
+                    "target_apr": float(target.interest_rate),
+                    "arbitrage_spread": float(target.interest_rate - weapon.interest_rate),
+                })
+                
+                # Update simulation state
+                target.balance -= chunk_amount
+                weapon.balance += chunk_amount  # Weapon balance increases
+                chunk_deployed_months.add(month_key)
+                break  # One chunk per income event
+        
+        # ─── 4. ATTACK OPPORTUNITY — 3-Phase Priority ─────────
         # Phase 1: Float Kill (revolving credit in grace period)
         # Phase 2: Hybrid Kill (eliminate small debts for compound benefit)
         # Phase 3: Avalanche (highest APR)

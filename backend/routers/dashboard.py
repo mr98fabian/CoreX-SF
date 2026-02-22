@@ -33,7 +33,8 @@ async def get_dashboard_metrics(
         shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
 
         # Plan-aware filtering: only active (unlocked) debts count
-        all_debts = [acc for acc in accounts if acc.type == "debt"]
+        # Note: only debts with balance > 0 are relevant (matches filter_active_debt_accounts)
+        all_debts = [acc for acc in accounts if acc.type == "debt" and acc.balance > 0]
         active_debts = filter_active_debt_accounts(accounts, plan_limit)
         active_debt_ids = {id(a) for a in active_debts}
 
@@ -149,6 +150,121 @@ async def get_dashboard_metrics(
                 else:
                     why_text = "Tu ataque está recargando. Esperando ingresos."
 
+            # --- MULTI-ACCOUNT ALLOCATION PLAN ---
+            # Builds a breakdown: how much to take from EACH liquid account
+            recommended_source = None
+            attack_amount = float(attack_equity) if attack_equity > 0 else 0
+            target_apr = float(r)
+            target_balance = float(target_account.balance)
+            checking_name = chase_acc.name if chase_acc else "Checking"
+
+            if attack_amount > 0:
+                # Gather ALL liquid accounts with positive balance
+                liquid_accounts = [
+                    acc for acc in accounts
+                    if acc.type != "debt" and float(acc.balance) > 0
+                ]
+                # Priority: checking first, then savings, then by balance desc
+                liquid_accounts.sort(
+                    key=lambda a: (0 if a.type == "checking" else 1, -float(a.balance))
+                )
+
+                allocation_plan = []
+                remaining = min(attack_amount, target_balance)
+                total_allocated = 0
+
+                for acc in liquid_accounts:
+                    if remaining <= 0:
+                        break
+                    available = float(acc.balance)
+                    take = round(min(available, remaining), 2)
+                    if take > 0:
+                        allocation_plan.append({
+                            "source_name": acc.name,
+                            "source_type": acc.type,
+                            "amount": take,
+                            "balance_after": round(available - take, 2),
+                        })
+                        remaining -= take
+                        total_allocated += take
+
+                # Check if we still need velocity weapons to cover the gap
+                weapon_shortfall = target_balance - total_allocated
+                weapon_allocations = []
+
+                if weapon_shortfall > 0:
+                    weapon_candidates = []
+                    for acc in accounts:
+                        if (acc.type == "debt"
+                            and acc.debt_subtype in ("uil", "heloc")
+                            and (acc.credit_limit or 0) > acc.balance
+                            and float(acc.interest_rate) < target_apr):
+                            avail_credit = float((acc.credit_limit or 0) - acc.balance)
+                            spread = target_apr - float(acc.interest_rate)
+                            weapon_candidates.append({
+                                "type": acc.debt_subtype,
+                                "source_name": acc.name,
+                                "available": avail_credit,
+                                "apr": float(acc.interest_rate),
+                                "spread": spread,
+                            })
+                    weapon_candidates.sort(
+                        key=lambda w: (0 if w["type"] == "uil" else 1, -w["spread"])
+                    )
+
+                    for w in weapon_candidates:
+                        if weapon_shortfall <= 0:
+                            break
+                        take_w = round(min(w["available"], weapon_shortfall), 2)
+                        if take_w > 0:
+                            weapon_allocations.append({
+                                "source_name": w["source_name"],
+                                "source_type": w["type"],
+                                "amount": take_w,
+                                "apr": w["apr"],
+                                "spread": w["spread"],
+                            })
+                            weapon_shortfall -= take_w
+                            total_allocated += take_w
+
+                # Build the recommended_source with full breakdown
+                all_sources = [a["source_name"] for a in allocation_plan]
+                all_sources += [w["source_name"] for w in weapon_allocations]
+
+                # Determine type
+                has_cash = len(allocation_plan) > 0
+                has_weapons = len(weapon_allocations) > 0
+
+                if has_cash and has_weapons:
+                    rec_type = "combined"
+                elif has_weapons:
+                    rec_type = weapon_allocations[0]["source_type"]
+                elif len(allocation_plan) == 1:
+                    rec_type = "cash"
+                else:
+                    rec_type = "multi"
+
+                # Build reason
+                parts = []
+                for a in allocation_plan:
+                    parts.append(f"${a['amount']:,.2f} de {a['source_name']}")
+                for w in weapon_allocations:
+                    parts.append(
+                        f"${w['amount']:,.2f} de {w['source_name']} "
+                        f"({w['apr']}% APR, spread +{w['spread']:.1f}%)"
+                    )
+                reason = " + ".join(parts) if parts else "Sin fuentes disponibles"
+
+                recommended_source = {
+                    "type": rec_type,
+                    "source_name": " + ".join(all_sources),
+                    "amount": round(total_allocated, 2),
+                    "reason_es": reason,
+                    "interest_spread": target_apr,
+                    "allocation_plan": allocation_plan,
+                    "weapon_allocations": weapon_allocations,
+                }
+
             velocity_target = {
                 "name": target_account.name,
                 "balance": float(target_account.balance),
@@ -160,6 +276,8 @@ async def get_dashboard_metrics(
                 "shield_note": f"🛡️ Shield: ${float(shield_target):,.0f} | 📅 Bills: ${float(reserved_for_bills):,.0f}",
                 "daily_interest_saved": float(daily_interest),
                 "next_payday": next_payday.strftime("%Y-%m-%d"),
+                "recommended_source": recommended_source,
+                "checking_account_name": checking_name,
             }
 
         # --- DEBT ALERTS (Phase 4 integration) ---
@@ -172,6 +290,22 @@ async def get_dashboard_metrics(
             if acc.interest_rate and acc.interest_rate > 0
         )
 
+        # --- VELOCITY WEAPONS (HELOCs/UILs with available credit) ---
+        velocity_weapons = [
+            {
+                "name": acc.name,
+                "weapon_type": acc.debt_subtype,
+                "balance": float(acc.balance),
+                "credit_limit": float(acc.credit_limit or 0),
+                "available_credit": float((acc.credit_limit or 0) - acc.balance),
+                "interest_rate": float(acc.interest_rate),
+            }
+            for acc in accounts
+            if acc.type == "debt"
+            and acc.debt_subtype in ("heloc", "uil")
+            and (acc.credit_limit or 0) > acc.balance
+        ]
+
         return {
             "total_debt": total_debt,
             "liquid_cash": liquid_cash,
@@ -182,6 +316,7 @@ async def get_dashboard_metrics(
             "safety_breakdown": safety_data["breakdown"],
             "calendar": safety_data.get("projection_data", []),
             "velocity_target": velocity_target,
+            "velocity_weapons": velocity_weapons,
             "unmonitored_debt": float(unmonitored_debt),
             "locked_account_count": len(all_debts) - len(active_debts),
             "debt_alerts": debt_alerts,

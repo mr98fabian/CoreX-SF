@@ -43,7 +43,7 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
     if (!days || days.length === 0) return null;
 
     return (
-        <Card className="border-blue-500/20 bg-black/40 backdrop-blur-xl relative overflow-hidden">
+        <Card className="border-blue-300 dark:border-blue-500/20 bg-white/50 dark:bg-black/40 backdrop-blur-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 
             <CardHeader className="pb-2">
@@ -74,13 +74,13 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
                                     "min-w-[80px] h-[110px] rounded-lg border flex flex-col items-center justify-between p-2 relative group transition-all duration-300 snap-start",
                                     isDanger ? "bg-rose-950/20 border-rose-500/30 hover:bg-rose-950/40" :
                                         isWarning ? "bg-amber-950/20 border-amber-500/30 hover:bg-amber-950/40" :
-                                            "bg-zinc-900/50 border-white/5 hover:bg-zinc-800/50 hover:border-blue-500/30"
+                                            "bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-zinc-800/50 hover:border-blue-400 dark:hover:border-blue-500/30"
                                 )}
                             >
                                 {/* Date Header */}
-                                <div className="text-center w-full border-b border-white/5 pb-1">
+                                <div className="text-center w-full border-b border-slate-200 dark:border-white/5 pb-1">
                                     <div className="text-[10px] uppercase text-zinc-500 font-mono tracking-wider">{weekday}</div>
-                                    <div className={cn("text-lg font-bold", isDanger ? "text-rose-400" : "text-white")}>{dayNum}</div>
+                                    <div className={cn("text-lg font-bold", isDanger ? "text-rose-400" : "text-slate-900 dark:text-white")}>{dayNum}</div>
                                 </div>
 
                                 {/* Events Indicators */}
@@ -99,7 +99,7 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
                                 </div>
 
                                 {/* Projected Balance (Always visible on hover, or simple dot if standard) */}
-                                <div className="text-[10px] font-mono font-medium text-zinc-500 group-hover:text-white transition-colors">
+                                <div className="text-[10px] font-mono font-medium text-zinc-500 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                     {formatMoney(day.ending_balance)}
                                 </div>
 
@@ -112,7 +112,7 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
                                 )}
 
                                 {/* Hover Tooltip (Native Title for speed) */}
-                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-2 text-center transition-opacity z-10 rounded-lg">
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/90 dark:bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-2 text-center transition-opacity z-10 rounded-lg">
                                     <span className="text-[10px] text-zinc-400 mb-1">Projected</span>
                                     <span className={cn("text-xs font-bold mb-2", isDanger ? "text-rose-400" : "text-blue-400")}>
                                         {formatMoney(day.ending_balance)}

@@ -60,7 +60,7 @@ export default function ArbitrageAlertPanel({ alerts }: Props) {
                     >
                         <div className="flex items-start gap-3">
                             {/* Icon */}
-                            <div className={`p-2 rounded-lg bg-black/20 ${style.icon} shrink-0 mt-0.5`}>
+                            <div className={`p-2 rounded-lg bg-slate-100 dark:bg-black/20 ${style.icon} shrink-0 mt-0.5`}>
                                 <AlertCircle size={18} />
                             </div>
 
@@ -81,18 +81,18 @@ export default function ArbitrageAlertPanel({ alerts }: Props) {
 
                                 {/* Metrics row */}
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="p-2 rounded-lg bg-black/20 text-center">
+                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
                                         <p className="text-[9px] text-slate-500 uppercase">Spread</p>
                                         <p className={`text-sm font-bold ${style.highlight}`}>{alert.rate_spread.toFixed(1)}%</p>
                                     </div>
-                                    <div className="p-2 rounded-lg bg-black/20 text-center">
+                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
                                         <p className="text-[9px] text-slate-500 uppercase">Monthly Cost</p>
                                         <p className="text-sm font-bold text-red-400">
                                             <TrendingDown size={10} className="inline mr-1" />
                                             {formatMoney(alert.monthly_net_loss)}
                                         </p>
                                     </div>
-                                    <div className="p-2 rounded-lg bg-black/20 text-center">
+                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
                                         <p className="text-[9px] text-slate-500 uppercase">Annual Loss</p>
                                         <p className="text-sm font-bold text-red-300">{formatMoney(alert.annual_net_loss)}</p>
                                     </div>

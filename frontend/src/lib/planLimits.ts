@@ -9,7 +9,7 @@ import { apiFetch } from '@/lib/api';
 
 // ─── Canonical Plan Limits (accounts allowed) ──────────────────
 export const PLAN_LIMITS: Record<string, number> = {
-    starter: 2,
+    starter: 12,
     velocity: 6,
     accelerator: 12,
     freedom: Infinity,

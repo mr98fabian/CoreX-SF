@@ -20,13 +20,13 @@ interface VelocityData {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg shadow-xl">
+            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-lg shadow-xl">
                 <p className="text-slate-400 text-xs mb-2">{label}</p>
                 <p className="text-zinc-500 text-sm">
-                    Bank: <span className="text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
+                    Bank: <span className="text-zinc-600 dark:text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
                 </p>
                 <p className="text-blue-500 text-sm font-bold">
-                    KoreX: <span className="text-white ml-1">${payload[1].value.toLocaleString()}</span>
+                    KoreX: <span className="text-slate-900 dark:text-white ml-1">${payload[1].value.toLocaleString()}</span>
                 </p>
             </div>
         );
@@ -99,7 +99,7 @@ export default function DebtBurndownChart() {
 
     if (loading) {
         return (
-            <Card className="h-full border-zinc-800 bg-zinc-950/50">
+            <Card className="h-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/50">
                 <CardContent className="flex items-center justify-center h-[380px]">
                     <Loader2 className="h-6 w-6 animate-spin text-blue-500" strokeWidth={1.5} />
                 </CardContent>
@@ -110,7 +110,7 @@ export default function DebtBurndownChart() {
     return (
         <Card className="h-full">
             <CardHeader>
-                <CardTitle className="text-zinc-100">Debt Burndown Projection</CardTitle>
+                <CardTitle className="text-zinc-900 dark:text-zinc-100">Debt Burndown Projection</CardTitle>
                 <CardDescription className="text-zinc-500">
                     Comparing standard bank payments vs. KoreX Velocity Strategy
                 </CardDescription>
@@ -130,7 +130,7 @@ export default function DebtBurndownChart() {
                                     <stop offset="95%" stopColor="#71717a" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" opacity={0.3} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} className="[&>line]:stroke-zinc-200 dark:[&>line]:stroke-zinc-800" stroke="currentColor" opacity={0.3} />
                             <XAxis
                                 dataKey="month"
                                 stroke="#52525b"

@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
     if (loading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-slate-950">
+            <div className="flex h-screen w-full items-center justify-center bg-slate-100 dark:bg-slate-950">
                 <div className="flex flex-col items-center gap-4">
                     <div className="h-10 w-10 animate-spin rounded-full border-2 border-gold-400 border-t-transparent" />
                     <p className="text-sm text-slate-400 animate-pulse">Verifying session...</p>

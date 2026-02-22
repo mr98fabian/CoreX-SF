@@ -399,7 +399,7 @@ export default function SettingsPage() {
     const renderProfile = () => (
         <div className="space-y-6">
             <SectionHeader title={t("settings.profile.title")} subtitle={t("settings.profile.subtitle")} icon={<User className="h-5 w-5 text-blue-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardContent className="pt-6 space-y-6">
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-4">
@@ -407,8 +407,8 @@ export default function SettingsPage() {
                             {userInitials}
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white dark:text-slate-100">{userName}</h3>
-                            <p className="text-sm text-slate-400 dark:text-slate-500">{userEmail}</p>
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{userName}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{userEmail}</p>
                             {isDemo && (
                                 <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
                                     {t("settings.profile.demoAccount")}
@@ -417,17 +417,17 @@ export default function SettingsPage() {
                         </div>
                     </div>
 
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
+                    <Separator className="bg-slate-200 dark:bg-slate-800" />
 
                     {/* Form fields */}
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name" className="text-slate-300 dark:text-slate-300">{t("settings.profile.displayName")}</Label>
-                            <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isDemo} className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50" />
+                            <Label htmlFor="name" className="text-slate-700 dark:text-slate-300">{t("settings.profile.displayName")}</Label>
+                            <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isDemo} className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:border-blue-500/50" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="email" className="text-slate-300 dark:text-slate-300">{t("settings.profile.email")}</Label>
-                            <Input id="email" value={userEmail} disabled className="bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 focus:border-blue-500/50 opacity-60" />
+                            <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">{t("settings.profile.email")}</Label>
+                            <Input id="email" value={userEmail} disabled className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:border-blue-500/50 opacity-60" />
                         </div>
                         {!isDemo && (
                             <Button onClick={handleSaveProfile} disabled={profileSaving || displayName === userName} variant="premium" className="w-full mt-2">
@@ -438,15 +438,15 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Security */}
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
+                    <Separator className="bg-slate-200 dark:bg-slate-800" />
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-white dark:text-slate-100 flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                             <Shield className="h-4 w-4 text-emerald-500" />
                             {t("settings.profile.security")}
                         </h4>
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label className="text-sm text-slate-200 dark:text-slate-300">
+                                <Label className="text-sm text-slate-700 dark:text-slate-300">
                                     {t("settings.profile.twoFactor")}
                                 </Label>
                                 <p className="text-xs text-slate-500 dark:text-slate-500">
@@ -464,7 +464,7 @@ export default function SettingsPage() {
     const renderAppearance = () => (
         <div className="space-y-6">
             <SectionHeader title={t("settings.appearance.title")} subtitle={t("settings.appearance.subtitle")} icon={<Palette className="h-5 w-5 text-purple-400" />} />
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardContent className="pt-6 space-y-6">
                     {/* Language */}
                     <div className="flex items-center justify-between">
@@ -473,22 +473,22 @@ export default function SettingsPage() {
                                 <Globe className="h-4 w-4 text-blue-400" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-200">{t("settings.appearance.language")}</Label>
+                                <Label className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearance.language")}</Label>
                                 <p className="text-xs text-slate-500">{t("settings.appearance.languageDesc")}</p>
                             </div>
                         </div>
                         <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "es")}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
-                                <SelectItem value="en" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">🇺🇸 English</SelectItem>
-                                <SelectItem value="es" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">🇪🇸 Español</SelectItem>
+                            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+                                <SelectItem value="en" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">🇺🇸 English</SelectItem>
+                                <SelectItem value="es" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">🇪🇸 Español</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
+                    <Separator className="bg-slate-200 dark:bg-slate-800" />
 
                     {/* Currency */}
                     <div className="flex items-center justify-between">
@@ -497,28 +497,28 @@ export default function SettingsPage() {
                                 <DollarSign className="h-4 w-4 text-emerald-400" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-200">{t("settings.appearance.currency")}</Label>
+                                <Label className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearance.currency")}</Label>
                                 <p className="text-xs text-slate-500">{t("settings.appearance.currencyDesc")}</p>
                             </div>
                         </div>
                         <Select value={currency} onValueChange={handleCurrencyChange}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
-                                <SelectItem value="USD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ USD (US Dollar)</SelectItem>
-                                <SelectItem value="MXN" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ MXN (Peso Mexicano)</SelectItem>
-                                <SelectItem value="EUR" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">€ EUR (Euro)</SelectItem>
-                                <SelectItem value="GBP" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">£ GBP (British Pound)</SelectItem>
-                                <SelectItem value="CAD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ CAD (Canadian Dollar)</SelectItem>
-                                <SelectItem value="COP" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ COP (Peso Colombiano)</SelectItem>
-                                <SelectItem value="ARS" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">$ ARS (Peso Argentino)</SelectItem>
-                                <SelectItem value="BRL" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">R$ BRL (Real Brasileiro)</SelectItem>
+                            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+                                <SelectItem value="USD" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">$ USD (US Dollar)</SelectItem>
+                                <SelectItem value="MXN" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">$ MXN (Peso Mexicano)</SelectItem>
+                                <SelectItem value="EUR" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">€ EUR (Euro)</SelectItem>
+                                <SelectItem value="GBP" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">£ GBP (British Pound)</SelectItem>
+                                <SelectItem value="CAD" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">$ CAD (Canadian Dollar)</SelectItem>
+                                <SelectItem value="COP" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">$ COP (Peso Colombiano)</SelectItem>
+                                <SelectItem value="ARS" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">$ ARS (Peso Argentino)</SelectItem>
+                                <SelectItem value="BRL" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">R$ BRL (Real Brasileiro)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
+                    <Separator className="bg-slate-200 dark:bg-slate-800" />
 
                     {/* Date Format */}
                     <div className="flex items-center justify-between">
@@ -527,18 +527,18 @@ export default function SettingsPage() {
                                 <Calendar className="h-4 w-4 text-amber-400" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-200">{t("settings.appearance.dateFormat")}</Label>
+                                <Label className="text-sm text-slate-700 dark:text-slate-200">{t("settings.appearance.dateFormat")}</Label>
                                 <p className="text-xs text-slate-500">{t("settings.appearance.dateDesc")}</p>
                             </div>
                         </div>
                         <Select value={dateFormat} onValueChange={handleDateFormatChange}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-900 border-slate-700 text-white dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700 dark:bg-slate-800 dark:border-slate-600">
-                                <SelectItem value="MM/DD/YYYY" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">MM/DD/YYYY</SelectItem>
-                                <SelectItem value="DD/MM/YYYY" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">DD/MM/YYYY</SelectItem>
-                                <SelectItem value="YYYY-MM-DD" className="text-white focus:bg-slate-800 dark:focus:bg-slate-700">YYYY-MM-DD</SelectItem>
+                            <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700">
+                                <SelectItem value="MM/DD/YYYY" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">MM/DD/YYYY</SelectItem>
+                                <SelectItem value="DD/MM/YYYY" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">DD/MM/YYYY</SelectItem>
+                                <SelectItem value="YYYY-MM-DD" className="text-slate-900 dark:text-white focus:bg-slate-100 dark:focus:bg-slate-800">YYYY-MM-DD</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -559,13 +559,13 @@ export default function SettingsPage() {
         return (
             <div className="space-y-6">
                 <SectionHeader title={t("settings.notifications.title")} subtitle={t("settings.notifications.subtitle")} icon={<Bell className="h-5 w-5 text-amber-400" />} />
-                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                     <CardContent className="pt-6 space-y-1">
                         {items.map((item, i) => (
                             <div key={item.key}>
                                 <div className="flex items-center justify-between py-3">
                                     <div className="space-y-0.5">
-                                        <Label className={`text-sm ${item.critical ? "text-rose-300" : "text-slate-200"}`}>
+                                        <Label className={`text-sm ${item.critical ? "text-rose-500 dark:text-rose-300" : "text-slate-700 dark:text-slate-200"}`}>
                                             {t(`settings.notifications.${item.uiKey}`)}
                                         </Label>
                                         <p className="text-xs text-slate-500">
@@ -574,7 +574,7 @@ export default function SettingsPage() {
                                     </div>
                                     <Switch checked={item.state} onCheckedChange={item.setter} />
                                 </div>
-                                {i < items.length - 1 && <Separator className="bg-slate-800/50 dark:bg-slate-700/50" />}
+                                {i < items.length - 1 && <Separator className="bg-slate-200/50 dark:bg-slate-800/50" />}
                             </div>
                         ))}
                     </CardContent>
@@ -588,9 +588,9 @@ export default function SettingsPage() {
             <SectionHeader title={t("settings.data.title")} subtitle={t("settings.data.subtitle")} icon={<Database className="h-5 w-5 text-purple-400" />} />
 
             {/* Export Section */}
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <CardTitle className="text-sm text-slate-900 dark:text-white flex items-center gap-2">
                         <Download className="h-4 w-4 text-emerald-400" />
                         {t("settings.data.exportData")}
                     </CardTitle>
@@ -649,16 +649,16 @@ export default function SettingsPage() {
             </Card>
 
             {/* Import Section */}
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <CardTitle className="text-sm text-slate-900 dark:text-white flex items-center gap-2">
                         <Upload className="h-4 w-4 text-blue-400" />
                         {t("settings.data.importExcel")}
                     </CardTitle>
                     <CardDescription className="text-xs">{t("settings.data.importExcelDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="border-2 border-dashed border-slate-700 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
+                    <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
                         <input
                             ref={fileInputRef}
                             type="file"
@@ -680,7 +680,7 @@ export default function SettingsPage() {
                                         {t("settings.data.process")}
                                     </Button>
                                     <Button size="sm" variant="outline" onClick={() => { setImportFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                                        className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                                        className="border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                                     >
                                         {t("settings.data.cancelImport")}
                                     </Button>
@@ -704,7 +704,7 @@ export default function SettingsPage() {
             </Card>
 
             {/* Restart Tutorial */}
-            <Card className="border-blue-500/20 bg-slate-950/50 dark:border-blue-500/30 dark:bg-slate-900/60">
+            <Card className="border-blue-500/20 bg-white dark:bg-slate-950/50">
                 <CardContent className="pt-5 pb-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -712,7 +712,7 @@ export default function SettingsPage() {
                                 <Sparkles className="h-4 w-4 text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-slate-200">{t('settings.restartTutorial')}</p>
+                                <p className="text-sm text-slate-700 dark:text-slate-200">{t('settings.restartTutorial')}</p>
                                 <p className="text-xs text-slate-500">{t('settings.restartTutorialDesc')}</p>
                             </div>
                         </div>
@@ -733,7 +733,7 @@ export default function SettingsPage() {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="border-rose-500/20 bg-slate-950/50 dark:border-rose-500/30 dark:bg-slate-900/60">
+            <Card className="border-rose-500/20 bg-white dark:bg-slate-950/50">
                 <CardHeader className="pb-3">
                     <CardTitle className="text-sm text-rose-400 flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4" />
@@ -743,7 +743,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-200">{t("settings.data.resetDemo")}</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-200">{t("settings.data.resetDemo")}</p>
                             <p className="text-xs text-slate-500">{t("settings.data.resetDemoDesc")}</p>
                         </div>
                         <Button
@@ -757,10 +757,10 @@ export default function SettingsPage() {
                             {t("settings.data.reset")}
                         </Button>
                     </div>
-                    <Separator className="bg-slate-800 dark:bg-slate-700" />
+                    <Separator className="bg-slate-200 dark:bg-slate-800" />
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-200">{t("settings.data.clearCache")}</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-200">{t("settings.data.clearCache")}</p>
                             <p className="text-xs text-slate-500">{t("settings.data.clearCacheDesc")}</p>
                         </div>
                         <Button
@@ -783,7 +783,7 @@ export default function SettingsPage() {
             <SectionHeader title={t("settings.about.title")} subtitle={t("settings.about.subtitle")} icon={<Info className="h-5 w-5 text-slate-400" />} />
 
             {/* Version Hero */}
-            <Card className="border-slate-800 bg-gradient-to-br from-slate-950 via-blue-950/20 to-slate-950 dark:border-slate-700 dark:from-slate-900 dark:via-blue-950/30 dark:to-slate-900 overflow-hidden relative">
+            <Card className="border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 dark:from-slate-950 dark:via-blue-950/20 dark:to-slate-950 overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
                 <CardContent className="pt-6 pb-8">
                     <div className="text-center space-y-4">
@@ -793,7 +793,7 @@ export default function SettingsPage() {
                                 {t("settings.about.financialSystem")}
                             </span>
                         </div>
-                        <h2 className="text-4xl font-bold text-white tracking-tight">
+                        <h2 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                             KoreX <span className="text-blue-400">v{__APP_VERSION__}</span>
                         </h2>
                         <p className="text-sm text-slate-400 dark:text-slate-500 max-w-md mx-auto">
@@ -805,30 +805,30 @@ export default function SettingsPage() {
 
             {/* Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.version")}</p>
-                        <p className="text-lg font-bold text-white font-mono">{__APP_VERSION__}</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">{__APP_VERSION__}</p>
                     </CardContent>
                 </Card>
-                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.build")}</p>
-                        <p className="text-lg font-bold text-white font-mono">{__BUILD_DATE__}</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">{__BUILD_DATE__}</p>
                     </CardContent>
                 </Card>
-                <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+                <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                     <CardContent className="pt-4 pb-4 text-center">
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{t("settings.about.engine")}</p>
-                        <p className="text-lg font-bold text-white font-mono">Velocity v1</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">Velocity v1</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Tech Stack */}
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-white">{t("settings.about.techStack")}</CardTitle>
+                    <CardTitle className="text-sm text-slate-900 dark:text-white">{t("settings.about.techStack")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -842,18 +842,18 @@ export default function SettingsPage() {
             </Card>
 
             {/* Links */}
-            <Card className="border-slate-800 bg-slate-950/50 dark:border-slate-700 dark:bg-slate-900/60">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
                 <CardContent className="pt-4 pb-4">
                     <div className="grid grid-cols-3 gap-3">
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <BookOpen className="h-4 w-4" />
                             Docs
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <Github className="h-4 w-4" />
                             GitHub
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors text-sm text-slate-300 hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             <ExternalLink className="h-4 w-4" />
                             Support
                         </a>
@@ -924,7 +924,7 @@ export default function SettingsPage() {
 
                 {/* 🔥 NEUROMARKETING: Interest Burning Banner */}
                 {sd?.has_data && sd.daily_interest_all > 0 && (
-                    <Card className="border-red-500/30 bg-gradient-to-r from-red-950/40 via-orange-950/30 to-red-950/40 overflow-hidden relative">
+                    <Card className="border-red-500/30 bg-gradient-to-r from-red-50/40 via-orange-50/30 to-red-50/40 dark:from-red-950/40 dark:via-orange-950/30 dark:to-red-950/40 overflow-hidden relative">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.08),transparent_70%)]" />
                         <CardContent className="p-5 relative">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-4">

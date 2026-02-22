@@ -37,34 +37,35 @@ def _seed_impl(user_id: str):
 
         # ── 2. ACCOUNTS ──
         accounts_data = [
-            # === ASSETS (4) ===
-            ("Chase Business Checking", "checking", 12450.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None),
-            ("Wells Fargo Personal", "checking", 3200.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None),
-            ("Ally Savings (Emergency)", "savings", 8500.00, 4.25, 0, None, None, False, "revolving", "credit_card", None, None, None),
-            ("Marcus Savings (Investment)", "savings", 15000.00, 4.40, 0, None, None, False, "revolving", "credit_card", None, None, None),
-            # === REVOLVING DEBT (5) ===
-            ("Amex Platinum Business", "debt", 18500.00, 24.99, 450.00, 5, 28, True, "revolving", "credit_card", None, None, None),
-            ("Chase Sapphire Reserve", "debt", 7200.00, 21.49, 180.00, 12, 5, False, "revolving", "credit_card", None, None, None),
-            ("Capital One Venture X", "debt", 4800.00, 19.99, 120.00, 20, 13, False, "revolving", "credit_card", None, None, None),
-            ("Citi Double Cash", "debt", 2300.00, 17.49, 60.00, 28, 21, False, "revolving", "credit_card", None, None, None),
-            ("HELOC - Property #2", "debt", 45000.00, 8.75, 375.00, 1, 25, False, "revolving", "heloc", None, None, None),
+            # === ASSETS (4) === (14th field = credit_limit)
+            ("Chase Business Checking", "checking", 12450.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
+            ("Wells Fargo Personal", "checking", 3200.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
+            ("Ally Savings (Emergency)", "savings", 8500.00, 4.25, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
+            ("Marcus Savings (Investment)", "savings", 15000.00, 4.40, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
+            # === REVOLVING DEBT (6) ===
+            ("Amex Platinum Business", "debt", 18500.00, 24.99, 450.00, 5, 28, True, "revolving", "credit_card", None, None, None, 35000.00),
+            ("Chase Sapphire Reserve", "debt", 7200.00, 21.49, 180.00, 12, 5, False, "revolving", "credit_card", None, None, None, 25000.00),
+            ("Capital One Venture X", "debt", 4800.00, 19.99, 120.00, 20, 13, False, "revolving", "credit_card", None, None, None, 15000.00),
+            ("Citi Double Cash", "debt", 2300.00, 17.49, 60.00, 28, 21, False, "revolving", "credit_card", None, None, None, 10000.00),
+            ("HELOC - Property #2", "debt", 45000.00, 8.75, 375.00, 1, 25, False, "revolving", "heloc", None, None, None, 100000.00),
+            ("UIL - Pacific Life", "debt", 0.00, 5.50, 0.00, 1, None, False, "revolving", "uil", None, None, None, 75000.00),
             # === FIXED / AMORTIZED DEBT (7) ===
-            ("Mortgage - Casa Principal", "debt", 385000.00, 6.875, 2850.00, 1, None, False, "fixed", "mortgage", 420000.00, 360, 312),
-            ("Mortgage - Rental #1", "debt", 220000.00, 7.25, 1680.00, 15, None, False, "fixed", "mortgage", 250000.00, 360, 288),
-            ("Mortgage - Rental #2", "debt", 175000.00, 7.50, 1395.00, 15, None, False, "fixed", "mortgage", 200000.00, 360, 300),
-            ("Tesla Model X Lease", "debt", 42000.00, 4.99, 780.00, 10, None, False, "fixed", "auto_loan", 65000.00, 72, 48),
-            ("Range Rover Sport", "debt", 35000.00, 5.49, 650.00, 18, None, False, "fixed", "auto_loan", 55000.00, 60, 36),
-            ("SBA Business Loan", "debt", 85000.00, 9.25, 1200.00, 25, None, False, "fixed", "personal_loan", 120000.00, 120, 84),
-            ("Student Loan (MBA)", "debt", 28000.00, 5.50, 310.00, 5, None, False, "fixed", "student_loan", 45000.00, 120, 60),
+            ("Mortgage - Casa Principal", "debt", 385000.00, 6.875, 2850.00, 1, None, False, "fixed", "mortgage", 420000.00, 360, 312, None),
+            ("Mortgage - Rental #1", "debt", 220000.00, 7.25, 1680.00, 15, None, False, "fixed", "mortgage", 250000.00, 360, 288, None),
+            ("Mortgage - Rental #2", "debt", 175000.00, 7.50, 1395.00, 15, None, False, "fixed", "mortgage", 200000.00, 360, 300, None),
+            ("Tesla Model X Lease", "debt", 42000.00, 4.99, 780.00, 10, None, False, "fixed", "auto_loan", 65000.00, 72, 48, None),
+            ("Range Rover Sport", "debt", 35000.00, 5.49, 650.00, 18, None, False, "fixed", "auto_loan", 55000.00, 60, 36, None),
+            ("SBA Business Loan", "debt", 85000.00, 9.25, 1200.00, 25, None, False, "fixed", "personal_loan", 120000.00, 120, 84, None),
+            ("Student Loan (MBA)", "debt", 28000.00, 5.50, 310.00, 5, None, False, "fixed", "student_loan", 45000.00, 120, 60, None),
         ]
 
         acc_insert = text("""
             INSERT INTO accounts (user_id, name, type, balance, interest_rate, min_payment,
                 due_day, closing_day, is_velocity_target, interest_type, debt_subtype,
-                original_amount, loan_term_months, remaining_months)
+                original_amount, loan_term_months, remaining_months, credit_limit)
             VALUES (CAST(:uid AS uuid), :name, :type, :balance, :rate, :min_pay,
                 :due_day, :closing_day, :vel_target, :int_type, :debt_sub,
-                :orig_amt, :term, :remaining)
+                :orig_amt, :term, :remaining, :credit_lim)
             RETURNING id, name
         """)
 
@@ -76,6 +77,7 @@ def _seed_impl(user_id: str):
                 "due_day": a[5], "closing_day": a[6], "vel_target": a[7],
                 "int_type": a[8], "debt_sub": a[9],
                 "orig_amt": a[10], "term": a[11], "remaining": a[12],
+                "credit_lim": a[13],
             })
             row = result.fetchone()
             acc_map[row[1]] = row[0]

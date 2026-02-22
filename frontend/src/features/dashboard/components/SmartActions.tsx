@@ -35,23 +35,23 @@ export default function SmartActions() {
     ];
 
     return (
-        <Card className="h-full border-slate-800 bg-slate-950/50">
+        <Card className="h-full border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-slate-100 flex items-center gap-2">
+                <CardTitle className="text-slate-900 dark:text-slate-100 flex items-center gap-2">
                     <ListTodo className="w-5 h-5 text-blue-500" strokeWidth={1.5} />
                     Smart Actions
                 </CardTitle>
-                <Badge variant="outline" className="border-blue-900 text-blue-400">3 Pending</Badge>
+                <Badge variant="outline" className="border-blue-300 dark:border-blue-900 text-blue-600 dark:text-blue-400">3 Pending</Badge>
             </CardHeader>
             <CardContent className="space-y-4">
                 {actions.map((action) => (
-                    <div key={action.id} className="group flex flex-col gap-3 rounded-lg border border-slate-800 bg-slate-900/50 p-4 transition-all hover:bg-slate-900 hover:border-slate-700">
+                    <div key={action.id} className="group flex flex-col gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-4 transition-all hover:bg-slate-100 dark:hover:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700">
                         <div className="flex items-start justify-between">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="font-semibold text-slate-100">{action.title}</h3>
+                                    <h3 className="font-semibold text-slate-900 dark:text-slate-100">{action.title}</h3>
                                 </div>
-                                <p className="text-xs text-slate-400">{action.description}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{action.description}</p>
                             </div>
                             <Badge variant={action.variant as any} className="text-[10px] uppercase tracking-wider">
                                 {action.badge}

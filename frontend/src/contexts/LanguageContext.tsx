@@ -178,6 +178,11 @@ const translations: Record<string, Record<Language, string>> = {
     "strategy.riskyOpp.execute": { en: "Confirm & Execute", es: "Confirmar y Ejecutar" },
     "strategy.riskyOpp.cancel": { en: "Cancel", es: "Cancelar" },
     "strategy.riskyOpp.success": { en: "✅ Risk Executed Successfully", es: "✅ Riesgo Ejecutado Exitosamente" },
+    "strategy.riskyOpp.benefitTitle": { en: "What You Gain", es: "Lo Que Ganas" },
+    "strategy.riskyOpp.daysCloser": { en: "days closer to freedom", es: "días más cerca de tu libertad" },
+    "strategy.riskyOpp.freedomAcceleration": { en: "Accelerate your debt-free date with this move", es: "Acelera tu fecha de libertad financiera con este movimiento" },
+    "strategy.riskyOpp.annualSavings": { en: "Annual Savings", es: "Ahorro Anual" },
+    "strategy.riskyOpp.costEliminated": { en: "Eliminating daily interest cost of", es: "Eliminando costo diario de interés de" },
 
     "strategy.confidence.title": { en: "Confidence Meter", es: "Medidor de Confianza" },
     "strategy.confidence.level": { en: "Confidence Level", es: "Nivel de Confianza" },
@@ -253,6 +258,7 @@ const translations: Record<string, Record<Language, string>> = {
     "actionPlan.badgeExpense": { en: "Tfr", es: "Trf" },
     "actionPlan.badgeFloatKill": { en: "Float", es: "Float" },
     "actionPlan.badgeHybridKill": { en: "Kill", es: "Kill" },
+    "actionPlan.badgeVelocityChunk": { en: "Chunk", es: "Chunk" },
     "actionPlan.inInterest": { en: "in interest", es: "en intereses" },
     "actionPlan.lockedAccounts": { en: "locked accounts", es: "cuentas bloqueadas" },
     "actionPlan.upgradeToUnlock": { en: "Upgrade to unlock", es: "Mejora para desbloquear" },
@@ -656,6 +662,10 @@ const translations: Record<string, Record<Language, string>> = {
     "cashflow.upgradeToUnlock": { en: "Upgrade plan to unlock", es: "Mejora tu plan para desbloquear" },
     "cashflow.autoManaged": { en: "Auto-managed — pay off debt to remove", es: "Auto-gestionado — paga la deuda para eliminar" },
     "cashflow.fillNameAmount": { en: "Please fill in Name and Amount", es: "Por favor ingresa Nombre y Monto" },
+    "cashflow.deleteConfirmTitle": { en: "Delete Transaction", es: "Eliminar Transacción" },
+    "cashflow.deleteConfirmDesc": { en: "Delete", es: "¿Eliminar" },
+    "cashflow.deleteConfirmWarn": { en: "This action cannot be undone.", es: "Esta acción no se puede deshacer." },
+    "cashflow.deleteConfirmAction": { en: "Yes, Delete", es: "Sí, Eliminar" },
 
     // ═══════════════════════════════════════════════════════════════════
     //  SETTINGS — NAVIGATION + PROFILE

@@ -38,7 +38,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 
 // Loan subtype → interest_type mapping (auto-inferred)
-const REVOLVING_SUBTYPES = ["credit_card", "heloc"];
+const REVOLVING_SUBTYPES = ["credit_card", "heloc", "uil"];
 const inferInterestType = (subtype: string) => REVOLVING_SUBTYPES.includes(subtype) ? "revolving" : "fixed";
 
 // Validation Schema
@@ -53,7 +53,7 @@ const accountFormSchema = z.object({
     closing_day: z.coerce.number().min(1).max(31).optional(),
     credit_limit: z.coerce.number().min(0).optional(),
     // Loan Classification — interest_type is auto-inferred from debt_subtype
-    debt_subtype: z.enum(["credit_card", "heloc", "auto_loan", "mortgage", "personal_loan", "student_loan"]).default("credit_card"),
+    debt_subtype: z.enum(["credit_card", "heloc", "uil", "auto_loan", "mortgage", "personal_loan", "student_loan"]).default("credit_card"),
 });
 
 const transactionFormSchema = z.object({
@@ -106,6 +106,7 @@ export default function AccountsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [updatingAccount, setUpdatingAccount] = useState<Account | null>(null);
+    const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
     const [cashflowRefreshKey, setCashflowRefreshKey] = useState(0);
 
 
@@ -200,15 +201,21 @@ export default function AccountsPage() {
         }
     };
 
-    const confirmDelete = async (id: number) => {
-        if (!confirm(t("accounts.deleteConfirm"))) return;
+    const requestDeleteAccount = (acc: Account) => {
+        setDeleteAccountTarget(acc);
+    };
+
+    const executeDeleteAccount = async () => {
+        if (!deleteAccountTarget) return;
         try {
-            await apiFetch(`/api/accounts/${id}`, { method: 'DELETE' });
-            setAccounts(prev => prev.filter(a => a.id !== id));
+            await apiFetch(`/api/accounts/${deleteAccountTarget.id}`, { method: 'DELETE' });
+            setAccounts(prev => prev.filter(a => a.id !== deleteAccountTarget.id));
             toast({ title: t("accounts.accountDeleted"), variant: "destructive" });
             emitDataChanged('accounts');
         } catch (e) {
             console.error("Delete failed", e);
+        } finally {
+            setDeleteAccountTarget(null);
         }
     };
 
@@ -337,7 +344,7 @@ export default function AccountsPage() {
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 font-light text-lg">{t("accounts.manageConnected")}</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                     <Button variant="outline" size="icon" onClick={fetchAccounts} title={t("accounts.refreshData")} className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5">
                         <RefreshCw size={18} className={isLoading ? "animate-spin text-gold-400" : "text-slate-500 dark:text-slate-400"} strokeWidth={1.5} />
                     </Button>
@@ -825,7 +832,7 @@ export default function AccountsPage() {
                                         {/* Delete button — only active */}
                                         {!isLocked && (
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => confirmDelete(acc.id)}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => requestDeleteAccount(acc)}>
                                                     <Trash2 size={14} strokeWidth={1.5} />
                                                 </Button>
                                             </div>
@@ -1004,7 +1011,7 @@ export default function AccountsPage() {
                                 <Card key={acc.id} className="glass-card group hover:border-emerald-500/30 transition-all duration-500 bg-white dark:bg-slate-950/50">
                                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => confirmDelete(acc.id)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => requestDeleteAccount(acc)}>
                                             <Trash2 size={14} strokeWidth={1.5} />
                                         </Button>
                                     </div>
@@ -1079,6 +1086,32 @@ export default function AccountsPage() {
                     }}
                 />
             )}
+
+            {/* 🗑️ Delete Account Confirmation Dialog */}
+            <AlertDialog open={!!deleteAccountTarget} onOpenChange={(open) => { if (!open) setDeleteAccountTarget(null); }}>
+                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
+                            <Trash2 size={18} /> {t("accounts.deleteConfirm")}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+                            {deleteAccountTarget?.name
+                                ? (language === 'es'
+                                    ? `¿Estás seguro de que deseas eliminar "${deleteAccountTarget.name}"? Esta acción no se puede deshacer.`
+                                    : `Are you sure you want to delete "${deleteAccountTarget.name}"? This action cannot be undone.`)
+                                : t("accounts.deleteConfirm")}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300">
+                            {t("accounts.cancel")}
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={executeDeleteAccount} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
+                            {t("accounts.delete")}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* 🔒 Upgrade Modal — shared component with plan cards */}
             <UpgradeModal

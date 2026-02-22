@@ -83,7 +83,7 @@ export default function DebtAlertBanner({ alerts }: Props) {
 
                         <div className="flex items-start gap-3 pr-6">
                             {/* Icon */}
-                            <div className={`p-2 rounded-lg bg-black/20 ${config.iconColor} shrink-0 mt-0.5`}>
+                            <div className={`p-2 rounded-lg bg-slate-100 dark:bg-black/20 ${config.iconColor} shrink-0 mt-0.5`}>
                                 <Icon size={20} />
                             </div>
 
@@ -124,7 +124,7 @@ export default function DebtAlertBanner({ alerts }: Props) {
                                 )}
 
                                 {/* Recommendation */}
-                                <div className="flex items-start gap-2 mt-2 p-2.5 rounded-lg bg-black/20 border border-white/5">
+                                <div className="flex items-start gap-2 mt-2 p-2.5 rounded-lg bg-slate-100 dark:bg-black/20 border border-slate-200 dark:border-white/5">
                                     <ArrowRight size={14} className={`${config.iconColor} shrink-0 mt-0.5`} />
                                     <p className="text-xs text-slate-300">
                                         {alert.recommendation}

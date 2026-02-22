@@ -75,7 +75,7 @@ export default function PeaceShield() {
 
     if (loading) {
         return (
-            <Card className="border-slate-800 bg-slate-900/50 animate-pulse">
+            <Card className="border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 animate-pulse">
                 <CardContent className="h-32 flex items-center justify-center">
                     <div className="text-slate-500 font-mono text-sm">Shield Status Loading...</div>
                 </CardContent>
@@ -110,11 +110,11 @@ export default function PeaceShield() {
                 <div className="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Dialog open={editOpen} onOpenChange={setEditOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-white">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-900 dark:hover:text-white">
                                 <Settings className="h-4 w-4" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-slate-950 border-slate-800 text-white">
+                        <DialogContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                             <DialogHeader>
                                 <DialogTitle>Configure Peace Shield</DialogTitle>
                             </DialogHeader>
@@ -125,7 +125,7 @@ export default function PeaceShield() {
                                         type="number"
                                         value={newTarget}
                                         onChange={(e) => setNewTarget(e.target.value)}
-                                        className="bg-slate-900 border-slate-800"
+                                        className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800"
                                     />
                                     <p className="text-xs text-slate-500">
                                         The amount of liquid cash you need to feel safe.
@@ -142,7 +142,7 @@ export default function PeaceShield() {
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <div className="text-lg font-bold text-white">{formatMoney(recommendedShield)}</div>
+                                                <div className="text-lg font-bold text-slate-900 dark:text-white">{formatMoney(recommendedShield)}</div>
                                                 <div className="text-[10px] text-emerald-500/70">3 Months of Living Expenses</div>
                                             </div>
                                             <Button

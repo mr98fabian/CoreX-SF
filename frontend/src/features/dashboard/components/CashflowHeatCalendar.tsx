@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ArrowUpCircle, ArrowDownCircle, X } from "lucide-react";
 import { apiFetch } from '@/lib/api';
@@ -84,7 +84,7 @@ function DayDetailContent({
                 <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-3 h-3 rounded-full shrink-0 ${getHeatDot(selectedDay.balance, minBal, maxBal)}`} />
                     <div className="min-w-0">
-                        <span className="text-sm font-semibold text-white block truncate">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white block truncate">
                             {new Date(selectedDay.date + "T12:00:00").toLocaleDateString("en-US", {
                                 weekday: "long", month: "long", day: "numeric", year: "numeric",
                             })}
@@ -98,7 +98,7 @@ function DayDetailContent({
                 </div>
                 <button
                     onClick={onClose}
-                    className="text-slate-500 hover:text-white transition-colors shrink-0 p-1"
+                    className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 p-1"
                 >
                     <X className="h-5 w-5" />
                 </button>
@@ -106,7 +106,7 @@ function DayDetailContent({
 
             {/* Balance + Delta */}
             <div className="flex flex-wrap items-baseline gap-2 sm:gap-4 mb-4">
-                <span className="text-2xl font-bold font-mono text-white">
+                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
                     {formatMoney(selectedDay.balance)}
                 </span>
                 {(() => {
@@ -177,6 +177,10 @@ export default function CashflowHeatCalendar() {
     const [data, setData] = useState<CashflowProjection | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedDay, setSelectedDay] = useState<ProjectionDay | null>(null);
+    // Anchor rect for popover positioning (captured on click)
+    const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+    const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
     const fetchProjection = useCallback(async () => {
         setLoading(true);
@@ -192,18 +196,52 @@ export default function CashflowHeatCalendar() {
 
     useEffect(() => { fetchProjection(); }, [fetchProjection]);
 
-    // Lock body scroll when modal is open on mobile
+    // Compute popover position after it renders, based on anchor rect
+    useLayoutEffect(() => {
+        if (!anchorRect || !popoverRef.current) {
+            setPopoverPos(null);
+            return;
+        }
+        const popEl = popoverRef.current;
+        const popW = popEl.offsetWidth;
+        const popH = popEl.offsetHeight;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const GAP = 8;
+
+        // Default: position below the cell, centered horizontally (viewport coords for fixed)
+        let top = anchorRect.bottom + GAP;
+        let left = anchorRect.left + anchorRect.width / 2 - popW / 2;
+
+        // If popover would go below viewport, place it ABOVE the cell
+        if (anchorRect.bottom + GAP + popH > vh) {
+            top = anchorRect.top - popH - GAP;
+        }
+
+        // Clamp horizontal so it stays within viewport (with 8px margin)
+        const margin = 8;
+        if (left < margin) left = margin;
+        if (left + popW > vw - margin) left = vw - margin - popW;
+
+        // If it still goes above viewport, just place at top
+        if (top < margin) top = margin;
+
+        setPopoverPos({ top, left });
+    }, [anchorRect, selectedDay]);
+
+    // Close on Escape key
     useEffect(() => {
         if (!selectedDay) return;
-        const isMobile = window.innerWidth < 640;
-        if (!isMobile) return;
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') { setSelectedDay(null); setAnchorRect(null); }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
     }, [selectedDay]);
 
     if (loading || !data) {
         return (
-            <Card className="border-slate-800 bg-slate-950/50">
+            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
                 <CardContent className="p-6">
                     <div className="h-32 flex items-center justify-center">
                         <div className="animate-pulse text-slate-600 text-sm">Loading cashflow heat map...</div>
@@ -259,9 +297,9 @@ export default function CashflowHeatCalendar() {
     };
 
     return (
-        <Card className="border-slate-800 bg-slate-950/50 backdrop-blur-sm overflow-hidden">
+        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-white text-base">
+                <CardTitle className="flex items-center justify-between text-slate-900 dark:text-white text-base">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-cyan-400" />
                         Cashflow Heat Map
@@ -318,7 +356,15 @@ export default function CashflowHeatCalendar() {
                                         return (
                                             <button
                                                 key={day.date}
-                                                onClick={() => setSelectedDay(isSelected ? null : day)}
+                                                onClick={(e) => {
+                                                    if (isSelected) {
+                                                        setSelectedDay(null);
+                                                        setAnchorRect(null);
+                                                    } else {
+                                                        setSelectedDay(day);
+                                                        setAnchorRect((e.currentTarget as HTMLElement).getBoundingClientRect());
+                                                    }
+                                                }}
                                                 className={`
                                                     aspect-square rounded-md border text-xs sm:text-[10px] font-mono
                                                     flex flex-col items-center justify-center gap-0.5
@@ -335,7 +381,7 @@ export default function CashflowHeatCalendar() {
                                                 `}
                                                 title={`${day.date}: ${formatMoney(day.balance)}`}
                                             >
-                                                <span className={`leading-none ${day.is_today ? "text-amber-300 font-bold" : "text-slate-300"}`}>
+                                                <span className={`leading-none ${day.is_today ? "text-amber-500 dark:text-amber-300 font-bold" : "text-slate-600 dark:text-slate-300"}`}>
                                                     {day.day_num}
                                                 </span>
                                                 {/* Event dots */}
@@ -354,36 +400,44 @@ export default function CashflowHeatCalendar() {
                     ))}
                 </div>
 
-                {/* --- Centered Modal for Day Detail (all screen sizes) --- */}
+                {/* --- Floating Popover for Day Detail --- */}
                 {selectedDay && (
                     <>
-                        {/* Backdrop overlay */}
+                        {/* Transparent backdrop to catch outside clicks */}
                         <div
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
-                            onClick={() => setSelectedDay(null)}
+                            className="fixed inset-0 z-40"
+                            onClick={() => { setSelectedDay(null); setAnchorRect(null); }}
                         />
-                        {/* Centered modal card */}
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-                            <div className="w-full max-w-lg pointer-events-auto rounded-2xl border border-slate-700/50 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300 max-h-[80vh] overflow-y-auto">
-                                {/* Accent bar */}
-                                <div className="h-1 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-500 rounded-t-2xl" />
-                                <DayDetailContent
-                                    selectedDay={selectedDay}
-                                    minBal={minBal}
-                                    maxBal={maxBal}
-                                    getPrevDay={getPrevDay}
-                                    onClose={() => setSelectedDay(null)}
-                                />
-                            </div>
+                        {/* Popover positioned near the clicked cell */}
+                        <div
+                            ref={popoverRef}
+                            className="fixed z-50 w-[min(380px,calc(100vw-16px))] rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/50 max-h-[70vh] overflow-y-auto"
+                            style={{
+                                top: popoverPos?.top ?? -9999,
+                                left: popoverPos?.left ?? -9999,
+                                // Hide until position is calculated to prevent flash
+                                opacity: popoverPos ? 1 : 0,
+                                transition: 'opacity 150ms ease',
+                            }}
+                        >
+                            {/* Accent bar */}
+                            <div className="h-1 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-500 rounded-t-2xl" />
+                            <DayDetailContent
+                                selectedDay={selectedDay}
+                                minBal={minBal}
+                                maxBal={maxBal}
+                                getPrevDay={getPrevDay}
+                                onClose={() => { setSelectedDay(null); setAnchorRect(null); }}
+                            />
                         </div>
                     </>
                 )}
 
                 {/* Balance range footer */}
-                <div className="flex items-center justify-between text-sm text-slate-500 pt-3 border-t border-slate-800/50">
-                    <span>Min: <span className="font-mono font-semibold text-slate-300">{formatMoneyShort(minBal)}</span></span>
+                <div className="flex items-center justify-between text-sm text-slate-500 pt-3 border-t border-slate-200 dark:border-slate-800/50">
+                    <span>Min: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{formatMoneyShort(minBal)}</span></span>
                     <span>Today: <span className="font-mono font-semibold text-amber-400">{formatMoneyShort(data.start_balance)}</span></span>
-                    <span>Max: <span className="font-mono font-semibold text-slate-300">{formatMoneyShort(maxBal)}</span></span>
+                    <span>Max: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{formatMoneyShort(maxBal)}</span></span>
                 </div>
             </CardContent>
         </Card>

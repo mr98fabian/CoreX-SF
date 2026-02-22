@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api';
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Repeat, Lock, CreditCard } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Repeat, Lock, CreditCard, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCashflowStats } from "../hooks/useCashflowStats";
@@ -18,6 +21,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
     const [currentTimeframe, setCurrentTimeframe] = useState<Timeframe>('monthly');
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
     const [newItem, setNewItem] = useState<Partial<CashflowItem>>({
         category: 'expense',
         frequency: 'monthly',
@@ -58,12 +62,19 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
         }
     };
 
-    const handleDelete = async (id: number) => {
+    const requestDelete = (id: number, name: string) => {
+        setDeleteTarget({ id, name });
+    };
+
+    const confirmDeleteItem = async () => {
+        if (!deleteTarget) return;
         try {
-            await apiFetch(`/api/cashflow/${id}`, { method: 'DELETE' });
+            await apiFetch(`/api/cashflow/${deleteTarget.id}`, { method: 'DELETE' });
             fetchCashflow();
         } catch (e) {
             console.error("Delete failed", e);
+        } finally {
+            setDeleteTarget(null);
         }
     };
 
@@ -161,9 +172,9 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
             </div>
 
             {/* 3. Recurring Transactions List */}
-            <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Repeat className="text-slate-500" size={20} /> {t('cashflow.recurringTransactions')}
+            <div className="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-800">
+                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 min-w-0">
+                    <Repeat className="text-slate-500 shrink-0" size={20} /> {t('cashflow.recurringTransactions')}
                 </h2>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -386,7 +397,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleDelete(item.id)}
+                                    onClick={() => requestDelete(item.id, item.name)}
                                     className="h-8 w-8 text-slate-600 hover:text-rose-400 hover:bg-rose-900/10 opacity-0 group-hover:opacity-100 transition-all"
                                 >
                                     <Trash2 size={16} />
@@ -425,7 +436,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    onClick={() => handleDelete(item.id)}
+                                    onClick={() => requestDelete(item.id, item.name)}
                                     className="h-8 w-8 text-slate-600 hover:text-rose-400 hover:bg-rose-900/10 opacity-0 group-hover:opacity-100 transition-all"
                                 >
                                     <Trash2 size={16} />
@@ -502,6 +513,29 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
+                            <AlertCircle size={20} /> {t('cashflow.deleteConfirmTitle') || 'Eliminar Transacción'}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+                            {t('cashflow.deleteConfirmDesc') || '¿Eliminar'} <strong className="text-white">{deleteTarget?.name}</strong>{'? '}
+                            {t('cashflow.deleteConfirmWarn') || 'Esta acción no se puede deshacer.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300">
+                            {t('accounts.cancel') || 'Cancelar'}
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteItem} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
+                            {t('cashflow.deleteConfirmAction') || 'Sí, Eliminar'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

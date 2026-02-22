@@ -131,7 +131,7 @@ export default function FreedomClock() {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h3 className="text-sm font-bold text-zinc-800 dark:text-zinc-100 tracking-wide uppercase">Velocity Engine</h3>
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/20">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-500/20">
                                     {velocityScore}x SPEED
                                 </span>
                             </div>
@@ -183,41 +183,41 @@ export default function FreedomClock() {
                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{years}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Years</div>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
-                        <div className="text-3xl font-extrabold text-white tabular-nums">{months}</div>
+                    <div className="text-center p-4 rounded-2xl bg-slate-200/70 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-slate-700/60 transition-colors">
+                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{months}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Months</div>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm group-hover:border-slate-700/60 transition-colors">
-                        <div className={`text-3xl font-extrabold tabular-nums ${extraPayment > 0 ? 'text-emerald-400' : 'text-blue-400'}`}>{days}</div>
+                    <div className="text-center p-4 rounded-2xl bg-slate-200/70 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-slate-700/60 transition-colors">
+                        <div className={`text-3xl font-extrabold tabular-nums ${extraPayment > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-blue-500 dark:text-blue-400'}`}>{days}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Days</div>
                     </div>
                 </div>
 
                 {/* Freedom Dates Comparison */}
-                <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-950/40 via-zinc-900/60 to-red-950/30 border border-emerald-800/20 mb-6">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-emerald-400 text-xs">⚡</span>
-                        <div className="min-w-0">
-                            <p className="text-[9px] uppercase tracking-widest text-emerald-500 font-bold">With KoreX</p>
-                            <p className="text-sm font-bold text-emerald-300 truncate">
+                <div className="flex items-center justify-between gap-2 px-3 py-3 rounded-xl bg-gradient-to-r from-emerald-100/80 via-slate-100 to-rose-100/60 dark:from-emerald-950/40 dark:via-zinc-900/60 dark:to-red-950/30 border border-emerald-200 dark:border-emerald-800/20 mb-6">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-emerald-500 dark:text-emerald-400 text-xs">⚡</span>
+                        <div>
+                            <p className="text-[9px] uppercase tracking-widest text-emerald-600 dark:text-emerald-500 font-bold">With KoreX</p>
+                            <p className="text-[13px] font-bold text-emerald-600 dark:text-emerald-300 whitespace-nowrap">
                                 {velocityDate.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}
                             </p>
                         </div>
                     </div>
 
-                    <div className="text-zinc-600 text-xs font-mono">→</div>
+                    <div className="text-zinc-400 dark:text-zinc-600 text-xs font-mono">→</div>
 
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                         <Clock size={12} className="text-red-400/60 flex-shrink-0" />
-                        <div className="min-w-0">
-                            <p className="text-[9px] uppercase tracking-widest text-red-400/70 font-bold">Without</p>
-                            <p className="text-sm font-bold text-red-400/70 line-through truncate">
+                        <div>
+                            <p className="text-[9px] uppercase tracking-widest text-red-500/70 dark:text-red-400/70 font-bold">Without</p>
+                            <p className="text-[13px] font-bold text-red-500/70 dark:text-red-400/70 line-through whitespace-nowrap">
                                 {standardDate.toLocaleDateString(locale, { month: 'short', year: 'numeric' })}
                             </p>
                         </div>
                     </div>
 
-                    <span className="ml-auto px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                    <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                         {data.months_saved}mo cut
                     </span>
                 </div>

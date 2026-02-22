@@ -47,6 +47,8 @@ async def create_transaction(tx: TransactionCreate, user_id: str = Depends(get_c
 
         if account.type == "debt":
             if tx.category == "payment":
+                # Cap debt payment at outstanding balance
+                abs_amount = min(abs_amount, account.balance)
                 account.balance -= abs_amount
             else:
                 account.balance += abs_amount
@@ -55,7 +57,20 @@ async def create_transaction(tx: TransactionCreate, user_id: str = Depends(get_c
                 account.interest_type, account.remaining_months,
             )
         else:
-            account.balance += amount_decimal
+            # Guard: prevent negative balance on non-debt accounts
+            new_balance = account.balance + amount_decimal
+            if new_balance < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "code": "INSUFFICIENT_FUNDS",
+                        "message": f"Fondos insuficientes. {account.name} tiene ${account.balance:.2f}, no se puede deducir ${abs(amount_decimal):.2f}.",
+                        "account_name": account.name,
+                        "current_balance": float(account.balance),
+                        "requested_amount": float(abs(amount_decimal)),
+                    },
+                )
+            account.balance = new_balance
 
         session.add(account)
         with bypass_fk(session):
@@ -98,6 +113,8 @@ async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depend
         abs_amount = abs(Decimal(str(tx.amount)))
         if account.type == "debt":
             if tx.category == "payment":
+                # Cap debt payment at outstanding balance
+                abs_amount = min(abs_amount, account.balance)
                 account.balance -= abs_amount
             else:
                 account.balance += abs_amount
@@ -106,7 +123,21 @@ async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depend
                 account.interest_type, account.remaining_months,
             )
         else:
-            account.balance += Decimal(str(tx.amount))
+            amount_decimal = Decimal(str(tx.amount))
+            new_balance = account.balance + amount_decimal
+            # Guard: prevent negative balance on non-debt accounts
+            if new_balance < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "code": "INSUFFICIENT_FUNDS",
+                        "message": f"Fondos insuficientes. {account.name} tiene ${account.balance:.2f}, no se puede deducir ${abs(amount_decimal):.2f}.",
+                        "account_name": account.name,
+                        "current_balance": float(account.balance),
+                        "requested_amount": float(abs(amount_decimal)),
+                    },
+                )
+            account.balance = new_balance
 
         session.add(account)
         with bypass_fk(session):

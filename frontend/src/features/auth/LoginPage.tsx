@@ -125,7 +125,7 @@ function FormInput({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-1.5">
+            <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1.5">
                 {label}
             </label>
             <div className="relative">
@@ -136,10 +136,10 @@ function FormInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className={`w-full px-4 py-3 bg-slate-800/60 border rounded-xl text-white placeholder:text-slate-500 outline-none transition-all
+                    className={`w-full px-4 py-3 bg-slate-100 dark:bg-slate-800/60 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all
                         ${error
                             ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                            : 'border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
+                            : 'border-slate-300 dark:border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
                         } ${children ? 'pr-12' : ''}`}
                 />
                 {children}
@@ -286,7 +286,7 @@ export default function LoginPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
             </div>
         );
@@ -295,18 +295,18 @@ export default function LoginPage() {
     // ── Animated Success State ──
     if (view === 'success') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-4">
+            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 relative overflow-hidden px-4">
                 <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
-                    <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-10">
+                    <div className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-10">
                         {/* Animated Checkmark */}
                         <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6 animate-success-pop">
                             <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-check-draw" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Account Created!</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Account Created!</h2>
                         <p className="text-slate-400 mb-2">
                             We've sent a verification email to:
                         </p>
@@ -334,7 +334,7 @@ export default function LoginPage() {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             tabIndex={-1}
         >
             {show ? (
@@ -351,7 +351,7 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 relative overflow-hidden px-6 py-8">
+        <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 relative overflow-hidden px-6 py-8">
             <BackgroundOrbs />
             <Styles />
 
@@ -376,10 +376,10 @@ export default function LoginPage() {
                 </div>
 
                 {/* Card */}
-                <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
+                <div className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
                     {/* Tabs */}
                     {view !== 'forgot' && (
-                        <div className="flex bg-slate-800/60 rounded-xl p-1 mb-6">
+                        <div className="flex bg-slate-200/60 dark:bg-slate-800/60 rounded-xl p-1 mb-6">
                             {(['signin', 'signup'] as const).map((tab) => (
                                 <button
                                     key={tab}
@@ -387,7 +387,7 @@ export default function LoginPage() {
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
                                         ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-slate-400 hover:text-white'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                         }`}
                                 >
                                     {tab === 'signin' ? 'Sign In' : 'Create Account'}
@@ -404,7 +404,7 @@ export default function LoginPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-bold text-white">Reset Password</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Reset Password</h2>
                             <p className="text-slate-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
                         </div>
                     )}
@@ -599,7 +599,7 @@ export default function LoginPage() {
                         {/* Back — forgot */}
                         {view === 'forgot' && (
                             <button type="button" onClick={() => switchView('signin')}
-                                className="w-full text-sm text-slate-400 hover:text-white transition-colors py-2">
+                                className="w-full text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors py-2">
                                 ← Back to Sign In
                             </button>
                         )}
@@ -609,17 +609,17 @@ export default function LoginPage() {
                     {view !== 'forgot' && (
                         <>
                             <div className="flex items-center gap-4 my-6">
-                                <div className="flex-1 h-px bg-white/10" />
+                                <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
                                 <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
-                                <div className="flex-1 h-px bg-white/10" />
+                                <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
                             </div>
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={isGoogleLoading || isSubmitting}
                                 className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
-                                    bg-slate-800/60 border border-white/10 text-white text-sm font-medium
-                                    hover:bg-slate-700/60 hover:border-white/20 transition-all duration-300
+                                    bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm font-medium
+                                    hover:bg-slate-200 dark:hover:bg-slate-700/60 hover:border-slate-400 dark:hover:border-white/20 transition-all duration-300
                                     active:scale-[0.98]
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
