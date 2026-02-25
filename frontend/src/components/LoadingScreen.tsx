@@ -34,7 +34,7 @@ export default function LoadingScreen() {
                 <img
                     src="/korex-imagotipo.svg"
                     alt="KoreX"
-                    className="h-16 drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]"
+                    className="h-24 drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]"
                 />
             </div>
 
