@@ -360,7 +360,7 @@ export default function LoginPage() {
                 src="/korex-isotipo.svg"
                 alt=""
                 aria-hidden="true"
-                className="absolute opacity-[0.03] w-[500px] h-[500px] pointer-events-none select-none"
+                className="absolute opacity-[0.06] w-[600px] h-[600px] pointer-events-none select-none"
                 style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
             />
 
@@ -370,7 +370,7 @@ export default function LoginPage() {
                     <img
                         src="/korex-imagotipo.svg"
                         alt="KoreX"
-                        className="h-14 sm:h-20 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
+                        className="h-20 sm:h-28 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
                     <p className="text-slate-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
