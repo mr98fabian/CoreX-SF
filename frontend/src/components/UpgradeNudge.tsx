@@ -21,7 +21,7 @@ export default function UpgradeNudge() {
     const [showUpgrade, setShowUpgrade] = useState(false);
 
     // Determine context from localStorage
-    const plan = localStorage.getItem('corex-plan') || 'starter';
+    const plan = localStorage.getItem('korex-plan') || 'starter';
     const isFree = plan === 'starter';
     const isPaid = plan !== 'starter';
 

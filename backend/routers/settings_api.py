@@ -12,7 +12,7 @@ from models import UserSettings
 from helpers import bypass_fk
 from auth import get_current_user_id
 
-logger = logging.getLogger("corex.settings")
+logger = logging.getLogger("korex.settings")
 
 router = APIRouter(prefix="/api", tags=["settings"])
 

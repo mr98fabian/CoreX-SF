@@ -22,7 +22,7 @@ export function ReferralProgram() {
 
     // Generate referral link using user ID (first 8 chars as ref code)
     const refCode = user?.id?.substring(0, 8) || 'demo';
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://corex.app';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://korex.app';
     const referralUrl = `${baseUrl}/signup?ref=${refCode}`;
 
     const isEs = language === 'es';

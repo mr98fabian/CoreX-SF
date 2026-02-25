@@ -1,4 +1,4 @@
-# CoreX Architecture
+# KoreX Architecture
 
 ## System Overview
 

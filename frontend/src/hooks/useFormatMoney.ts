@@ -25,7 +25,7 @@ const CURRENCY_MAP: Record<CurrencyCode, CurrencyConfig> = {
  * Defaults to USD if nothing is set.
  */
 function getCurrencyConfig(): CurrencyConfig {
-    const stored = localStorage.getItem("corex-currency") as CurrencyCode | null;
+    const stored = localStorage.getItem("korex-currency") as CurrencyCode | null;
     return CURRENCY_MAP[stored ?? "USD"] ?? CURRENCY_MAP.USD;
 }
 

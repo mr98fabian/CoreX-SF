@@ -582,7 +582,7 @@ export default function LandingPage() {
 
             {/* ─── Navbar ──────────────────────────────────── */}
             <nav className={`lp-navbar ${navScrolled ? 'scrolled' : ''}`}>
-                <img src="/korex-logotipo.png" alt="KoreX" className="lp-nav-logo-img" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+                <img src="/korex-logotipo.svg" alt="KoreX" className="lp-nav-logo-img" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
                 <div className="lp-nav-links">
                     <button className="lp-nav-link desktop-only" onClick={() => scrollTo(solutionRef)}>
                         {copy.nav.features[L]}
@@ -657,7 +657,7 @@ export default function LandingPage() {
                     {/* Right: Logo + tagline + CTA */}
                     <div className="lp-hero-split-content">
                         <img
-                            src="/korex-imagotipo.png"
+                            src="/korex-imagotipo.svg"
                             alt="KoreX"
                             className="lp-hero-logo-img"
                         />

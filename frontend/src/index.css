@@ -38,7 +38,7 @@
 
     --radius: 0.75rem;
 
-    /* CoreX custom semantic tokens */
+    /* KoreX custom semantic tokens */
     --cx-surface: 220 20% 97%;
     --cx-surface-elevated: 0 0% 100%;
     --cx-sidebar-bg: 0 0% 100%;
@@ -85,7 +85,7 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 48 96% 53%;
 
-    /* CoreX semantic tokens for dark */
+    /* KoreX semantic tokens for dark */
     --cx-surface: 224 71% 4%;
     --cx-surface-elevated: 222 47% 11%;
     --cx-sidebar-bg: 224 71% 3%;

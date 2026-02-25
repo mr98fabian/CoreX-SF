@@ -32,7 +32,7 @@ export default function LoadingScreen() {
             {/* Logo with pulse */}
             <div className="relative z-10 animate-logo-pulse">
                 <img
-                    src="/korex-imagotipo.png"
+                    src="/korex-imagotipo.svg"
                     alt="KoreX"
                     className="h-16 drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]"
                 />

@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
 
 export type DataSource = 'dashboard' | 'accounts' | 'strategy';
 
-const EVENT_NAME = 'corex:data-changed';
+const EVENT_NAME = 'korex:data-changed';
 
 interface DataChangedDetail {
     source: DataSource;

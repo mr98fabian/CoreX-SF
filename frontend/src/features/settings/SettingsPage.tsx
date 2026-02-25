@@ -186,8 +186,8 @@ export default function SettingsPage() {
     // ─── Local state ────────────────────────────────────────────
     const [activeSection, setActiveSection] = useState<Section>("profile");
 
-    const [currency, setCurrency] = useState(() => localStorage.getItem("corex-currency") || "USD");
-    const [dateFormat, setDateFormat] = useState(() => localStorage.getItem("corex-date-format") || "MM/DD/YYYY");
+    const [currency, setCurrency] = useState(() => localStorage.getItem("korex-currency") || "USD");
+    const [dateFormat, setDateFormat] = useState(() => localStorage.getItem("korex-date-format") || "MM/DD/YYYY");
     const [exportLoading, setExportLoading] = useState(false);
     const [pdfLoading, setPdfLoading] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
@@ -196,21 +196,21 @@ export default function SettingsPage() {
 
     // Notification states
     // Notification toggles — persisted in localStorage
-    const [notifPayment, setNotifPayment] = useState(() => localStorage.getItem('corex-notif-payment') !== 'false');
-    const [notifDaily, setNotifDaily] = useState(() => localStorage.getItem('corex-notif-daily') === 'true');
-    const [notifBank, setNotifBank] = useState(() => localStorage.getItem('corex-notif-bank') !== 'false');
-    const [notifMilestones, setNotifMilestones] = useState(() => localStorage.getItem('corex-notif-milestones') !== 'false');
-    const [notifWeekly, setNotifWeekly] = useState(() => localStorage.getItem('corex-notif-weekly') === 'true');
+    const [notifPayment, setNotifPayment] = useState(() => localStorage.getItem('korex-notif-payment') !== 'false');
+    const [notifDaily, setNotifDaily] = useState(() => localStorage.getItem('korex-notif-daily') === 'true');
+    const [notifBank, setNotifBank] = useState(() => localStorage.getItem('korex-notif-bank') !== 'false');
+    const [notifMilestones, setNotifMilestones] = useState(() => localStorage.getItem('korex-notif-milestones') !== 'false');
+    const [notifWeekly, setNotifWeekly] = useState(() => localStorage.getItem('korex-notif-weekly') === 'true');
 
     const toggleNotif = (key: string, setter: React.Dispatch<React.SetStateAction<boolean>>) => (val: boolean) => {
         setter(val);
-        localStorage.setItem(`corex-notif-${key}`, String(val));
+        localStorage.setItem(`korex-notif-${key}`, String(val));
     };
     const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
     const [promoCode, setPromoCode] = useState('');
     const [promoStatus, setPromoStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
     const [promoMessage, setPromoMessage] = useState('');
-    const [activePlan, setActivePlan] = useState(() => localStorage.getItem('corex-plan') || 'starter');
+    const [activePlan, setActivePlan] = useState(() => localStorage.getItem('korex-plan') || 'starter');
     const [savingsData, setSavingsData] = useState<SavingsData | null>(null);
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
@@ -256,12 +256,12 @@ export default function SettingsPage() {
     // ─── Handlers ───────────────────────────────────────────────
     const handleCurrencyChange = (val: string) => {
         setCurrency(val);
-        localStorage.setItem("corex-currency", val);
+        localStorage.setItem("korex-currency", val);
     };
 
     const handleDateFormatChange = (val: string) => {
         setDateFormat(val);
-        localStorage.setItem("corex-date-format", val);
+        localStorage.setItem("korex-date-format", val);
     };
 
     const handleExportExcel = async () => {
@@ -885,8 +885,8 @@ export default function SettingsPage() {
 
                 if (result.valid && result.plan) {
                     setActivePlan(result.plan);
-                    localStorage.setItem('corex-plan', result.plan);
-                    localStorage.setItem('corex-plan-label', result.label || result.plan);
+                    localStorage.setItem('korex-plan', result.plan);
+                    localStorage.setItem('korex-plan-label', result.label || result.plan);
                     setPromoStatus('success');
                     setPromoMessage(result.message);
                     setPromoCode('');
@@ -902,15 +902,15 @@ export default function SettingsPage() {
 
         const handleCancelSubscription = () => {
             setActivePlan('starter');
-            localStorage.setItem('corex-plan', 'starter');
-            localStorage.removeItem('corex-plan-label');
+            localStorage.setItem('korex-plan', 'starter');
+            localStorage.removeItem('korex-plan-label');
             setPromoStatus('idle');
             setPromoMessage('');
         };
 
         const currentPlan = activePlan === 'freedom-dev' ? 'freedom' : activePlan;
         const isDevLicense = activePlan === 'freedom-dev';
-        const planLabel = localStorage.getItem('corex-plan-label');
+        const planLabel = localStorage.getItem('korex-plan-label');
 
         const sd = savingsData; // shorthand
 

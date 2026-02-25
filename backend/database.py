@@ -22,9 +22,9 @@ if DATABASE_URL:
 else:
     # SQLite Fallback — Local Development
     if os.environ.get("VERCEL"):
-        sqlite_file_name = "/tmp/corex.db"
+        sqlite_file_name = "/tmp/korex.db"
     else:
-        sqlite_file_name = "corex.db"
+        sqlite_file_name = "korex.db"
     
     sqlite_url = f"sqlite:///{sqlite_file_name}"
     engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})

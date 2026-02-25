@@ -1,5 +1,5 @@
 """
-CoreX Alembic Environment Configuration
+KoreX Alembic Environment Configuration
 
 Reads DATABASE_URL from .env and configures SQLModel metadata
 for autogeneration of migration scripts.
@@ -32,7 +32,7 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 # ── Dynamic DATABASE_URL from environment ───────────────────
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./corex_local.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./korex_local.db")
 
 # SQLAlchemy needs postgresql:// not postgres://
 if DATABASE_URL.startswith("postgres://"):

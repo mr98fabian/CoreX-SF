@@ -1,5 +1,5 @@
 """
-CoreX Transaction Classifier — "The Radar"
+KoreX Transaction Classifier — "The Radar"
 Automatically categorizes transactions into Life, Debt, and Income.
 Uses heuristic-based rules for V1 (no ML dependency).
 """
@@ -33,7 +33,7 @@ TRANSFER_KEYWORDS = frozenset([
     "paypal", "wire", "ach", "internal",
 ])
 
-# Categories that Plaid returns — mapped to CoreX tags
+# Categories that Plaid returns — mapped to KoreX tags
 PLAID_CATEGORY_MAP: Dict[str, TransactionTag] = {
     "Transfer": "transfer",
     "Payment": "debt",
@@ -62,7 +62,7 @@ def classify_transaction(
     category: str | None = None,
 ) -> Dict:
     """
-    Classify a single transaction into a CoreX tag.
+    Classify a single transaction into a KoreX tag.
 
     Args:
         amount: Transaction amount (Plaid convention: positive = spend, negative = credit/income).
@@ -105,7 +105,7 @@ def classify_batch(transactions: list) -> list:
     Classify a batch of transactions. Each must have 'amount', 'name'.
     Optionally 'merchant_name' and 'category'.
 
-    Returns the same list with 'corex_tag' and 'corex_confidence' added.
+    Returns the same list with 'korex_tag' and 'korex_confidence' added.
     """
     results = []
     for tx in transactions:
@@ -117,8 +117,8 @@ def classify_batch(transactions: list) -> list:
         )
         results.append({
             **tx,
-            "corex_tag": classification["tag"],
-            "corex_confidence": classification["confidence"],
+            "korex_tag": classification["tag"],
+            "korex_confidence": classification["confidence"],
         })
     return results
 
@@ -136,7 +136,7 @@ def get_cashflow_summary(classified_transactions: list) -> Dict:
 
     for tx in classified_transactions:
         amount = Decimal(str(abs(tx.get("amount", 0))))
-        tag = tx.get("corex_tag", "life")
+        tag = tx.get("korex_tag", "life")
 
         if tag == "income":
             total_income += amount

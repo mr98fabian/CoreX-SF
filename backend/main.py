@@ -1,5 +1,5 @@
 """
-CoreX Financial System — API Entrypoint (Slim)
+KoreX Financial System — API Entrypoint (Slim)
 All routes live in backend/routers/. This file handles:
   - FastAPI app creation & CORS
   - Startup lifecycle (DB tables + seed data)
@@ -20,14 +20,14 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from database import create_db_and_tables, seed_data
-from exceptions import CoreXError
+from exceptions import KoreXError
 
 # ── Logging ──────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("corex")
+logger = logging.getLogger("korex")
 
 # ── CORS: Production domain + local dev servers ──────────────
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korexf.com")
@@ -116,9 +116,9 @@ async def add_request_id(request: Request, call_next):
     return response
 
 
-# ── CoreXError Handler (structured business errors) ─────────
-@app.exception_handler(CoreXError)
-async def corex_error_handler(request: Request, exc: CoreXError):
+# ── KoreXError Handler (structured business errors) ─────────
+@app.exception_handler(KoreXError)
+async def korex_error_handler(request: Request, exc: KoreXError):
     request_id = getattr(request.state, "request_id", "unknown")
     logger.warning(
         f"[{request_id}] {exc.error_code}: {exc.message} | details={exc.details}"

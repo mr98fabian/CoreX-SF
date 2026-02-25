@@ -1,4 +1,4 @@
-# CoreX Financial System
+# KoreX Financial System
 
 > **Velocity Banking Engine** — A full-stack application that automates debt elimination using the Velocity Banking strategy.
 
@@ -63,7 +63,7 @@ pytest -v
 ## Project Structure
 
 ```
-CoreX Financial System/
+KoreX Financial System/
 ├── backend/
 │   ├── main.py              # Slim entrypoint (CORS, startup, router registration)
 │   ├── auth.py              # JWT authentication dependency

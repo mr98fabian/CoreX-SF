@@ -1,5 +1,5 @@
 """
-CoreX Financial System — Pure Financial Calculators
+KoreX Financial System — Pure Financial Calculators
 No database or API dependencies. All functions are pure.
 """
 from decimal import Decimal

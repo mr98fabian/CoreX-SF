@@ -15,7 +15,7 @@ interface WeeklyDigestData {
     dismiss: () => void;
 }
 
-const STORAGE_KEY = 'corex_weekly_digest';
+const STORAGE_KEY = 'korex_weekly_digest';
 
 function getWeekKey(): string {
     const now = new Date();

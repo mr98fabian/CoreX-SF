@@ -34,7 +34,7 @@ build:
 failed to resolve 
 import "react-is" 
 from "C:/Users/Khine/D
-esktop/CoreX 
+esktop/KoreX 
 Financial System/front
 end/node_modules/recha
 rts/es6/util/ReactUtil
@@ -52,46 +52,46 @@ it to
 xternal`[31m
     at viteLog (file:/
 //C:/Users/Khine/Deskt
-op/CoreX%20Financial%2
+op/KoreX%20Financial%2
 0System/frontend/node_
 modules/vite/dist/node
 /chunks/config.js:3363
 5:57)
     at file:///C:/User
-s/Khine/Desktop/CoreX%
+s/Khine/Desktop/KoreX%
 20Financial%20System/f
 rontend/node_modules/v
 ite/dist/node/chunks/c
 onfig.js:33669:73
     at onwarn (file://
 /C:/Users/Khine/Deskto
-p/CoreX%20Financial%20
+p/KoreX%20Financial%20
 System/frontend/node_m
 odules/@vitejs/plugin-
 react/dist/index.js:76
 :7)
     at file:///C:/User
-s/Khine/Desktop/CoreX%
+s/Khine/Desktop/KoreX%
 20Financial%20System/f
 rontend/node_modules/v
 ite/dist/node/chunks/c
 onfig.js:33669:28
     at onRollupLog (fi
 le:///C:/Users/Khine/D
-esktop/CoreX%20Financi
+esktop/KoreX%20Financi
 al%20System/frontend/n
 ode_modules/vite/dist/
 node/chunks/config.js:
 33664:63)
     at onLog (file:///
 C:/Users/Khine/Desktop
-/CoreX%20Financial%20S
+/KoreX%20Financial%20S
 ystem/frontend/node_mo
 dules/vite/dist/node/c
 hunks/config.js:33467:
 4)
     at file:///C:/User
-s/Khine/Desktop/CoreX%
+s/Khine/Desktop/KoreX%
 20Financial%20System/f
 rontend/node_modules/r
 ollup/dist/es/shared/n
@@ -107,13 +107,13 @@ red/node-entry.js:2294
     at ModuleLoader.ha
 ndleInvalidResolvedId 
 (file:///C:/Users/Khin
-e/Desktop/CoreX%20Fina
+e/Desktop/KoreX%20Fina
 ncial%20System/fronten
 d/node_modules/rollup/
 dist/es/shared/node-en
 try.js:21689:26)
     at file:///C:/User
-s/Khine/Desktop/CoreX%
+s/Khine/Desktop/KoreX%
 20Financial%20System/f
 rontend/node_modules/r
 ollup/dist/es/shared/n

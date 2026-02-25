@@ -66,7 +66,7 @@ export default function DashboardLayout() {
             <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-white/5">
                 <div className="flex items-center gap-2 group cursor-default">
                     <img
-                        src="/korex-logotipo.png"
+                        src="/korex-logotipo.svg"
                         alt="KoreX"
                         className="h-8 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
                     />
@@ -128,7 +128,7 @@ export default function DashboardLayout() {
                 )}
                 {/* Commander Rank compact badge in sidebar */}
                 <div className="px-2">
-                    <CommanderBadge isPaid={(localStorage.getItem('corex-plan') || 'starter') !== 'starter'} compact />
+                    <CommanderBadge isPaid={(localStorage.getItem('korex-plan') || 'starter') !== 'starter'} compact />
                 </div>
                 <Button
                     variant="ghost"
@@ -240,7 +240,7 @@ export default function DashboardLayout() {
                     onSkip={async () => {
                         // Mark complete so wizard closes, but flag as skipped
                         await onboarding.complete();
-                        localStorage.setItem('corex_onboarding_skipped', 'true');
+                        localStorage.setItem('korex_onboarding_skipped', 'true');
                     }}
                 />
             )}
@@ -249,7 +249,7 @@ export default function DashboardLayout() {
             {onboarding.hasCompleted && (
                 <OnboardingResumePopup
                     onResume={async () => {
-                        localStorage.removeItem('corex_onboarding_skipped');
+                        localStorage.removeItem('korex_onboarding_skipped');
                         await onboarding.restart();
                     }}
                 />

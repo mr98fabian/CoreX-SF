@@ -110,7 +110,7 @@ export default function TermsOfServicePage() {
                         Back to Login
                     </Link>
                     <div className="flex items-center gap-2">
-                        <img src="/korex-icon.png" alt="KoreX" className="w-6 h-6" />
+                        <img src="/korex-isotipo.svg" alt="KoreX" className="w-6 h-6" />
                         <span className="text-sm font-semibold text-slate-900 dark:text-white">KoreX</span>
                     </div>
                 </div>

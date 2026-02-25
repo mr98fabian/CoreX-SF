@@ -17,7 +17,7 @@ interface AnimatedCurrencyProps {
  * like a professional financial terminal. Creates a sensation of
  * real-time calculation and precision.
  * 
- * Skill: corex-ui-magic §1 — "The Money Count Effect"
+ * Skill: korex-ui-magic §1 — "The Money Count Effect"
  */
 export function AnimatedCurrency({
     value,

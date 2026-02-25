@@ -56,7 +56,7 @@ module.exports = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
-                // CoreX Premium Colors
+                // KoreX Premium Colors
                 gold: {
                     400: '#fbbf24',
                     500: '#f59e0b',

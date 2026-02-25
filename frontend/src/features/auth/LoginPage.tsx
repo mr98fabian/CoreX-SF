@@ -357,7 +357,7 @@ export default function LoginPage() {
 
             {/* Raccoon Watermark — subtle brand presence */}
             <img
-                src="/korex-icon.png"
+                src="/korex-isotipo.svg"
                 alt=""
                 aria-hidden="true"
                 className="absolute opacity-[0.03] w-[500px] h-[500px] pointer-events-none select-none"
@@ -368,7 +368,7 @@ export default function LoginPage() {
                 {/* KoreX Brand Logo */}
                 <div className="text-center mb-8">
                     <img
-                        src="/korex-imagotipo.png"
+                        src="/korex-imagotipo.svg"
                         alt="KoreX"
                         className="h-14 sm:h-20 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />

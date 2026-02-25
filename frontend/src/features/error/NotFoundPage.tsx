@@ -14,7 +14,7 @@ export default function NotFoundPage() {
             {/* Raccoon mascot */}
             <div className="relative z-10 mb-8 animate-bounce-slow">
                 <img
-                    src="/korex-icon.png"
+                    src="/korex-isotipo.svg"
                     alt="KoreX Raccoon"
                     className="h-32 mx-auto opacity-60 drop-shadow-[0_0_40px_rgba(251,191,36,0.2)]"
                 />
@@ -52,7 +52,7 @@ export default function NotFoundPage() {
             {/* Footer brand */}
             <div className="absolute bottom-8 z-10">
                 <img
-                    src="/korex-logotipo.png"
+                    src="/korex-logotipo.svg"
                     alt="KoreX"
                     className="h-5 opacity-20"
                 />

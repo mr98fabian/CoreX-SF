@@ -399,7 +399,7 @@ export default function DashboardPage() {
                     <div>
                         {/* Commander Rank greeting — Skill: neuroventa §2 */}
                         {(() => {
-                            const plan = localStorage.getItem('corex-plan') || 'starter';
+                            const plan = localStorage.getItem('korex-plan') || 'starter';
                             const isPaidUser = plan !== 'starter';
                             const effectiveScore = getEffectiveScore(streak.score, isPaidUser);
                             const cmdRank = getCommanderRank(effectiveScore);
@@ -458,7 +458,7 @@ export default function DashboardPage() {
                 {/* Commander Rank Badge — Full visual widget */}
                 <div className="relative group">
                     <WidgetHelp helpKey="commanderBadge" />
-                    <CommanderBadge isPaid={(localStorage.getItem('corex-plan') || 'starter') !== 'starter'} />
+                    <CommanderBadge isPaid={(localStorage.getItem('korex-plan') || 'starter') !== 'starter'} />
                 </div>
 
                 {/* Debt-Free Countdown — Phase 2 Quick Win */}
@@ -647,7 +647,7 @@ export default function DashboardPage() {
                                 totalDebt={data?.total_debt ?? 0}
                                 liquidCash={data?.liquid_cash ?? 0}
                                 streakScore={streak.score}
-                                commanderLevel={getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('corex-plan') || 'starter') !== 'starter')).level}
+                                commanderLevel={getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('korex-plan') || 'starter') !== 'starter')).level}
                             />
                         </div>
 
@@ -658,7 +658,7 @@ export default function DashboardPage() {
                                 context={{
                                     streakRaw: streak.rawStreak,
                                     streakScore: streak.score,
-                                    commanderLevel: getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('corex-plan') || 'starter') !== 'starter')).level,
+                                    commanderLevel: getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('korex-plan') || 'starter') !== 'starter')).level,
                                     shieldPercent: data ? Math.min(100, (data.liquid_cash / Math.max(1, data.shield_target)) * 100) : 0,
                                     totalDebt: data?.total_debt ?? 0,
                                     debtsEliminated: 0,

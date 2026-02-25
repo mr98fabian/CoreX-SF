@@ -27,7 +27,7 @@ const QUOTES: Quote[] = [
     { en: "The system was designed to keep you in debt. You chose to fight BACK.", es: "El sistema fue diseñado para mantenerte endeudado. Tú decidiste CONTRAATACAR." },
 ];
 
-const STORAGE_KEY = 'corex_quote_index';
+const STORAGE_KEY = 'korex_quote_index';
 
 export function useMotivationalQuote(language: 'en' | 'es'): string {
     const [quote, setQuote] = useState('');

@@ -201,7 +201,7 @@ const translations: Record<string, Record<Language, string>> = {
     "strategy.freedom.debtFreeDate": { en: "Debt-Free Date", es: "Fecha Libre de Deudas" },
     "strategy.freedom.daysRecovered": { en: "Days of Freedom Recovered", es: "Días de Libertad Recuperados" },
     "strategy.freedom.velocityPower": { en: "Velocity Power", es: "Poder de Velocidad" },
-    "strategy.freedom.corexTarget": { en: "KoreX Target", es: "Objetivo KoreX" },
+    "strategy.freedom.korexTarget": { en: "KoreX Target", es: "Objetivo KoreX" },
     "strategy.freedom.standard": { en: "Standard", es: "Estándar" },
     "strategy.freedom.monthsAccelerated": { en: "Months Accelerated", es: "Meses Acelerados" },
     "strategy.freedom.attackStreak": { en: "Attack Streak", es: "Racha de Ataque" },
@@ -518,7 +518,7 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.moreAccountsDesc": { en: "Upgrade your plan to unlock more accounts and accelerate your debt freedom.", es: "Mejora tu plan para desbloquear más cuentas y acelerar tu libertad de deuda." },
     "upgrade.starterNudge": { en: "You're on Starter — upgrade to track more debts and save thousands in interest.", es: "Estás en Starter — mejora para rastrear más deudas y ahorrar miles en intereses." },
     "upgrade.lockedNudge": { en: "Some of your debts are locked and bleeding interest. Upgrade to cover them all.", es: "Algunas de tus deudas están bloqueadas y pierden intereses. Mejora para cubrirlas todas." },
-    "upgrade.unlockAllReason": { en: "Unlock all your debt accounts so CoreX can monitor and optimize every dollar.", es: "Desbloquea todas tus cuentas de deuda para que CoreX monitoree y optimice cada dólar." },
+    "upgrade.unlockAllReason": { en: "Unlock all your debt accounts so KoreX can monitor and optimize every dollar.", es: "Desbloquea todas tus cuentas de deuda para que KoreX monitoree y optimice cada dólar." },
     "upgrade.unlockAllReasonAction": { en: "Unlock all your debt accounts so KoreX can optimize every dollar of interest.", es: "Desbloquea todas tus cuentas de deuda para que KoreX optimice cada dólar de interés." },
     "upgrade.monthly": { en: "Monthly", es: "Mensual" },
     "upgrade.annual": { en: "Annual", es: "Anual" },
@@ -534,8 +534,8 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.noLimits": { en: "no limits", es: "sin límites" },
     "upgrade.futureDebtsCovered": { en: "every future debt automatically covered", es: "cada deuda futura cubierta automáticamente" },
     "upgrade.inInterest": { en: "in interest", es: "en intereses" },
-    "upgrade.savedEachMonth": { en: "saved each month using CoreX", es: "ahorrado cada mes usando CoreX" },
-    "upgrade.savedEachYear": { en: "saved each year using CoreX", es: "ahorrado cada año usando CoreX" },
+    "upgrade.savedEachMonth": { en: "saved each month using KoreX", es: "ahorrado cada mes usando KoreX" },
+    "upgrade.savedEachYear": { en: "saved each year using KoreX", es: "ahorrado cada año usando KoreX" },
     "upgrade.netGain": { en: "💰 Net gain:", es: "💰 Ganancia neta:" },
     "upgrade.afterPlanCost": { en: "after plan cost", es: "después del costo del plan" },
     "upgrade.paysForItself": { en: "Pays for itself in", es: "Se paga solo en" },
@@ -887,13 +887,13 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 // ─── Provider ───────────────────────────────────────────────────────
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>(() => {
-        const stored = localStorage.getItem("corex-language");
+        const stored = localStorage.getItem("korex-language");
         return (stored === "es" ? "es" : "en") as Language;
     });
 
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);
-        localStorage.setItem("corex-language", lang);
+        localStorage.setItem("korex-language", lang);
     };
 
     const t = (key: string): string => {

@@ -1,5 +1,5 @@
 """
-Velocity Banking Engine for CoreX Financial System.
+Velocity Banking Engine for KoreX Financial System.
 Core financial calculations for debt optimization strategy.
 
 Uses Decimal for precision as per project standards.

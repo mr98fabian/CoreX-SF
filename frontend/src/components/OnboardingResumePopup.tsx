@@ -4,7 +4,7 @@ import { Rocket, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const STORAGE_KEY = 'corex_onboarding_skipped';
+const STORAGE_KEY = 'korex_onboarding_skipped';
 
 interface OnboardingResumePopupProps {
     /** Restart the onboarding wizard */

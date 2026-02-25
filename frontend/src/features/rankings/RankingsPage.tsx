@@ -12,7 +12,7 @@ export default function RankingsPage() {
     const { t, language } = useLanguage();
     usePageTitle(t('nav.rankings'));
     const streak = useLoginStreak();
-    const plan = localStorage.getItem('corex-plan') || 'starter';
+    const plan = localStorage.getItem('korex-plan') || 'starter';
     const isPaid = plan !== 'starter';
     const effectiveScore = getEffectiveScore(streak.score, isPaid);
     const currentRank = getCommanderRank(effectiveScore);

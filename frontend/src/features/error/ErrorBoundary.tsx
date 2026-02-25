@@ -54,7 +54,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 {/* Raccoon mascot */}
                 <div className="relative z-10 mb-8">
                     <img
-                        src="/korex-icon.png"
+                        src="/korex-isotipo.svg"
                         alt="KoreX"
                         className="h-24 mx-auto opacity-50 drop-shadow-[0_0_40px_rgba(239,68,68,0.2)]"
                     />
@@ -121,7 +121,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 {/* Footer brand */}
                 <div className="absolute bottom-8 z-10">
                     <img
-                        src="/korex-logotipo.png"
+                        src="/korex-logotipo.svg"
                         alt="KoreX"
                         className="h-5 opacity-20"
                     />

@@ -1,5 +1,5 @@
 """
-CPA Financial Auditor — Comprehensive math verification for CoreX engine.
+CPA Financial Auditor — Comprehensive math verification for KoreX engine.
 
 Tests every financial formula against hand-calculated expected values.
 Uses Decimal exclusively to match production precision.

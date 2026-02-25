@@ -415,7 +415,7 @@ export async function generateMonthlyReport(
 
     // ── 8. Footer on all pages ────────────────────────────
     const totalPages = doc.getNumberOfPages();
-    const plan = typeof window !== 'undefined' ? localStorage.getItem('corex-plan') || 'starter' : 'starter';
+    const plan = typeof window !== 'undefined' ? localStorage.getItem('korex-plan') || 'starter' : 'starter';
     const isFree = plan === 'starter';
 
     for (let i = 1; i <= totalPages; i++) {

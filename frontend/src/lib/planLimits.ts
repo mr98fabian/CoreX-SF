@@ -28,7 +28,7 @@ export const PLAN_NAMES: Record<string, string> = {
 
 /** Read the current plan from localStorage. Defaults to 'starter'. */
 export function getUserPlan(): string {
-    return localStorage.getItem('corex-plan') || 'starter';
+    return localStorage.getItem('korex-plan') || 'starter';
 }
 
 /** Get the debt-account limit for the current (or given) plan. */
@@ -81,7 +81,7 @@ export async function syncPlanFromBackend(): Promise<string> {
     try {
         const data = await apiFetch<SubStatus>('/api/subscriptions/status');
         const plan = data.plan || 'starter';
-        localStorage.setItem('corex-plan', plan);
+        localStorage.setItem('korex-plan', plan);
         return plan;
     } catch {
         // Network error / not authenticated — keep cached value

@@ -1,5 +1,5 @@
 """
-Plaid API Service for CoreX Financial System.
+Plaid API Service for KoreX Financial System.
 Handles bank account linking and transaction syncing.
 """
 import os
@@ -33,7 +33,7 @@ def get_plaid_client():
     return plaid_api.PlaidApi(api_client)
 
 
-def create_link_token(user_id: str = "corex_user_001") -> dict:
+def create_link_token(user_id: str = "korex_user_001") -> dict:
     """
     Create a Link token for initializing Plaid Link in the frontend.
     

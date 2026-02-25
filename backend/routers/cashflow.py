@@ -13,7 +13,7 @@ from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk
 from auth import get_current_user_id
 
-logger = logging.getLogger("corex.cashflow")
+logger = logging.getLogger("korex.cashflow")
 
 router = APIRouter(prefix="/api", tags=["cashflow"])
 

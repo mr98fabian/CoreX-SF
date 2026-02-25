@@ -20,7 +20,7 @@
 - **Sanitization:** Never render raw HTML or execute SQL strings directly. Use parameterized queries and ORMs.
 - **Secrets:** NEVER output secrets. Use `process.env` or `os.getenv`. If a secret is missing, fail loudly with a clear error message.
 
-## 4. ARCHITECTURE & FOLDER STRUCTURE (CoreX Financial System)
+## 4. ARCHITECTURE & FOLDER STRUCTURE (KoreX Financial System)
 - **/frontend:**
   - `src/components/ui`: Shadcn reusable components.
   - `src/features`: Feature-based modules (e.g., `auth`, `dashboard`, `plaid-link`).

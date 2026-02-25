@@ -1,5 +1,5 @@
 """
-CoreX Financial System — Lemon Squeezy Subscription Router
+KoreX Financial System — Lemon Squeezy Subscription Router
 
 Endpoints:
   POST /api/subscriptions/checkout   → Create LS checkout session, return URL
@@ -24,7 +24,7 @@ from database import get_session
 from auth import get_current_user_id
 from models import Subscription
 
-logger = logging.getLogger("corex.subscriptions")
+logger = logging.getLogger("korex.subscriptions")
 
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 
@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 LS_API_KEY = os.getenv("LEMONSQUEEZY_API_KEY", "")
 LS_WEBHOOK_SECRET = os.getenv("LEMONSQUEEZY_WEBHOOK_SECRET", "")
 LS_STORE_ID = os.getenv("LEMONSQUEEZY_STORE_ID", "")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://corex-financial.vercel.app")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korex-financial.vercel.app")
 
 # Variant IDs — you create these as Products in your LS dashboard.
 # Map plan name → { monthly_variant_id, annual_variant_id }

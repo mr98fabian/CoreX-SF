@@ -19,14 +19,14 @@ export function InterestBleedBanner() {
     const [dismissed, setDismissed] = useState(false);
     const [showUpgrade, setShowUpgrade] = useState(false);
 
-    const plan = localStorage.getItem('corex-plan') || 'starter';
+    const plan = localStorage.getItem('korex-plan') || 'starter';
     const isFree = plan === 'starter';
 
     useEffect(() => {
         if (!isFree) return;
 
         // Check if dismissed within the last 24 hours
-        const lastDismissed = localStorage.getItem('corex-bleed-dismissed');
+        const lastDismissed = localStorage.getItem('korex-bleed-dismissed');
         if (lastDismissed) {
             const elapsed = Date.now() - parseInt(lastDismissed, 10);
             if (elapsed < 24 * 60 * 60 * 1000) {
@@ -47,7 +47,7 @@ export function InterestBleedBanner() {
 
     const handleDismiss = () => {
         setDismissed(true);
-        localStorage.setItem('corex-bleed-dismissed', String(Date.now()));
+        localStorage.setItem('korex-bleed-dismissed', String(Date.now()));
     };
 
     // Don't show if: paid user, dismissed, or no interest data

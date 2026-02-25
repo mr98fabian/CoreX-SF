@@ -1,5 +1,5 @@
 """
-CoreX — Notifications Router
+KoreX — Notifications Router
 
 Provides upcoming payment alerts and summary data
 for the in-browser notification system.
@@ -15,7 +15,7 @@ from database import get_session
 from auth import get_current_user_id
 from models import CashflowItem, Account
 
-logger = logging.getLogger("corex.notifications")
+logger = logging.getLogger("korex.notifications")
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 

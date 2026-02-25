@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 // - Dev: connect directly to local backend
 // - Capacitor (native app): connect directly to Railway (no Vercel proxy available)
 // - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
-const RAILWAY_URL = 'https://corex-sf-production.up.railway.app';
+const RAILWAY_URL = 'https://korex-sf-production.up.railway.app';
 
 const API_BASE = import.meta.env.DEV
     ? 'http://localhost:8000'
@@ -14,7 +14,7 @@ const API_BASE = import.meta.env.DEV
         : '';
 
 // Demo Mode constants
-const DEMO_TOKEN_KEY = 'corex_demo_token';
+const DEMO_TOKEN_KEY = 'korex_demo_token';
 
 export function setDemoToken(token: string) {
     localStorage.setItem(DEMO_TOKEN_KEY, token);

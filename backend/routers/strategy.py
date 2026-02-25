@@ -192,7 +192,7 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
     Action Plan generates slightly different names than what's stored in DB.
     """
     import logging
-    logger = logging.getLogger("corex.execute")
+    logger = logging.getLogger("korex.execute")
 
     with Session(engine) as session:
         amount = Decimal(str(data.amount))

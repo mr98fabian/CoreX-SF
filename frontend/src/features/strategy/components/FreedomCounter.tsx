@@ -101,7 +101,7 @@ export default function FreedomCounter({ freedom, streak }: Props) {
                     <div className="rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 p-2.5">
                         <div className="flex items-center gap-1 mb-0.5">
                             <CalendarCheck className="h-3 w-3 text-emerald-400" />
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.corexTarget")}</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.korexTarget")}</span>
                         </div>
                         <p className="text-xs font-semibold text-slate-900 dark:text-white">
                             {formatDate(freedom.current_freedom_date)}

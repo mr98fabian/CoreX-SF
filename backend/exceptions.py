@@ -1,5 +1,5 @@
 """
-CoreX Financial System — Structured Exception Hierarchy
+KoreX Financial System — Structured Exception Hierarchy
 
 Usage in routers:
     from exceptions import NotFoundError, ValidationError, ConflictError
@@ -11,8 +11,8 @@ Usage in routers:
 from typing import Optional, Any
 
 
-class CoreXError(Exception):
-    """Base exception for all CoreX business errors."""
+class KoreXError(Exception):
+    """Base exception for all KoreX business errors."""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class CoreXError(Exception):
         self.details = details or {}
 
 
-class NotFoundError(CoreXError):
+class NotFoundError(KoreXError):
     """Resource not found (404)."""
 
     def __init__(self, resource: str, resource_id: Any = None):
@@ -43,7 +43,7 @@ class NotFoundError(CoreXError):
         )
 
 
-class ValidationError(CoreXError):
+class ValidationError(KoreXError):
     """Input validation failed (422)."""
 
     def __init__(self, message: str, details: Optional[dict] = None):
@@ -55,7 +55,7 @@ class ValidationError(CoreXError):
         )
 
 
-class ConflictError(CoreXError):
+class ConflictError(KoreXError):
     """Duplicate / conflict (409)."""
 
     def __init__(self, message: str, details: Optional[dict] = None):
@@ -67,7 +67,7 @@ class ConflictError(CoreXError):
         )
 
 
-class RateLimitError(CoreXError):
+class RateLimitError(KoreXError):
     """Too many requests (429)."""
 
     def __init__(self, message: str = "Too many requests. Please retry later.", retry_after: int = 60):
@@ -79,7 +79,7 @@ class RateLimitError(CoreXError):
         )
 
 
-class PaymentRequiredError(CoreXError):
+class PaymentRequiredError(KoreXError):
     """Feature requires paid subscription (402)."""
 
     def __init__(self, feature: str, required_plan: str = "velocity"):

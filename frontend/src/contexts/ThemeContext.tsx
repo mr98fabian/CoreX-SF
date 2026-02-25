@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null);
 // ─── Provider ───────────────────────────────────────────────────────
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setThemeState] = useState<Theme>(() => {
-        const stored = localStorage.getItem("corex-theme");
+        const stored = localStorage.getItem("korex-theme");
         return (stored === "light" ? "light" : "dark") as Theme;
     });
 
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const setTheme = (t: Theme) => {
         setThemeState(t);
-        localStorage.setItem("corex-theme", t);
+        localStorage.setItem("korex-theme", t);
     };
 
     const toggleTheme = () => {

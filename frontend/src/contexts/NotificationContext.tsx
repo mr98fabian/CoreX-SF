@@ -17,7 +17,7 @@ interface NotificationContextType {
     isSupported: boolean;
 }
 
-const STORAGE_KEY = "corex-notification-prefs";
+const STORAGE_KEY = "korex-notification-prefs";
 const defaultPreferences: NotificationPreferences = {
     payment: true,
     daily: false,
@@ -72,7 +72,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                     body,
                     icon: icon || "/favicon.ico",
                     badge: "/favicon.ico",
-                    tag: `corex-${Date.now()}`,
+                    tag: `korex-${Date.now()}`,
                 });
             } catch (err) {
                 console.warn("Failed to send notification:", err);

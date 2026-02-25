@@ -1,5 +1,5 @@
 """
-CoreX Financial System — Core Engine
+KoreX Financial System — Core Engine
 Pure financial math and algorithms. Zero database dependencies.
 """
 from .calculators import calculate_minimum_payment

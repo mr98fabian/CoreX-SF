@@ -1,4 +1,4 @@
-# CoreX API Reference
+# KoreX API Reference
 
 > Base URL: `http://localhost:8000` (dev) or your Railway domain (prod)  
 > Auth: All endpoints except `/health` require `Authorization: Bearer <token>` header.
@@ -93,7 +93,7 @@
 | POST   | `/api/plaid/create-link-token`        | Start Plaid Link flow                   |
 | POST   | `/api/plaid/exchange-token`           | Exchange public token for access token  |
 | GET    | `/api/plaid/accounts/{access_token}`  | Fetch Plaid accounts                    |
-| POST   | `/api/plaid/import-accounts`          | Import Plaid accounts to CoreX          |
+| POST   | `/api/plaid/import-accounts`          | Import Plaid accounts to KoreX          |
 | POST   | `/api/plaid/sync-transactions`        | Sync and auto-verify transactions       |
 
 ---

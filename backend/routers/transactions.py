@@ -291,15 +291,15 @@ async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id))
                     existing_account.name = f"{acc['name']} (...{acc['mask']})" if acc['mask'] else acc['name']
                     continue
 
-                corex_type = "checking"
+                korex_type = "checking"
                 if acc["type"] == "credit":
-                    corex_type = "debt"
+                    korex_type = "debt"
                 elif acc["type"] == "depository":
-                    corex_type = "checking" if acc["subtype"] in ["checking", None] else "savings"
+                    korex_type = "checking" if acc["subtype"] in ["checking", None] else "savings"
 
                 new_account = Account(
                     name=f"{acc['name']} (...{acc['mask']})" if acc['mask'] else acc['name'],
-                    type=corex_type,
+                    type=korex_type,
                     balance=Decimal(str(abs(acc["balance"]))),
                     interest_rate=Decimal("0"),
                     min_payment=Decimal("0"),
@@ -354,12 +354,12 @@ async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(g
                 )
 
                 smart_category = f"{classification['tag'].title()}: {tx['category']}"
-                corex_amount = plaid_amount * Decimal("-1")
+                korex_amount = plaid_amount * Decimal("-1")
 
                 new_tx = Transaction(
                     account_id=local_account_id,
                     date=tx["date"],
-                    amount=corex_amount,
+                    amount=korex_amount,
                     description=tx["name"],
                     category=smart_category,
                     plaid_transaction_id=tx["plaid_transaction_id"],

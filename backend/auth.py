@@ -1,5 +1,5 @@
 """
-CoreX Financial System — Authentication Dependency
+KoreX Financial System — Authentication Dependency
 Extracted from main.py so all routers can import it directly.
 """
 import os

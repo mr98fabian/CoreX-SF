@@ -31,7 +31,7 @@ interface StreakData {
     incrementStreakOnTransaction: () => void;
 }
 
-const STORAGE_KEY = 'corex_login_streak_v2';
+const STORAGE_KEY = 'korex_login_streak_v2';
 
 interface StoredStreak {
     score: number;        // Effective score (with penalties applied)
@@ -146,7 +146,7 @@ export function useLoginStreak(): StreakData {
         const today = todayStr();
 
         // Migrate from v1 format if exists
-        const v1Raw = localStorage.getItem('corex_login_streak');
+        const v1Raw = localStorage.getItem('korex_login_streak');
         if (v1Raw && !localStorage.getItem(STORAGE_KEY)) {
             try {
                 const v1 = JSON.parse(v1Raw);
@@ -158,7 +158,7 @@ export function useLoginStreak(): StreakData {
                     hasTransactionToday: false,
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-                localStorage.removeItem('corex_login_streak');
+                localStorage.removeItem('korex_login_streak');
             } catch {
                 // Ignore migration errors
             }

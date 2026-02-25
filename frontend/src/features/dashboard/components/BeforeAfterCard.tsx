@@ -14,7 +14,7 @@ interface BeforeAfterCardProps {
     currentDebt: number;
 }
 
-const STORAGE_KEY = 'corex_starting_debt';
+const STORAGE_KEY = 'korex_starting_debt';
 
 /** Call this on first dashboard load to snapshot starting debt */
 export function recordStartingDebt(totalDebt: number): void {

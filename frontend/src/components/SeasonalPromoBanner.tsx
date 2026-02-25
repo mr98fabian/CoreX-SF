@@ -57,7 +57,7 @@ export function SeasonalPromoBanner() {
     // Check if dismissed within 24h
     useEffect(() => {
         if (!ACTIVE_PROMO) return;
-        const key = `corex-promo-dismissed-${ACTIVE_PROMO.id}`;
+        const key = `korex-promo-dismissed-${ACTIVE_PROMO.id}`;
         const lastDismissed = localStorage.getItem(key);
         if (lastDismissed) {
             const elapsed = Date.now() - parseInt(lastDismissed, 10);
@@ -96,12 +96,12 @@ export function SeasonalPromoBanner() {
     const handleDismiss = () => {
         if (!ACTIVE_PROMO) return;
         setDismissed(true);
-        localStorage.setItem(`corex-promo-dismissed-${ACTIVE_PROMO.id}`, String(Date.now()));
+        localStorage.setItem(`korex-promo-dismissed-${ACTIVE_PROMO.id}`, String(Date.now()));
     };
 
     if (!ACTIVE_PROMO || !isActive || dismissed) return null;
 
-    const plan = localStorage.getItem('corex-plan') || 'starter';
+    const plan = localStorage.getItem('korex-plan') || 'starter';
     if (plan !== 'starter') return null; // Only show to free users
 
     return (

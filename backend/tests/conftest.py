@@ -1,5 +1,5 @@
 """
-Test fixtures for CoreX Financial System backend.
+Test fixtures for KoreX Financial System backend.
 Uses in-memory SQLite and the demo token for auth bypass.
 """
 import os
