@@ -616,7 +616,7 @@ export default function LandingPage() {
             <section className="lp-section lp-hero" ref={heroRef}>
                 {/* Full-bleed background gradient replacing image */}
                 <div className="lp-hero-bg">
-                    <div className="lp-hero-gradient-overlay" style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #020617 70%)' }} />
+                    <div className="lp-hero-gradient-overlay" style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #020617 70%)', willChange: 'transform' }} />
                 </div>
 
                 {/* ─── WebGL 3D Scene (behind content, above bg) ─── */}

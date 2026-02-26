@@ -83,13 +83,6 @@ export default function DebtVisualizerSVG({ className, style }: DebtVisualizerSV
                     <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
                     <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
                 </linearGradient>
-                <filter id="dv-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="6" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
             </defs>
 
             {/* Background Base */}
@@ -120,7 +113,6 @@ export default function DebtVisualizerSVG({ className, style }: DebtVisualizerSV
                 stroke="#EF4444"
                 strokeWidth="4"
                 strokeLinecap="round"
-                filter="url(#dv-glow)"
             />
 
             {/* Data Annotations */}
@@ -135,7 +127,7 @@ export default function DebtVisualizerSVG({ className, style }: DebtVisualizerSV
             </g>
 
             <g className="dv-debt-text">
-                <rect x="420" y="40" width="150" height="50" rx="4" fill="#450A0A" stroke="#EF4444" strokeWidth="2" filter="url(#dv-glow)" />
+                <rect x="420" y="40" width="150" height="50" rx="4" fill="#450A0A" stroke="#EF4444" strokeWidth="2" />
                 <text x="495" y="60" fill="#FECACA" fontSize="10" fontFamily="sans-serif" textAnchor="middle">BANKS WON</text>
                 <text x="495" y="80" fill="#F87171" fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">-$284,000</text>
             </g>

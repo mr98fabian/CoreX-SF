@@ -80,13 +80,6 @@ export default function ComparisonGraphSVG({ className, style }: ComparisonGraph
                     <stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
                     <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.3" />
                 </linearGradient>
-                <filter id="cg-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
             </defs>
 
             {/* Base Background */}
@@ -119,7 +112,6 @@ export default function ComparisonGraphSVG({ className, style }: ComparisonGraph
                 stroke="#EF4444"
                 strokeWidth="4"
                 strokeLinecap="round"
-                filter="url(#cg-glow)"
             />
             {/* Red Data Point */}
             <g className="cg-node" transform="translate(600, 100)">
@@ -144,15 +136,14 @@ export default function ComparisonGraphSVG({ className, style }: ComparisonGraph
                 stroke="#F59E0B"
                 strokeWidth="5"
                 strokeLinecap="round"
-                filter="url(#cg-glow)"
             />
             {/* Gold Data Point at Freedom Date */}
             <g className="cg-node" transform="translate(300, 80)">
-                <circle cx="0" cy="0" r="10" fill="#F59E0B" filter="url(#cg-glow)" />
+                <circle cx="0" cy="0" r="10" fill="#F59E0B" />
                 <circle cx="0" cy="0" r="4" fill="#FFFFFF" />
             </g>
             <g className="cg-gold-text">
-                <rect x="180" y="30" width="100" height="40" rx="4" fill="#1E293B" stroke="#F59E0B" strokeWidth="2" filter="url(#cg-glow)" />
+                <rect x="180" y="30" width="100" height="40" rx="4" fill="#1E293B" stroke="#F59E0B" strokeWidth="2" />
                 <text x="230" y="48" fill="#FDE68A" fontSize="10" fontFamily="sans-serif" textAnchor="middle">FREEDOM</text>
                 <text x="230" y="64" fill="#F59E0B" fontSize="14" fontWeight="bold" fontFamily="monospace" textAnchor="middle">ACHIEVED</text>
             </g>

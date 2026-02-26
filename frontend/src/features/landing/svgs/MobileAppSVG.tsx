@@ -69,16 +69,6 @@ export default function MobileAppSVG({ className, style }: MobileAppSVGProps) {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
         >
-            <defs>
-                <filter id="ma-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
             {/* Phone Frame */}
             <g className="ma-frame">
                 <rect x="25" y="25" width="350" height="650" rx="40" fill="#0F172A" stroke="#334155" strokeWidth="8" />
@@ -94,7 +84,7 @@ export default function MobileAppSVG({ className, style }: MobileAppSVGProps) {
                 <circle cx="65" cy="100" r="16" fill="#1E293B" />
                 <path d="M 58 100 L 72 100 M 58 95 L 72 95 M 58 105 L 67 105" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" />
                 <rect x="270" y="84" width="60" height="32" rx="16" fill="#0F172A" stroke="#F59E0B" />
-                <circle cx="286" cy="100" r="6" fill="#F59E0B" filter="url(#ma-glow)" />
+                <circle cx="286" cy="100" r="6" fill="#F59E0B" />
                 <text x="300" y="104" fill="#F59E0B" fontSize="12" fontWeight="bold" fontFamily="sans-serif">PRO</text>
 
                 <text x="200" y="160" fill="#F8FAFC" fontSize="28" fontWeight="bold" fontFamily="sans-serif" textAnchor="middle">Dashboard</text>
@@ -124,7 +114,7 @@ export default function MobileAppSVG({ className, style }: MobileAppSVGProps) {
                 </g>
 
                 {/* Strike line (initially hidden by scaleX: 0) */}
-                <path className="ma-strike" d="M 70 365 L 330 365" stroke="#A78BFA" strokeWidth="4" strokeLinecap="round" filter="url(#ma-glow)" />
+                <path className="ma-strike" d="M 70 365 L 330 365" stroke="#A78BFA" strokeWidth="4" strokeLinecap="round" />
 
                 {/* Success Badge */}
                 <g className="ma-success-badge" transform="translate(290, 340)">
@@ -144,12 +134,12 @@ export default function MobileAppSVG({ className, style }: MobileAppSVGProps) {
 
             {/* Bottom Nav / Button */}
             <g className="ma-list-item">
-                <rect x="50" y="550" width="300" height="60" rx="30" fill="#F59E0B" filter="url(#ma-glow)" />
+                <rect x="50" y="550" width="300" height="60" rx="30" fill="#F59E0B" />
                 <circle cx="85" cy="580" r="15" fill="#FFFFFF" fillOpacity="0.2" />
                 <path d="M 78 580 L 88 580 M 83 575 L 83 585" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
                 <text x="200" y="586" fill="#000000" fontSize="16" fontWeight="bold" fontFamily="sans-serif" textAnchor="middle">EXECUTE CHUNK</text>
             </g>
 
-        </svg>
+        </svg >
     );
 }

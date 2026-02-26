@@ -71,14 +71,6 @@ export default function HeroDashboardSVG({ className, style }: HeroDashboardSVGP
                     <stop offset="0%" stopColor="#F59E0B" />
                     <stop offset="100%" stopColor="#D97706" />
                 </linearGradient>
-
-                <filter id="hd-glow">
-                    <feGaussianBlur stdDeviation="8" result="coloredBlur" />
-                    <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
             </defs>
 
             {/* Base Screen / Frame */}
@@ -117,7 +109,6 @@ export default function HeroDashboardSVG({ className, style }: HeroDashboardSVGP
                 stroke="url(#hd-goldGrad)"
                 strokeWidth="4"
                 strokeLinecap="round"
-                filter="url(#hd-glow)"
             />
 
             {/* Data Nodes */}
@@ -132,7 +123,7 @@ export default function HeroDashboardSVG({ className, style }: HeroDashboardSVGP
                 <text x="555" y="116" fill="#94A3B8" fontSize="12" fontFamily="monospace" textAnchor="middle">VELOCITY</text>
             </g>
             <g className="hd-data-node">
-                <circle cx="650" cy="60" r="10" fill="#10B981" filter="url(#hd-glow)" />
+                <circle cx="650" cy="60" r="10" fill="#10B981" />
                 <rect x="520" y="40" width="110" height="30" rx="4" fill="#020617" stroke="#10B981" />
                 <text x="575" y="60" fill="#10B981" fontSize="14" fontWeight="bold" fontFamily="monospace" textAnchor="middle">FREEDOM</text>
             </g>

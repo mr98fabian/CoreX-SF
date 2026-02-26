@@ -122,13 +122,6 @@ export default function FreedomCelebrateSVG({ className, style }: FreedomCelebra
                     <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8" />
                     <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
                 </radialGradient>
-                <filter id="fc-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="8" result="blur" />
-                    <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
             </defs>
 
             {/* Base Container */}
@@ -152,7 +145,6 @@ export default function FreedomCelebrateSVG({ className, style }: FreedomCelebra
                         stroke="#A78BFA"
                         strokeWidth="2"
                         strokeLinecap="round"
-                        filter="url(#fc-glow)"
                     />
                     {/* Node circle */}
                     <circle
@@ -160,7 +152,6 @@ export default function FreedomCelebrateSVG({ className, style }: FreedomCelebra
                         cx={n.cx} cy={n.cy}
                         r="6"
                         fill="#FFFFFF"
-                        filter="url(#fc-glow)"
                     />
                     {/* Node Label */}
                     <g className="fc-label" transform={`translate(${n.lx - 60}, ${n.ly})`}>
@@ -174,7 +165,7 @@ export default function FreedomCelebrateSVG({ className, style }: FreedomCelebra
 
             {/* Center Core Shield / Emblem */}
             <g className="fc-center-shield" transform={`translate(${centerX}, ${centerY})`}>
-                <polygon points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20" fill="#2E1065" stroke="#8B5CF6" strokeWidth="4" filter="url(#fc-glow)" />
+                <polygon points="0,-40 35,-20 35,20 0,40 -35,20 -35,-20" fill="#2E1065" stroke="#8B5CF6" strokeWidth="4" />
                 <circle cx="0" cy="0" r="15" fill="#C4B5FD" />
                 <path d="M -5 0 L 0 5 L 10 -5" stroke="#2E1065" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
             </g>
