@@ -14,11 +14,11 @@ export default function LoadingScreen() {
                     clearInterval(timer);
                     return 100;
                 }
-                // Accelerate near the end for a snappy feel
-                const increment = prev < 60 ? 3 : prev < 85 ? 2 : 1;
+                // Slower increments for ~2.5s total duration (1s longer than before)
+                const increment = prev < 50 ? 2 : prev < 80 ? 1.5 : 0.8;
                 return Math.min(prev + increment, 100);
             });
-        }, 30);
+        }, 50);
         return () => clearInterval(timer);
     }, []);
 
@@ -34,7 +34,7 @@ export default function LoadingScreen() {
                 <img
                     src="/korex-imagotipo.svg"
                     alt="KoreX"
-                    className="h-24 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                    className="h-44 sm:h-56 max-w-[85vw] drop-shadow-[0_0_40px_rgba(255,255,255,0.25)]"
                 />
             </div>
 
