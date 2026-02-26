@@ -1445,13 +1445,30 @@
    RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
-    /* Hero split stacks on tablet */
+    /* Hero split stacks on tablet: Text first, Graphic second */
     .lp-hero-split {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 3rem;
         text-align: center;
+        padding: 0 1.5rem; /* reduce padding on tablet to give graphic more room */
     }
+    
+    .lp-hero-split-media {
+        order: 2; /* Force media to bottom */
+        width: 100%;
+    }
+    
+    /* Remove the asymmetric mask on mobile/tablet so the graphic looks centered and full */
+    .lp-hero-split-media .lp-hero-mockup-img {
+        -webkit-mask-image: none;
+        mask-image: none;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
     .lp-hero-split-content {
+        order: 1; /* Force content to top */
         align-items: center;
         text-align: center;
     }
