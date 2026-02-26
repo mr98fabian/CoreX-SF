@@ -1417,10 +1417,36 @@
 /* ═══════════════════════════════════════════════════════════════════════
    FINAL CTA — Background Image with Feathered Edge
    ═══════════════════════════════════════════════════════════════════════ */
+.lp-final {
+    position: relative;
+    overflow: hidden;
+}
+
 .lp-final-bg {
     position: absolute;
     inset: 0;
     z-index: 0;
+    pointer-events: none; /* Crucial to prevent interaction blocking */
+}
+
+/* Specific fix for the final SVG to stay properly behind text */
+.lp-final-bg-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1; /* Place above the section base */
+    will-change: transform, opacity;
+}
+
+/* Force hardware acceleration on all major GSAP SVGs to stop stuttering */
+svg.lp-hero-mockup-img,
+svg.lp-final-bg-svg,
+.lp-split-media svg {
+    /* TranslateZ(0) forces the browser to composite the element on the GPU */
+    transform: translateZ(0); 
+    will-change: transform;
 }
 
 .lp-final-bg img {
@@ -1439,6 +1465,14 @@
         black 30%,
         transparent 100%
     );
+}
+
+/* Explicitly push text content above the absolute background layers */
+.lp-final-headline,
+.lp-final-sub,
+.lp-hero-cta {
+    position: relative;
+    z-index: 10;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
