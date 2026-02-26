@@ -18,6 +18,12 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { use3DTilt } from './use3DTilt';
 import './LandingPage.css';
 
+import HeroDashboardSVG from './svgs/HeroDashboardSVG';
+import DebtVisualizerSVG from './svgs/DebtVisualizerSVG';
+import MobileAppSVG from './svgs/MobileAppSVG';
+import ComparisonGraphSVG from './svgs/ComparisonGraphSVG';
+import FreedomCelebrateSVG from './svgs/FreedomCelebrateSVG';
+
 // Lazy-load the WebGL 3D scene to avoid blocking initial paint
 const HeroScene3D = lazy(() => import('./HeroScene3D'));
 
@@ -263,7 +269,7 @@ export default function LandingPage() {
     const [scrollProgress, setScrollProgress] = useState(0);
 
     // ── 3D Tilt hook for dashboard mockup ──
-    const tiltRef = use3DTilt<HTMLImageElement>({ maxTilt: 12, scale: 1.03 });
+    const tiltRef = use3DTilt<HTMLDivElement>({ maxTilt: 12, scale: 1.03 });
 
     // ── Magnetic button ref ──
     const magneticCtaRef = useRef<HTMLButtonElement>(null);
@@ -355,7 +361,7 @@ export default function LandingPage() {
             });
 
             // Hero background parallax on scroll
-            gsap.to('.lp-hero-bg img', {
+            gsap.to('.lp-hero-gradient-overlay', {
                 scrollTrigger: {
                     trigger: heroRef.current,
                     start: 'top top',
@@ -608,13 +614,9 @@ export default function LandingPage() {
 
             {/* ═══ 1. HERO — Full-Bleed Cinematic ═══════════ */}
             <section className="lp-section lp-hero" ref={heroRef}>
-                {/* Full-bleed background image */}
+                {/* Full-bleed background gradient replacing image */}
                 <div className="lp-hero-bg">
-                    <img
-                        src="/landing-assets/hero-background.png"
-                        alt=""
-                        loading="eager"
-                    />
+                    <div className="lp-hero-gradient-overlay" style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #020617 70%)' }} />
                 </div>
 
                 {/* ─── WebGL 3D Scene (behind content, above bg) ─── */}
@@ -643,13 +645,9 @@ export default function LandingPage() {
                 {/* Hero split: Mockup LEFT, Branding RIGHT */}
                 <div className="lp-hero-split">
                     {/* Left: Dashboard mockup with 3D tilt */}
-                    <div className="lp-hero-split-media">
-                        <img
-                            ref={tiltRef}
-                            src="/landing-assets/dashboard-desktop.png"
-                            alt="KoreX Dashboard"
+                    <div className="lp-hero-split-media" ref={tiltRef}>
+                        <HeroDashboardSVG
                             className="lp-hero-mockup-img lp-tilt-card"
-                            loading="eager"
                             style={{ transformStyle: 'preserve-3d' }}
                         />
                     </div>
@@ -698,14 +696,11 @@ export default function LandingPage() {
                             {copy.problem.counterLabel[L]}
                         </p>
                     </div>
-                    {/* Right: Image */}
+                    {/* Right: Interactive Debt Mountain SVG */}
                     <div className="lp-split-media">
-                        <img
-                            src="/landing-assets/hero-visual-debt.png"
-                            alt="Debt visualization"
+                        <DebtVisualizerSVG
                             className="lp-split-img lp-tilt-card"
                             style={{ transformStyle: 'preserve-3d' }}
-                            loading="lazy"
                         />
                     </div>
                 </div>
@@ -718,14 +713,11 @@ export default function LandingPage() {
                 <p className="lp-section-subtitle">{copy.solution.subtitle[L]}</p>
 
                 <div className="lp-split lp-split--img-left">
-                    {/* Left: Mobile 3D App Preview */}
+                    {/* Left: Interactive Mobile SVG Preview */}
                     <div className="lp-split-media lp-solution-preview">
-                        <img
-                            src="/landing-assets/app-mobile-3d.png"
-                            alt="KoreX Mobile App"
+                        <MobileAppSVG
                             className="lp-split-img lp-solution-preview-img lp-tilt-card"
-                            style={{ transformStyle: 'preserve-3d' }}
-                            loading="lazy"
+                            style={{ transformStyle: 'preserve-3d', maxHeight: '600px' }}
                         />
                     </div>
                     {/* Right: Nerd-mode explanation */}
@@ -827,14 +819,11 @@ export default function LandingPage() {
                             </div>
                         </div>
                     </div>
-                    {/* Right: Image */}
+                    {/* Right: Interactive Comparison Graph SVG */}
                     <div className="lp-split-media">
-                        <img
-                            src="/landing-assets/bank-vs-korex.png"
-                            alt="The Bank's Plan vs KoreX Plan"
+                        <ComparisonGraphSVG
                             className="lp-split-img lp-compare-banner-img lp-tilt-card"
                             style={{ transformStyle: 'preserve-3d' }}
-                            loading="lazy"
                         />
                     </div>
                 </div>
@@ -917,13 +906,9 @@ export default function LandingPage() {
 
             {/* ═══ 7. FINAL CTA ═════════════════════════════ */}
             <section className="lp-section lp-final" ref={finalRef}>
-                {/* Background image layer */}
-                <div className="lp-final-bg">
-                    <img
-                        src="/landing-assets/freedom-celebration.png"
-                        alt=""
-                        loading="lazy"
-                    />
+                {/* Background SVG celebration layer */}
+                <div className="lp-final-bg" style={{ overflow: 'hidden' }}>
+                    <FreedomCelebrateSVG className="lp-final-bg-svg" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
                 </div>
 
                 <h2 className="lp-final-headline">
