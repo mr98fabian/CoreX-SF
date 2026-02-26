@@ -130,7 +130,7 @@ export default function AttackEquityCard({
 
     return (
         <>
-            <Card className="relative overflow-hidden group border-amber-300 dark:border-amber-500/30 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/10 dark:to-slate-950 hover:border-amber-400 dark:hover:border-amber-500/60 transition-colors duration-500">
+            <Card className="relative overflow-hidden group border-amber-300 dark:border-amber-500/30 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/10 dark:to-black hover:border-amber-400 dark:hover:border-amber-500/60 transition-colors duration-500">
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
@@ -158,7 +158,7 @@ export default function AttackEquityCard({
                                 </div>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-500">
+                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-500">
                                 <span className="flex items-center gap-1">
                                     Chase: <span className="text-emerald-600 dark:text-emerald-400">{formatMoney(chaseBalance)}</span>
                                 </span>
@@ -197,7 +197,7 @@ export default function AttackEquityCard({
                         <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             {/* Recommendation badge */}
                             <div className="flex items-center justify-between text-[11px]">
-                                <span className="flex items-center gap-1.5 text-slate-500 dark:text-zinc-500">
+                                <span className="flex items-center gap-1.5 text-gray-500 dark:text-zinc-500">
                                     {(() => {
                                         const Icon = SOURCE_ICONS[rec.type] || Banknote;
                                         return <Icon className="h-3 w-3" strokeWidth={1.5} />;
@@ -239,7 +239,7 @@ export default function AttackEquityCard({
                         <div className="mt-4 pt-4 border-t border-amber-200 dark:border-white/5 space-y-3 animate-in fade-in slide-in-from-bottom-3">
                             {/* Action Header */}
                             <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500 dark:text-zinc-500 font-medium uppercase tracking-wider">Próxima Acción</span>
+                                <span className="text-gray-500 dark:text-zinc-500 font-medium uppercase tracking-wider">Próxima Acción</span>
 
                                 {(() => {
                                     const actionDate = new Date(velocityTarget.action_date);
@@ -287,7 +287,7 @@ export default function AttackEquityCard({
 
                                         {/* Priority Reason */}
                                         {velocityTarget.priority_reason && (
-                                            <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-zinc-500">
+                                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-zinc-500">
                                                 <Trophy className="h-3 w-3 text-amber-600 dark:text-amber-500" strokeWidth={1.5} />
                                                 <span>{velocityTarget.priority_reason}</span>
                                             </div>
@@ -316,7 +316,7 @@ export default function AttackEquityCard({
                             {velocityWeapons.map((w, i) => (
                                 <div key={i} className="flex items-center justify-between text-[11px] px-2 py-1.5 rounded-md bg-cyan-950/20 border border-cyan-500/10">
                                     <div className="flex flex-col">
-                                        <span className="text-slate-300 font-medium">{w.name}</span>
+                                        <span className="text-gray-300 font-medium">{w.name}</span>
                                         <span className="text-[9px] text-cyan-600">{w.interest_rate}% APR · {w.weapon_type.toUpperCase()}</span>
                                     </div>
                                     <span className="text-cyan-400 font-mono font-bold">{formatMoney(w.available_credit)}</span>
@@ -341,26 +341,26 @@ export default function AttackEquityCard({
                                 {/* Target summary */}
                                 <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200 dark:border-amber-500/20 space-y-2">
                                     <div className="flex justify-between">
-                                        <span className="text-slate-500 dark:text-zinc-500">Target:</span>
+                                        <span className="text-gray-500 dark:text-zinc-500">Target:</span>
                                         <span className="font-semibold text-slate-900 dark:text-white">{targetName} ({velocityTarget?.interest_rate}% APR)</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-500 dark:text-zinc-500">Total Ataque:</span>
+                                        <span className="text-gray-500 dark:text-zinc-500">Total Ataque:</span>
                                         <span className="font-bold text-amber-600 dark:text-amber-400">{formatMoney(rec?.amount || 0)}</span>
                                     </div>
                                 </div>
 
                                 {/* Per-account breakdown */}
                                 <div className="space-y-1.5">
-                                    <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-500 uppercase tracking-wider">Desglose por cuenta:</span>
+                                    <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Desglose por cuenta:</span>
                                     {allAllocations.map((a, i) => (
-                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800">
+                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-base">{ACCOUNT_TYPE_ICON[a.source_type] || '💳'}</span>
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">{a.source_name}</span>
                                                     {a.balance_after !== undefined && (
-                                                        <span className="text-[10px] text-slate-400 dark:text-zinc-600">Queda: {formatMoney(a.balance_after)}</span>
+                                                        <span className="text-[10px] text-gray-400 dark:text-zinc-600">Queda: {formatMoney(a.balance_after)}</span>
                                                     )}
                                                     {a.spread && (
                                                         <span className="text-[10px] text-emerald-500">Spread +{a.spread.toFixed(1)}% ({a.apr}% APR)</span>

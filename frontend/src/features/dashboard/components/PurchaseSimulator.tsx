@@ -86,14 +86,14 @@ export default function PurchaseSimulator() {
     };
 
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 overflow-hidden h-full flex flex-col">
-            <CardHeader className="pb-3 border-b border-slate-200 dark:border-slate-800/50">
-                <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-zinc-200 text-base">
+        <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50 overflow-hidden h-full flex flex-col">
+            <CardHeader className="pb-3 border-b border-gray-200 dark:border-neutral-800/50">
+                <CardTitle className="flex items-center gap-2 text-black dark:text-zinc-200 text-base">
                     <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/10 border border-amber-300 dark:border-amber-900/30">
                         <Calculator size={16} className="text-amber-400" strokeWidth={1.5} />
                     </div>
                     {t('purchaseSim.title')}
-                    <span className="text-[10px] text-slate-500 font-mono ml-auto">
+                    <span className="text-[10px] text-gray-500 font-mono ml-auto">
                         {t('purchaseSim.subtitle')}
                     </span>
                 </CardTitle>
@@ -113,7 +113,7 @@ export default function PurchaseSimulator() {
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder={t('purchaseSim.placeholder')}
-                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 font-mono text-sm"
+                            className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-gray-100 dark:bg-[#0f0f0f] border border-slate-300 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 font-mono text-sm"
                             min="1"
                             step="0.01"
                         />
@@ -121,7 +121,7 @@ export default function PurchaseSimulator() {
                     <Button
                         type="submit"
                         disabled={loading || !amount}
-                        className="bg-blue-600 hover:bg-slate-800 text-white px-6"
+                        className="bg-blue-600 hover:bg-neutral-800 text-white px-6"
                     >
                         {loading ? <Loader2 size={16} className="animate-spin" /> : t('purchaseSim.analyze')}
                     </Button>
@@ -136,7 +136,7 @@ export default function PurchaseSimulator() {
                                 setAmount(String(p.amount));
                                 simulate(p.amount);
                             }}
-                            className="px-2.5 py-1 rounded-full text-[11px] bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-zinc-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-blue-400 dark:hover:border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-500/5 transition-all"
+                            className="px-2.5 py-1 rounded-full text-[11px] bg-gray-100 dark:bg-[#0f0f0f]/80 border border-slate-300 dark:border-zinc-800/50 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:border-blue-400 dark:hover:border-blue-500/30 hover:bg-blue-50 dark:hover:bg-blue-500/5 transition-all"
                         >
                             {p.label} · ${p.amount}
                         </button>
@@ -166,7 +166,7 @@ export default function PurchaseSimulator() {
                                     <>+{result.days_delayed} {t('purchaseSim.days')}</>
                                 )}
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
                                 {result.days_delayed > 0
                                     ? t('purchaseSim.addedTimeline')
                                     : t('purchaseSim.minimalImpact')}
@@ -175,8 +175,8 @@ export default function PurchaseSimulator() {
 
                         {/* Detail Breakdown */}
                         {result.days_delayed > 0 && (
-                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-white/5">
-                                <div className="text-center p-2 rounded-lg bg-slate-100 dark:bg-black/20">
+                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-white/5">
+                                <div className="text-center p-2 rounded-lg bg-gray-100 dark:bg-black/20">
                                     <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
                                         <Clock size={10} strokeWidth={1.5} />
                                         {t('purchaseSim.timeDelay')}
@@ -187,7 +187,7 @@ export default function PurchaseSimulator() {
                                             : `${result.days_delayed} ${t('purchaseSim.days')}`}
                                     </div>
                                 </div>
-                                <div className="text-center p-2 rounded-lg bg-slate-100 dark:bg-black/20">
+                                <div className="text-center p-2 rounded-lg bg-gray-100 dark:bg-black/20">
                                     <div className="text-xs text-zinc-500 flex items-center justify-center gap-1">
                                         <DollarSign size={10} strokeWidth={1.5} />
                                         {t('purchaseSim.extraInterest')}

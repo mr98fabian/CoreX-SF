@@ -99,11 +99,11 @@ const sections = [
 export default function TermsOfServicePage() {
     usePageTitle('Terms of Service');
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300">
+        <div className="min-h-screen bg-gray-50 dark:bg-black text-slate-600 dark:text-gray-300">
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/5">
+            <div className="sticky top-0 z-20 bg-gray-50/90 dark:bg-black/90 backdrop-blur-xl border-b border-gray-200 dark:border-white/5">
                 <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link to="/login" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <Link to="/login" className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -120,12 +120,12 @@ export default function TermsOfServicePage() {
             <div className="max-w-4xl mx-auto px-6 py-12">
                 <div className="mb-10">
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Terms of Service</h1>
-                    <p className="text-sm text-slate-500">Effective Date: {EFFECTIVE_DATE}</p>
+                    <p className="text-sm text-gray-500">Effective Date: {EFFECTIVE_DATE}</p>
                 </div>
 
                 {/* Quick Nav */}
-                <div className="mb-10 p-4 rounded-xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5">
-                    <p className="text-xs uppercase tracking-wider text-slate-500 mb-3 font-medium">Table of Contents</p>
+                <div className="mb-10 p-4 rounded-xl bg-gray-100 dark:bg-[#0f0f0f]/50 border border-gray-200 dark:border-white/5">
+                    <p className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-medium">Table of Contents</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                         {sections.map((s) => (
                             <a
@@ -144,10 +144,10 @@ export default function TermsOfServicePage() {
                     {sections.map((s) => (
                         <section key={s.id} id={s.id} className="scroll-mt-20">
                             <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">{s.title}</h2>
-                            <div className="text-sm leading-relaxed whitespace-pre-line text-slate-400">
+                            <div className="text-sm leading-relaxed whitespace-pre-line text-gray-400">
                                 {s.content.split('**').map((part, i) =>
                                     i % 2 === 1 ? (
-                                        <strong key={i} className="text-slate-800 dark:text-slate-200">{part}</strong>
+                                        <strong key={i} className="text-black dark:text-gray-200">{part}</strong>
                                     ) : (
                                         <span key={i}>{part}</span>
                                     )
@@ -158,7 +158,7 @@ export default function TermsOfServicePage() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-16 pt-8 border-t border-slate-200 dark:border-white/5 text-center">
+                <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/5 text-center">
                     <p className="text-xs text-slate-600">
                         KoreX Financial System — &copy; {new Date().getFullYear()} Kontrolly Consulting LLC. All rights reserved.
                     </p>

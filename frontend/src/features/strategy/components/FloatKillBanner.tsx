@@ -15,7 +15,7 @@ export default function FloatKillBanner({ opportunities }: Props) {
     const atRisk = opportunities.filter(o => !o.can_kill);
 
     return (
-        <div className="rounded-xl border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 to-slate-950/60 p-5 shadow-lg shadow-cyan-500/5 backdrop-blur-sm">
+        <div className="rounded-xl border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 to-black/60 p-5 shadow-lg shadow-cyan-500/5 backdrop-blur-sm">
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-cyan-500/15">
@@ -25,7 +25,7 @@ export default function FloatKillBanner({ opportunities }: Props) {
                     <h3 className="text-sm font-bold text-cyan-300 uppercase tracking-wider">
                         ⚡ Float Kill Opportunities
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-gray-400 mt-0.5">
                         Credit cards in grace period — pay now to keep 0% interest
                     </p>
                 </div>
@@ -51,11 +51,11 @@ export default function FloatKillBanner({ opportunities }: Props) {
                                         CAN KILL
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-400 mt-0.5 truncate">{opp.reason}</p>
+                                <p className="text-xs text-gray-400 mt-0.5 truncate">{opp.reason}</p>
                             </div>
                             <div className="text-right shrink-0">
                                 <p className="text-sm font-bold text-cyan-300">{formatMoney(opp.balance)}</p>
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
                                     <Clock size={10} />
                                     <span>{opp.days_until_due} days left</span>
                                 </div>
@@ -76,12 +76,12 @@ export default function FloatKillBanner({ opportunities }: Props) {
                         >
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-300 truncate">{opp.name}</span>
+                                    <span className="text-sm font-medium text-gray-300 truncate">{opp.name}</span>
                                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
                                         AT RISK
                                     </span>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-0.5 truncate">{opp.reason}</p>
+                                <p className="text-xs text-gray-500 mt-0.5 truncate">{opp.reason}</p>
                             </div>
                             <div className="text-right shrink-0">
                                 <p className="text-sm font-medium text-amber-300">{formatMoney(opp.balance)}</p>

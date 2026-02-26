@@ -40,7 +40,7 @@ export default function AttackDecisionHelper({ data }: Props) {
     const { t } = useLanguage();
 
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 backdrop-blur-sm h-full">
+        <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50 backdrop-blur-sm h-full">
             <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-sm">
                     <Scale className="h-4 w-4 text-blue-400" />
@@ -59,7 +59,7 @@ export default function AttackDecisionHelper({ data }: Props) {
                             key={option.id}
                             className={`w-full text-left rounded-xl p-4 border transition-all duration-200 ${isRecommended
                                 ? `${colors.bg} ${colors.border} ring-1 ring-offset-0 ${colors.border} shadow-lg ${colors.glow}`
-                                : `bg-slate-100 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/30`
+                                : `bg-gray-100 dark:bg-neutral-800/30 border-gray-200 dark:border-neutral-700/30`
                                 }`}
                         >
                             <div className="flex items-start gap-3">
@@ -81,7 +81,7 @@ export default function AttackDecisionHelper({ data }: Props) {
                                             </Badge>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {option.description}
                                     </p>
                                     <p className={`text-xs font-mono mt-1 ${colors.text}`}>

@@ -5,7 +5,7 @@ export default function NotFoundPage() {
     usePageTitle('404');
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+        <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
             {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px]" />
@@ -26,10 +26,10 @@ export default function NotFoundPage() {
             </h1>
 
             {/* Message */}
-            <p className="relative z-10 text-slate-400 text-lg mt-4 max-w-md">
+            <p className="relative z-10 text-gray-400 text-lg mt-4 max-w-md">
                 The raccoon searched everywhere, but this page doesn't exist.
             </p>
-            <p className="relative z-10 text-slate-500 text-sm mt-2">
+            <p className="relative z-10 text-gray-500 text-sm mt-2">
                 Maybe it was moved, deleted, or never existed in the first place.
             </p>
 
@@ -43,7 +43,7 @@ export default function NotFoundPage() {
                 </Link>
                 <button
                     onClick={() => window.history.back()}
-                    className="px-6 py-3 bg-slate-200 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-medium rounded-lg border border-slate-300 dark:border-slate-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                    className="px-6 py-3 bg-gray-200 dark:bg-neutral-800/60 text-slate-600 dark:text-gray-300 font-medium rounded-lg border border-slate-300 dark:border-neutral-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
                 >
                     Go Back
                 </button>

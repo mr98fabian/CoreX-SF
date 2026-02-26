@@ -125,7 +125,7 @@ function FormInput({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1.5">
+            <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1.5">
                 {label}
             </label>
             <div className="relative">
@@ -136,7 +136,7 @@ function FormInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className={`w-full px-4 py-3 bg-slate-100 dark:bg-slate-800/60 border rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-all
+                    className={`w-full px-4 py-3 bg-gray-100 dark:bg-neutral-800/60 border rounded-xl text-slate-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none transition-all
                         ${error
                             ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
                             : 'border-slate-300 dark:border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
@@ -286,7 +286,7 @@ export default function LoginPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
             </div>
         );
@@ -295,11 +295,11 @@ export default function LoginPage() {
     // ── Animated Success State ──
     if (view === 'success') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 relative overflow-hidden px-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-4">
                 <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
-                    <div className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-10">
+                    <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-10">
                         {/* Animated Checkmark */}
                         <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6 animate-success-pop">
                             <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -307,11 +307,11 @@ export default function LoginPage() {
                             </svg>
                         </div>
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Account Created!</h2>
-                        <p className="text-slate-400 mb-2">
+                        <p className="text-gray-400 mb-2">
                             We've sent a verification email to:
                         </p>
                         <p className="text-amber-400 font-mono text-sm mb-6 break-all">{email}</p>
-                        <p className="text-slate-500 text-sm mb-8">
+                        <p className="text-gray-500 text-sm mb-8">
                             Click the link in your email to activate your account, then come back to sign in.
                         </p>
                         <button
@@ -334,7 +334,7 @@ export default function LoginPage() {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
             tabIndex={-1}
         >
             {show ? (
@@ -351,7 +351,7 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-950 relative overflow-hidden px-6 py-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-6 py-8">
             <BackgroundOrbs />
             <Styles />
 
@@ -372,14 +372,14 @@ export default function LoginPage() {
                         alt="KoreX"
                         className="h-28 sm:h-36 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
-                    <p className="text-slate-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
+                    <p className="text-gray-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
+                <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
                     {/* Tabs */}
                     {view !== 'forgot' && (
-                        <div className="flex bg-slate-200/60 dark:bg-slate-800/60 rounded-xl p-1 mb-6">
+                        <div className="flex bg-gray-200/60 dark:bg-neutral-800/60 rounded-xl p-1 mb-6">
                             {(['signin', 'signup'] as const).map((tab) => (
                                 <button
                                     key={tab}
@@ -387,7 +387,7 @@ export default function LoginPage() {
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
                                         ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
                                         }`}
                                 >
                                     {tab === 'signin' ? 'Sign In' : 'Create Account'}
@@ -405,7 +405,7 @@ export default function LoginPage() {
                                 </svg>
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Reset Password</h2>
-                            <p className="text-slate-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
+                            <p className="text-gray-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
                         </div>
                     )}
 
@@ -494,11 +494,11 @@ export default function LoginPage() {
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                         </svg>
                                                     ) : (
-                                                        <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                        <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                             <circle cx="12" cy="12" r="9" />
                                                         </svg>
                                                     )}
-                                                    <span className={req.met ? 'text-emerald-400' : 'text-slate-500'}>
+                                                    <span className={req.met ? 'text-emerald-400' : 'text-gray-500'}>
                                                         {req.label}
                                                     </span>
                                                 </div>
@@ -559,7 +559,7 @@ export default function LoginPage() {
                                             )}
                                         </div>
                                     </div>
-                                    <span className="text-sm text-slate-400 leading-tight">
+                                    <span className="text-sm text-gray-400 leading-tight">
                                         I agree to the{' '}
                                         <Link to="/terms" target="_blank" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
                                             Terms of Service
@@ -599,7 +599,7 @@ export default function LoginPage() {
                         {/* Back — forgot */}
                         {view === 'forgot' && (
                             <button type="button" onClick={() => switchView('signin')}
-                                className="w-full text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors py-2">
+                                className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors py-2">
                                 ← Back to Sign In
                             </button>
                         )}
@@ -610,7 +610,7 @@ export default function LoginPage() {
                         <>
                             <div className="flex items-center gap-4 my-6">
                                 <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
-                                <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
+                                <span className="text-xs text-gray-500 uppercase tracking-wider">or</span>
                                 <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
                             </div>
                             <button
@@ -618,8 +618,8 @@ export default function LoginPage() {
                                 onClick={handleGoogleLogin}
                                 disabled={isGoogleLoading || isSubmitting}
                                 className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
-                                    bg-slate-100 dark:bg-slate-800/60 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm font-medium
-                                    hover:bg-slate-200 dark:hover:bg-slate-700/60 hover:border-slate-400 dark:hover:border-white/20 transition-all duration-300
+                                    bg-gray-100 dark:bg-neutral-800/60 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm font-medium
+                                    hover:bg-gray-200 dark:hover:bg-slate-700/60 hover:border-slate-400 dark:hover:border-white/20 transition-all duration-300
                                     active:scale-[0.98]
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -642,7 +642,7 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <div className="text-center mt-6">
-                    <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-gray-500 flex items-center justify-center gap-1.5">
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
@@ -656,7 +656,7 @@ export default function LoginPage() {
                             type="button"
                             onClick={handleDemoLogin}
                             disabled={isDemoLoading || isSubmitting}
-                            className="text-slate-500 hover:text-amber-400 transition-colors duration-300
+                            className="text-gray-500 hover:text-amber-400 transition-colors duration-300
                                 disabled:opacity-50 disabled:cursor-not-allowed
                                 underline underline-offset-2 decoration-slate-700 hover:decoration-amber-400/50"
                         >

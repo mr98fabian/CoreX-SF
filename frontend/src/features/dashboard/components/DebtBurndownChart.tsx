@@ -20,8 +20,8 @@ interface VelocityData {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-lg shadow-xl">
-                <p className="text-slate-400 text-xs mb-2">{label}</p>
+            <div className="bg-white dark:bg-black border border-gray-200 dark:border-neutral-800 p-3 rounded-lg shadow-xl">
+                <p className="text-gray-400 text-xs mb-2">{label}</p>
                 <p className="text-zinc-500 text-sm">
                     Bank: <span className="text-zinc-600 dark:text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
                 </p>

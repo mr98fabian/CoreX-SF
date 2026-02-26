@@ -412,7 +412,7 @@ export default function DashboardPage() {
                         })()}
                         {/* Motivational quote rotation — Skill: neuroventa §6 */}
                         {motivationalQuote && (
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500 italic mb-2 max-w-md animate-in fade-in duration-1000">
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 italic mb-2 max-w-md animate-in fade-in duration-1000">
                                 "{motivationalQuote}"
                             </p>
                         )}
@@ -447,7 +447,7 @@ export default function DashboardPage() {
                                 <Button variant="destructive" size="sm" className="shadow-lg shadow-rose-900/20">{t('dashboard.expense')}</Button>
                             </TransactionDialog>
                         </div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">
                             {language === 'es'
                                 ? 'Registra ingresos o gastos no planificados'
                                 : 'Log unplanned income or expenses'}
@@ -481,8 +481,8 @@ export default function DashboardPage() {
                 {/* Weekly Progress Digest Toast */}
                 {weeklyDigest.shouldShow && (
                     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/15 text-xs">
-                        <span className="text-slate-300">{weeklyDigest.message}</span>
-                        <button onClick={weeklyDigest.dismiss} className="text-slate-500 hover:text-white text-[10px] shrink-0">✕</button>
+                        <span className="text-gray-300">{weeklyDigest.message}</span>
+                        <button onClick={weeklyDigest.dismiss} className="text-gray-500 hover:text-white text-[10px] shrink-0">✕</button>
                     </div>
                 )}
 
@@ -621,10 +621,10 @@ export default function DashboardPage() {
                                 onExecuted={refreshStrategy}
                             />
                         ) : (
-                            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-6 text-center h-full flex flex-col items-center justify-center">
-                                <Zap className="h-8 w-8 text-slate-400 dark:text-slate-700 mx-auto mb-2" />
-                                <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300">{t('dashboard.noAttackTitle')}</h3>
-                                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                            <div className="rounded-xl border border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-black/50 p-6 text-center h-full flex flex-col items-center justify-center">
+                                <Zap className="h-8 w-8 text-gray-400 dark:text-slate-700 mx-auto mb-2" />
+                                <h3 className="text-base font-semibold text-slate-700 dark:text-gray-300">{t('dashboard.noAttackTitle')}</h3>
+                                <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
                                     {t('dashboard.noAttackDesc')}
                                 </p>
                             </div>

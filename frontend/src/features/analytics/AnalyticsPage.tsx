@@ -40,7 +40,7 @@ const CATEGORY_COLORS: Record<string, string> = {
     Housing: 'bg-indigo-500',
     Insurance: 'bg-cyan-500',
     Education: 'bg-emerald-500',
-    Uncategorized: 'bg-slate-500',
+    Uncategorized: 'bg-gray-500',
 };
 
 function getCategoryColor(name: string): string {
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-slate-200 dark:border-white/5">
+                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
                     <CardContent className="p-6 flex items-center gap-4">
                         <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
                             <DollarSign className="text-amber-500" size={24} />
@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-slate-200 dark:border-white/5">
+                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
                     <CardContent className="p-6 flex items-center gap-4">
                         <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center">
                             <TrendingDown className="text-red-500" size={24} />
@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-slate-200 dark:border-white/5">
+                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
                     <CardContent className="p-6 flex items-center gap-4">
                         <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
                             <Tag className="text-purple-500" size={24} />
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Spending by Category — Horizontal bars */}
-            <Card className="border-slate-200 dark:border-white/5">
+            <Card className="border-gray-200 dark:border-white/5">
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <BarChart3 size={18} className="text-amber-500" />
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                                         </span>
                                         <span className="text-muted-foreground font-mono">{formatMoney(cat.amount)}</span>
                                     </div>
-                                    <div className="h-3 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-3 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full ${getCategoryColor(cat.name)} transition-all duration-700 ease-out`}
                                             style={{ width: `${pct}%` }}
@@ -188,7 +188,7 @@ export default function AnalyticsPage() {
             </Card>
 
             {/* Monthly Trend — Visual "bar chart" */}
-            <Card className="border-slate-200 dark:border-white/5">
+            <Card className="border-gray-200 dark:border-white/5">
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <TrendingUp size={18} className="text-emerald-500" />
@@ -201,7 +201,7 @@ export default function AnalyticsPage() {
                     ) : (
                         <div className="space-y-4">
                             {trend.map((month) => (
-                                <div key={month.month} className="space-y-2 p-3 rounded-lg bg-slate-50 dark:bg-white/[0.02]">
+                                <div key={month.month} className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="font-semibold">{month.month}</span>
                                         <span className={`font-mono font-bold flex items-center gap-1 ${month.net >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
                                     {/* Income bar */}
                                     <div className="flex items-center gap-2 text-xs">
                                         <span className="w-16 text-emerald-500 font-medium">Income</span>
-                                        <div className="flex-1 h-2.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div className="flex-1 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-emerald-500 rounded-full transition-all duration-700"
                                                 style={{ width: `${(month.income / maxTrendVal) * 100}%` }}
@@ -223,7 +223,7 @@ export default function AnalyticsPage() {
                                     {/* Expense bar */}
                                     <div className="flex items-center gap-2 text-xs">
                                         <span className="w-16 text-red-500 font-medium">Expense</span>
-                                        <div className="flex-1 h-2.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <div className="flex-1 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-red-500 rounded-full transition-all duration-700"
                                                 style={{ width: `${(month.expense / maxTrendVal) * 100}%` }}

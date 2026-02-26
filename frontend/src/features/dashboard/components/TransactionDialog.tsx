@@ -201,17 +201,17 @@ export function TransactionDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+            <DialogContent className="sm:max-w-[425px] bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                 <DialogHeader className="relative group">
                     <WidgetHelp helpKey="addTransaction" />
                     <DialogTitle>{isEs ? 'Registrar Transacción' : 'Add Transaction'}</DialogTitle>
-                    <DialogDescription className="text-slate-500">
+                    <DialogDescription className="text-gray-500">
                         {isEs ? 'Registra un movimiento manualmente para actualizar tu posición de efectivo.' : 'Manually record a transaction to update your cash position.'}
                     </DialogDescription>
                 </DialogHeader>
 
                 <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-100 dark:bg-slate-900">
+                    <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-[#0f0f0f]">
                         <TabsTrigger value="income" className="data-[state=active]:bg-emerald-950 data-[state=active]:text-emerald-400">
                             {isEs ? 'Ingreso' : 'Income'}
                         </TabsTrigger>
@@ -232,11 +232,11 @@ export function TransactionDialog({
                                     <FormLabel>{isEs ? 'Monto' : 'Amount'}</FormLabel>
                                     <FormControl>
                                         <div className="relative">
-                                            <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-slate-500" />
+                                            <DollarSign className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
                                             <Input
                                                 type="number"
                                                 step="0.01"
-                                                className="pl-8 bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800"
+                                                className="pl-8 bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-800"
                                                 placeholder="0.00"
                                                 {...field}
                                             />
@@ -254,7 +254,7 @@ export function TransactionDialog({
                                 <FormItem>
                                     <FormLabel>{isEs ? 'Descripción' : 'Description'}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder={isEs ? 'Supermercado, Salario, etc.' : 'Grocery, Salary, etc.'} className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800" {...field} />
+                                        <Input placeholder={isEs ? 'Supermercado, Salario, etc.' : 'Grocery, Salary, etc.'} className="bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-800" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -270,14 +270,14 @@ export function TransactionDialog({
                                     <FormLabel>{isEs ? 'Cuenta' : 'Account'}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
-                                            <SelectTrigger className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white">
+                                            <SelectTrigger className="bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-800 text-slate-900 dark:text-white">
                                                 <SelectValue placeholder={isEs ? 'Seleccionar cuenta' : 'Select account'} />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white max-h-64">
+                                        <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white max-h-64">
                                             {accountGroups.map((group) => (
                                                 <SelectGroup key={group.label}>
-                                                    <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1.5">
+                                                    <SelectLabel className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-2 py-1.5">
                                                         {group.label}
                                                     </SelectLabel>
                                                     {group.accounts.map((acc) => (

@@ -101,7 +101,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
 
     return (
         <>
-            <Card className="relative overflow-hidden border-amber-500/20 dark:border-amber-500/20 border-amber-200 bg-gradient-to-br from-white via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 h-full">
+            <Card className="relative overflow-hidden border-amber-500/20 dark:border-amber-500/20 border-amber-200 bg-gradient-to-br from-white via-slate-50 to-white dark:from-black dark:via-slate-900 dark:to-black h-full">
                 {/* Ambient glow */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -117,7 +117,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                 <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                                     {t("strategy.morningBriefing.opportunity")}
                                 </h2>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {formatMoney(data.available_cash)} {t("strategy.morningBriefing.liquidity")}
                                 </p>
                             </div>
@@ -136,7 +136,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                     </div>
 
                     {/* Action Card — informational recommendation */}
-                    <div className="rounded-xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 p-4 space-y-3 backdrop-blur-sm">
+                    <div className="rounded-xl bg-gray-100/80 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 p-4 space-y-3 backdrop-blur-sm">
                         <div className="flex items-center gap-2 text-sm font-medium text-amber-500 dark:text-amber-400">
                             <Zap className="h-4 w-4" />
                             {t("strategy.morningBriefing.recommended")}
@@ -147,7 +147,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                 <p className="text-xl font-bold text-slate-900 dark:text-white font-mono">
                                     {formatMoney(action.amount)}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1 text-slate-600 dark:text-slate-300">
+                                <div className="flex items-center gap-2 mt-1 text-slate-600 dark:text-gray-300">
                                     <span>{t("strategy.morningBriefing.moveTo")}</span>
                                     <ArrowRight className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
                                     <span className="font-semibold text-slate-900 dark:text-white">
@@ -160,7 +160,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                             </div>
                         </div>
 
-                        <p className="text-sm text-slate-500 dark:text-slate-400 italic">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                             "{action.reason}"
                         </p>
 
@@ -171,7 +171,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                     <AlertTriangle size={13} />
                                     Gap-First Strategy Active
                                 </div>
-                                <p className="text-xs text-slate-400 leading-relaxed">
+                                <p className="text-xs text-gray-400 leading-relaxed">
                                     {formatMoney(action.gap_coverage.total_cost)} covers interest shortfalls on{' '}
                                     {action.gap_coverage.debts.map(d => d.name).join(', ')}{' '}
                                     before attacking {action.destination}.
@@ -187,21 +187,21 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                             <p className="text-lg font-bold text-emerald-400 font-mono">
                                 {impact.days_accelerated}
                             </p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{t("strategy.morningBriefing.daysAccelerated")}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{t("strategy.morningBriefing.daysAccelerated")}</p>
                         </div>
                         <div className="rounded-lg bg-amber-500/5 border border-amber-500/10 p-2.5 text-center">
                             <DollarSign className="h-3.5 w-3.5 text-amber-400 mx-auto mb-1" />
                             <p className="text-lg font-bold text-amber-400 font-mono">
                                 {formatMoney(impact.interest_saved_monthly)}
                             </p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{t("strategy.morningBriefing.savedMonth")}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{t("strategy.morningBriefing.savedMonth")}</p>
                         </div>
                         <div className="rounded-lg bg-purple-500/5 border border-purple-500/10 p-2.5 text-center">
                             <Sparkles className="h-3.5 w-3.5 text-purple-400 mx-auto mb-1" />
                             <p className="text-lg font-bold text-purple-400 font-mono">
                                 {impact.freedom_hours_earned}h
                             </p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">{t("strategy.morningBriefing.freedomHours")}</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{t("strategy.morningBriefing.freedomHours")}</p>
                         </div>
                     </div>
 
@@ -231,13 +231,13 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                             {showBreakdown && (
                                 <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
                                     {allAllocations.map((a, i) => (
-                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800">
+                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-base">{ACCOUNT_TYPE_ICON[a.source_type] || '💳'}</span>
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">{a.source_name}</span>
                                                     {a.balance_after !== undefined && (
-                                                        <span className="text-[10px] text-slate-400 dark:text-zinc-600">Queda: {formatMoney(a.balance_after)}</span>
+                                                        <span className="text-[10px] text-gray-400 dark:text-zinc-600">Queda: {formatMoney(a.balance_after)}</span>
                                                     )}
                                                     {a.spread && (
                                                         <span className="text-[10px] text-emerald-500">Spread +{a.spread.toFixed(1)}% ({a.apr}% APR)</span>
@@ -290,14 +290,14 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
 
             {/* ═══ CONFIRMATION DIALOG ═══ */}
             <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-                <AlertDialogContent className="max-w-sm bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                <AlertDialogContent className="max-w-sm bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-lg">
                             <Zap className="h-5 w-5 text-amber-400" />
                             Confirmar Ataque
                         </AlertDialogTitle>
                         <AlertDialogDescription asChild>
-                            <div className="space-y-3 text-sm text-slate-400">
+                            <div className="space-y-3 text-sm text-gray-400">
                                 <p>
                                     Vas a mover <span className="font-bold text-slate-900 dark:text-white font-mono">{formatMoney(recommendedSource?.amount ?? 0)}</span>{' '}
                                     hacia <span className="font-bold text-slate-900 dark:text-white">{action.destination}</span>.
@@ -319,15 +319,15 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
 
                                 {/* Per-account breakdown */}
                                 <div className="space-y-1.5">
-                                    <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">Desglose por cuenta:</p>
+                                    <p className="text-xs font-semibold text-gray-300 uppercase tracking-wide">Desglose por cuenta:</p>
                                     {allAllocations.map((a, i) => (
-                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+                                        <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 dark:bg-[#0f0f0f]/80 border border-gray-200 dark:border-neutral-800">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm">{ACCOUNT_TYPE_ICON[a.source_type] || '💳'}</span>
                                                 <div className="flex flex-col">
-                                                    <span className="text-xs font-medium text-slate-200">{a.source_name}</span>
+                                                    <span className="text-xs font-medium text-gray-200">{a.source_name}</span>
                                                     {a.balance_after !== undefined && (
-                                                        <span className="text-[10px] text-slate-500">Queda: {formatMoney(a.balance_after)}</span>
+                                                        <span className="text-[10px] text-gray-500">Queda: {formatMoney(a.balance_after)}</span>
                                                     )}
                                                     {a.spread && (
                                                         <span className="text-[10px] text-emerald-400">Spread +{a.spread.toFixed(1)}%</span>
@@ -343,22 +343,22 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                 <div className="flex items-center gap-3 pt-1">
                                     <div className="text-center">
                                         <p className="text-sm font-bold text-emerald-400 font-mono">{impact.days_accelerated}</p>
-                                        <p className="text-[10px] text-slate-500">días</p>
+                                        <p className="text-[10px] text-gray-500">días</p>
                                     </div>
                                     <div className="text-center">
                                         <p className="text-sm font-bold text-amber-400 font-mono">{formatMoney(impact.interest_saved_monthly)}</p>
-                                        <p className="text-[10px] text-slate-500">/mes</p>
+                                        <p className="text-[10px] text-gray-500">/mes</p>
                                     </div>
                                     <div className="text-center">
                                         <p className="text-sm font-bold text-purple-400 font-mono">{impact.freedom_hours_earned}h</p>
-                                        <p className="text-[10px] text-slate-500">libertad</p>
+                                        <p className="text-[10px] text-gray-500">libertad</p>
                                     </div>
                                 </div>
                             </div>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="gap-2 sm:gap-0">
-                        <AlertDialogCancel className="bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white">
+                        <AlertDialogCancel className="bg-gray-100 dark:bg-neutral-800 border-slate-300 dark:border-neutral-700 text-slate-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white">
                             Cancelar
                         </AlertDialogCancel>
                         <AlertDialogAction

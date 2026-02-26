@@ -59,7 +59,7 @@ export function TimeMachineCard({ dailyInterest, registrationDate }: TimeMachine
                     <p className="text-[11px] text-amber-400/80 font-medium mb-0.5">
                         {language === 'es' ? '⏰ Máquina del Tiempo' : '⏰ Time Machine'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                         {language === 'es'
                             ? `Si hubieras empezado una estrategia de ataque hace ${monthsAgo} meses, podrías tener ${formatMoney(potentialSavings)} menos de deuda hoy.`
                             : `If you had started an attack strategy ${monthsAgo} months ago, you could have ${formatMoney(potentialSavings)} less debt today.`

@@ -74,7 +74,7 @@ export default function DebtAlertBanner({ alerts }: Props) {
                         <button
                             onClick={() => dismiss(alert)}
                             className="absolute top-3 right-3 p-1 rounded-lg
-                                       text-slate-500 hover:text-slate-300 hover:bg-white/5
+                                       text-gray-500 hover:text-gray-300 hover:bg-white/5
                                        transition-colors"
                             title="Dismiss"
                         >
@@ -83,7 +83,7 @@ export default function DebtAlertBanner({ alerts }: Props) {
 
                         <div className="flex items-start gap-3 pr-6">
                             {/* Icon */}
-                            <div className={`p-2 rounded-lg bg-slate-100 dark:bg-black/20 ${config.iconColor} shrink-0 mt-0.5`}>
+                            <div className={`p-2 rounded-lg bg-gray-100 dark:bg-black/20 ${config.iconColor} shrink-0 mt-0.5`}>
                                 <Icon size={20} />
                             </div>
 
@@ -100,13 +100,13 @@ export default function DebtAlertBanner({ alerts }: Props) {
                                 </div>
 
                                 {/* Message */}
-                                <p className="text-sm text-slate-300 leading-relaxed">
+                                <p className="text-sm text-gray-300 leading-relaxed">
                                     {alert.message}
                                 </p>
 
                                 {/* Details Bar */}
                                 {alert.details && (
-                                    <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
+                                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
                                         <span>Balance: {formatMoney(alert.details.balance)}</span>
                                         <span>APR: {alert.details.apr}%</span>
                                         {alert.details.shortfall !== undefined && (
@@ -124,9 +124,9 @@ export default function DebtAlertBanner({ alerts }: Props) {
                                 )}
 
                                 {/* Recommendation */}
-                                <div className="flex items-start gap-2 mt-2 p-2.5 rounded-lg bg-slate-100 dark:bg-black/20 border border-slate-200 dark:border-white/5">
+                                <div className="flex items-start gap-2 mt-2 p-2.5 rounded-lg bg-gray-100 dark:bg-black/20 border border-gray-200 dark:border-white/5">
                                     <ArrowRight size={14} className={`${config.iconColor} shrink-0 mt-0.5`} />
-                                    <p className="text-xs text-slate-300">
+                                    <p className="text-xs text-gray-300">
                                         {alert.recommendation}
                                     </p>
                                 </div>

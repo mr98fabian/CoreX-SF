@@ -31,15 +31,15 @@ interface FreedomPathCalendarProps {
 export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalendarProps) {
     if (isLoading) {
         return (
-            <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
+            <Card className="h-full border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
                 <CardHeader>
-                    <div className="h-6 w-48 animate-pulse rounded bg-slate-200 dark:bg-white/10" />
-                    <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-100 dark:bg-white/5" />
+                    <div className="h-6 w-48 animate-pulse rounded bg-gray-200 dark:bg-white/10" />
+                    <div className="mt-2 h-4 w-32 animate-pulse rounded bg-gray-100 dark:bg-white/5" />
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {[...Array(6)].map((_, i) => (
-                            <div key={i} className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-white/5" />
+                            <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
                         ))}
                     </div>
                 </CardContent>
@@ -50,7 +50,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
     // Defensive check: ensure timeline exists and is an array
     if (!simulation || !Array.isArray(simulation.timeline) || simulation.timeline.length === 0) {
         return (
-            <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
+            <Card className="h-full border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl">
                 <CardHeader>
                     <CardTitle className="text-xl text-slate-900 dark:text-white">Camino a la Libertad</CardTitle>
                     <CardDescription>No hay datos de simulación disponibles.</CardDescription>
@@ -62,7 +62,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
     const { timeline, freedom_date, total_months, total_interest_paid } = simulation;
 
     return (
-        <Card className="h-full border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-emerald-400 dark:hover:border-emerald-500/20">
+        <Card className="h-full border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl transition-all duration-500 hover:border-emerald-400 dark:hover:border-emerald-500/20">
             <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                     <div>
@@ -70,7 +70,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                             <Flag className="h-5 w-5 text-emerald-400" />
                             Camino a la Libertad
                         </CardTitle>
-                        <CardDescription className="text-slate-500 dark:text-slate-400">
+                        <CardDescription className="text-gray-500 dark:text-gray-400">
                             Tu mapa mensual hacia la vida Sin Deudas.
                         </CardDescription>
                     </div>
@@ -78,8 +78,8 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                         <div className="text-2xl font-bold text-emerald-400">
                             {total_months} Meses
                         </div>
-                        <div className="text-xs text-slate-500">
-                            Fecha Final: <span className="text-slate-700 dark:text-slate-300">{new Date(freedom_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
+                        <div className="text-xs text-gray-500">
+                            Fecha Final: <span className="text-slate-700 dark:text-gray-300">{new Date(freedom_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</span>
                         </div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
 
             <CardContent>
                 <ScrollArea className="h-[400px] w-full pr-4">
-                    <div className="relative border-l border-slate-200 dark:border-white/10 pl-6 space-y-8">
+                    <div className="relative border-l border-gray-200 dark:border-white/10 pl-6 space-y-8">
                         {timeline.map((month, index) => {
                             const isLast = index === timeline.length - 1;
                             const previousBalance = index > 0 ? timeline[index - 1].total_balance : month.total_balance; // Approx for first month
@@ -109,25 +109,25 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                                         {isLast && <Flag className="h-2 w-2 text-white dark:text-black fill-current" />}
                                     </div>
 
-                                    <div className="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/5 p-4 transition-colors hover:border-slate-300 dark:hover:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10">
+                                    <div className="flex flex-col gap-2 rounded-xl border border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 p-4 transition-colors hover:border-slate-300 dark:hover:border-white/10 hover:bg-gray-100 dark:hover:bg-white/10">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="font-medium text-slate-700 dark:text-slate-200 uppercase tracking-wider text-sm">
+                                            <h4 className="font-medium text-slate-700 dark:text-gray-200 uppercase tracking-wider text-sm">
                                                 {month.month_display}
                                             </h4>
-                                            <span className="text-xs font-mono text-slate-500">
+                                            <span className="text-xs font-mono text-gray-500">
                                                 Mes {index + 1}
                                             </span>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div className="flex flex-col">
-                                                <span className="text-xs text-slate-500">Balance Restante</span>
+                                                <span className="text-xs text-gray-500">Balance Restante</span>
                                                 <span className="font-bold text-slate-900 dark:text-white font-mono">
                                                     ${month.total_balance.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                                 </span>
                                             </div>
                                             <div className="flex flex-col items-end">
-                                                <span className="text-xs text-slate-500">Reducción Principal</span>
+                                                <span className="text-xs text-gray-500">Reducción Principal</span>
                                                 <span className="font-bold text-emerald-400 font-mono">
                                                     {index === 0 ? "---" : `-$${principalPaid.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                                                 </span>
@@ -158,16 +158,16 @@ export function FreedomPathCalendar({ simulation, isLoading }: FreedomPathCalend
                     <ScrollBar orientation="vertical" />
                 </ScrollArea>
 
-                <div className="mt-6 flex justify-between rounded-xl bg-slate-100 dark:bg-slate-950 p-4 border border-slate-200 dark:border-white/5">
+                <div className="mt-6 flex justify-between rounded-xl bg-gray-100 dark:bg-black p-4 border border-gray-200 dark:border-white/5">
                     <div className="flex flex-col">
-                        <span className="text-xs text-slate-500 uppercase tracking-widest">Interés Total Pagado</span>
+                        <span className="text-xs text-gray-500 uppercase tracking-widest">Interés Total Pagado</span>
                         <span className="text-xl font-bold text-rose-400 font-mono">
                             ${total_interest_paid?.toLocaleString('en-US', { minimumFractionDigits: 2 }) || "0.00"}
                         </span>
                     </div>
                     <div className="flex flex-col items-end">
-                        <span className="text-xs text-slate-500 uppercase tracking-widest">Estado</span>
-                        <span className="text-xl font-bold text-slate-400 font-mono">
+                        <span className="text-xs text-gray-500 uppercase tracking-widest">Estado</span>
+                        <span className="text-xl font-bold text-gray-400 font-mono">
                             {total_months > 600 ? "Maxed Out" : "En Progreso"}
                         </span>
                     </div>

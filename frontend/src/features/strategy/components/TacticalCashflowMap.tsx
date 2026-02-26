@@ -12,19 +12,19 @@ function DayTooltip({ day, delta, position }: { day: ProjectionDay; delta: numbe
         new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
     const zoneBadge = {
-        past: { text: "PAST", cls: "text-slate-400 bg-slate-800/60" },
+        past: { text: "PAST", cls: "text-gray-400 bg-neutral-800/60" },
         today: { text: "TODAY", cls: "text-amber-400 bg-amber-400/10" },
         future: { text: "FUTURE", cls: "text-blue-400 bg-blue-400/10" },
     }[day.zone];
 
     return (
         <div
-            className="fixed z-50 pointer-events-none px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/40 min-w-[220px] max-w-[280px]"
+            className="fixed z-50 pointer-events-none px-4 py-3 rounded-xl border border-gray-200 dark:border-neutral-700/60 bg-white/95 dark:bg-black/95 backdrop-blur-xl shadow-2xl shadow-black/10 dark:shadow-black/40 min-w-[220px] max-w-[280px]"
             style={{ left: position.x, top: position.y - 10, transform: "translate(-50%, -100%)" }}
         >
             {/* Full date + zone badge */}
             <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                <span className="text-xs text-slate-600 dark:text-gray-300 font-medium">
                     {new Date(day.date + "T12:00:00").toLocaleDateString("en-US", {
                         weekday: "long", month: "short", day: "numeric", year: "numeric",
                     })}
@@ -48,10 +48,10 @@ function DayTooltip({ day, delta, position }: { day: ProjectionDay; delta: numbe
 
             {/* Events */}
             {day.events.length > 0 && (
-                <div className="space-y-1 border-t border-slate-200 dark:border-slate-800 pt-2">
+                <div className="space-y-1 border-t border-gray-200 dark:border-neutral-800 pt-2">
                     {day.events.map((ev, i) => (
                         <div key={i} className="flex items-center justify-between text-xs gap-2">
-                            <span className="text-slate-400 truncate max-w-[140px]">{ev.name}</span>
+                            <span className="text-gray-400 truncate max-w-[140px]">{ev.name}</span>
                             <span className={`shrink-0 font-mono ${ev.category === "income" ? "text-emerald-400" : "text-rose-400"}`}>
                                 {ev.category === "income" ? "+" : ""}{formatMoney(ev.amount)}
                             </span>
@@ -71,7 +71,7 @@ export default function TacticalCashflowMap() {
 
     if (loading) {
         return (
-            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+            <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm">
                 <CardContent className="p-6">
                     <div className="h-48 flex items-center justify-center">
                         <div className="animate-pulse text-slate-600 text-sm">Loading projection...</div>
@@ -83,7 +83,7 @@ export default function TacticalCashflowMap() {
 
     if (error || !data) {
         return (
-            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm">
+            <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm">
                 <CardContent className="p-6">
                     <div className="h-48 flex items-center justify-center text-rose-400 text-sm">
                         {error || "No projection data"}
@@ -141,14 +141,14 @@ export default function TacticalCashflowMap() {
     };
 
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm overflow-hidden">
+        <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-slate-900 dark:text-white text-base">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-blue-400" />
                         Tactical Cashflow Map
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
                         <span className="flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-slate-700" /> Past
                         </span>
@@ -243,7 +243,7 @@ export default function TacticalCashflowMap() {
                             {monthLabels.map((ml) => (
                                 <span
                                     key={ml.label + ml.offset}
-                                    className="text-[10px] text-slate-500 font-mono absolute"
+                                    className="text-[10px] text-gray-500 font-mono absolute"
                                     style={{ left: `${(ml.offset / data.days.length) * 100}%` }}
                                 >
                                     {ml.label}
@@ -254,24 +254,24 @@ export default function TacticalCashflowMap() {
                 </div>
 
                 {/* Summary stats row */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 dark:border-slate-800/50">
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-neutral-800/50">
                     <div className="flex items-center gap-4">
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-gray-500">
                             Balance today:{" "}
                             <span className="text-slate-900 dark:text-white font-mono font-semibold">
                                 {formatMoney(data.start_balance)}
                             </span>
                         </div>
                         {balances.length > 0 && (
-                            <div className="text-xs text-slate-500">
+                            <div className="text-xs text-gray-500">
                                 Projected min:{" "}
-                                <span className={`font-mono font-semibold ${minBal < 0 ? "text-rose-400" : "text-slate-300"}`}>
+                                <span className={`font-mono font-semibold ${minBal < 0 ? "text-rose-400" : "text-gray-300"}`}>
                                     {formatMoney(Math.min(...balances.filter((_, i) => data.days[i].zone !== "past")))}
                                 </span>
                             </div>
                         )}
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span className="flex items-center gap-1">
                             <TrendingUp className="h-3 w-3 text-emerald-400" /> Income
                         </span>

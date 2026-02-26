@@ -23,10 +23,10 @@ export default function LoadingScreen() {
     }, []);
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-slate-950 flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
             {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[100px] animate-pulse" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/[0.03] rounded-full blur-[100px] animate-pulse" />
             </div>
 
             {/* Logo with pulse */}
@@ -34,22 +34,22 @@ export default function LoadingScreen() {
                 <img
                     src="/korex-imagotipo.svg"
                     alt="KoreX"
-                    className="h-24 drop-shadow-[0_0_30px_rgba(251,191,36,0.3)]"
+                    className="h-24 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                 />
             </div>
 
             {/* Progress bar */}
             <div className="relative z-10 mt-8 w-48">
-                <div className="h-0.5 bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-0.5 bg-neutral-800 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-100 ease-out"
+                        className="h-full bg-gradient-to-r from-white/60 to-white rounded-full transition-all duration-100 ease-out"
                         style={{ width: `${progress}%` }}
                     />
                 </div>
             </div>
 
             {/* Status text */}
-            <p className="relative z-10 text-slate-500 text-xs mt-4 font-mono tracking-wider">
+            <p className="relative z-10 text-neutral-500 text-xs mt-4 font-mono tracking-wider">
                 {progress < 20
                     ? 'Initializing KoreX Intelligence Engine...'
                     : progress < 40

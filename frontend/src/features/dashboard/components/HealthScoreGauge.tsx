@@ -30,13 +30,13 @@ export function HealthScoreGauge(props: HealthScoreGaugeProps) {
     const dashOffset = circumference - (health.score / 100) * circumference;
 
     return (
-        <div className="flex items-center gap-4 p-3 rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-zinc-950/30 h-full">
+        <div className="flex items-center gap-4 p-3 rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-white/50 dark:bg-zinc-950/30 h-full">
             {/* Circular gauge */}
             <div className="relative shrink-0">
                 <svg width="88" height="88" viewBox="0 0 100 100">
                     {/* Background circle */}
                     <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor"
-                        className="text-slate-200 dark:text-zinc-800" strokeWidth="6" />
+                        className="text-gray-200 dark:text-zinc-800" strokeWidth="6" />
                     {/* Progress arc */}
                     <circle cx="50" cy="50" r={radius} fill="none"
                         stroke={health.color} strokeWidth="6" strokeLinecap="round"
@@ -50,7 +50,7 @@ export function HealthScoreGauge(props: HealthScoreGaugeProps) {
                     <span className="text-xl font-black tabular-nums" style={{ color: health.color }}>
                         {health.score}
                     </span>
-                    <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase">
+                    <span className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
                         {health.grade}
                     </span>
                 </div>
@@ -58,10 +58,10 @@ export function HealthScoreGauge(props: HealthScoreGaugeProps) {
 
             {/* Score details */}
             <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-1">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-gray-200 mb-1">
                     {isEs ? 'Salud Financiera' : 'Financial Health'}
                 </h4>
-                <p className="text-[10px] text-slate-500 mb-2">
+                <p className="text-[10px] text-gray-500 mb-2">
                     {isEs ? health.messageEs : health.messageEn}
                 </p>
 
@@ -75,8 +75,8 @@ export function HealthScoreGauge(props: HealthScoreGaugeProps) {
                         [isEs ? 'Rango' : 'Rank', health.breakdown.rank, 10],
                     ] as [string, number, number][]).map(([label, val, max]) => (
                         <div key={label} className="flex items-center gap-1.5">
-                            <span className="text-[8px] text-slate-500 w-10 shrink-0">{label}</span>
-                            <div className="flex-1 h-1 rounded-full bg-slate-200 dark:bg-zinc-800 overflow-hidden">
+                            <span className="text-[8px] text-gray-500 w-10 shrink-0">{label}</span>
+                            <div className="flex-1 h-1 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
                                 <div className="h-full rounded-full transition-all duration-1000"
                                     style={{
                                         width: `${(val / max) * 100}%`,
@@ -84,7 +84,7 @@ export function HealthScoreGauge(props: HealthScoreGaugeProps) {
                                     }}
                                 />
                             </div>
-                            <span className="text-[8px] text-slate-500 tabular-nums w-6 text-right">{val}/{max}</span>
+                            <span className="text-[8px] text-gray-500 tabular-nums w-6 text-right">{val}/{max}</span>
                         </div>
                     ))}
                 </div>

@@ -64,11 +64,11 @@ export function OnboardingResumePopup({ onResume }: OnboardingResumePopupProps) 
                         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                         className="relative w-full max-w-sm"
                     >
-                        <div className="relative p-5 rounded-2xl bg-slate-950/95 border border-amber-500/20 shadow-2xl shadow-amber-500/10 backdrop-blur-xl">
+                        <div className="relative p-5 rounded-2xl bg-black/95 border border-amber-500/20 shadow-2xl shadow-amber-500/10 backdrop-blur-xl">
                             {/* Close button */}
                             <button
                                 onClick={handleDismiss}
-                                className="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors"
+                                className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors"
                             >
                                 <X size={16} />
                             </button>
@@ -84,7 +84,7 @@ export function OnboardingResumePopup({ onResume }: OnboardingResumePopupProps) 
                                             ? '¿Listo para tu carrera millonaria? 🚀'
                                             : 'Ready for your millionaire run? 🚀'}
                                     </h3>
-                                    <p className="text-xs text-slate-400 leading-relaxed">
+                                    <p className="text-xs text-gray-400 leading-relaxed">
                                         {language === 'es'
                                             ? 'Completa el tutorial para desbloquear todo el poder del motor de velocidad y acelerar tu libertad financiera.'
                                             : 'Complete the tutorial to unlock the full power of the velocity engine and accelerate your financial freedom.'}
@@ -103,7 +103,7 @@ export function OnboardingResumePopup({ onResume }: OnboardingResumePopupProps) 
                                 <Button
                                     variant="ghost"
                                     onClick={handleDismiss}
-                                    className="text-slate-500 hover:text-white text-xs h-8"
+                                    className="text-gray-500 hover:text-white text-xs h-8"
                                 >
                                     {language === 'es' ? 'Después' : 'Later'}
                                 </Button>

@@ -98,7 +98,7 @@ function DayDetailContent({
                 </div>
                 <button
                     onClick={onClose}
-                    className="text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 p-1"
+                    className="text-gray-400 dark:text-gray-500 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0 p-1"
                 >
                     <X className="h-5 w-5" />
                 </button>
@@ -136,7 +136,7 @@ function DayDetailContent({
                                 .filter(e => e.category === "income")
                                 .map((ev, i) => (
                                     <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-emerald-950/30 border border-emerald-900/30">
-                                        <span className="text-sm text-slate-300 truncate mr-2">{ev.name}</span>
+                                        <span className="text-sm text-gray-300 truncate mr-2">{ev.name}</span>
                                         <span className="text-sm font-mono font-semibold text-emerald-400 shrink-0">
                                             +{formatMoney(Math.abs(ev.amount))}
                                         </span>
@@ -156,7 +156,7 @@ function DayDetailContent({
                                 .filter(e => e.category === "expense")
                                 .map((ev, i) => (
                                     <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-rose-950/30 border border-rose-900/30">
-                                        <span className="text-sm text-slate-300 truncate mr-2">{ev.name}</span>
+                                        <span className="text-sm text-gray-300 truncate mr-2">{ev.name}</span>
                                         <span className="text-sm font-mono font-semibold text-rose-400 shrink-0">
                                             {formatMoney(ev.amount)}
                                         </span>
@@ -241,7 +241,7 @@ export default function CashflowHeatCalendar() {
 
     if (loading || !data) {
         return (
-            <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
+            <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50">
                 <CardContent className="p-6">
                     <div className="h-32 flex items-center justify-center">
                         <div className="animate-pulse text-slate-600 text-sm">Loading cashflow heat map...</div>
@@ -297,14 +297,14 @@ export default function CashflowHeatCalendar() {
     };
 
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 backdrop-blur-sm overflow-hidden">
+        <Card className="border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-black/50 backdrop-blur-sm overflow-hidden">
             <CardHeader className="pb-2">
                 <CardTitle className="flex items-center justify-between text-slate-900 dark:text-white text-base">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-cyan-400" />
                         Cashflow Heat Map
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-slate-500 flex-wrap">
+                    <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-gray-500 flex-wrap">
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-rose-800" />
                             Low
@@ -330,7 +330,7 @@ export default function CashflowHeatCalendar() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-4">
                     {months.slice(0, 5).map((month) => (
                         <div key={month.label} className="min-w-0">
-                            <div className="text-xs text-slate-400 font-mono mb-2 tracking-wide">
+                            <div className="text-xs text-gray-400 font-mono mb-2 tracking-wide">
                                 {month.label}
                             </div>
                             {/* Weekday headers */}
@@ -381,7 +381,7 @@ export default function CashflowHeatCalendar() {
                                                 `}
                                                 title={`${day.date}: ${formatMoney(day.balance)}`}
                                             >
-                                                <span className={`leading-none ${day.is_today ? "text-amber-500 dark:text-amber-300 font-bold" : "text-slate-600 dark:text-slate-300"}`}>
+                                                <span className={`leading-none ${day.is_today ? "text-amber-500 dark:text-amber-300 font-bold" : "text-slate-600 dark:text-gray-300"}`}>
                                                     {day.day_num}
                                                 </span>
                                                 {/* Event dots */}
@@ -411,7 +411,7 @@ export default function CashflowHeatCalendar() {
                         {/* Popover positioned near the clicked cell */}
                         <div
                             ref={popoverRef}
-                            className="fixed z-50 w-[min(380px,calc(100vw-16px))] rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/50 max-h-[70vh] overflow-y-auto"
+                            className="fixed z-50 w-[min(380px,calc(100vw-16px))] rounded-2xl border border-gray-200 dark:border-neutral-700/50 bg-white/95 dark:bg-[#0f0f0f]/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/50 max-h-[70vh] overflow-y-auto"
                             style={{
                                 top: popoverPos?.top ?? -9999,
                                 left: popoverPos?.left ?? -9999,
@@ -434,10 +434,10 @@ export default function CashflowHeatCalendar() {
                 )}
 
                 {/* Balance range footer */}
-                <div className="flex items-center justify-between text-sm text-slate-500 pt-3 border-t border-slate-200 dark:border-slate-800/50">
-                    <span>Min: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{formatMoneyShort(minBal)}</span></span>
+                <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-200 dark:border-neutral-800/50">
+                    <span>Min: <span className="font-mono font-semibold text-slate-700 dark:text-gray-300">{formatMoneyShort(minBal)}</span></span>
                     <span>Today: <span className="font-mono font-semibold text-amber-400">{formatMoneyShort(data.start_balance)}</span></span>
-                    <span>Max: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{formatMoneyShort(maxBal)}</span></span>
+                    <span>Max: <span className="font-mono font-semibold text-slate-700 dark:text-gray-300">{formatMoneyShort(maxBal)}</span></span>
                 </div>
             </CardContent>
         </Card>

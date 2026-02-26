@@ -135,7 +135,7 @@ export default function FreedomClock() {
                                     {velocityScore}x SPEED
                                 </span>
                             </div>
-                            <p className="text-[11px] text-slate-500 font-medium">
+                            <p className="text-[11px] text-gray-500 font-medium">
                                 Paying off debt {velocityScore}x faster than the bank
                             </p>
                         </div>
@@ -146,7 +146,7 @@ export default function FreedomClock() {
                             {data.years_saved > 0 ? data.years_saved.toFixed(1) : (data.months_saved / 12).toFixed(1)}
                             <span className="text-sm text-blue-500/60 ml-1">yrs</span>
                         </p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">Ahead of schedule</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Ahead of schedule</p>
                     </div>
                 </div>
 
@@ -167,7 +167,7 @@ export default function FreedomClock() {
                     </motion.div>
 
                     <div className="flex flex-col items-center gap-1">
-                        <p className={`text-sm font-mono tracking-tight transition-colors ${extraPayment > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                        <p className={`text-sm font-mono tracking-tight transition-colors ${extraPayment > 0 ? 'text-emerald-400' : 'text-gray-400'}`}>
                             {extraPayment > 0
                                 ? `Wait... that's ${Math.round(simulatedSavingsMonths)} months SOONER!`
                                 : `You cut ${(data.months_saved + (data.years_saved * 12)).toFixed(0)} months of payments.`
@@ -179,15 +179,15 @@ export default function FreedomClock() {
 
                 {/* Countdown Grid */}
                 <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="text-center p-4 rounded-2xl bg-slate-100 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-300 dark:group-hover:border-slate-700/60 transition-colors">
+                    <div className="text-center p-4 rounded-2xl bg-gray-100 dark:bg-[#0f0f0f]/40 border border-gray-200 dark:border-neutral-800/60 backdrop-blur-sm group-hover:border-slate-300 dark:group-hover:border-neutral-700/60 transition-colors">
                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{years}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Years</div>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-slate-200/70 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-slate-700/60 transition-colors">
+                    <div className="text-center p-4 rounded-2xl bg-gray-200/70 dark:bg-[#0f0f0f]/40 border border-slate-300 dark:border-neutral-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-neutral-700/60 transition-colors">
                         <div className="text-3xl font-extrabold text-slate-900 dark:text-white tabular-nums">{months}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Months</div>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-slate-200/70 dark:bg-slate-900/40 border border-slate-300 dark:border-slate-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-slate-700/60 transition-colors">
+                    <div className="text-center p-4 rounded-2xl bg-gray-200/70 dark:bg-[#0f0f0f]/40 border border-slate-300 dark:border-neutral-800/60 backdrop-blur-sm group-hover:border-slate-400 dark:group-hover:border-neutral-700/60 transition-colors">
                         <div className={`text-3xl font-extrabold tabular-nums ${extraPayment > 0 ? 'text-emerald-500 dark:text-emerald-400' : 'text-blue-500 dark:text-blue-400'}`}>{days}</div>
                         <div className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1 font-bold">Days</div>
                     </div>
@@ -223,7 +223,7 @@ export default function FreedomClock() {
                 </div>
 
                 {/* Simulator (Bottom Section) */}
-                <div className="space-y-4 pt-6 border-t border-slate-200 dark:border-zinc-800/50">
+                <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-zinc-800/50">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-zinc-400">
                             <TrendingUp size={14} className={extraPayment > 0 ? "text-emerald-400" : ""} />

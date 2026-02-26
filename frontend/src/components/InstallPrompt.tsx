@@ -75,7 +75,7 @@ export default function InstallPrompt() {
             className={cn(
                 "fixed bottom-4 left-4 right-4 z-50 flex items-center gap-3",
                 "rounded-xl border p-4 shadow-2xl backdrop-blur-xl",
-                "bg-white/95 border-slate-200 dark:bg-slate-900/95 dark:border-white/10",
+                "bg-white/95 border-gray-200 dark:bg-[#0f0f0f]/95 dark:border-white/10",
                 "animate-in slide-in-from-bottom-8 fade-in duration-500"
             )}
         >
@@ -89,7 +89,7 @@ export default function InstallPrompt() {
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     Install KoreX
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     Faster access, works offline
                 </p>
             </div>
@@ -105,7 +105,7 @@ export default function InstallPrompt() {
             </Button>
             <button
                 onClick={handleDismiss}
-                className="flex-shrink-0 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                className="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-slate-600 dark:hover:text-gray-300 transition-colors"
                 aria-label="Dismiss"
             >
                 <X size={16} />

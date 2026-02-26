@@ -10,21 +10,21 @@ const formatMoney = (n: number) =>
 
 const severityStyles = {
     critical: {
-        bg: 'bg-gradient-to-br from-red-950/40 to-slate-950/60',
+        bg: 'bg-gradient-to-br from-red-950/40 to-black/60',
         border: 'border-red-500/40',
         badge: 'bg-red-500/20 text-red-400',
         icon: 'text-red-400',
         highlight: 'text-red-300',
     },
     warning: {
-        bg: 'bg-gradient-to-br from-amber-950/30 to-slate-950/60',
+        bg: 'bg-gradient-to-br from-amber-950/30 to-black/60',
         border: 'border-amber-500/30',
         badge: 'bg-amber-500/20 text-amber-400',
         icon: 'text-amber-400',
         highlight: 'text-amber-300',
     },
     info: {
-        bg: 'bg-gradient-to-br from-yellow-950/20 to-slate-950/60',
+        bg: 'bg-gradient-to-br from-yellow-950/20 to-black/60',
         border: 'border-yellow-500/25',
         badge: 'bg-yellow-500/15 text-yellow-400',
         icon: 'text-yellow-400',
@@ -60,7 +60,7 @@ export default function ArbitrageAlertPanel({ alerts }: Props) {
                     >
                         <div className="flex items-start gap-3">
                             {/* Icon */}
-                            <div className={`p-2 rounded-lg bg-slate-100 dark:bg-black/20 ${style.icon} shrink-0 mt-0.5`}>
+                            <div className={`p-2 rounded-lg bg-gray-100 dark:bg-black/20 ${style.icon} shrink-0 mt-0.5`}>
                                 <AlertCircle size={18} />
                             </div>
 
@@ -77,23 +77,23 @@ export default function ArbitrageAlertPanel({ alerts }: Props) {
                                 </div>
 
                                 {/* Main message */}
-                                <p className="text-xs text-slate-300 leading-relaxed">{alert.message}</p>
+                                <p className="text-xs text-gray-300 leading-relaxed">{alert.message}</p>
 
                                 {/* Metrics row */}
                                 <div className="grid grid-cols-3 gap-2">
-                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
-                                        <p className="text-[9px] text-slate-500 uppercase">Spread</p>
+                                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-black/20 text-center">
+                                        <p className="text-[9px] text-gray-500 uppercase">Spread</p>
                                         <p className={`text-sm font-bold ${style.highlight}`}>{alert.rate_spread.toFixed(1)}%</p>
                                     </div>
-                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
-                                        <p className="text-[9px] text-slate-500 uppercase">Monthly Cost</p>
+                                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-black/20 text-center">
+                                        <p className="text-[9px] text-gray-500 uppercase">Monthly Cost</p>
                                         <p className="text-sm font-bold text-red-400">
                                             <TrendingDown size={10} className="inline mr-1" />
                                             {formatMoney(alert.monthly_net_loss)}
                                         </p>
                                     </div>
-                                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-black/20 text-center">
-                                        <p className="text-[9px] text-slate-500 uppercase">Annual Loss</p>
+                                    <div className="p-2 rounded-lg bg-gray-100 dark:bg-black/20 text-center">
+                                        <p className="text-[9px] text-gray-500 uppercase">Annual Loss</p>
                                         <p className="text-sm font-bold text-red-300">{formatMoney(alert.annual_net_loss)}</p>
                                     </div>
                                 </div>

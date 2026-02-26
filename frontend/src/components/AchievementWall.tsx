@@ -136,15 +136,15 @@ export function AchievementWall({ context }: AchievementWallProps) {
     const displayList = expanded ? evaluated : evaluated.slice(0, 6);
 
     return (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-zinc-950/30 p-3 h-full flex flex-col">
+        <div className="rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-white/50 dark:bg-zinc-950/30 p-3 h-full flex flex-col">
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                     <Trophy size={14} className="text-amber-400" />
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-gray-200">
                         {isEs ? 'Logros' : 'Achievements'}
                     </h4>
                 </div>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[10px] font-mono text-gray-500">
                     {unlockCount}/{ACHIEVEMENTS.length}
                 </span>
             </div>
@@ -155,18 +155,18 @@ export function AchievementWall({ context }: AchievementWallProps) {
                         key={a.id}
                         className={`relative flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition-all ${a.unlocked
                             ? 'border-amber-500/20 bg-amber-500/5'
-                            : 'border-slate-200 dark:border-slate-800/30 opacity-40 grayscale'
+                            : 'border-gray-200 dark:border-neutral-800/30 opacity-40 grayscale'
                             }`}
                         title={a.unlocked
                             ? (isEs ? a.descEs : a.descEn)
                             : (isEs ? '🔒 Bloqueado' : '🔒 Locked')}
                     >
                         <span className="text-lg">{a.emoji}</span>
-                        <span className="text-[8px] font-bold text-slate-600 dark:text-slate-300 leading-tight">
+                        <span className="text-[8px] font-bold text-slate-600 dark:text-gray-300 leading-tight">
                             {isEs ? a.titleEs : a.titleEn}
                         </span>
                         {!a.unlocked && (
-                            <Lock size={8} className="absolute top-1 right-1 text-slate-500" />
+                            <Lock size={8} className="absolute top-1 right-1 text-gray-500" />
                         )}
                     </div>
                 ))}
@@ -175,7 +175,7 @@ export function AchievementWall({ context }: AchievementWallProps) {
             {ACHIEVEMENTS.length > 6 && (
                 <button
                     onClick={() => setExpanded(!expanded)}
-                    className="w-full mt-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors"
+                    className="w-full mt-2 text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
                 >
                     {expanded
                         ? (isEs ? 'Ver menos' : 'Show less')

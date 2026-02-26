@@ -46,7 +46,7 @@ export default function TacticalActionBanner() {
         fetchData();
     }, []);
 
-    if (loading) return <div className="h-8 animate-pulse bg-slate-200/50 dark:bg-zinc-800/50 w-full rounded-b-xl" />;
+    if (loading) return <div className="h-8 animate-pulse bg-gray-200/50 dark:bg-zinc-800/50 w-full rounded-b-xl" />;
 
     if (!nextMove) {
         return (
@@ -60,9 +60,9 @@ export default function TacticalActionBanner() {
     const isAttack = nextMove.type === 'attack' || nextMove.type === 'pump';
     const bgColor = isAttack
         ? 'bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/50 dark:to-blue-950/50'
-        : 'bg-slate-100/50 dark:bg-zinc-900/50';
+        : 'bg-gray-100/50 dark:bg-zinc-900/50';
 
-    const borderColor = isAttack ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-slate-200 dark:border-zinc-800';
+    const borderColor = isAttack ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-gray-200 dark:border-zinc-800';
 
     return (
         <div className={`flex items-center justify-between px-4 py-2 border-t ${borderColor} ${bgColor} backdrop-blur-sm transition-all duration-500`}>
@@ -73,7 +73,7 @@ export default function TacticalActionBanner() {
 
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                             {(() => {
                                 const moveDate = new Date(nextMove.date);
                                 const today = new Date();
@@ -98,7 +98,7 @@ export default function TacticalActionBanner() {
                 </span>
 
                 {/* Informational badge — no execute action */}
-                <span className="flex items-center gap-1 h-6 px-2 text-[10px] text-slate-400 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 rounded-md uppercase tracking-wider">
+                <span className="flex items-center gap-1 h-6 px-2 text-[10px] text-gray-400 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 rounded-md uppercase tracking-wider">
                     <Calendar size={10} strokeWidth={1.5} />
                     SCHEDULED
                 </span>

@@ -45,7 +45,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         if (!this.state.hasError) return this.props.children;
 
         return (
-            <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+            <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
                 {/* Ambient glow */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-[120px]" />
@@ -83,20 +83,20 @@ export default class ErrorBoundary extends Component<Props, State> {
                 </h1>
 
                 {/* Message */}
-                <p className="relative z-10 text-slate-400 text-base max-w-md mb-2">
+                <p className="relative z-10 text-gray-400 text-base max-w-md mb-2">
                     La aplicación encontró un error inesperado. Tu información está segura.
                 </p>
-                <p className="relative z-10 text-slate-500 text-sm max-w-md">
+                <p className="relative z-10 text-gray-500 text-sm max-w-md">
                     Intenta recargar la página. Si el problema persiste, contacta soporte.
                 </p>
 
                 {/* Error details (dev-friendly, collapsed) */}
                 {this.state.error && (
                     <details className="relative z-10 mt-6 max-w-lg w-full text-left">
-                        <summary className="text-xs text-slate-600 cursor-pointer hover:text-slate-400 transition-colors">
+                        <summary className="text-xs text-slate-600 cursor-pointer hover:text-gray-400 transition-colors">
                             Detalles técnicos
                         </summary>
-                        <pre className="mt-2 p-3 bg-slate-100 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-lg text-xs text-red-400/80 overflow-x-auto whitespace-pre-wrap break-words">
+                        <pre className="mt-2 p-3 bg-gray-100 dark:bg-[#0f0f0f]/80 border border-slate-300 dark:border-neutral-800 rounded-lg text-xs text-red-400/80 overflow-x-auto whitespace-pre-wrap break-words">
                             {this.state.error.message}
                         </pre>
                     </details>
@@ -112,7 +112,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                     </button>
                     <button
                         onClick={this.handleRetry}
-                        className="px-6 py-3 bg-slate-200 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-medium rounded-lg border border-slate-300 dark:border-slate-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                        className="px-6 py-3 bg-gray-200 dark:bg-neutral-800/60 text-slate-600 dark:text-gray-300 font-medium rounded-lg border border-slate-300 dark:border-neutral-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
                     >
                         Reintentar
                     </button>

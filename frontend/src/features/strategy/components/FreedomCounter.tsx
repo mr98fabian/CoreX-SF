@@ -55,7 +55,7 @@ export default function FreedomCounter({ freedom, streak }: Props) {
     };
 
     return (
-        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50 backdrop-blur-sm overflow-hidden relative h-full">
+        <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50 backdrop-blur-sm overflow-hidden relative h-full">
             {/* Subtle ambient glow */}
             <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -72,15 +72,15 @@ export default function FreedomCounter({ freedom, streak }: Props) {
                     <p className="text-4xl font-bold font-mono text-emerald-400 tracking-tight">
                         {animatedDays.toFixed(1)}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         {t("strategy.freedom.daysRecovered")}
                     </p>
                 </div>
 
                 {/* Velocity Power */}
-                <div className="rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 p-3">
+                <div className="rounded-lg bg-gray-100 dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700/50 p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                             <Zap className="h-3 w-3 text-amber-400" />
                             {t("strategy.freedom.velocityPower")}
                         </span>
@@ -88,7 +88,7 @@ export default function FreedomCounter({ freedom, streak }: Props) {
                             {animatedPower.toFixed(0)}%
                         </span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-1000 ease-out"
                             style={{ width: `${Math.min(freedom.velocity_power, 100)}%` }}
@@ -98,36 +98,36 @@ export default function FreedomCounter({ freedom, streak }: Props) {
 
                 {/* Inline Stats */}
                 <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 p-2.5">
+                    <div className="rounded-lg bg-gray-50 dark:bg-neutral-800/30 border border-gray-200 dark:border-neutral-700/30 p-2.5">
                         <div className="flex items-center gap-1 mb-0.5">
                             <CalendarCheck className="h-3 w-3 text-emerald-400" />
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.korexTarget")}</span>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500">{t("strategy.freedom.korexTarget")}</span>
                         </div>
                         <p className="text-xs font-semibold text-slate-900 dark:text-white">
                             {formatDate(freedom.current_freedom_date)}
                         </p>
                     </div>
-                    <div className="rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/30 p-2.5">
+                    <div className="rounded-lg bg-gray-50 dark:bg-neutral-800/30 border border-gray-200 dark:border-neutral-700/30 p-2.5">
                         <div className="flex items-center gap-1 mb-0.5">
-                            <TrendingUp className="h-3 w-3 text-slate-400 dark:text-slate-500" />
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.standard")}</span>
+                            <TrendingUp className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500">{t("strategy.freedom.standard")}</span>
                         </div>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 line-through">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 line-through">
                             {formatDate(freedom.standard_freedom_date)}
                         </p>
                     </div>
                 </div>
 
                 {/* Months Saved + Streak */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-neutral-800">
                     <div>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.monthsAccelerated")}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500">{t("strategy.freedom.monthsAccelerated")}</p>
                         <p className="text-base font-bold font-mono text-emerald-400">
                             {freedom.months_saved}
                         </p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("strategy.freedom.attackStreak")}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500">{t("strategy.freedom.attackStreak")}</p>
                         <div className="flex items-center gap-1">
                             <Flame className="h-3.5 w-3.5 text-orange-400" />
                             <span className="text-base font-bold font-mono text-orange-400">

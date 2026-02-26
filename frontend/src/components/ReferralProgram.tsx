@@ -78,7 +78,7 @@ export function ReferralProgram() {
                     <h3 className="text-base font-bold text-white">
                         {isEs ? '🎁 Programa de Referidos' : '🎁 Referral Program'}
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-gray-400">
                         {isEs
                             ? 'Invita amigos y gana 1 mes gratis por cada registro'
                             : 'Invite friends and earn 1 free month per signup'}
@@ -109,14 +109,14 @@ export function ReferralProgram() {
                         <div className="mx-auto w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400 mb-1.5">
                             {s.icon}
                         </div>
-                        <p className="text-[11px] text-slate-400 font-medium">{s.label}</p>
+                        <p className="text-[11px] text-gray-400 font-medium">{s.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* Referral Link */}
             <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-lg bg-slate-900/80 border border-slate-700/50 px-3 py-2.5 text-xs text-slate-300 font-mono truncate select-all">
+                <div className="flex-1 rounded-lg bg-[#0f0f0f]/80 border border-neutral-700/50 px-3 py-2.5 text-xs text-gray-300 font-mono truncate select-all">
                     {referralUrl}
                 </div>
                 <button
@@ -129,7 +129,7 @@ export function ReferralProgram() {
                 {typeof navigator !== 'undefined' && 'share' in navigator && (
                     <button
                         onClick={handleShare}
-                        className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all"
+                        className="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all"
                         aria-label="Share"
                     >
                         <Share2 size={14} />
@@ -139,11 +139,11 @@ export function ReferralProgram() {
 
             {/* Stats placeholder — will be wired to backend later */}
             <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-gray-500">
                     {isEs ? 'Tu código:' : 'Your code:'}{' '}
                     <span className="font-mono text-violet-400 font-bold">{refCode}</span>
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-gray-500">
                     {isEs ? '0 referidos · 0 meses ganados' : '0 referrals · 0 months earned'}
                 </p>
             </div>

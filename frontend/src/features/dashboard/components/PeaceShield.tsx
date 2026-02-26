@@ -75,9 +75,9 @@ export default function PeaceShield() {
 
     if (loading) {
         return (
-            <Card className="border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/50 animate-pulse">
+            <Card className="border-gray-200 dark:border-neutral-800 bg-gray-100/50 dark:bg-[#0f0f0f]/50 animate-pulse">
                 <CardContent className="h-32 flex items-center justify-center">
-                    <div className="text-slate-500 font-mono text-sm">Shield Status Loading...</div>
+                    <div className="text-gray-500 font-mono text-sm">Shield Status Loading...</div>
                 </CardContent>
             </Card>
         );
@@ -110,11 +110,11 @@ export default function PeaceShield() {
                 <div className="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Dialog open={editOpen} onOpenChange={setEditOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-500 hover:text-slate-900 dark:hover:text-white">
                                 <Settings className="h-4 w-4" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                        <DialogContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                             <DialogHeader>
                                 <DialogTitle>Configure Peace Shield</DialogTitle>
                             </DialogHeader>
@@ -125,9 +125,9 @@ export default function PeaceShield() {
                                         type="number"
                                         value={newTarget}
                                         onChange={(e) => setNewTarget(e.target.value)}
-                                        className="bg-slate-50 dark:bg-slate-900 border-slate-300 dark:border-slate-800"
+                                        className="bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-800"
                                     />
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-gray-500">
                                         The amount of liquid cash you need to feel safe.
                                         Usually 3-6 months of expenses, or a fixed amount like $1,000.
                                     </p>
@@ -190,7 +190,7 @@ export default function PeaceShield() {
                         </div>
 
                         {/* Progress Bar — with micro-animation at thresholds */}
-                        <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-800/50 overflow-hidden mb-1.5">
+                        <div className="w-full h-2.5 rounded-full bg-gray-200 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-800/50 overflow-hidden mb-1.5">
                             <div
                                 className={`h-full rounded-full transition-all duration-1000 ease-out ${isCharged
                                     ? 'bg-gradient-to-r from-emerald-600 to-emerald-400'
@@ -230,7 +230,7 @@ export default function PeaceShield() {
                     {/* Attack Status */}
                     <div className={`text-center px-3 py-2 rounded-xl border min-w-[90px] ${isCharged
                         ? 'bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-900/20'
-                        : 'bg-slate-100 dark:bg-zinc-900/50 border-slate-200 dark:border-zinc-800/50'
+                        : 'bg-gray-100 dark:bg-zinc-900/50 border-gray-200 dark:border-zinc-800/50'
                         }`}>
                         {isCharged ? (
                             <>
@@ -240,9 +240,9 @@ export default function PeaceShield() {
                             </>
                         ) : (
                             <>
-                                <Lock size={18} className="text-slate-400 dark:text-zinc-600 mx-auto mb-0.5" />
-                                <div className="text-[10px] font-bold text-slate-500 dark:text-zinc-500 uppercase">Attack</div>
-                                <div className="text-[9px] text-slate-400 dark:text-zinc-600">Paused</div>
+                                <Lock size={18} className="text-gray-400 dark:text-zinc-600 mx-auto mb-0.5" />
+                                <div className="text-[10px] font-bold text-gray-500 dark:text-zinc-500 uppercase">Attack</div>
+                                <div className="text-[9px] text-gray-400 dark:text-zinc-600">Paused</div>
                             </>
                         )}
                     </div>

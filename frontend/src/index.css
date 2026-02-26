@@ -5,98 +5,98 @@
 @layer base {
   /* ═══════════════════════════════════════════════════════════════════
      LIGHT MODE (default)
-     Clean, professional light theme with soft shadows
+     KoreX Brand: Clean monochromatic with gold premium accents
      ═══════════════════════════════════════════════════════════════════ */
   :root {
-    --background: 220 20% 97%;       /* #f5f6fa soft blue-gray */
-    --foreground: 222 47% 11%;        /* #0f172a slate-900 */
+    --background: 0 0% 97%;           /* #f7f7f7 near-white */
+    --foreground: 0 0% 0%;            /* #000000 Negro Profundo */
 
     --card: 0 0% 100%;                /* #ffffff pure white */
-    --card-foreground: 222 47% 11%;   /* #0f172a */
+    --card-foreground: 0 0% 0%;       /* #000000 */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 48 96% 45%;            /* Rich gold */
-    --primary-foreground: 0 0% 100%;  /* White text on gold */
+    --primary: 0 0% 0%;               /* Negro Profundo — primary actions */
+    --primary-foreground: 0 0% 100%;  /* White text on black */
 
-    --secondary: 220 14% 93%;         /* #e8eaef light gray */
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 93%;            /* #ededed light gray */
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 220 14% 93%;
-    --muted-foreground: 215 16% 47%;  /* #637490 medium gray */
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 29%;     /* #4A4A4A Gris Técnico */
 
-    --accent: 151 55% 41%;            /* Emerald */
-    --accent-foreground: 0 0% 100%;
+    --accent: 48 96% 51%;             /* Gold — premium accent */
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 51%;         /* Red-500 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 87%;            /* #d4d7dd light border */
-    --input: 220 13% 87%;
-    --ring: 48 96% 45%;
+    --border: 0 0% 87%;               /* #dedede light border */
+    --input: 0 0% 87%;
+    --ring: 48 96% 51%;               /* Gold ring for focus states */
 
     --radius: 0.75rem;
 
-    /* KoreX custom semantic tokens */
-    --cx-surface: 220 20% 97%;
+    /* KoreX semantic tokens */
+    --cx-surface: 0 0% 97%;
     --cx-surface-elevated: 0 0% 100%;
     --cx-sidebar-bg: 0 0% 100%;
-    --cx-sidebar-border: 220 13% 87%;
+    --cx-sidebar-border: 0 0% 87%;
     --cx-glass: 0 0% 100% / 0.7;
-    --cx-glass-border: 220 13% 87%;
-    --cx-text-primary: 222 47% 11%;
-    --cx-text-secondary: 215 16% 47%;
-    --cx-text-muted: 215 16% 63%;
-    --cx-gradient-start: rgba(16, 185, 129, 0.06);
-    --cx-gradient-mid: rgba(251, 191, 36, 0.04);
+    --cx-glass-border: 0 0% 87%;
+    --cx-text-primary: 0 0% 0%;
+    --cx-text-secondary: 0 0% 29%;
+    --cx-text-muted: 0 0% 45%;
+    --cx-gradient-start: rgba(0, 0, 0, 0.03);
+    --cx-gradient-mid: rgba(251, 191, 36, 0.03);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
      DARK MODE
-     Rich, immersive dark theme with glassmorphism
+     KoreX Brand: Negro Profundo base, Blanco Puro text, gold accents
      ═══════════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 224 71% 4%;         /* #020617 slate-950 */
-    --foreground: 210 40% 98%;        /* #f8fafc slate-50 */
+    --background: 0 0% 0%;            /* #000000 Negro Profundo */
+    --foreground: 0 0% 100%;          /* #FFFFFF Blanco Puro */
 
-    --card: 222 47% 11%;              /* #0f172a slate-900 */
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 6%;                  /* #0f0f0f near-black card */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 48 96% 51%;            /* Gold #fbbf24 */
-    --primary-foreground: 222 47% 11%;
+    --primary: 0 0% 100%;             /* Blanco Puro — primary actions */
+    --primary-foreground: 0 0% 0%;    /* Black text on white */
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 12%;            /* #1f1f1f dark elevated */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 55%;     /* #8c8c8c muted gray */
 
-    --accent: 151 55% 41.5%;          /* Emerald */
-    --accent-foreground: 0 0% 100%;
+    --accent: 48 96% 51%;             /* Gold — premium accent */
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 48 96% 53%;
+    --border: 0 0% 18%;               /* #2e2e2e subtle border */
+    --input: 0 0% 18%;
+    --ring: 48 96% 53%;               /* Gold ring */
 
     /* KoreX semantic tokens for dark */
-    --cx-surface: 224 71% 4%;
-    --cx-surface-elevated: 222 47% 11%;
-    --cx-sidebar-bg: 224 71% 3%;
-    --cx-sidebar-border: 217.2 32.6% 17.5%;
-    --cx-glass: 222 47% 6% / 0.6;
+    --cx-surface: 0 0% 0%;
+    --cx-surface-elevated: 0 0% 6%;
+    --cx-sidebar-bg: 0 0% 2%;
+    --cx-sidebar-border: 0 0% 18%;
+    --cx-glass: 0 0% 4% / 0.6;
     --cx-glass-border: 0 0% 100% / 0.05;
-    --cx-text-primary: 210 40% 98%;
-    --cx-text-secondary: 215 20% 65%;
-    --cx-text-muted: 215 20% 45%;
-    --cx-gradient-start: rgba(16, 185, 129, 0.08);
-    --cx-gradient-mid: rgba(251, 191, 36, 0.05);
+    --cx-text-primary: 0 0% 100%;
+    --cx-text-secondary: 0 0% 55%;
+    --cx-text-muted: 0 0% 35%;
+    --cx-gradient-start: rgba(255, 255, 255, 0.03);
+    --cx-gradient-mid: rgba(251, 191, 36, 0.03);
   }
 }
 
@@ -163,13 +163,16 @@
   .text-gradient-emerald {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-emerald-500 to-teal-500;
   }
+  .text-gradient-brand {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-white;
+  }
 
   /* ─── Light mode specific card style ────────────────────────── */
   :root .card-elevated {
-    @apply bg-white shadow-md shadow-slate-200/50 border border-slate-200;
+    @apply bg-white shadow-md shadow-black/5 border border-gray-200;
   }
   .dark .card-elevated {
-    @apply bg-slate-900/40 shadow-xl shadow-black/20 border border-white/5;
+    @apply bg-[#0f0f0f] shadow-xl shadow-black/30 border border-white/5;
   }
 
   /* ─── Smooth theme transition ───────────────────────────────── */

@@ -100,7 +100,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
                     {/* Progress bar to next rank */}
                     {!rank.isMaxRank && (
                         <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 rounded-full bg-slate-800/50 overflow-hidden">
+                            <div className="flex-1 h-1.5 rounded-full bg-neutral-800/50 overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all duration-1000 ease-out"
                                     style={{
@@ -110,7 +110,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
                                     }}
                                 />
                             </div>
-                            <span className="text-[9px] font-mono text-slate-500 tabular-nums whitespace-nowrap">
+                            <span className="text-[9px] font-mono text-gray-500 tabular-nums whitespace-nowrap">
                                 {rank.progressPercent}%
                             </span>
                         </div>
@@ -118,7 +118,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
 
                     {/* Next rank hint */}
                     {!rank.isMaxRank && nextName && (
-                        <p className="text-[9px] text-slate-500 mt-0.5 truncate">
+                        <p className="text-[9px] text-gray-500 mt-0.5 truncate">
                             {isEs ? 'Siguiente' : 'Next'}: {nextName}
                         </p>
                     )}
@@ -145,7 +145,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
             )}
 
             {/* Streak info */}
-            <div className="mt-2 flex items-center gap-3 text-[10px] text-slate-500">
+            <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
                 <span>🔥 {streak.rawStreak} {isEs ? 'días racha' : 'day streak'}</span>
                 <span>📊 {streak.score} {isEs ? 'pts' : 'pts'}</span>
             </div>

@@ -40,7 +40,7 @@ export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfS
 
 
     return (
-        <Card className="border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl h-full flex flex-col">
+        <Card className="border-gray-200 dark:border-white/10 bg-white/50 dark:bg-black/40 backdrop-blur-xl h-full flex flex-col">
             <CardHeader className="pb-2 pt-4 px-4">
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-sm">
@@ -49,14 +49,14 @@ export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfS
                     </CardTitle>
                     {isLoading && <Loader2 className="h-4 w-4 animate-spin text-purple-400" />}
                 </div>
-                <CardDescription className="text-slate-400 text-xs">
+                <CardDescription className="text-gray-400 text-xs">
                     ¿Qué pasa si inyectas más capital mensualmente?
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1 flex flex-col justify-between px-4 pb-4">
                 <div className={isLoading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
                     <div className="mb-4 flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-300">Inyección Extra Mensual</span>
+                        <span className="text-sm font-medium text-gray-300">Inyección Extra Mensual</span>
                         <Badge variant="outline" className="border-purple-500/50 bg-purple-500/10 text-lg font-bold text-purple-400 px-3 py-1">
                             ${sliderValue[0].toLocaleString()}
                         </Badge>
@@ -71,7 +71,7 @@ export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfS
                         className="py-4 cursor-pointer"
                     />
 
-                    <div className="flex justify-between px-1 text-xs text-slate-500">
+                    <div className="flex justify-between px-1 text-xs text-gray-500">
                         <span>$0</span>
                         <span>$1,000</span>
                         <span>$2,000</span>

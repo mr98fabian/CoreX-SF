@@ -74,11 +74,11 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
                                     "min-w-[80px] h-[110px] rounded-lg border flex flex-col items-center justify-between p-2 relative group transition-all duration-300 snap-start",
                                     isDanger ? "bg-rose-950/20 border-rose-500/30 hover:bg-rose-950/40" :
                                         isWarning ? "bg-amber-950/20 border-amber-500/30 hover:bg-amber-950/40" :
-                                            "bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-zinc-800/50 hover:border-blue-400 dark:hover:border-blue-500/30"
+                                            "bg-gray-50 dark:bg-zinc-900/50 border-gray-200 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-zinc-800/50 hover:border-blue-400 dark:hover:border-blue-500/30"
                                 )}
                             >
                                 {/* Date Header */}
-                                <div className="text-center w-full border-b border-slate-200 dark:border-white/5 pb-1">
+                                <div className="text-center w-full border-b border-gray-200 dark:border-white/5 pb-1">
                                     <div className="text-[10px] uppercase text-zinc-500 font-mono tracking-wider">{weekday}</div>
                                     <div className={cn("text-lg font-bold", isDanger ? "text-rose-400" : "text-slate-900 dark:text-white")}>{dayNum}</div>
                                 </div>

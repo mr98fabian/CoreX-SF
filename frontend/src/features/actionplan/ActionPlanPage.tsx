@@ -136,7 +136,7 @@ const getCategoryColor = (category: string): string => {
     if (lower.includes('health') || lower.includes('medical')) return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
     if (lower.includes('housing') || lower.includes('rent') || lower.includes('mortgage')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300';
     if (lower.includes('payment') || lower.includes('velocity') || lower.includes('attack')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-    return 'bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300';
+    return 'bg-gray-100 text-slate-700 dark:bg-neutral-800/60 dark:text-gray-300';
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -434,27 +434,27 @@ export default function ActionPlanPage() {
             <div className="space-y-8">
                 {/* ────── CONFIRMATION DIALOG ────── */}
                 <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
-                    <AlertDialogContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-white/10 max-w-md">
+                    <AlertDialogContent className="bg-white dark:bg-black border-gray-200 dark:border-white/10 max-w-md">
                         <AlertDialogHeader>
                             <AlertDialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
                                 <Zap className="text-emerald-400" size={20} />
                                 {t('actionPlan.confirmExecution')}
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-500 dark:text-slate-400 space-y-4">
+                            <AlertDialogDescription className="text-gray-500 dark:text-gray-400 space-y-4">
                                 <p>{t('actionPlan.confirmQuestion')}</p>
                                 {confirmTarget && (
-                                    <div className="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-4 space-y-2">
+                                    <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{confirmTarget.title}</span>
+                                            <span className="text-sm text-slate-700 dark:text-gray-300 font-medium">{confirmTarget.title}</span>
                                             <span className="text-lg font-bold text-emerald-400">{formatMoney(confirmTarget.amount)}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
-                                            <span className="bg-slate-200 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-md px-2 py-0.5">{confirmTarget.source}</span>
+                                        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                                            <span className="bg-gray-200 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-md px-2 py-0.5">{confirmTarget.source}</span>
                                             <span>→</span>
                                             <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md px-2 py-0.5">{confirmTarget.destination}</span>
                                         </div>
                                         {confirmTarget.type === 'attack' && confirmTarget.daily_interest_saved > 0 && (
-                                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 dark:border-white/5">
+                                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-white/5">
                                                 <TrendingDown size={14} className="text-emerald-400" />
                                                 <span className="text-xs text-emerald-400">
                                                     {t('actionPlan.savesDay')} {formatMoney(confirmTarget.daily_interest_saved)}/{t('strategy.confidence.perDay').replace('/', '')} · ~{confirmTarget.days_shortened} {t('actionPlan.daysSooner')}
@@ -466,7 +466,7 @@ export default function ActionPlanPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white">
+                            <AlertDialogCancel className="bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white">
                                 {t('actionPlan.cancel')}
                             </AlertDialogCancel>
                             <AlertDialogAction
@@ -485,7 +485,7 @@ export default function ActionPlanPage() {
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent">
                         {t('actionPlan.title')}
                     </h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {t('actionPlan.battlePlan')}
                     </p>
                 </div>
@@ -534,7 +534,7 @@ export default function ActionPlanPage() {
                             size="icon"
                             onClick={() => setMonthOffset(prev => Math.max(prev - 1, 0))}
                             disabled={monthOffset === 0}
-                            className="h-9 w-9 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30"
+                            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30"
                         >
                             <ChevronLeft size={20} />
                         </Button>
@@ -554,7 +554,7 @@ export default function ActionPlanPage() {
                             size="icon"
                             onClick={() => setMonthOffset(prev => Math.min(prev + 1, 1))}
                             disabled={monthOffset >= 1}
-                            className="h-9 w-9 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-30"
+                            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30"
                         >
                             <ChevronRight size={20} />
                         </Button>
@@ -590,16 +590,16 @@ export default function ActionPlanPage() {
                 </div>
 
                 {/* ────── ACTION QUEUE TABLE ────── */}
-                <Card className="relative overflow-hidden border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950/60 backdrop-blur-xl group">
+                <Card className="relative overflow-hidden border-gray-200 dark:border-white/5 bg-white dark:bg-black/60 backdrop-blur-xl group">
                     {/* Ambient glow */}
                     <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     <WidgetHelp helpKey="actionPlanTable" />
 
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                        <CardTitle className="text-lg text-black dark:text-zinc-200 flex items-center gap-2">
                             <ListChecks className="text-emerald-400" size={20} />
                             {t('actionPlan.scheduledMoves')}
-                            <span className="text-xs text-slate-400 dark:text-slate-500 font-normal ml-2">
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-2">
                                 {filteredMovements.length} {filteredMovements.length !== 1 ? t('actionPlan.movementsThisMonth') : t('actionPlan.movement')}
                             </span>
                         </CardTitle>
@@ -607,15 +607,15 @@ export default function ActionPlanPage() {
 
                     <CardContent>
                         {filteredMovements.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-slate-500">
+                            <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
                                 <Calendar size={40} className="mb-3 opacity-30" />
                                 <p className="text-sm font-medium">{t('actionPlan.noMovements')} {monthLabel}</p>
-                                <p className="text-xs mt-1 text-slate-500 dark:text-slate-600">{t('actionPlan.addAccountsHint')}</p>
+                                <p className="text-xs mt-1 text-gray-500 dark:text-slate-600">{t('actionPlan.addAccountsHint')}</p>
                             </div>
                         ) : (
                             <div className="space-y-2">
                                 {/* Table Header — hidden on mobile */}
-                                <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-white/5">
+                                <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-white/5">
                                     <div className="col-span-2">{t('actionPlan.tableDate')}</div>
                                     <div className="col-span-3">{t('actionPlan.tableAction')}</div>
                                     <div className="col-span-2">{t('actionPlan.tableFrom')}</div>
@@ -642,8 +642,8 @@ export default function ActionPlanPage() {
                                             ${isToday
                                                     ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
                                                     : isPast
-                                                        ? 'opacity-50 bg-slate-50 dark:bg-white/[0.01]'
-                                                        : 'bg-slate-50 dark:bg-white/[0.02] border border-transparent hover:border-slate-200 dark:hover:border-white/5'
+                                                        ? 'opacity-50 bg-gray-50 dark:bg-white/[0.01]'
+                                                        : 'bg-gray-50 dark:bg-white/[0.02] border border-transparent hover:border-gray-200 dark:hover:border-white/5'
                                                 }
                                         `}
                                         >
@@ -651,7 +651,7 @@ export default function ActionPlanPage() {
                                             <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-1.5 min-w-0 overflow-hidden flex-wrap">
                                                     {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
-                                                    <span className={`text-xs font-mono shrink-0 ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>
+                                                    <span className={`text-xs font-mono shrink-0 ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-gray-300'}`}>
                                                         {m.display_date}
                                                     </span>
                                                     {isToday && (
@@ -667,7 +667,7 @@ export default function ActionPlanPage() {
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     <span className={`text-sm font-bold whitespace-nowrap ${style.text}`}>{formatMoney(m.amount)}</span>
                                                     {isPast ? (
-                                                        <Clock size={14} className="text-slate-400 dark:text-slate-600 shrink-0" />
+                                                        <Clock size={14} className="text-gray-400 dark:text-slate-600 shrink-0" />
                                                     ) : (
                                                         <Button
                                                             size="sm"
@@ -676,7 +676,7 @@ export default function ActionPlanPage() {
                                                             onClick={() => handleRequestExecute(m)}
                                                             className={`h-7 w-7 p-0 rounded-full transition-all shrink-0 ${isToday
                                                                 ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 border border-emerald-500/30'
-                                                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                                                                : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                                                                 }`}
                                                         >
                                                             {isExecuting ? (
@@ -701,15 +701,15 @@ export default function ActionPlanPage() {
                                                         </p>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-[11px] text-slate-400 dark:text-slate-500">{m.description}</p>
+                                                    <p className="text-[11px] text-gray-400 dark:text-gray-500">{m.description}</p>
                                                 )}
                                             </div>
                                             {/* Row 3: Source → Destination */}
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1">
+                                                <span className="text-xs font-medium text-slate-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-1">
                                                     {m.source}
                                                 </span>
-                                                <span className="text-slate-300 dark:text-slate-600">→</span>
+                                                <span className="text-gray-300 dark:text-slate-600">→</span>
                                                 <span className={`text-xs font-medium ${style.text} ${style.bg} border ${style.border} rounded-md px-2 py-1`}>
                                                     {m.destination}
                                                 </span>
@@ -724,15 +724,15 @@ export default function ActionPlanPage() {
                                             ${isToday
                                                     ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
                                                     : isPast
-                                                        ? 'opacity-50 bg-slate-50 dark:bg-white/[0.01]'
-                                                        : 'bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-transparent hover:border-slate-200 dark:hover:border-white/5'
+                                                        ? 'opacity-50 bg-gray-50 dark:bg-white/[0.01]'
+                                                        : 'bg-gray-50 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/[0.04] border border-transparent hover:border-gray-200 dark:hover:border-white/5'
                                                 }
                                         `}
                                         >
                                             {/* Date */}
                                             <div className="col-span-2 flex items-center gap-2">
                                                 {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-                                                <span className={`text-sm font-mono ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-slate-300'}`}>
+                                                <span className={`text-sm font-mono ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-gray-300'}`}>
                                                     {m.display_date}
                                                 </span>
                                                 {isToday && (
@@ -753,20 +753,20 @@ export default function ActionPlanPage() {
                                                         · {t('actionPlan.savesDay')} {formatMoney(m.total_interest_saved)} {t('actionPlan.inInterest')}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate">{m.description}</span>
+                                                    <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{m.description}</span>
                                                 )}
                                             </div>
 
                                             {/* Source */}
                                             <div className="col-span-2 flex items-center">
-                                                <span className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1 truncate">
+                                                <span className="text-xs font-medium text-slate-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 truncate">
                                                     {m.source}
                                                 </span>
                                             </div>
 
                                             {/* Destination */}
                                             <div className="col-span-2 flex items-center gap-1.5">
-                                                <span className="text-slate-300 dark:text-slate-600">→</span>
+                                                <span className="text-gray-300 dark:text-slate-600">→</span>
                                                 <span className={`text-xs font-medium ${style.text} ${style.bg} border ${style.border} rounded-md px-2 py-1 truncate`}>
                                                     {m.destination}
                                                 </span>
@@ -788,7 +788,7 @@ export default function ActionPlanPage() {
                                             {/* Execute Button */}
                                             <div className="col-span-1 flex items-center justify-center">
                                                 {isPast ? (
-                                                    <Clock size={14} className="text-slate-400 dark:text-slate-600" />
+                                                    <Clock size={14} className="text-gray-400 dark:text-slate-600" />
                                                 ) : (
                                                     <Button
                                                         size="sm"
@@ -797,7 +797,7 @@ export default function ActionPlanPage() {
                                                         onClick={() => handleRequestExecute(m)}
                                                         className={`h-7 w-7 p-0 rounded-full transition-all ${isToday
                                                             ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 border border-emerald-500/30'
-                                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10'
+                                                            : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                                                             }`}
                                                     >
                                                         {isExecuting ? (
@@ -829,19 +829,19 @@ export default function ActionPlanPage() {
                                                 /* Mobile locked card */
                                                 <div
                                                     key={`locked-${debt.id}`}
-                                                    className="rounded-lg p-4 space-y-2 opacity-40 bg-slate-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
+                                                    className="rounded-lg p-4 space-y-2 opacity-40 bg-gray-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
                                                     onClick={() => setShowUpgrade(true)}
                                                 >
                                                     <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(244,63,94,0.03)_10px,rgba(244,63,94,0.03)_20px)] pointer-events-none" />
                                                     <div className="flex items-center justify-between relative">
                                                         <div className="flex items-center gap-2">
                                                             <Lock size={12} className="text-rose-400" />
-                                                            <span className="text-sm text-slate-400 font-medium">{debt.name}</span>
+                                                            <span className="text-sm text-gray-400 font-medium">{debt.name}</span>
                                                         </div>
                                                         <span className="text-xs font-mono text-rose-400/60">{debt.interest_rate}% APR</span>
                                                     </div>
                                                     <div className="flex items-center justify-between relative">
-                                                        <span className="text-xs text-slate-500">Balance: {formatMoney(debt.balance)}</span>
+                                                        <span className="text-xs text-gray-500">Balance: {formatMoney(debt.balance)}</span>
                                                         <Button size="sm" variant="ghost" className="h-6 text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2" onClick={() => setShowUpgrade(true)}>
                                                             {t('actionPlan.upgradeToUnlock')}
                                                         </Button>
@@ -851,26 +851,26 @@ export default function ActionPlanPage() {
                                                 /* Desktop locked row */
                                                 <div
                                                     key={`locked-${debt.id}`}
-                                                    className="grid grid-cols-12 gap-3 px-4 py-3 rounded-lg opacity-40 bg-slate-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
+                                                    className="grid grid-cols-12 gap-3 px-4 py-3 rounded-lg opacity-40 bg-gray-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
                                                     onClick={() => setShowUpgrade(true)}
                                                 >
                                                     <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(244,63,94,0.03)_10px,rgba(244,63,94,0.03)_20px)] pointer-events-none" />
                                                     <div className="col-span-2 flex items-center gap-2 relative">
                                                         <Lock size={12} className="text-rose-400" />
-                                                        <span className="text-sm text-slate-400 font-mono">—</span>
+                                                        <span className="text-sm text-gray-400 font-mono">—</span>
                                                     </div>
                                                     <div className="col-span-3 flex flex-col justify-center relative">
-                                                        <span className="text-sm text-slate-400 font-medium">{debt.name}</span>
+                                                        <span className="text-sm text-gray-400 font-medium">{debt.name}</span>
                                                         <span className="text-[11px] text-rose-400/60">{debt.interest_rate}% APR · {formatMoney(debt.balance)}</span>
                                                     </div>
                                                     <div className="col-span-2 flex items-center relative">
-                                                        <span className="text-xs text-slate-400/50">—</span>
+                                                        <span className="text-xs text-gray-400/50">—</span>
                                                     </div>
                                                     <div className="col-span-2 flex items-center relative">
-                                                        <span className="text-xs text-slate-400/50">—</span>
+                                                        <span className="text-xs text-gray-400/50">—</span>
                                                     </div>
                                                     <div className="col-span-1 flex items-center justify-end relative">
-                                                        <span className="text-sm text-slate-400/50">—</span>
+                                                        <span className="text-sm text-gray-400/50">—</span>
                                                     </div>
                                                     <div className="col-span-1 flex items-center justify-center relative">
                                                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-rose-400/60 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5">
@@ -893,12 +893,12 @@ export default function ActionPlanPage() {
                 </Card>
 
                 {/* ────── EXECUTION HISTORY (Enhanced with Search, Filters, Pagination) ────── */}
-                <Card className="border-slate-200 dark:border-white/5 bg-white dark:bg-slate-950/60 backdrop-blur-xl">
+                <Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-black/60 backdrop-blur-xl">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                        <CardTitle className="text-lg text-black dark:text-zinc-200 flex items-center gap-2">
                             <History className="text-amber-400" size={20} />
                             {t('actionPlan.executionHistory')}
-                            <span className="text-xs text-slate-400 dark:text-slate-500 font-normal ml-2">
+                            <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-2">
                                 {historyTotal} {t('actionPlan.executed')}
                             </span>
                         </CardTitle>
@@ -907,17 +907,17 @@ export default function ActionPlanPage() {
                         {/* ── Search + Filter Toggle ── */}
                         <div className="flex flex-col sm:flex-row gap-2">
                             <div className="relative flex-1">
-                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     placeholder={language === 'es' ? 'Buscar transacciones...' : 'Search transactions...'}
                                     value={historySearch}
                                     onChange={(e) => setHistorySearch(e.target.value)}
-                                    className="pl-9 h-9 bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                                    className="pl-9 h-9 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
                                 />
                                 {historySearch && (
                                     <button
                                         onClick={() => setHistorySearch('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-600 dark:hover:text-white"
                                     >
                                         <X size={14} />
                                     </button>
@@ -927,7 +927,7 @@ export default function ActionPlanPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setShowHistoryFilters(!showHistoryFilters)}
-                                className={`h-9 gap-1.5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 ${activeFilterCount > 0 ? 'border-amber-400/50 text-amber-500 dark:text-amber-400' : ''
+                                className={`h-9 gap-1.5 border-gray-200 dark:border-white/10 text-slate-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 ${activeFilterCount > 0 ? 'border-amber-400/50 text-amber-500 dark:text-amber-400' : ''
                                     }`}
                             >
                                 <SlidersHorizontal size={14} />
@@ -942,11 +942,11 @@ export default function ActionPlanPage() {
 
                         {/* ── Collapsible Filter Panel ── */}
                         {showHistoryFilters && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 animate-in slide-in-from-top-2 duration-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 animate-in slide-in-from-top-2 duration-200">
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Cuenta' : 'Account'}</label>
+                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Cuenta' : 'Account'}</label>
                                     <Select value={historyAccountFilter} onValueChange={setHistoryAccountFilter}>
-                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm">
+                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm">
                                             <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -958,9 +958,9 @@ export default function ActionPlanPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Categoría' : 'Category'}</label>
+                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Categoría' : 'Category'}</label>
                                     <Select value={historyCategoryFilter} onValueChange={setHistoryCategoryFilter}>
-                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm">
+                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm">
                                             <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -972,26 +972,26 @@ export default function ActionPlanPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Desde' : 'From'}</label>
+                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Desde' : 'From'}</label>
                                     <Input
                                         type="date"
                                         value={historyDateFrom}
                                         onChange={(e) => setHistoryDateFrom(e.target.value)}
-                                        className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                                        className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{language === 'es' ? 'Hasta' : 'To'}</label>
+                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Hasta' : 'To'}</label>
                                     <Input
                                         type="date"
                                         value={historyDateTo}
                                         onChange={(e) => setHistoryDateTo(e.target.value)}
-                                        className="h-9 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-sm"
+                                        className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
                                     />
                                 </div>
                                 {activeFilterCount > 0 && (
                                     <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
-                                        <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-white gap-1">
+                                        <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="text-xs text-gray-400 hover:text-slate-600 dark:hover:text-white gap-1">
                                             <X size={12} />
                                             {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
                                         </Button>
@@ -1005,7 +1005,7 @@ export default function ActionPlanPage() {
                             /* Skeleton Loader */
                             <div className="space-y-2">
                                 {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5">
+                                    <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5">
                                         <Skeleton className="h-8 w-8 rounded-full" />
                                         <div className="flex-1 space-y-1.5">
                                             <Skeleton className="h-4 w-48" />
@@ -1017,7 +1017,7 @@ export default function ActionPlanPage() {
                                 ))}
                             </div>
                         ) : historyTxs.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 text-slate-400 dark:text-slate-500">
+                            <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
                                 <CheckCircle2 size={32} className="mb-2 opacity-20" />
                                 <p className="text-sm">
                                     {historySearch || activeFilterCount > 0
@@ -1039,7 +1039,7 @@ export default function ActionPlanPage() {
                                     return (
                                         <div
                                             key={tx.id}
-                                            className="flex flex-col md:flex-row md:items-center justify-between px-4 py-3 rounded-lg bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors gap-2"
+                                            className="flex flex-col md:flex-row md:items-center justify-between px-4 py-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors gap-2"
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <div className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${isIncome ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
@@ -1051,9 +1051,9 @@ export default function ActionPlanPage() {
                                                         {tx.description}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">{tx.date}</span>
+                                                        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">{tx.date}</span>
                                                         {tx.account_name && (
-                                                            <span className="text-[10px] text-slate-400 dark:text-slate-600">· {tx.account_name}</span>
+                                                            <span className="text-[10px] text-gray-400 dark:text-slate-600">· {tx.account_name}</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1105,18 +1105,18 @@ export default function ActionPlanPage() {
 
                         {/* ── Pagination ── */}
                         {historyTotalPages > 1 && (
-                            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-white/5">
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-white/5">
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setHistoryPage(p => Math.max(0, p - 1))}
                                     disabled={historyPage === 0}
-                                    className="gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                    className="gap-1 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
                                 >
                                     <ChevronLeft size={16} />
                                     {language === 'es' ? 'Anterior' : 'Previous'}
                                 </Button>
-                                <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                                <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
                                     {historyPage + 1} / {historyTotalPages}
                                 </span>
                                 <Button
@@ -1124,7 +1124,7 @@ export default function ActionPlanPage() {
                                     size="sm"
                                     onClick={() => setHistoryPage(p => Math.min(historyTotalPages - 1, p + 1))}
                                     disabled={historyPage >= historyTotalPages - 1}
-                                    className="gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                    className="gap-1 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
                                 >
                                     {language === 'es' ? 'Siguiente' : 'Next'}
                                     <ChevronRight size={16} />

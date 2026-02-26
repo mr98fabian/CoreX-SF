@@ -33,7 +33,7 @@ export default function DemoWelcomeModal() {
 
             {/* Modal Card */}
             <div className="relative z-10 w-full max-w-md animate-in zoom-in-95 slide-in-from-bottom-4 duration-400">
-                <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                     {/* Header accent bar */}
                     <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
 
@@ -47,12 +47,12 @@ export default function DemoWelcomeModal() {
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-white">Demo Mode</h2>
-                                <p className="text-xs text-slate-400">Sandbox environment</p>
+                                <p className="text-xs text-gray-400">Sandbox environment</p>
                             </div>
                         </div>
 
                         {/* Description */}
-                        <p className="text-sm text-slate-300 leading-relaxed mb-4">
+                        <p className="text-sm text-gray-300 leading-relaxed mb-4">
                             Welcome! You're exploring <span className="text-amber-400 font-medium">KoreX</span> with pre-loaded
                             financial data from a fictional profile. This demo showcases the platform's
                             full capabilities:
@@ -66,7 +66,7 @@ export default function DemoWelcomeModal() {
                                 { icon: '🗓️', text: 'Cashflow heat map & scheduling' },
                                 { icon: '📈', text: 'Freedom counter & savings calculator' },
                             ].map(({ icon, text }) => (
-                                <div key={text} className="flex items-center gap-2.5 text-sm text-slate-400">
+                                <div key={text} className="flex items-center gap-2.5 text-sm text-gray-400">
                                     <span className="text-base">{icon}</span>
                                     <span>{text}</span>
                                 </div>
@@ -74,9 +74,9 @@ export default function DemoWelcomeModal() {
                         </div>
 
                         {/* Disclaimer */}
-                        <div className="rounded-lg bg-slate-800/60 border border-slate-700/50 px-3 py-2.5 mb-5">
-                            <p className="text-xs text-slate-500 leading-relaxed">
-                                <span className="text-slate-400 font-medium">Note:</span> Changes in demo mode are temporary
+                        <div className="rounded-lg bg-neutral-800/60 border border-neutral-700/50 px-3 py-2.5 mb-5">
+                            <p className="text-xs text-gray-500 leading-relaxed">
+                                <span className="text-gray-400 font-medium">Note:</span> Changes in demo mode are temporary
                                 and reset after logout. Create an account to save your own financial data securely.
                             </p>
                         </div>

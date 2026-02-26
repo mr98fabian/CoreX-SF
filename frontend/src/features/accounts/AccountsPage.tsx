@@ -279,7 +279,7 @@ export default function AccountsPage() {
                 <div className="space-y-12">
                     {/* Liabilities skeleton */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
                             <Skeleton className="h-10 w-10 rounded-lg" />
                             <div className="space-y-1">
                                 <Skeleton className="h-6 w-28" />
@@ -308,7 +308,7 @@ export default function AccountsPage() {
 
                     {/* Assets skeleton */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
                             <Skeleton className="h-10 w-10 rounded-lg" />
                             <div className="space-y-1">
                                 <Skeleton className="h-6 w-20" />
@@ -342,28 +342,28 @@ export default function AccountsPage() {
                     <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white drop-shadow-lg mb-2">
                         {t("accounts.financialNetwork")}
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-light text-lg">{t("accounts.manageConnected")}</p>
+                    <p className="text-gray-500 dark:text-gray-400 font-light text-lg">{t("accounts.manageConnected")}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" size="icon" onClick={fetchAccounts} title={t("accounts.refreshData")} className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5">
-                        <RefreshCw size={18} className={isLoading ? "animate-spin text-gold-400" : "text-slate-500 dark:text-slate-400"} strokeWidth={1.5} />
+                    <Button variant="outline" size="icon" onClick={fetchAccounts} title={t("accounts.refreshData")} className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5">
+                        <RefreshCw size={18} className={isLoading ? "animate-spin text-gold-400" : "text-gray-500 dark:text-gray-400"} strokeWidth={1.5} />
                     </Button>
 
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive" className="shadow-lg shadow-rose-900/20 hover:shadow-rose-900/40">{t("accounts.resetSystem")}</Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+                        <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-black/90 backdrop-blur-xl">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
                                     <AlertCircle size={20} /> {t("accounts.nuclearReset")}
                                 </AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+                                <AlertDialogDescription className="text-slate-600 dark:text-gray-300">
                                     {t("accounts.resetWarning")} {t("accounts.resetCannotUndo")}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300">{t("accounts.cancel")}</AlertDialogCancel>
+                                <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300">{t("accounts.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleResetSystem} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
                                     {t("accounts.yesWipe")}
                                 </AlertDialogAction>
@@ -392,10 +392,10 @@ export default function AccountsPage() {
                                 </Button>
                             )}
                         </DialogTrigger>
-                        <DialogContent className="glass-panel sm:max-w-[450px] bg-white dark:bg-slate-950/90 backdrop-blur-2xl border-slate-200 dark:border-white/10">
+                        <DialogContent className="glass-panel sm:max-w-[450px] bg-white dark:bg-black/90 backdrop-blur-2xl border-gray-200 dark:border-white/10">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white">{t("accounts.addManual")}</DialogTitle>
-                                <DialogDescription className="text-slate-500 dark:text-slate-400">
+                                <DialogDescription className="text-gray-500 dark:text-gray-400">
                                     {t("accounts.addManualDesc")}
                                 </DialogDescription>
                             </DialogHeader>
@@ -408,7 +408,7 @@ export default function AccountsPage() {
                                             <FormItem>
                                                 <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.accountName")}</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder={t("accounts.accountNamePlaceholder")} {...field} className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white h-11" />
+                                                    <Input placeholder={t("accounts.accountNamePlaceholder")} {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white h-11" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -423,11 +423,11 @@ export default function AccountsPage() {
                                                     <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.type")}</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                         <FormControl>
-                                                            <SelectTrigger className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
+                                                            <SelectTrigger className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
                                                                 <SelectValue placeholder={t("accounts.selectType")} />
                                                             </SelectTrigger>
                                                         </FormControl>
-                                                        <SelectContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                                        <SelectContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                                                             <SelectItem value="debt">{t("accounts.debt")}</SelectItem>
                                                             <SelectItem value="checking">{t("accounts.checking")}</SelectItem>
                                                             <SelectItem value="savings">{t("accounts.savings")}</SelectItem>
@@ -445,8 +445,8 @@ export default function AccountsPage() {
                                                     <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.currentBalance")}</FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">$</span>
-                                                            <Input type="number" placeholder="0.00" {...field} className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono" />
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">$</span>
+                                                            <Input type="number" placeholder="0.00" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono" />
                                                         </div>
                                                     </FormControl>
                                                     <FormMessage />
@@ -465,11 +465,11 @@ export default function AccountsPage() {
                                                         <FormLabel className="text-amber-500 dark:text-amber-400 font-semibold">{t("accounts.debtType")}</FormLabel>
                                                         <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
-                                                                <SelectTrigger className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
+                                                                <SelectTrigger className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
                                                                     <SelectValue placeholder={t("accounts.whatKindDebt")} />
                                                                 </SelectTrigger>
                                                             </FormControl>
-                                                            <SelectContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                                            <SelectContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                                                                 <SelectItem value="credit_card">{t("accounts.creditCard")}</SelectItem>
                                                                 <SelectItem value="auto_loan">{t("accounts.autoLoan")}</SelectItem>
                                                                 <SelectItem value="mortgage">{t("accounts.mortgage")}</SelectItem>
@@ -491,8 +491,8 @@ export default function AccountsPage() {
                                                             <FormLabel className="text-rose-500 dark:text-rose-400 font-semibold">{t("accounts.apr")}</FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white h-11 font-mono pr-8" />
-                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">%</span>
+                                                                    <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white h-11 font-mono pr-8" />
+                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">%</span>
                                                                 </div>
                                                             </FormControl>
                                                             <FormMessage />
@@ -506,15 +506,15 @@ export default function AccountsPage() {
                                                         <FormItem>
                                                             <FormLabel className="flex items-center justify-between text-rose-500 dark:text-rose-400 font-semibold">
                                                                 {t("accounts.minPayment")}
-                                                                <span className="text-[10px] bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/5 uppercase tracking-wider" title="Leave 0 to auto-calculate">{t("accounts.optional")}</span>
+                                                                <span className="text-[10px] bg-gray-100 dark:bg-neutral-800/50 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/5 uppercase tracking-wider" title="Leave 0 to auto-calculate">{t("accounts.optional")}</span>
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-600">$</span>
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-600">$</span>
                                                                     <Input
                                                                         type="number"
                                                                         {...field}
-                                                                        className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
+                                                                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
                                                                         placeholder="0.00 (Auto)"
                                                                     />
                                                                 </div>
@@ -535,13 +535,13 @@ export default function AccountsPage() {
                                                             <FormLabel className="text-blue-500 dark:text-blue-400 font-semibold">{t("accounts.creditLimit")}</FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-600">$</span>
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-600">$</span>
                                                                     <Input
                                                                         type="number"
                                                                         step="100"
                                                                         placeholder="5,000"
                                                                         {...field}
-                                                                        className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-blue-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
+                                                                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-blue-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
                                                                     />
                                                                 </div>
                                                             </FormControl>
@@ -564,7 +564,7 @@ export default function AccountsPage() {
                                                     </button>
                                                     {showAPRSuggestions && (
                                                         <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-2">
-                                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-2">
+                                                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2">
                                                                 {t('accounts.aprSuggestionHint')} — Avg: <span className="font-mono text-amber-400">{getNationalAverageAPR()}%</span>
                                                             </p>
                                                             <div className="flex flex-wrap gap-1.5">
@@ -575,7 +575,7 @@ export default function AccountsPage() {
                                                                         onClick={() => setSelectedBank(selectedBank === bank ? null : bank)}
                                                                         className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${selectedBank === bank
                                                                             ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                                                            : 'bg-slate-100 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5 hover:bg-slate-200 dark:hover:bg-slate-800/80'
+                                                                            : 'bg-gray-100 dark:bg-[#0f0f0f]/60 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-neutral-800/80'
                                                                             }`}
                                                                     >
                                                                         {bank}
@@ -593,17 +593,17 @@ export default function AccountsPage() {
                                                                                 setShowAPRSuggestions(false);
                                                                                 setSelectedBank(null);
                                                                             }}
-                                                                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 hover:border-amber-500/30 transition-all text-left group"
+                                                                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/5 hover:border-amber-500/30 transition-all text-left group"
                                                                         >
                                                                             <div>
                                                                                 <span className="text-xs font-medium text-slate-700 dark:text-white">{card.card}</span>
-                                                                                <span className="ml-2 text-[10px] text-slate-400 uppercase">{card.category.replace('_', ' ')}</span>
+                                                                                <span className="ml-2 text-[10px] text-gray-400 uppercase">{card.category.replace('_', ' ')}</span>
                                                                             </div>
                                                                             <div className="flex items-center gap-1">
                                                                                 <span className="font-mono text-xs text-amber-500 group-hover:text-amber-400">
                                                                                     {card.aprLow}%–{card.aprHigh}%
                                                                                 </span>
-                                                                                <span className="text-[10px] text-slate-500">→</span>
+                                                                                <span className="text-[10px] text-gray-500">→</span>
                                                                                 <span className="font-mono text-xs font-bold text-amber-400">{card.aprTypical}%</span>
                                                                             </div>
                                                                         </button>
@@ -621,9 +621,9 @@ export default function AccountsPage() {
                                                     name="closing_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-slate-600 dark:text-slate-300">{t("accounts.closingDay")}</FormLabel>
+                                                            <FormLabel className="text-slate-600 dark:text-gray-300">{t("accounts.closingDay")}</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -634,9 +634,9 @@ export default function AccountsPage() {
                                                     name="due_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-slate-600 dark:text-slate-300">{t("accounts.dueDay")}</FormLabel>
+                                                            <FormLabel className="text-slate-600 dark:text-gray-300">{t("accounts.dueDay")}</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -669,7 +669,7 @@ export default function AccountsPage() {
                 ? 'bg-rose-500/5 border-rose-500/20'
                 : isNearLimit
                     ? 'bg-amber-500/5 border-amber-500/20'
-                    : 'bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5'
+                    : 'bg-gray-50 dark:bg-white/[0.02] border-gray-200 dark:border-white/5'
                 }`}>
                 <div className="flex items-center gap-3">
                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${isDevLicense ? 'bg-amber-500/10' : 'bg-blue-500/10'
@@ -696,7 +696,7 @@ export default function AccountsPage() {
                 {/* Progress bar (only for limited plans) */}
                 {planLimit !== Infinity && (
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="w-32 h-2 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div className="w-32 h-2 bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-500 ${isAtLimit
                                     ? 'bg-rose-500'
@@ -777,7 +777,7 @@ export default function AccountsPage() {
             <div className="space-y-12">
                 {/* Liabilities */}
                 <div className="space-y-6 relative group">
-                    <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                    <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
                         <WidgetHelp helpKey="liabilitiesSection" />
                         <div className="p-2 bg-rose-500/10 rounded-lg">
                             <CreditCard size={24} className="text-rose-500" strokeWidth={1.5} />
@@ -789,12 +789,12 @@ export default function AccountsPage() {
                                     ({debtCount}{planLimit === Infinity ? '' : `/${planLimit}`})
                                 </span>
                             </h2>
-                            <p className="text-sm text-slate-500">{t("accounts.liabilitiesDesc")}</p>
+                            <p className="text-sm text-gray-500">{t("accounts.liabilitiesDesc")}</p>
                         </div>
                     </div>
 
                     {debts.length === 0 ? (
-                        <div className="p-6 sm:p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-950/30">
+                        <div className="p-6 sm:p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-gray-50 dark:bg-black/30">
                             <CreditCard size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">{t("accounts.noDebts")}</p>
                             <p className="text-sm opacity-60">{t("accounts.noDebtsHint")}</p>
@@ -808,7 +808,7 @@ export default function AccountsPage() {
                                 return (
                                     <Card
                                         key={acc.id}
-                                        className={`glass-card group transition-all duration-500 bg-white dark:bg-slate-950/50 relative ${isLocked
+                                        className={`glass-card group transition-all duration-500 bg-white dark:bg-black/50 relative ${isLocked
                                             ? 'opacity-60 border-rose-500/15 cursor-pointer'
                                             : 'hover:border-rose-500/30'
                                             }`}
@@ -821,7 +821,7 @@ export default function AccountsPage() {
 
                                         {/* 🔒 Lock Overlay */}
                                         {isLocked && (
-                                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/30 backdrop-blur-[2px] rounded-lg pointer-events-none">
+                                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/30 backdrop-blur-[2px] rounded-lg pointer-events-none">
                                                 <div className="h-12 w-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2">
                                                     <Lock size={20} className="text-rose-400" />
                                                 </div>
@@ -841,7 +841,7 @@ export default function AccountsPage() {
                                         <CardHeader className="pb-2 relative z-10">
                                             <CardTitle className="flex justify-between items-start">
                                                 <span className={`text-lg font-bold truncate pr-8 transition-colors ${isLocked
-                                                    ? 'text-slate-500 dark:text-slate-400'
+                                                    ? 'text-gray-500 dark:text-gray-400'
                                                     : 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-200'
                                                     }`}>{acc.name}</span>
                                                 <span className="text-[10px] bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/20 px-2 py-1 rounded text-rose-500 dark:text-rose-300 font-mono tracking-wide">
@@ -878,20 +878,20 @@ export default function AccountsPage() {
                                                 return (
                                                     <div className="mb-3 animate-in fade-in slide-in-from-top-1 duration-300">
                                                         <div className="flex items-center justify-between text-[10px] mb-1">
-                                                            <span className="text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+                                                            <span className="text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
                                                                 {language === 'es' ? 'Utilización' : 'Utilization'}
                                                             </span>
                                                             <span className={`font-bold ${utilTextColor}`}>
                                                                 {utilPct}% · {utilLabel}
                                                             </span>
                                                         </div>
-                                                        <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                        <div className="h-2 w-full bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                                                             <div
                                                                 className={`h-full rounded-full transition-all duration-700 ease-out ${utilColor}`}
                                                                 style={{ width: `${utilPct}%` }}
                                                             />
                                                         </div>
-                                                        <div className="flex justify-between text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
+                                                        <div className="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-0.5 font-mono">
                                                             <span>{formatMoney(acc.balance)}</span>
                                                             <span>{language === 'es' ? 'Límite' : 'Limit'}: {formatMoney(acc.credit_limit)}</span>
                                                         </div>
@@ -938,20 +938,20 @@ export default function AccountsPage() {
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-950/30 p-3 rounded-lg border border-slate-200 dark:border-white/5 mb-6">
+                                            <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 dark:bg-black/30 p-3 rounded-lg border border-gray-200 dark:border-white/5 mb-6">
                                                 <div>
-                                                    <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
-                                                    <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
+                                                    <span className="block text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
+                                                    <span className="text-slate-700 dark:text-gray-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="block text-slate-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
-                                                    <span className="text-slate-700 dark:text-slate-200 font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
+                                                    <span className="block text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
+                                                    <span className="text-slate-700 dark:text-gray-200 font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
                                                 </div>
                                             </div>
 
                                             {/* Action buttons — disabled when locked */}
                                             {isLocked ? (
-                                                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-slate-100 dark:bg-slate-800/30 text-slate-400 dark:text-slate-500 text-xs font-medium pointer-events-none">
+                                                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-neutral-800/30 text-gray-400 dark:text-gray-500 text-xs font-medium pointer-events-none">
                                                     <Lock size={12} />
                                                     {t('upgrade.toManage')}
                                                 </div>
@@ -962,7 +962,7 @@ export default function AccountsPage() {
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => setUpdatingAccount(acc)}
-                                                        className="h-9 px-3 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                                        className="h-9 px-3 border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                                                         title={t("accounts.manualAdjustment")}
                                                     >
                                                         <RefreshCw size={14} />
@@ -973,7 +973,7 @@ export default function AccountsPage() {
                                                                 {t("accounts.payOff")}
                                                             </Button>
                                                         </AlertDialogTrigger>
-                                                        <AlertDialogContent className="glass-panel bg-white dark:bg-slate-950/90 border-slate-200 dark:border-white/10">
+                                                        <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
                                                             <AccountActionDialog account={acc} type="payment" onClose={() => { }} onUpdate={fetchAccounts} />
                                                         </AlertDialogContent>
                                                     </AlertDialog>
@@ -989,29 +989,29 @@ export default function AccountsPage() {
 
                 {/* Assets */}
                 <div className="space-y-6 relative group">
-                    <div className="flex items-center gap-3 pb-2 border-b border-slate-200 dark:border-white/5">
+                    <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
                         <WidgetHelp helpKey="assetsSection" />
                         <div className="p-2 bg-emerald-500/10 rounded-lg">
                             <Landmark size={24} className="text-emerald-500" strokeWidth={1.5} />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("accounts.assets")}</h2>
-                            <p className="text-sm text-slate-500">{t("accounts.assetsDesc")}</p>
+                            <p className="text-sm text-gray-500">{t("accounts.assetsDesc")}</p>
                         </div>
                     </div>
 
                     {assets.length === 0 ? (
-                        <div className="p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 bg-slate-50 dark:bg-slate-950/30">
+                        <div className="p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-gray-50 dark:bg-black/30">
                             <Landmark size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">{t("accounts.noAssets")}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {assets.map(acc => (
-                                <Card key={acc.id} className="glass-card group hover:border-emerald-500/30 transition-all duration-500 bg-white dark:bg-slate-950/50">
+                                <Card key={acc.id} className="glass-card group hover:border-emerald-500/30 transition-all duration-500 bg-white dark:bg-black/50">
                                     <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => requestDeleteAccount(acc)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => requestDeleteAccount(acc)}>
                                             <Trash2 size={14} strokeWidth={1.5} />
                                         </Button>
                                     </div>
@@ -1032,7 +1032,7 @@ export default function AccountsPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => setUpdatingAccount(acc)}
-                                                className="h-9 w-9 p-0 border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                                                className="h-9 w-9 p-0 border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                                                 title={t("accounts.manualAdjustment")}
                                             >
                                                 <RefreshCw size={14} />
@@ -1045,7 +1045,7 @@ export default function AccountsPage() {
                                                             {t("accounts.deposit")}
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-slate-950/90 border-slate-200 dark:border-white/10">
+                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
                                                         <AccountActionDialog account={acc} type="deposit" onClose={() => { }} onUpdate={fetchAccounts} />
                                                     </AlertDialogContent>
                                                 </AlertDialog>
@@ -1056,7 +1056,7 @@ export default function AccountsPage() {
                                                             {t("accounts.spend")}
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-slate-950/90 border-slate-200 dark:border-white/10">
+                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
                                                         <AccountActionDialog account={acc} type="spend" onClose={() => { }} onUpdate={fetchAccounts} />
                                                     </AlertDialogContent>
                                                 </AlertDialog>
@@ -1070,7 +1070,7 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Cashflow Section */}
-                <div className="pt-12 border-t border-slate-200 dark:border-white/5 relative group">
+                <div className="pt-12 border-t border-gray-200 dark:border-white/5 relative group">
                     <WidgetHelp helpKey="cashflowOverview" />
                     <CashflowManager refreshKey={cashflowRefreshKey} lockedIds={lockedIds} onUpgrade={() => setShowUpgradeModal(true)} />
                 </div>
@@ -1089,12 +1089,12 @@ export default function AccountsPage() {
 
             {/* 🗑️ Delete Account Confirmation Dialog */}
             <AlertDialog open={!!deleteAccountTarget} onOpenChange={(open) => { if (!open) setDeleteAccountTarget(null); }}>
-                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-black/90 backdrop-blur-xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
                             <Trash2 size={18} /> {t("accounts.deleteConfirm")}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+                        <AlertDialogDescription className="text-slate-600 dark:text-gray-300">
                             {deleteAccountTarget?.name
                                 ? (language === 'es'
                                     ? `¿Estás seguro de que deseas eliminar "${deleteAccountTarget.name}"? Esta acción no se puede deshacer.`
@@ -1103,7 +1103,7 @@ export default function AccountsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300">
+                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300">
                             {t("accounts.cancel")}
                         </AlertDialogCancel>
                         <AlertDialogAction onClick={executeDeleteAccount} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
@@ -1172,7 +1172,7 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                     {type === 'spend' && <Trash2 className="text-rose-500" />}
                     {type} {t("accounts.transaction")}
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-slate-500 dark:text-slate-400">
+                <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
                     {type === 'payment' ? `${t("accounts.payOffDesc")} ${account.name}` :
                         type === 'deposit' ? `${t("accounts.addFundsDesc")} ${account.name}` :
                             `${t("accounts.recordExpenseDesc")} ${account.name}`}
@@ -1182,24 +1182,24 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                 <div className="space-y-2">
                     <label className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">{t("accounts.amount")}</label>
                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-lg">$</span>
                         <Input
                             type="number" step="0.01"
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-xl font-mono h-12 pl-8 text-slate-900 dark:text-white focus:border-slate-400 dark:focus:border-white/20"
+                            className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-xl font-mono h-12 pl-8 text-slate-900 dark:text-white focus:border-slate-400 dark:focus:border-white/20"
                             placeholder="0.00"
                             autoFocus
                         />
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{t("accounts.descriptionOptional")}</label>
+                    <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">{t("accounts.descriptionOptional")}</label>
                     <Input
                         placeholder={type === 'deposit' ? "Paycheck, Gift, etc." : "Groceries, Coffee, etc."}
                         value={desc}
                         onChange={e => setDesc(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white h-11"
+                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11"
                     />
                 </div>
             </div>
@@ -1273,27 +1273,27 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="glass-panel sm:max-w-[420px] bg-white dark:bg-slate-950/90 backdrop-blur-2xl border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+            <DialogContent className="glass-panel sm:max-w-[420px] bg-white dark:bg-black/90 backdrop-blur-2xl border-gray-200 dark:border-white/10 text-slate-900 dark:text-white">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-xl font-bold">
                         <RefreshCw size={20} className="text-blue-500" strokeWidth={2} />
                         {t("accounts.manualAdjustment")}
                     </DialogTitle>
-                    <DialogDescription className="text-slate-500 dark:text-slate-400">
+                    <DialogDescription className="text-gray-500 dark:text-gray-400">
                         {t("accounts.adjustBalanceFor")} <span className="text-slate-900 dark:text-white font-medium">{account.name}</span>.
                         <br />
-                        <span className="text-xs text-slate-400 dark:text-slate-500">{t("accounts.createsRecord")}</span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500">{t("accounts.createsRecord")}</span>
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                     {/* Operation Selector */}
-                    <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-lg border border-slate-200 dark:border-white/5">
+                    <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-[#0f0f0f]/50 p-1 rounded-lg border border-gray-200 dark:border-white/5">
                         <button
                             onClick={() => setOperation('add')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'add'
                                 ? (isDebt ? "bg-rose-500 text-white shadow-lg shadow-rose-900/20" : "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20")
-                                : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5"
+                                : "text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"
                                 }`}
                         >
                             {isDebt ? t("accounts.addCharge") : t("accounts.addDeposit")}
@@ -1302,7 +1302,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                             onClick={() => setOperation('subtract')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'subtract'
                                 ? (isDebt ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20" : "bg-rose-500 text-white shadow-lg shadow-rose-900/20")
-                                : "text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/5"
+                                : "text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"
                                 }`}
                         >
                             {isDebt ? t("accounts.subtractPayment") : t("accounts.subtractExpense")}
@@ -1311,30 +1311,30 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
                     {/* Amount Input */}
                     <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                             {t("accounts.adjustmentAmount")}
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl font-light">$</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl font-light">$</span>
                             <Input
                                 type="number"
                                 step="0.01"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 pl-8 text-3xl font-mono h-16 font-bold text-slate-900 dark:text-white focus:border-blue-500/50"
+                                className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 pl-8 text-3xl font-mono h-16 font-bold text-slate-900 dark:text-white focus:border-blue-500/50"
                                 autoFocus
                             />
                         </div>
                     </div>
 
                     {/* Preview Section */}
-                    <div className="bg-slate-50 dark:bg-slate-900/30 rounded-lg p-4 border border-slate-200 dark:border-white/5 space-y-3">
+                    <div className="bg-gray-50 dark:bg-[#0f0f0f]/30 rounded-lg p-4 border border-gray-200 dark:border-white/5 space-y-3">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-500">{t("accounts.currentBalanceLabel")}</span>
-                            <span className="font-mono text-slate-600 dark:text-slate-300">{formatMoney(currentBalance)}</span>
+                            <span className="text-gray-500">{t("accounts.currentBalanceLabel")}</span>
+                            <span className="font-mono text-slate-600 dark:text-gray-300">{formatMoney(currentBalance)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm pb-3 border-b border-slate-200 dark:border-white/5">
+                        <div className="flex justify-between items-center text-sm pb-3 border-b border-gray-200 dark:border-white/5">
                             <span className={operation === 'add' ? "text-emerald-500" : "text-rose-500"}>
                                 {operation === 'add' ? '+' : '-'} {t("accounts.adjustment")}
                             </span>
@@ -1350,7 +1350,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={onClose} className="hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400">{t("accounts.cancel")}</Button>
+                    <Button variant="ghost" onClick={onClose} className="hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400">{t("accounts.cancel")}</Button>
                     <Button
                         onClick={handleTransaction}
                         disabled={loading || !amount || parseFloat(amount) <= 0}
@@ -1424,31 +1424,31 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
     return (
         <Sheet onOpenChange={(open: boolean) => open && fetchTransactions()}>
             <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full text-xs h-9 border-slate-300 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-zinc-300">{t("accounts.history")}</Button>
+                <Button variant="outline" size="sm" className="w-full text-xs h-9 border-slate-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800/50 hover:bg-gray-200 dark:hover:bg-neutral-800 text-slate-600 dark:text-zinc-300">{t("accounts.history")}</Button>
             </SheetTrigger>
-            <SheetContent className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white w-full sm:w-[540px]">
+            <SheetContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white w-full sm:w-[540px]">
                 <SheetHeader>
                     <SheetTitle className="text-slate-900 dark:text-white">{t("accounts.transactions")} {account.name}</SheetTitle>
-                    <SheetDescription className="text-slate-500 dark:text-slate-400">
+                    <SheetDescription className="text-gray-500 dark:text-gray-400">
                         {t("accounts.historyContext")} {account.type.toUpperCase()}.
                     </SheetDescription>
                 </SheetHeader>
 
                 <div className="py-6 space-y-6">
                     {/* Add Transaction Form */}
-                    <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <div className="bg-gray-50 dark:bg-[#0f0f0f]/50 p-4 rounded-lg border border-gray-200 dark:border-neutral-800">
                         <h3 className="text-sm font-medium text-slate-600 dark:text-zinc-300 mb-3">{t("accounts.newTransaction")}</h3>
                         <Form {...txForm}>
                             <form onSubmit={txForm.handleSubmit(onAddTransaction)} className="space-y-3">
                                 <div className="grid grid-cols-2 gap-2">
                                     <FormField control={txForm.control} name="description" render={({ field }) => (
                                         <FormItem>
-                                            <FormControl><Input placeholder={t("accounts.description")} {...field} className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 h-8 text-xs" /></FormControl>
+                                            <FormControl><Input placeholder={t("accounts.description")} {...field} className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 h-8 text-xs" /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={txForm.control} name="amount" render={({ field }) => (
                                         <FormItem>
-                                            <FormControl><Input type="number" placeholder={t("accounts.amount")} {...field} className="bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 h-8 text-xs" /></FormControl>
+                                            <FormControl><Input type="number" placeholder={t("accounts.amount")} {...field} className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 h-8 text-xs" /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
@@ -1457,11 +1457,11 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
                                         <FormItem>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger className="bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 h-8 text-xs">
+                                                    <SelectTrigger className="bg-gray-100 dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-800 h-8 text-xs">
                                                         <SelectValue placeholder={t("accounts.type")} />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
+                                                <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
                                                     <SelectItem value="expense">{t("accounts.expense")}</SelectItem>
                                                     <SelectItem value="income">{t("accounts.income")}</SelectItem>
                                                     <SelectItem value="payment">{t("accounts.payment")}</SelectItem>
@@ -1478,21 +1478,21 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
                     {/* Transaction List */}
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium text-slate-600 dark:text-zinc-300">{t("accounts.history")}</h3>
-                        <ScrollArea className="h-[400px] rounded-md border border-slate-200 dark:border-slate-800 p-4 bg-slate-50 dark:bg-slate-900/20">
+                        <ScrollArea className="h-[400px] rounded-md border border-gray-200 dark:border-neutral-800 p-4 bg-gray-50 dark:bg-[#0f0f0f]/20">
                             {loading ? (
-                                <div className="flex justify-center items-center h-full text-slate-500">
+                                <div className="flex justify-center items-center h-full text-gray-500">
                                     <Loader2 className="animate-spin mr-2" /> {t("accounts.loading")}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {transactions.length === 0 ? (
-                                        <p className="text-slate-500 text-sm text-center italic py-10">{t("accounts.noTransactions")}</p>
+                                        <p className="text-gray-500 text-sm text-center italic py-10">{t("accounts.noTransactions")}</p>
                                     ) : (
                                         transactions.map(tx => (
-                                            <div key={tx.id} className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0 last:pb-0">
+                                            <div key={tx.id} className="flex justify-between items-center border-b border-gray-200 dark:border-neutral-800 pb-2 last:border-0 last:pb-0">
                                                 <div>
                                                     <div className="font-medium text-slate-700 dark:text-zinc-200">{tx.description}</div>
-                                                    <div className="text-xs text-slate-500">{tx.date} • {tx.category}</div>
+                                                    <div className="text-xs text-gray-500">{tx.date} • {tx.category}</div>
                                                 </div>
                                                 <div className={`font-mono ${tx.amount < 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                                     {formatMoney(tx.amount)}

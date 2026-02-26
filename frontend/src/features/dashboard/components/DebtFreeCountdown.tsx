@@ -44,7 +44,7 @@ export function DebtFreeCountdown({ debtFreeDate, totalDebt }: DebtFreeCountdown
     return (
         <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500/5 to-emerald-500/5 border border-sky-500/10 text-xs">
             <CalendarClock size={14} className="text-sky-400 shrink-0" />
-            <span className="text-slate-400">
+            <span className="text-gray-400">
                 {isEs ? 'A este ritmo, serás libre en' : 'At this pace, free in'}{' '}
                 <span className="font-extrabold text-sky-400">{timeLabel}</span>
             </span>

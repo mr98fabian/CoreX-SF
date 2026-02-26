@@ -84,21 +84,21 @@ export default function RankingsPage() {
                     </div>
 
                     <div className="text-center md:text-left flex-1">
-                        <p className="text-xs text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
+                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
                             {es ? 'Tu Rango Actual' : 'Your Current Rank'}
                         </p>
                         <h1 className="text-2xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent"
                             style={{ backgroundImage: `linear-gradient(135deg, ${currentRank.material.color}, ${currentRank.material.color}88, white)` }}>
                             {es ? currentRank.fullDisplayEs : currentRank.fullDisplayEn}
                         </h1>
-                        <p className="text-slate-400 mt-2 text-sm">
+                        <p className="text-gray-400 mt-2 text-sm">
                             {es ? `Nivel ${currentRank.level} de 90` : `Level ${currentRank.level} of 90`}
                         </p>
                         {!currentRank.isMaxRank && (
-                            <p className="text-slate-500 text-xs mt-1 flex items-center gap-1">
+                            <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
                                 <span className="text-amber-500">▸</span>
                                 {es ? 'Siguiente:' : 'Next:'}{' '}
-                                <span className="text-slate-300 font-semibold">
+                                <span className="text-gray-300 font-semibold">
                                     {es ? currentRank.nextRankEs : currentRank.nextRankEn}
                                 </span>
                             </p>
@@ -106,7 +106,7 @@ export default function RankingsPage() {
 
                         {/* Progress to next rank */}
                         <div className="mt-4 max-w-md">
-                            <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+                            <div className="flex justify-between text-[10px] text-gray-500 mb-1">
                                 <span>{es ? 'Progreso al siguiente rango' : 'Progress to next rank'}</span>
                                 <span>{Math.round(currentRank.progressPercent)}%</span>
                             </div>
@@ -127,12 +127,12 @@ export default function RankingsPage() {
                             <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
                                 <Flame size={14} className="text-orange-400" />
                                 <span className="text-xs font-bold text-white">{streak.score}</span>
-                                <span className="text-[10px] text-slate-400">{es ? 'pts racha' : 'streak pts'}</span>
+                                <span className="text-[10px] text-gray-400">{es ? 'pts racha' : 'streak pts'}</span>
                             </div>
                             <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
                                 <Zap size={14} className="text-amber-400" />
                                 <span className="text-xs font-bold text-white">{effectiveScore}</span>
-                                <span className="text-[10px] text-slate-400">{es ? 'XP efectivo' : 'effective XP'}</span>
+                                <span className="text-[10px] text-gray-400">{es ? 'XP efectivo' : 'effective XP'}</span>
                             </div>
                             {isPaid && (
                                 <div className="flex items-center gap-1.5 bg-amber-500/10 rounded-lg px-3 py-1.5 border border-amber-500/20">
@@ -154,7 +154,7 @@ export default function RankingsPage() {
                         {es ? '¿Cómo Funciona?' : 'How Does It Work?'}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-xs text-slate-400">
+                <CardContent className="space-y-3 text-xs text-gray-400">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
                             <p className="font-bold text-emerald-400 mb-1">✅ {es ? 'Sube de Rango' : 'Rank Up'}</p>
@@ -185,7 +185,7 @@ export default function RankingsPage() {
                                 <p className="text-sm font-bold text-amber-300 mb-1">
                                     {es ? '¿Quieres avanzar más rápido?' : 'Want to progress faster?'}
                                 </p>
-                                <p className="text-xs text-slate-400 mb-3">
+                                <p className="text-xs text-gray-400 mb-3">
                                     {es
                                         ? 'Conviértete en VIP para ganar 2x XP por cada transacción registrada, acortar tu camino dramáticamente y agregar más cuentas simultáneas para un control financiero total.'
                                         : 'Go VIP to earn 2x XP per transaction, dramatically shorten your journey and add more simultaneous accounts for total financial control.'}
@@ -234,7 +234,7 @@ export default function RankingsPage() {
                                                 {isTierLocked ? '???' : tier.materialName}
                                             </span>
                                             {!isTierLocked && (
-                                                <span className="text-[10px] text-slate-500 ml-2">
+                                                <span className="text-[10px] text-gray-500 ml-2">
                                                     {unlockedCount}/9 {es ? 'desbloqueados' : 'unlocked'}
                                                 </span>
                                             )}
@@ -248,7 +248,7 @@ export default function RankingsPage() {
                                             </span>
                                         )}
                                         {!isTierLocked && (
-                                            isExpanded ? <ChevronUp size={14} className="text-slate-500" /> : <ChevronDown size={14} className="text-slate-500" />
+                                            isExpanded ? <ChevronUp size={14} className="text-gray-500" /> : <ChevronDown size={14} className="text-gray-500" />
                                         )}
                                         {isTierLocked && <Lock size={14} className="text-slate-600" />}
                                     </div>
@@ -275,7 +275,7 @@ export default function RankingsPage() {
                                                         </span>
                                                         <span className={`text-xs font-medium ${rank.isCurrent ? 'text-amber-300'
                                                             : isLocked ? 'text-slate-600 italic'
-                                                                : 'text-slate-300'
+                                                                : 'text-gray-300'
                                                             }`}>
                                                             {isLocked ? '???' : rank.militaryName}
                                                         </span>
@@ -319,29 +319,29 @@ export default function RankingsPage() {
                         <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
                             <span className="text-lg">🏅</span>
                             <div>
-                                <p className="font-bold text-slate-200">{es ? 'Insignias de Logro' : 'Achievement Badges'}</p>
-                                <p className="text-slate-500 mt-0.5">{es ? 'Desbloquea insignias exclusivas en tu Muro de Logros conforme subes de rango' : 'Unlock exclusive badges on your Achievement Wall as you rank up'}</p>
+                                <p className="font-bold text-gray-200">{es ? 'Insignias de Logro' : 'Achievement Badges'}</p>
+                                <p className="text-gray-500 mt-0.5">{es ? 'Desbloquea insignias exclusivas en tu Muro de Logros conforme subes de rango' : 'Unlock exclusive badges on your Achievement Wall as you rank up'}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
                             <span className="text-lg">💚</span>
                             <div>
-                                <p className="font-bold text-slate-200">{es ? 'Salud Financiera' : 'Financial Health'}</p>
-                                <p className="text-slate-500 mt-0.5">{es ? 'Tu rango de Comandante contribuye directamente a tu Puntaje de Salud Financiera' : 'Your Commander rank directly contributes to your Financial Health Score'}</p>
+                                <p className="font-bold text-gray-200">{es ? 'Salud Financiera' : 'Financial Health'}</p>
+                                <p className="text-gray-500 mt-0.5">{es ? 'Tu rango de Comandante contribuye directamente a tu Puntaje de Salud Financiera' : 'Your Commander rank directly contributes to your Financial Health Score'}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
                             <span className="text-lg">🎯</span>
                             <div>
-                                <p className="font-bold text-slate-200">{es ? 'Disciplina Financiera' : 'Financial Discipline'}</p>
-                                <p className="text-slate-500 mt-0.5">{es ? 'Mantener tu racha te obliga a revisar tus finanzas diariamente — el hábito más poderoso' : 'Keeping your streak forces daily financial check-ins — the most powerful habit'}</p>
+                                <p className="font-bold text-gray-200">{es ? 'Disciplina Financiera' : 'Financial Discipline'}</p>
+                                <p className="text-gray-500 mt-0.5">{es ? 'Mantener tu racha te obliga a revisar tus finanzas diariamente — el hábito más poderoso' : 'Keeping your streak forces daily financial check-ins — the most powerful habit'}</p>
                             </div>
                         </div>
                         <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
                             <span className="text-lg">✨</span>
                             <div>
-                                <p className="font-bold text-slate-200">{es ? 'Prestigio Visual' : 'Visual Prestige'}</p>
-                                <p className="text-slate-500 mt-0.5">{es ? 'Tu rango y material brillan en el Dashboard y la barra lateral — muestra tu progreso' : 'Your rank and material glow on the Dashboard and sidebar — show off your progress'}</p>
+                                <p className="font-bold text-gray-200">{es ? 'Prestigio Visual' : 'Visual Prestige'}</p>
+                                <p className="text-gray-500 mt-0.5">{es ? 'Tu rango y material brillan en el Dashboard y la barra lateral — muestra tu progreso' : 'Your rank and material glow on the Dashboard and sidebar — show off your progress'}</p>
                             </div>
                         </div>
                     </div>

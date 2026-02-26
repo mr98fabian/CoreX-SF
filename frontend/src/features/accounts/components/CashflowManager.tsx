@@ -87,7 +87,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
             {/* 1. Timeframe Toggle */}
             <div className="flex justify-center">
                 <Tabs defaultValue="monthly" className="w-full max-w-md" onValueChange={(val) => setCurrentTimeframe(val as Timeframe)}>
-                    <TabsList className="grid w-full grid-cols-4 bg-slate-900/50 border border-slate-800">
+                    <TabsList className="grid w-full grid-cols-4 bg-[#0f0f0f]/50 border border-neutral-800">
                         <TabsTrigger value="daily">{t('cashflow.daily')}</TabsTrigger>
                         <TabsTrigger value="weekly">{t('cashflow.weekly')}</TabsTrigger>
                         <TabsTrigger value="monthly">{t('cashflow.monthly')}</TabsTrigger>
@@ -126,7 +126,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         {stats.debtExpenses > 0 && (
                             <div className="mt-2 space-y-1">
                                 <div className="flex justify-between text-xs">
-                                    <span className="text-slate-500">{t('cashflow.fixed')}: {formatMoney(stats.regularExpenses)}</span>
+                                    <span className="text-gray-500">{t('cashflow.fixed')}: {formatMoney(stats.regularExpenses)}</span>
                                     <span className="text-amber-500">{t('cashflow.debt')}: {formatMoney(stats.debtExpenses)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs mt-1">
@@ -152,7 +152,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         <div className={`text-3xl font-extrabold drop-shadow-md ${stats.surplus >= 0 ? 'text-blue-400' : 'text-orange-500'}`}>
                             {formatMoney(stats.surplus)}
                         </div>
-                        <p className="text-xs text-slate-500 mt-1 capitalize">
+                        <p className="text-xs text-gray-500 mt-1 capitalize">
                             {t('cashflow.available')} {t(`cashflow.${currentTimeframe === 'annually' ? 'yearly' : currentTimeframe}`).toLowerCase()}
                         </p>
                         {stats.surplus > 0 && (
@@ -172,19 +172,19 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
             </div>
 
             {/* 3. Recurring Transactions List */}
-            <div className="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-slate-800">
+            <div className="flex flex-wrap justify-between items-center gap-3 pt-4 border-t border-neutral-800">
                 <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 min-w-0">
-                    <Repeat className="text-slate-500 shrink-0" size={20} /> {t('cashflow.recurringTransactions')}
+                    <Repeat className="text-gray-500 shrink-0" size={20} /> {t('cashflow.recurringTransactions')}
                 </h2>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-slate-300 hover:text-white gap-2 transition-all">
+                        <Button variant="outline" className="border-neutral-700 bg-[#0f0f0f]/50 hover:bg-neutral-800 text-gray-300 hover:text-white gap-2 transition-all">
                             <Plus size={16} /> {t('cashflow.addRecurring')}
                         </Button>
                     </DialogTrigger>
                     {/* ... (Dialog Content remains mostly same, can be modularized later) ... */}
-                    <DialogContent className="glass-panel sm:max-w-[450px] bg-slate-950/90 backdrop-blur-2xl border-white/10 text-white">
+                    <DialogContent className="glass-panel sm:max-w-[450px] bg-black/90 backdrop-blur-2xl border-white/10 text-white">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold">{t('cashflow.addRecurringItem')}</DialogTitle>
                         </DialogHeader>
@@ -192,28 +192,28 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             {/* Type */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400">{t('cashflow.type')}</Label>
+                                    <Label className="text-gray-400">{t('cashflow.type')}</Label>
                                     <Select
                                         value={newItem.category}
                                         onValueChange={(val: any) => setNewItem({ ...newItem, category: val })}
                                     >
-                                        <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
+                                        <SelectTrigger className="bg-black/50 border-white/10 text-white h-11">
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-slate-950 border-slate-800 text-white">
+                                        <SelectContent className="bg-black border-neutral-800 text-white">
                                             <SelectItem value="income">{t('cashflow.incomeOption')}</SelectItem>
                                             <SelectItem value="expense">{t('cashflow.expenseOption')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400">{t('cashflow.amount')}</Label>
+                                    <Label className="text-gray-400">{t('cashflow.amount')}</Label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
                                         <Input
                                             type="number"
                                             placeholder="0.00"
-                                            className="bg-slate-950/50 border-white/10 text-white pl-7 h-11 font-mono"
+                                            className="bg-black/50 border-white/10 text-white pl-7 h-11 font-mono"
                                             value={newItem.amount || ''}
                                             onChange={e => setNewItem({ ...newItem, amount: parseFloat(e.target.value) })}
                                         />
@@ -223,10 +223,10 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
                             {/* Name */}
                             <div className="space-y-2">
-                                <Label className="text-slate-400">{t('cashflow.nameDesc')}</Label>
+                                <Label className="text-gray-400">{t('cashflow.nameDesc')}</Label>
                                 <Input
                                     placeholder="e.g. Salary, Rent, Spotify..."
-                                    className="bg-slate-950/50 border-white/10 text-white h-11"
+                                    className="bg-black/50 border-white/10 text-white h-11"
                                     value={newItem.name || ''}
                                     onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                                 />
@@ -234,15 +234,15 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
                             {/* Frequency */}
                             <div className="space-y-2">
-                                <Label className="text-slate-400">{t('cashflow.frequency')}</Label>
+                                <Label className="text-gray-400">{t('cashflow.frequency')}</Label>
                                 <Select
                                     value={newItem.frequency}
                                     onValueChange={(val) => setNewItem({ ...newItem, frequency: val })}
                                 >
-                                    <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
+                                    <SelectTrigger className="bg-black/50 border-white/10 text-white h-11">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-950 border-slate-800 text-white">
+                                    <SelectContent className="bg-black border-neutral-800 text-white">
                                         <SelectItem value="weekly">{t('cashflow.freqWeekly')}</SelectItem>
                                         <SelectItem value="biweekly">{t('cashflow.freqBiweekly')}</SelectItem>
                                         <SelectItem value="semi_monthly">{t('cashflow.freqSemiMonthly')}</SelectItem>
@@ -255,14 +255,14 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             {/* Dynamic Fields */}
                             {(newItem.frequency === 'weekly' || newItem.frequency === 'biweekly') && (
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400">{t('cashflow.whichDay')}</Label>
+                                    <Label className="text-gray-400">{t('cashflow.whichDay')}</Label>
                                     <div className="flex justify-between gap-1">
                                         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
                                             <Button
                                                 key={day}
                                                 type="button"
                                                 variant={newItem.day_of_week === idx ? "default" : "outline"}
-                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500' : 'bg-slate-950/50 border-white/10 text-slate-400 hover:text-white hover:bg-white/5'}`}
+                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500' : 'bg-black/50 border-white/10 text-gray-400 hover:text-white hover:bg-white/5'}`}
                                                 onClick={() => setNewItem({ ...newItem, day_of_week: idx })}
                                             >
                                                 {day[0]}
@@ -274,11 +274,11 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
                             {newItem.frequency === 'monthly' && (
                                 <div className="space-y-2">
-                                    <Label className="text-slate-400">{t('cashflow.dayOfMonth')}</Label>
+                                    <Label className="text-gray-400">{t('cashflow.dayOfMonth')}</Label>
                                     <Input
                                         type="number"
                                         min="1" max="31"
-                                        className="bg-slate-950/50 border-white/10 text-white h-11"
+                                        className="bg-black/50 border-white/10 text-white h-11"
                                         value={newItem.day_of_month || ''}
                                         onChange={e => setNewItem({ ...newItem, day_of_month: parseInt(e.target.value) })}
                                     />
@@ -288,23 +288,23 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             {newItem.frequency === 'semi_monthly' && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400">{t('cashflow.firstPayDay')}</Label>
+                                        <Label className="text-gray-400">{t('cashflow.firstPayDay')}</Label>
                                         <Input
                                             type="number"
                                             min="1" max="15"
                                             placeholder="15"
-                                            className="bg-slate-950/50 border-white/10 text-white h-11"
+                                            className="bg-black/50 border-white/10 text-white h-11"
                                             value={newItem.date_specific_1 || ''}
                                             onChange={e => setNewItem({ ...newItem, date_specific_1: parseInt(e.target.value) })}
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400">{t('cashflow.secondPayDay')}</Label>
+                                        <Label className="text-gray-400">{t('cashflow.secondPayDay')}</Label>
                                         <Input
                                             type="number"
                                             min="16" max="31"
                                             placeholder="30"
-                                            className="bg-slate-950/50 border-white/10 text-white h-11"
+                                            className="bg-black/50 border-white/10 text-white h-11"
                                             value={newItem.date_specific_2 || ''}
                                             onChange={e => setNewItem({ ...newItem, date_specific_2: parseInt(e.target.value) })}
                                         />
@@ -315,15 +315,15 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             {newItem.frequency === 'annually' && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400">{t('cashflow.month')}</Label>
+                                        <Label className="text-gray-400">{t('cashflow.month')}</Label>
                                         <Select
                                             value={newItem.month_of_year?.toString()}
                                             onValueChange={(val) => setNewItem({ ...newItem, month_of_year: parseInt(val) })}
                                         >
-                                            <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
+                                            <SelectTrigger className="bg-black/50 border-white/10 text-white h-11">
                                                 <SelectValue placeholder="Month" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-slate-950 border-slate-800 text-white">
+                                            <SelectContent className="bg-black border-neutral-800 text-white">
                                                 {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                                                     <SelectItem key={m} value={m.toString()}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</SelectItem>
                                                 ))}
@@ -331,11 +331,11 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                         </Select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label className="text-slate-400">{t('cashflow.day')}</Label>
+                                        <Label className="text-gray-400">{t('cashflow.day')}</Label>
                                         <Input
                                             type="number"
                                             min="1" max="31"
-                                            className="bg-slate-950/50 border-white/10 text-white h-11"
+                                            className="bg-black/50 border-white/10 text-white h-11"
                                             value={newItem.day_of_month || ''}
                                             onChange={e => setNewItem({ ...newItem, day_of_month: parseInt(e.target.value) })}
                                         />
@@ -344,15 +344,15 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             )}
 
                             <div className="space-y-2">
-                                <Label className="text-slate-400">{t('cashflow.variable')}</Label>
+                                <Label className="text-gray-400">{t('cashflow.variable')}</Label>
                                 <Select
                                     value={newItem.is_variable ? "yes" : "no"}
                                     onValueChange={(val) => setNewItem({ ...newItem, is_variable: val === 'yes' })}
                                 >
-                                    <SelectTrigger className="bg-slate-950/50 border-white/10 text-white h-11">
+                                    <SelectTrigger className="bg-black/50 border-white/10 text-white h-11">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-950 border-slate-800 text-white">
+                                    <SelectContent className="bg-black border-neutral-800 text-white">
                                         <SelectItem value="no">{t('cashflow.fixedAmount')}</SelectItem>
                                         <SelectItem value="yes">{t('cashflow.variableAvg')}</SelectItem>
                                     </SelectContent>
@@ -379,15 +379,15 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         </div>
                     )}
                     {income.map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-slate-950/40 border border-emerald-900/20 group hover:border-emerald-500/30 hover:bg-slate-950/60 transition-all duration-300">
+                        <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-black/40 border border-emerald-900/20 group hover:border-emerald-500/30 hover:bg-black/60 transition-all duration-300">
                             <div className="flex items-center gap-4">
                                 <div className="bg-emerald-500/10 p-2.5 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
                                     <TrendingUp size={18} className="text-emerald-500" />
                                 </div>
                                 <div>
                                     <div className="font-semibold text-white group-hover:text-emerald-200 transition-colors">{item.name}</div>
-                                    <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                        <span className="bg-white/5 px-1.5 py-0.5 rounded text-slate-400">{item.frequency}</span>
+                                    <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                                        <span className="bg-white/5 px-1.5 py-0.5 rounded text-gray-400">{item.frequency}</span>
                                         <span>• {t('cashflow.dayPrefix')} {item.day_of_month}</span>
                                     </div>
                                 </div>
@@ -418,15 +418,15 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         </div>
                     )}
                     {expenses.map(item => (
-                        <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-slate-950/40 border border-rose-900/20 group hover:border-rose-500/30 hover:bg-slate-950/60 transition-all duration-300">
+                        <div key={item.id} className="flex justify-between items-center p-4 rounded-xl bg-black/40 border border-rose-900/20 group hover:border-rose-500/30 hover:bg-black/60 transition-all duration-300">
                             <div className="flex items-center gap-4">
                                 <div className="bg-rose-500/10 p-2.5 rounded-lg group-hover:bg-rose-500/20 transition-colors">
                                     <TrendingDown size={18} className="text-rose-500" />
                                 </div>
                                 <div>
                                     <div className="font-semibold text-white group-hover:text-rose-200 transition-colors">{item.name}</div>
-                                    <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                        <span className="bg-white/5 px-1.5 py-0.5 rounded text-slate-400">{item.frequency}</span>
+                                    <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                                        <span className="bg-white/5 px-1.5 py-0.5 rounded text-gray-400">{item.frequency}</span>
                                         <span>• {t('cashflow.dayPrefix')} {item.day_of_month}</span>
                                     </div>
                                 </div>
@@ -458,14 +458,14 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                     <div
                                         key={item.id}
                                         className={`relative flex justify-between items-center p-4 rounded-xl transition-all duration-300 ${isLocked
-                                            ? 'bg-slate-950/60 border border-rose-500/15 opacity-50 cursor-pointer hover:opacity-70 hover:border-rose-500/30'
+                                            ? 'bg-black/60 border border-rose-500/15 opacity-50 cursor-pointer hover:opacity-70 hover:border-rose-500/30'
                                             : 'bg-amber-950/20 border border-amber-900/30 group hover:border-amber-500/40 hover:bg-amber-950/30'
                                             }`}
                                         onClick={isLocked && onUpgrade ? onUpgrade : undefined}
                                     >
                                         {/* Lock overlay for locked accounts */}
                                         {isLocked && (
-                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/40 backdrop-blur-[1px] rounded-xl">
+                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px] rounded-xl">
                                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20">
                                                     <Lock size={12} className="text-rose-400" />
                                                     <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider">{t('cashflow.locked')}</span>
@@ -481,10 +481,10 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                             </div>
                                             <div>
                                                 <div className={`font-semibold transition-colors ${isLocked
-                                                    ? 'text-slate-500'
+                                                    ? 'text-gray-500'
                                                     : 'text-white group-hover:text-amber-200'
                                                     }`}>{item.name}</div>
-                                                <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                                <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
                                                     <span className={`px-1.5 py-0.5 rounded ${isLocked
                                                         ? 'bg-rose-500/10 text-rose-400/60'
                                                         : 'bg-amber-500/10 text-amber-400/80'
@@ -499,7 +499,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <span className={`font-mono font-bold text-lg ${isLocked ? 'text-slate-500' : 'text-amber-400'
+                                            <span className={`font-mono font-bold text-lg ${isLocked ? 'text-gray-500' : 'text-amber-400'
                                                 }`}>{formatMoney(item.amount)}</span>
                                             <div className={`h-8 w-8 flex items-center justify-center ${isLocked ? 'text-rose-500/60' : 'text-amber-700'
                                                 }`} title={isLocked ? t('cashflow.upgradeToUnlock') : t('cashflow.autoManaged')}>
@@ -516,18 +516,18 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-slate-950/90 backdrop-blur-xl">
+                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-black/90 backdrop-blur-xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
                             <AlertCircle size={20} /> {t('cashflow.deleteConfirmTitle') || 'Eliminar Transacción'}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+                        <AlertDialogDescription className="text-slate-600 dark:text-gray-300">
                             {t('cashflow.deleteConfirmDesc') || '¿Eliminar'} <strong className="text-white">{deleteTarget?.name}</strong>{'? '}
                             {t('cashflow.deleteConfirmWarn') || 'Esta acción no se puede deshacer.'}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300">
+                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300">
                             {t('accounts.cancel') || 'Cancelar'}
                         </AlertDialogCancel>
                         <AlertDialogAction onClick={confirmDeleteItem} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">

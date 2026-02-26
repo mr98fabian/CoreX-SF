@@ -63,12 +63,12 @@ export default function DashboardLayout() {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200 dark:border-white/5">
+            <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-white/5">
                 <div className="flex items-center gap-2 group cursor-default">
                     <img
                         src="/korex-logotipo.svg"
                         alt="KoreX"
-                        className="h-12 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                        className="h-12 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
                     />
                 </div>
                 {/* Close button — mobile only */}
@@ -76,7 +76,7 @@ export default function DashboardLayout() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="text-slate-400 hover:text-white"
+                        className="text-gray-400 hover:text-white"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <X size={20} />
@@ -92,8 +92,8 @@ export default function DashboardLayout() {
                             className={cn(
                                 "w-full justify-start gap-2 h-10 transition-all",
                                 isActive(path)
-                                    ? "shadow-lg shadow-amber-900/20"
-                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                                    ? "shadow-lg shadow-black/20 dark:shadow-white/10"
+                                    : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
                             )}
                         >
                             <Icon size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{label}</span>
@@ -102,25 +102,25 @@ export default function DashboardLayout() {
                 ))}
             </nav>
 
-            <div className="border-t border-slate-200 dark:border-white/5 p-4 space-y-3">
+            <div className="border-t border-gray-200 dark:border-white/5 p-4 space-y-3">
                 {user && (
                     <div className="flex items-center gap-3 px-2">
                         {user.user_metadata?.avatar_url ? (
                             <img
                                 src={user.user_metadata.avatar_url}
                                 alt="Avatar"
-                                className="h-8 w-8 rounded-full ring-2 ring-gold-400/30"
+                                className="h-8 w-8 rounded-full ring-2 ring-white/30 dark:ring-white/20"
                             />
                         ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800 text-xs font-bold text-gold-400 ring-2 ring-gold-400/30">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-800 text-xs font-bold text-black dark:text-white ring-2 ring-black/10 dark:ring-white/20">
                                 {(user.email?.[0] || 'U').toUpperCase()}
                             </div>
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-slate-800 dark:text-white">
+                            <p className="truncate text-xs font-medium text-black dark:text-white">
                                 {user.user_metadata?.full_name || 'User'}
                             </p>
-                            <p className="truncate text-[10px] text-slate-400 dark:text-slate-500">
+                            <p className="truncate text-[10px] text-gray-400 dark:text-gray-500">
                                 {user.email}
                             </p>
                         </div>
@@ -156,7 +156,7 @@ export default function DashboardLayout() {
             {/* ═══ MOBILE: Drawer sidebar (fixed, full-height, slides in/out) ═══ */}
             {isMobile && (
                 <aside
-                    className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 dark:border-white/5 transition-transform duration-300 ease-in-out"
+                    className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-gray-200 dark:border-white/5 transition-transform duration-300 ease-in-out"
                     style={{
                         width: '85vw',
                         maxWidth: '320px',
@@ -173,7 +173,7 @@ export default function DashboardLayout() {
                 <aside
                     className={cn(
                         "flex flex-col border-r transition-all duration-300 ease-in-out relative overflow-hidden z-20 backdrop-blur-xl",
-                        "bg-white/80 border-slate-200 dark:bg-slate-950/50 dark:border-white/5",
+                        "bg-white/80 border-gray-200 dark:bg-black/50 dark:border-white/5",
                         isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0 border-none"
                     )}
                 >
@@ -184,15 +184,15 @@ export default function DashboardLayout() {
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
                 {/* Ambient glow */}
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5 pointer-events-none dark:opacity-100 opacity-30" />
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 via-transparent to-white/3 pointer-events-none dark:from-white/[0.02] dark:to-white/[0.01] opacity-30 dark:opacity-100" />
 
                 {/* TOP BAR / HEADER */}
-                <header className="flex h-14 items-center gap-4 border-b px-4 backdrop-blur-md sticky top-0 z-10 bg-white/60 border-slate-200 dark:bg-slate-950/30 dark:border-white/5">
+                <header className="flex h-14 items-center gap-4 border-b px-4 backdrop-blur-md sticky top-0 z-10 bg-white/60 border-gray-200 dark:bg-black/30 dark:border-white/5">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                        className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
                     >
                         {isMobile ? (
                             <Menu size={20} strokeWidth={1.5} />
@@ -206,7 +206,7 @@ export default function DashboardLayout() {
                         variant="ghost"
                         size="icon"
                         onClick={toggleTheme}
-                        className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                        className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
                         title={isDark
                             ? (language === 'es' ? 'Cambiar a Modo Claro' : 'Switch to Light Mode')
                             : (language === 'es' ? 'Cambiar a Modo Oscuro' : 'Switch to Dark Mode')}

@@ -45,14 +45,14 @@ export function BeforeAfterCard({ originalDebt, currentDebt }: BeforeAfterCardPr
     if (reduced <= 0) return null;
 
     return (
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800/50 bg-white/50 dark:bg-zinc-950/30 p-3 overflow-hidden relative">
+        <div className="rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-white/50 dark:bg-zinc-950/30 p-3 overflow-hidden relative">
             {/* Decorative gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
 
             <div className="relative">
                 <div className="flex items-center gap-2 mb-3">
                     <TrendingDown size={14} className="text-emerald-400" />
-                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-gray-200">
                         {isEs ? 'Tu Progreso' : 'Your Progress'}
                     </h4>
                 </div>
@@ -82,8 +82,8 @@ export function BeforeAfterCard({ originalDebt, currentDebt }: BeforeAfterCardPr
                 </div>
 
                 {/* Bottom Stats */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-slate-800/30">
-                    <span className="text-[10px] text-slate-500">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 dark:border-neutral-800/30">
+                    <span className="text-[10px] text-gray-500">
                         {isEs ? 'Reducido' : 'Reduced'}: <strong className="text-emerald-400">{formatMoney(reduced)}</strong>
                     </span>
                     <span className="text-[10px] font-bold tabular-nums" style={{ color: percentReduced > 50 ? '#10b981' : '#f59e0b' }}>

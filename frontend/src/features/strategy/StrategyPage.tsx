@@ -86,7 +86,7 @@ export default function StrategyPage() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center space-y-4">
                     <Loader2 className="h-8 w-8 text-amber-400 animate-spin mx-auto" />
-                    <p className="text-slate-400">Analyzing your financial strategy...</p>
+                    <p className="text-gray-400">Analyzing your financial strategy...</p>
                 </div>
             </div>
         );
@@ -98,9 +98,9 @@ export default function StrategyPage() {
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center space-y-4 max-w-md">
                     <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto" />
-                    <p className="text-slate-300 font-medium">Strategy engine unavailable</p>
-                    <p className="text-sm text-slate-500">{error || "Could not load strategy data"}</p>
-                    <Button onClick={refresh} variant="outline" className="border-slate-700">
+                    <p className="text-gray-300 font-medium">Strategy engine unavailable</p>
+                    <p className="text-sm text-gray-500">{error || "Could not load strategy data"}</p>
+                    <Button onClick={refresh} variant="outline" className="border-neutral-700">
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Retry
                     </Button>
@@ -118,7 +118,7 @@ export default function StrategyPage() {
                         <Zap className="h-6 w-6 text-amber-400" />
                         Strategy Command Center
                     </h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                         Your personalized attack intelligence. One decision. Maximum impact.
                     </p>
                 </div>
@@ -126,7 +126,7 @@ export default function StrategyPage() {
                     onClick={refresh}
                     variant="ghost"
                     size="icon"
-                    className="text-slate-400 hover:text-white"
+                    className="text-gray-400 hover:text-white"
                 >
                     <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -163,12 +163,12 @@ export default function StrategyPage() {
                             />
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 p-8 text-center">
-                            <Zap className="h-10 w-10 text-slate-400 dark:text-slate-700 mx-auto mb-3" />
-                            <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">
+                        <div className="rounded-xl border border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-black/50 p-8 text-center">
+                            <Zap className="h-10 w-10 text-gray-400 dark:text-slate-700 mx-auto mb-3" />
+                            <h3 className="text-lg font-semibold text-slate-600 dark:text-gray-300">
                                 No Attack Available
                             </h3>
-                            <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
+                            <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
                                 Your Peace Shield needs reinforcement first, or no active debts were found.
                                 Check your accounts and shield settings.
                             </p>

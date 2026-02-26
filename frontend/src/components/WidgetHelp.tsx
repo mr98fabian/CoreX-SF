@@ -476,7 +476,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
             <button
                 onClick={(e) => { e.stopPropagation(); setOpen(true); }}
                 className="absolute top-2.5 left-2.5 z-[1] p-1 rounded-full
-                    text-slate-700/0 group-hover:text-slate-500 hover:!text-amber-400
+                    text-slate-700/0 group-hover:text-gray-500 hover:!text-amber-400
                     hover:!bg-amber-400/10 transition-all duration-300 opacity-0
                     group-hover:opacity-100"
                 aria-label="Widget help"
@@ -508,7 +508,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                 transition={{ duration: 0.25, ease: 'easeOut' }}
                                 className="relative z-10 w-full max-w-lg"
                             >
-                                <div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                                <div className="bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                                     {/* Accent bar */}
                                     <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
 
@@ -516,7 +516,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                         {/* Close button */}
                                         <button
                                             onClick={() => setOpen(false)}
-                                            className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                                            className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
                                         >
                                             <X size={18} />
                                         </button>
@@ -530,14 +530,14 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                         </div>
 
                                         {/* Description */}
-                                        <p className="text-sm text-slate-300 leading-relaxed mb-5">
+                                        <p className="text-sm text-gray-300 leading-relaxed mb-5">
                                             {desc}
                                         </p>
 
                                         {/* Bullet points */}
                                         <div className="space-y-2.5 mb-5">
                                             {content.bullets.map((bullet, i) => (
-                                                <div key={i} className="flex items-start gap-2.5 text-sm text-slate-400">
+                                                <div key={i} className="flex items-start gap-2.5 text-sm text-gray-400">
                                                     <span className="text-base mt-0.5 shrink-0">{bullet.icon}</span>
                                                     <span className="leading-relaxed">{isEs ? bullet.textEs : bullet.text}</span>
                                                 </div>
@@ -545,7 +545,7 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                         </div>
 
                                         {/* Location hint */}
-                                        <div className="rounded-lg bg-slate-800/60 border border-amber-500/10 px-3 py-2.5 mb-5">
+                                        <div className="rounded-lg bg-neutral-800/60 border border-amber-500/10 px-3 py-2.5 mb-5">
                                             <p className="text-xs text-amber-400/80 leading-relaxed">
                                                 {location}
                                             </p>

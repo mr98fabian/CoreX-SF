@@ -78,7 +78,7 @@ export default function UpgradeNudge() {
                     {/* Modal Card */}
                     <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
                         <div
-                            className="relative w-full max-w-md pointer-events-auto overflow-hidden rounded-3xl border border-amber-500/30 bg-slate-950/98 backdrop-blur-xl shadow-2xl shadow-amber-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500"
+                            className="relative w-full max-w-md pointer-events-auto overflow-hidden rounded-3xl border border-amber-500/30 bg-black/98 backdrop-blur-xl shadow-2xl shadow-amber-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500"
                         >
                             {/* Ambient glow effects */}
                             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-emerald-500/5 pointer-events-none" />
@@ -90,7 +90,7 @@ export default function UpgradeNudge() {
                             {/* Dismiss button */}
                             <button
                                 onClick={handleDismiss}
-                                className="absolute top-4 right-4 z-10 text-slate-500 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
+                                className="absolute top-4 right-4 z-10 text-gray-500 hover:text-white transition-colors p-1.5 rounded-full hover:bg-white/10"
                                 aria-label="Dismiss"
                             >
                                 <X size={18} />
@@ -113,7 +113,7 @@ export default function UpgradeNudge() {
                                             : t('upgrade.debtsUnmonitored')
                                         }
                                     </h2>
-                                    <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
+                                    <p className="text-sm text-gray-400 leading-relaxed max-w-xs mx-auto">
                                         {isFree
                                             ? t('upgrade.starterNudge')
                                             : t('upgrade.lockedNudge')
@@ -132,7 +132,7 @@ export default function UpgradeNudge() {
                                         ].map((f, i) => (
                                             <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5">
                                                 <span className="text-base">{f.icon}</span>
-                                                <span className="text-xs text-slate-300 font-medium">{f.text}</span>
+                                                <span className="text-xs text-gray-300 font-medium">{f.text}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -151,7 +151,7 @@ export default function UpgradeNudge() {
                                 {/* Dismiss link */}
                                 <button
                                     onClick={handleDismiss}
-                                    className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+                                    className="text-xs text-slate-600 hover:text-gray-400 transition-colors"
                                 >
                                     {t('upgrade.dismissShame')}
                                 </button>

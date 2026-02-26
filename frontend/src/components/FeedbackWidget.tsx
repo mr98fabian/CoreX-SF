@@ -177,7 +177,7 @@ export default function FeedbackWidget() {
             <div
                 className={cn(
                     'w-[calc(100vw-2.5rem)] sm:w-[360px] max-h-[85vh] overflow-y-auto rounded-2xl border shadow-2xl transition-all duration-300 origin-bottom-right',
-                    'bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10',
+                    'bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-white/10',
                     'shadow-black/10 dark:shadow-black/40',
                     isOpen
                         ? 'scale-100 opacity-100 translate-y-0 pointer-events-auto'
@@ -217,7 +217,7 @@ export default function FeedbackWidget() {
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-slate-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                             >
                                 <X size={14} />
                             </button>
@@ -236,7 +236,7 @@ export default function FeedbackWidget() {
                                             'flex flex-col items-center gap-1 p-2 rounded-xl border text-xs font-medium transition-all duration-200',
                                             type === value
                                                 ? color
-                                                : 'border-slate-200 dark:border-white/5 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/[0.02]'
+                                                : 'border-gray-200 dark:border-white/5 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/[0.02]'
                                         )}
                                     >
                                         <Icon size={16} />
@@ -259,7 +259,7 @@ export default function FeedbackWidget() {
                                             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200',
                                             priority === value
                                                 ? 'border-amber-500/30 bg-amber-500/10 text-amber-500'
-                                                : 'border-slate-200 dark:border-white/5 text-slate-500 hover:bg-slate-50 dark:hover:bg-white/[0.02]'
+                                                : 'border-gray-200 dark:border-white/5 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/[0.02]'
                                         )}
                                     >
                                         <span>{emoji}</span>
@@ -280,8 +280,8 @@ export default function FeedbackWidget() {
                                 placeholder={isEs ? 'tu@correo.com' : 'you@email.com'}
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border transition-colors',
-                                    'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/5',
-                                    'placeholder:text-slate-400 dark:placeholder:text-slate-600',
+                                    'bg-gray-50 dark:bg-white/[0.03] border-gray-200 dark:border-white/5',
+                                    'placeholder:text-gray-400 dark:placeholder:text-slate-600',
                                     'focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40'
                                 )}
                             />
@@ -298,15 +298,15 @@ export default function FeedbackWidget() {
                                 rows={4}
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border resize-none transition-colors',
-                                    'bg-slate-50 dark:bg-white/[0.03] border-slate-200 dark:border-white/5',
-                                    'placeholder:text-slate-400 dark:placeholder:text-slate-600',
+                                    'bg-gray-50 dark:bg-white/[0.03] border-gray-200 dark:border-white/5',
+                                    'placeholder:text-gray-400 dark:placeholder:text-slate-600',
                                     'focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40'
                                 )}
                             />
                         </div>
 
                         {/* Context info (auto-captured) */}
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-600">
+                        <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-600">
                             <AlertTriangle size={10} />
                             {isEs
                                 ? 'La página, navegador e info del dispositivo se incluirán automáticamente.'
@@ -347,7 +347,7 @@ export default function FeedbackWidget() {
                 aria-label={isEs ? 'Reportar un bug o enviar comentario' : 'Report a bug or send feedback'}
                 className={cn(
                     'group relative h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 pointer-events-auto',
-                    'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/10',
+                    'bg-gray-100 dark:bg-neutral-800/80 border border-gray-200 dark:border-white/10',
                     'hover:bg-amber-500/10 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10',
                     'active:scale-95',
                     isOpen && 'bg-amber-500/10 border-amber-500/30 rotate-12',
@@ -360,12 +360,12 @@ export default function FeedbackWidget() {
                         'transition-all duration-300',
                         isOpen
                             ? 'text-amber-500'
-                            : 'text-slate-400 dark:text-slate-500 group-hover:text-amber-500'
+                            : 'text-gray-400 dark:text-gray-500 group-hover:text-amber-500'
                     )}
                 />
                 {/* Subtle ping dot */}
                 {!isOpen && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-white dark:border-slate-800 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-white dark:border-neutral-800 animate-pulse" />
                 )}
             </button>
         </div>

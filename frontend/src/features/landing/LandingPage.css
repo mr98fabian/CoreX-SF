@@ -4,28 +4,28 @@
    cinematic letterboxing, bold typography, scroll-driven reveals.
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* ─── Google Font — Oswald for impactful headings ─────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* ─── Google Font — Rajdhani for impactful headings, Montserrat for body ────── */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ─── Design Tokens ──────────────────────────────────────────────── */
 .landing-page {
-    --lp-bg-deep:        #030508;
-    --lp-bg-section:     #050a14;
+    --lp-bg-deep:        #000000;
+    --lp-bg-section:     #050505;
     --lp-accent-emerald: #34d399;
     --lp-accent-violet:  #8b5cf6;
     --lp-accent-amber:   #f59e0b;
     --lp-accent-rose:    #fb7185;
     --lp-accent-gold:    #fbbf24;
-    --lp-text-primary:   #f1f5f9;
-    --lp-text-secondary: #94a3b8;
-    --lp-text-muted:     #475569;
+    --lp-text-primary:   #FFFFFF;
+    --lp-text-secondary: #8c8c8c;
+    --lp-text-muted:     #4A4A4A;
     --lp-glow-emerald:   0 0 80px rgba(52, 211, 153, 0.15);
     --lp-glow-violet:    0 0 80px rgba(139, 92, 246, 0.15);
 
     background: var(--lp-bg-deep);
     color: var(--lp-text-primary);
     overflow-x: hidden;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
     scroll-behavior: smooth;
 }
 
@@ -216,7 +216,7 @@
 }
 
 .lp-scroll-hint span {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     letter-spacing: 0.3em;
     text-transform: uppercase;
@@ -238,7 +238,7 @@
    SECTION TYPOGRAPHY — Bold, Impact, GTA Style
    ═══════════════════════════════════════════════════════════════════════ */
 .lp-section-label {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.35em;
@@ -259,7 +259,7 @@
 }
 
 .lp-section-title {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     font-weight: 700;
     text-align: center;
@@ -373,7 +373,7 @@
 }
 
 .lp-counter {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: clamp(4rem, 12vw, 8rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -477,7 +477,7 @@
 }
 
 .lp-feature-title {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.05em;
@@ -516,7 +516,7 @@
 }
 
 .lp-explainer-heading {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.6rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -546,7 +546,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
     color: #fff;
@@ -555,7 +555,7 @@
 
 .lp-explainer-step strong {
     display: block;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1rem;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -688,7 +688,7 @@
 }
 
 .lp-compare-col-heading {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.1rem;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -740,7 +740,7 @@
 .lp-stat { text-align: center; }
 
 .lp-stat-number {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -810,7 +810,7 @@
     transform: translateX(-50%);
     padding: 0.35rem 1.5rem;
     border-radius: 0;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.2em;
@@ -820,7 +820,7 @@
 }
 
 .lp-plan-name {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.3rem;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -829,7 +829,7 @@
 }
 
 .lp-plan-price {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 3rem;
     font-weight: 700;
     line-height: 1;
@@ -861,7 +861,7 @@
     width: 100%;
     padding: 1rem;
     border-radius: 0;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -932,7 +932,7 @@
 }
 
 .lp-final-headline {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: clamp(3rem, 8vw, 6rem);
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -986,7 +986,7 @@
 }
 
 .lp-nav-logo {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: 0.1em;
@@ -1001,7 +1001,7 @@
 }
 
 .lp-nav-link {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
     letter-spacing: 0.15em;
@@ -1018,7 +1018,7 @@
 .lp-nav-cta {
     padding: 0.5rem 1.5rem;
     border-radius: 0;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -1054,7 +1054,7 @@
 }
 
 .lp-footer-link {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.1em;
@@ -1161,7 +1161,7 @@
 }
 
 .lp-nav-link {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
     letter-spacing: 0.15em;
@@ -1178,7 +1178,7 @@
 }
 
 .lp-nav-cta {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -1207,7 +1207,7 @@
     background: rgba(255, 255, 255, 0.04);
     cursor: pointer;
     transition: all 0.3s ease;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.72rem;
     font-weight: 500;
     letter-spacing: 0.12em;
@@ -1249,7 +1249,7 @@
 }
 
 .lp-hero-tagline {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: clamp(0.85rem, 1.8vw, 1.15rem);
     font-weight: 400;
     letter-spacing: 0.25em;
@@ -1272,7 +1272,7 @@
     gap: 0.75rem;
     padding: 1.1rem 3rem;
     border-radius: 0;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.95rem;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -1310,7 +1310,7 @@
     gap: 0.5rem;
     padding: 1rem 2rem;
     border-radius: 0;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
     letter-spacing: 0.15em;
@@ -1857,7 +1857,7 @@
     transform: translateX(-50%);
     background: linear-gradient(135deg, #8b5cf6, #a78bfa);
     color: #fff;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.65rem;
     font-weight: 600;
     letter-spacing: 0.15em;
@@ -1877,7 +1877,7 @@
 
 /* ── Plan name ── */
 .lp-plan-name {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -1896,7 +1896,7 @@
 
 /* ── Price ── */
 .lp-plan-price {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 3.2rem;
     font-weight: 700;
     color: #fbbf24;
@@ -1927,7 +1927,7 @@
 }
 
 .lp-plan-discount {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.65rem;
     font-weight: 600;
     color: #22c55e;
@@ -1953,7 +1953,7 @@
 }
 
 .lp-plan-savings-value {
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
     color: #22c55e;
@@ -1999,7 +1999,7 @@
     width: 100%;
     padding: 0.85rem 1.5rem;
     margin-top: auto;
-    font-family: 'Oswald', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.12em;
