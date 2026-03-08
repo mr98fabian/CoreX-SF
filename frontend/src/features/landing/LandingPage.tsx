@@ -10,22 +10,18 @@
  *
  * 7 sections: Hero → Problem → Solution → Comparison → Proof → Pricing → Final CTA
  */
-import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { use3DTilt } from './use3DTilt';
 import './LandingPage.css';
 
-import HeroDashboardSVG from './svgs/HeroDashboardSVG';
 import DebtVisualizerSVG from './svgs/DebtVisualizerSVG';
 import MobileAppSVG from './svgs/MobileAppSVG';
 import ComparisonGraphSVG from './svgs/ComparisonGraphSVG';
-import FreedomCelebrateSVG from './svgs/FreedomCelebrateSVG';
-
-// Lazy-load the WebGL 3D scene to avoid blocking initial paint
-const HeroScene3D = lazy(() => import('./HeroScene3D'));
+import SimpleFreedomSVG from './svgs/SimpleFreedomSVG';
+import ScrollyHeroIntro from './ScrollyHeroIntro';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -265,11 +261,7 @@ export default function LandingPage() {
 
     // ── State ──
     const [navScrolled, setNavScrolled] = useState(false);
-    // Counter removed — now using static $1,975/month figure
     const [scrollProgress, setScrollProgress] = useState(0);
-
-    // ── 3D Tilt hook for dashboard mockup ──
-    const tiltRef = use3DTilt<HTMLDivElement>({ maxTilt: 12, scale: 1.03 });
 
     // ── Magnetic button ref ──
     const magneticCtaRef = useRef<HTMLButtonElement>(null);
@@ -562,20 +554,6 @@ export default function LandingPage() {
 
     const goAuth = useCallback(() => navigate('/login'), [navigate]);
 
-    // ── Particles — gold-tinted (stable across re-renders) ──
-    const particlesRef = useRef<Array<{ id: number; left: string; size: string; delay: string; duration: string; opacity: number }> | null>(null);
-    if (particlesRef.current == null) {
-        particlesRef.current = Array.from({ length: 20 }, (_, i) => ({
-            id: i,
-            left: `${(i * 5 + (i * 17 % 7) * 9) % 100}%`,
-            size: `${1.5 + ((i * 13) % 10) * 0.25}px`,
-            delay: `${(i * 3) % 15}s`,
-            duration: `${12 + ((i * 7) % 18)}s`,
-            opacity: 0.08 + ((i * 11) % 10) * 0.02,
-        }));
-    }
-    const particles = particlesRef.current;
-
     return (
         <div className="landing-page" ref={containerRef}>
             {/* ─── Scroll Progress Bar ──────────────────── */}
@@ -612,73 +590,8 @@ export default function LandingPage() {
                 </div>
             </nav>
 
-            {/* ═══ 1. HERO — Full-Bleed Cinematic ═══════════ */}
-            <section className="lp-section lp-hero" ref={heroRef}>
-                {/* Full-bleed background gradient replacing image */}
-                <div className="lp-hero-bg">
-                    <div className="lp-hero-gradient-overlay" style={{ width: '100%', height: '100%', background: 'radial-gradient(ellipse at 50% 0%, #1e1b4b 0%, #020617 70%)', willChange: 'transform' }} />
-                </div>
-
-                {/* ─── WebGL 3D Scene (behind content, above bg) ─── */}
-                <Suspense fallback={null}>
-                    <HeroScene3D />
-                </Suspense>
-
-                {/* Floating particles */}
-                <div className="lp-particles">
-                    {particles.map((p) => (
-                        <div
-                            key={p.id}
-                            className="lp-particle"
-                            style={{
-                                left: p.left,
-                                width: p.size,
-                                height: p.size,
-                                animationDelay: p.delay,
-                                animationDuration: p.duration,
-                                opacity: p.opacity,
-                            }}
-                        />
-                    ))}
-                </div>
-
-                {/* Hero split: Mockup LEFT, Branding RIGHT */}
-                <div className="lp-hero-split">
-                    {/* Left: Dashboard mockup with 3D tilt */}
-                    <div className="lp-hero-split-media" ref={tiltRef}>
-                        <HeroDashboardSVG
-                            className="lp-hero-mockup-img lp-tilt-card"
-                            style={{ transformStyle: 'preserve-3d' }}
-                        />
-                    </div>
-
-                    {/* Right: Logo + tagline + CTA */}
-                    <div className="lp-hero-split-content">
-                        <img
-                            src="/korex-imagotipo.svg"
-                            alt="KoreX"
-                            className="lp-hero-logo-img"
-                        />
-                        <p className="lp-hero-tagline">
-                            {copy.hero.tagline[L]}
-                        </p>
-                        <div className="lp-hero-buttons">
-                            <button className="lp-hero-cta" onClick={goAuth}>
-                                {copy.hero.cta[L]} →
-                            </button>
-                            <button className="lp-hero-secondary" onClick={() => scrollTo(solutionRef)}>
-                                ▶ {copy.hero.secondary[L]}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Scroll hint */}
-                <div className="lp-scroll-hint">
-                    <span>Scroll</span>
-                    <div className="lp-scroll-line" />
-                </div>
-            </section>
+            {/* ═══ 0. SCROLLY HERO INTRO (Replaces static hero) ═══════════ */}
+            <ScrollyHeroIntro />
 
             {/* ═══ 2. PROBLEM — Text LEFT, Image RIGHT ═════ */}
             <section className="lp-section lp-problem" ref={problemRef}>
@@ -908,7 +821,7 @@ export default function LandingPage() {
             <section className="lp-section lp-final" ref={finalRef}>
                 {/* Background SVG celebration layer */}
                 <div className="lp-final-bg" style={{ overflow: 'hidden' }}>
-                    <FreedomCelebrateSVG className="lp-final-bg-svg" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
+                    <SimpleFreedomSVG className="lp-final-bg-svg" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.6 }} />
                 </div>
 
                 <h2 className="lp-final-headline">

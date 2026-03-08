@@ -142,48 +142,58 @@ function AccentParticles() {
     );
 }
 
+/* ── Visibility gate — pauses useFrame when hero is offscreen ── */
+const isVisible = { current: true };
+
+function VisibilityGate() {
+    const { invalidate } = useThree();
+
+    useFrame(() => {
+        // When visible, keep requesting frames
+        if (isVisible.current) invalidate();
+    });
+
+    return null;
+}
+
 /* ── Exported Canvas ──────────────────────────────── */
 export default function HeroScene3D() {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Pause WebGL rendering when hero is scrolled offscreen
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        const container = containerRef.current;
+        if (!container) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {
-                // R3F respects the frameloop prop; we toggle visibility
-                // to let the browser skip compositing entirely
-                const container = canvas.parentElement;
-                if (container) {
-                    container.style.visibility = entry.isIntersecting ? 'visible' : 'hidden';
-                }
+                isVisible.current = entry.isIntersecting;
+                // Also hide from compositing to save GPU entirely
+                container.style.visibility = entry.isIntersecting ? 'visible' : 'hidden';
             },
             { threshold: 0 }
         );
 
-        observer.observe(canvas);
+        observer.observe(container);
         return () => observer.disconnect();
     }, []);
 
     return (
-        <div style={{
+        <div ref={containerRef} style={{
             position: 'absolute',
             inset: 0,
             zIndex: 1,
             pointerEvents: 'none',
-            willChange: 'transform',
         }}>
             <Suspense fallback={null}>
                 <Canvas
-                    ref={canvasRef}
                     camera={{ position: [0, 0, 8], fov: 60 }}
                     gl={{ alpha: true, antialias: false, powerPreference: 'high-performance' }}
                     dpr={[1, 1.5]}
-                    frameloop="always"
+                    frameloop="demand"
                     style={{ background: 'transparent' }}
                 >
+                    <VisibilityGate />
                     <Particles />
                     <AccentParticles />
                 </Canvas>
