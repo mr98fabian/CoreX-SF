@@ -9,7 +9,7 @@ export default function SmartActions() {
             id: 1,
             title: "Transfer $850 to HELOC",
             badge: "High Priority",
-            variant: "destructive", // Red
+            variant: "destructive" as const, // Red
             description: "Optimization opportunity detected.",
             btnText: "Execute",
             btnVariant: "default" as const
@@ -18,7 +18,7 @@ export default function SmartActions() {
             id: 2,
             title: "Pay Chase Sapphire",
             badge: "Due Tomorrow",
-            variant: "secondary", // Orange-ish visual handled via custom class if needed, using secondary for now
+            variant: "secondary" as const, // Orange-ish visual handled via custom class if needed, using secondary for now
             description: "Minimum payment of $45.00 due.",
             btnText: "Pay",
             btnVariant: "outline" as const
@@ -27,7 +27,7 @@ export default function SmartActions() {
             id: 3,
             title: "Review Weekly Spending",
             badge: "Routine",
-            variant: "outline", // Gray
+            variant: "outline" as const, // Gray
             description: "3 unclassified transactions.",
             btnText: "View",
             btnVariant: "ghost" as const
@@ -53,7 +53,7 @@ export default function SmartActions() {
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400">{action.description}</p>
                             </div>
-                            <Badge variant={action.variant as any} className="text-[10px] uppercase tracking-wider">
+                            <Badge variant={action.variant} className="text-[10px] uppercase tracking-wider">
                                 {action.badge}
                             </Badge>
                         </div>

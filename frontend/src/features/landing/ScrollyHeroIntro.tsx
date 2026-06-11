@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import LandingNav from './LandingNav';
 import HeroDashboardSVG from './svgs/HeroDashboardSVG';
 import { ArrowRight, Play, ShieldAlert } from 'lucide-react';
 
@@ -133,8 +132,6 @@ export default function ScrollyHeroIntro() {
                 ref={containerRef}
                 className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center"
             >
-                <LandingNav onOpenWaitlist={() => { }} onOpenLogin={() => { }} />
-
                 {/* Subtle Background Particles */}
                 <div className="absolute inset-0 z-0 pointer-events-none opacity-40 lp-particles-scrolly">
                     <div className="absolute top-[20%] left-[15%] w-[300px] h-[300px] rounded-full bg-amber-600/10 blur-[120px]"></div>

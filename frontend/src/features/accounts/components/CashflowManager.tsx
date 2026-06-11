@@ -195,7 +195,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                     <Label className="text-gray-400">{t('cashflow.type')}</Label>
                                     <Select
                                         value={newItem.category}
-                                        onValueChange={(val: any) => setNewItem({ ...newItem, category: val })}
+                                        onValueChange={(val) => setNewItem({ ...newItem, category: val as 'income' | 'expense' })}
                                     >
                                         <SelectTrigger className="bg-black/50 border-white/10 text-white h-11">
                                             <SelectValue />

@@ -166,7 +166,7 @@ export function useLoginStreak(): StreakData {
 
         // Migrate from v2 format (add missing fields)
         const raw = localStorage.getItem(STORAGE_KEY);
-        let stored: StoredStreak = raw
+        const stored: StoredStreak = raw
             ? JSON.parse(raw)
             : { score: 0, rawStreak: 0, lastDate: '', lastLoginDate: '', hasTransactionToday: false };
 
@@ -175,8 +175,9 @@ export function useLoginStreak(): StreakData {
         if (stored.hasTransactionToday === undefined) stored.hasTransactionToday = false;
 
         // If already logged in today — just read the existing state
+        // (setData deferred a frame to avoid a synchronous cascading render)
         if (stored.lastLoginDate === today) {
-            setData({
+            const id = requestAnimationFrame(() => setData({
                 score: stored.score,
                 rawStreak: stored.rawStreak,
                 isNewDay: !stored.hasTransactionToday,
@@ -186,8 +187,8 @@ export function useLoginStreak(): StreakData {
                 showLoginPopup: !stored.hasTransactionToday,
                 dismissPopup,
                 incrementStreakOnTransaction,
-            });
-            return;
+            }));
+            return () => cancelAnimationFrame(id);
         }
 
         // New day: apply penalties for any missed days since last LOGIN
@@ -211,7 +212,7 @@ export function useLoginStreak(): StreakData {
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-        setData({
+        const id = requestAnimationFrame(() => setData({
             score: newScore,
             rawStreak: updated.rawStreak,
             isNewDay: true,
@@ -221,7 +222,8 @@ export function useLoginStreak(): StreakData {
             showLoginPopup: true, // Show popup on new day
             dismissPopup,
             incrementStreakOnTransaction,
-        });
+        }));
+        return () => cancelAnimationFrame(id);
     }, [dismissPopup, incrementStreakOnTransaction]);
 
     return data;

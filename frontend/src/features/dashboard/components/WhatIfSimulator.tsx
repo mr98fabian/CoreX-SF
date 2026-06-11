@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Calculator, Sparkles } from "lucide-react";
@@ -13,30 +13,26 @@ interface WhatIfSimulatorProps {
 
 export function WhatIfSimulator({ onSimulate, currentExtra, isLoading }: WhatIfSimulatorProps) {
     const [sliderValue, setSliderValue] = useState([currentExtra]);
-    const [debouncedValue, setDebouncedValue] = useState(currentExtra);
 
-    // Debounce effect
+    // Keep latest callback without retriggering the debounce effect
+    const onSimulateRef = useRef(onSimulate);
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedValue(sliderValue[0]);
-        }, 500); // 500ms delay
+        onSimulateRef.current = onSimulate;
+    }, [onSimulate]);
 
+    // Debounced notify: fire parent 500ms after the slider settles
+    useEffect(() => {
+        if (sliderValue[0] === currentExtra) return;
+        const timer = setTimeout(() => onSimulateRef.current(sliderValue[0]), 500);
         return () => clearTimeout(timer);
-    }, [sliderValue]);
+    }, [sliderValue, currentExtra]);
 
-    // Notify parent on debounce change
-    useEffect(() => {
-        if (debouncedValue !== currentExtra) {
-            onSimulate(debouncedValue);
-        }
-    }, [debouncedValue]);
-
-    // Update local state if prop changes upstream (reset)
-    useEffect(() => {
-        if (currentExtra !== sliderValue[0] && currentExtra !== debouncedValue) {
-            setSliderValue([currentExtra]);
-        }
-    }, [currentExtra]);
+    // Sync local slider when the prop changes upstream (reset) — render-phase pattern
+    const [prevExtra, setPrevExtra] = useState(currentExtra);
+    if (prevExtra !== currentExtra) {
+        setPrevExtra(currentExtra);
+        setSliderValue([currentExtra]);
+    }
 
 
     return (

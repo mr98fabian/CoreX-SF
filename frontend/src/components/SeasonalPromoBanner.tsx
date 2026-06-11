@@ -44,7 +44,13 @@ interface PromoConfig {
 }
 
 export function SeasonalPromoBanner() {
-    const [dismissed, setDismissed] = useState(false);
+    // Dismissed within 24h?
+    const [dismissed, setDismissed] = useState(() => {
+        if (!ACTIVE_PROMO) return false;
+        const lastDismissed = localStorage.getItem(`korex-promo-dismissed-${ACTIVE_PROMO.id}`);
+        if (!lastDismissed) return false;
+        return Date.now() - parseInt(lastDismissed, 10) < 24 * 60 * 60 * 1000;
+    });
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [timeLeft, setTimeLeft] = useState('');
 
@@ -52,19 +58,6 @@ export function SeasonalPromoBanner() {
     const isActive = useMemo(() => {
         if (!ACTIVE_PROMO) return false;
         return new Date() < ACTIVE_PROMO.endDate;
-    }, []);
-
-    // Check if dismissed within 24h
-    useEffect(() => {
-        if (!ACTIVE_PROMO) return;
-        const key = `korex-promo-dismissed-${ACTIVE_PROMO.id}`;
-        const lastDismissed = localStorage.getItem(key);
-        if (lastDismissed) {
-            const elapsed = Date.now() - parseInt(lastDismissed, 10);
-            if (elapsed < 24 * 60 * 60 * 1000) {
-                setDismissed(true);
-            }
-        }
     }, []);
 
     // Countdown timer

@@ -19,5 +19,25 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Contexts, shadcn/ui primitives, and helper exports intentionally share
+      // files with components — allow constant exports instead of failing CI.
+      'react-refresh/only-export-components': [
+        'error',
+        { allowConstantExport: true },
+      ],
+    },
+  },
+  {
+    // Context providers and shadcn/ui files export hooks/variants alongside
+    // components by design; Fast Refresh limitation is accepted there.
+    files: [
+      'src/contexts/**/*.{ts,tsx}',
+      'src/components/ui/**/*.{ts,tsx}',
+      'src/features/auth/AuthContext.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

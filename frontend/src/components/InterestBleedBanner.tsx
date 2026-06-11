@@ -16,24 +16,19 @@ import { apiFetch } from '@/lib/api';
 export function InterestBleedBanner() {
     const { language } = useLanguage();
     const [dailyInterest, setDailyInterest] = useState<number | null>(null);
-    const [dismissed, setDismissed] = useState(false);
+    // Dismissed within the last 24 hours?
+    const [dismissed, setDismissed] = useState(() => {
+        const lastDismissed = localStorage.getItem('korex-bleed-dismissed');
+        if (!lastDismissed) return false;
+        return Date.now() - parseInt(lastDismissed, 10) < 24 * 60 * 60 * 1000;
+    });
     const [showUpgrade, setShowUpgrade] = useState(false);
 
     const plan = localStorage.getItem('korex-plan') || 'starter';
     const isFree = plan === 'starter';
 
     useEffect(() => {
-        if (!isFree) return;
-
-        // Check if dismissed within the last 24 hours
-        const lastDismissed = localStorage.getItem('korex-bleed-dismissed');
-        if (lastDismissed) {
-            const elapsed = Date.now() - parseInt(lastDismissed, 10);
-            if (elapsed < 24 * 60 * 60 * 1000) {
-                setDismissed(true);
-                return;
-            }
-        }
+        if (!isFree || dismissed) return;
 
         // Fetch dashboard data to get real daily interest
         apiFetch<{ total_daily_interest?: number }>('/api/dashboard')
@@ -43,7 +38,7 @@ export function InterestBleedBanner() {
                 }
             })
             .catch(() => { /* silent */ });
-    }, [isFree]);
+    }, [isFree, dismissed]);
 
     const handleDismiss = () => {
         setDismissed(true);

@@ -11,15 +11,17 @@ export default function DemoWelcomeModal() {
     const { isDemo } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
 
+    // Show only once per demo session — decided during render to avoid
+    // an effect-driven extra render; the storage write happens in the effect.
+    const [demoSeen, setDemoSeen] = useState(false);
+    if (isDemo && !demoSeen) {
+        setDemoSeen(true);
+        if (!sessionStorage.getItem(DEMO_WELCOME_KEY)) setIsOpen(true);
+    }
+
     useEffect(() => {
-        if (!isDemo) return;
-        // Show only once per demo session
-        const alreadyShown = sessionStorage.getItem(DEMO_WELCOME_KEY);
-        if (!alreadyShown) {
-            setIsOpen(true);
-            sessionStorage.setItem(DEMO_WELCOME_KEY, 'true');
-        }
-    }, [isDemo]);
+        if (isOpen) sessionStorage.setItem(DEMO_WELCOME_KEY, 'true');
+    }, [isOpen]);
 
     if (!isOpen) return null;
 

@@ -17,15 +17,13 @@ export default function InstallPrompt() {
     const isMobile = useIsMobile();
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [isVisible, setIsVisible] = useState(false);
-    const [isInstalled, setIsInstalled] = useState(false);
+    // Already running as standalone PWA — no need to prompt
+    const [isInstalled, setIsInstalled] = useState(
+        () => window.matchMedia('(display-mode: standalone)').matches,
+    );
 
-    // Check if already installed or dismissed
     useEffect(() => {
-        // Already running as standalone PWA — no need to prompt
-        if (window.matchMedia('(display-mode: standalone)').matches) {
-            setIsInstalled(true);
-            return;
-        }
+        if (isInstalled) return;
 
         // Check dismissal expiry
         const dismissedAt = localStorage.getItem(DISMISS_KEY);
@@ -39,17 +37,21 @@ export default function InstallPrompt() {
             setIsVisible(true);
         };
 
-        window.addEventListener('beforeinstallprompt', handler);
-
         // Track successful installs
-        window.addEventListener('appinstalled', () => {
+        const installedHandler = () => {
             setIsInstalled(true);
             setIsVisible(false);
             setDeferredPrompt(null);
-        });
+        };
 
-        return () => window.removeEventListener('beforeinstallprompt', handler);
-    }, []);
+        window.addEventListener('beforeinstallprompt', handler);
+        window.addEventListener('appinstalled', installedHandler);
+
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handler);
+            window.removeEventListener('appinstalled', installedHandler);
+        };
+    }, [isInstalled]);
 
     const handleInstall = useCallback(async () => {
         if (!deferredPrompt) return;

@@ -22,7 +22,7 @@ def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
     try:
         b = Decimal(str(balance)) if balance is not None else Decimal("0")
         a = Decimal(str(apr)) if apr is not None else Decimal("0")
-    except:
+    except (ValueError, ArithmeticError):
         return Decimal("0.00")
 
     if b <= 0:

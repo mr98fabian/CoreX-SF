@@ -1,10 +1,6 @@
 import { ShieldAlert, X, DollarSign, AlertTriangle } from "lucide-react";
 import type { FundsErrorData } from "@/hooks/useInsufficientFundsDialog";
 
-// Re-export hook from dedicated file for convenience
-export { useInsufficientFundsDialog } from "@/hooks/useInsufficientFundsDialog";
-export type { FundsErrorData } from "@/hooks/useInsufficientFundsDialog";
-
 // ── Dialog Component ─────────────────────────────────────────
 interface InsufficientFundsDialogProps {
     data: FundsErrorData | null;

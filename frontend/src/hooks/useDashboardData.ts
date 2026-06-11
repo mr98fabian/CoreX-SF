@@ -23,7 +23,7 @@ export interface DashboardData {
     attack_equity: number;
     reserved_for_bills?: number;
     velocity_target: VelocityTarget | null;
-    calendar?: any[];
+    calendar?: Record<string, unknown>[];
 }
 
 export interface VelocityProjections {

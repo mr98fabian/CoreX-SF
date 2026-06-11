@@ -61,9 +61,9 @@ export default function AnalyticsPage() {
 
     useEffect(() => {
         Promise.all([
-            apiFetch<any>('/api/analytics/summary'),
-            apiFetch<any>('/api/analytics/spending-by-category'),
-            apiFetch<any>('/api/analytics/monthly-trend'),
+            apiFetch<AnalyticsSummary>('/api/analytics/summary'),
+            apiFetch<{ categories?: CategoryData[] }>('/api/analytics/spending-by-category'),
+            apiFetch<{ trend?: MonthlyTrend[] }>('/api/analytics/monthly-trend'),
         ])
             .then(([summaryData, catData, trendData]) => {
                 setSummary(summaryData);
@@ -75,6 +75,8 @@ export default function AnalyticsPage() {
                 toast({ title: 'Error', description: 'Failed to load analytics data.', variant: 'destructive' });
             })
             .finally(() => setIsLoading(false));
+        // toast is stable (from useToast) — including it would refetch on every toast change
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ─── Skeleton ─────────────────────────────────────────

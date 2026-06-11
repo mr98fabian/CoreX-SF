@@ -539,12 +539,7 @@ export default function LandingPage() {
 
         }, containerRef);
 
-        return () => {
-            ctx.revert();
-            if ((window as any).__lp_raf) {
-                cancelAnimationFrame((window as any).__lp_raf);
-            }
-        };
+        return () => ctx.revert();
     }, []);
 
     // ── Navigation helpers ──

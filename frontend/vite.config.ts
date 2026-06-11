@@ -47,6 +47,19 @@ export default defineConfig({
   },
   build: {
     sourcemap: false, // Security: don't expose source code in production
+    rollupOptions: {
+      output: {
+        // Stable vendor chunks: these libs change only on dependency bumps,
+        // so returning visitors keep them cached across app deploys.
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+          'vendor-motion': ['framer-motion', 'gsap'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+        },
+      },
+    },
   },
   resolve: {
     alias: {

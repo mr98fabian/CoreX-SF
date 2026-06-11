@@ -43,28 +43,29 @@ async function seedDemoData(): Promise<void> {
     }
 }
 
+/**
+ * Restore demo session from localStorage — instant, no re-seed.
+ * Seed only happens on login (LoginPage) and signOut (cleanup).
+ */
+function restoreDemoUser(): User | null {
+    if (getDemoToken() !== DEMO_TOKEN) return null;
+    return {
+        id: DEMO_USER_ID,
+        email: 'carlos@demo.korex.io',
+        user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
+    } as unknown as User;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
+    // Demo session restores synchronously via lazy initializers (no flash, no extra render)
+    const [user, setUser] = useState<User | null>(restoreDemoUser);
     const [session, setSession] = useState<Session | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [isDemo, setIsDemo] = useState(false);
+    const [isDemo, setIsDemo] = useState(() => getDemoToken() === DEMO_TOKEN);
+    const [loading, setLoading] = useState(() => getDemoToken() !== DEMO_TOKEN);
 
     useEffect(() => {
-        // Check for existing demo session first
-        const existingDemoToken = getDemoToken();
-        if (existingDemoToken === DEMO_TOKEN) {
-            // Restore demo session from localStorage — instant, no re-seed
-            // Seed only happens on login (LoginPage) and signOut (cleanup)
-            const demoUser = {
-                id: DEMO_USER_ID,
-                email: 'carlos@demo.korex.io',
-                user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
-            } as unknown as User;
-            setUser(demoUser);
-            setIsDemo(true);
-            setLoading(false);
-            return;
-        }
+        // Demo session already restored — skip Supabase auth wiring
+        if (getDemoToken() === DEMO_TOKEN) return;
 
         supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
             setSession(currentSession);

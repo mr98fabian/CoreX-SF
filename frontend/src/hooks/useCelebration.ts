@@ -8,14 +8,19 @@
 
 type CelebrationLevel = 'spark' | 'burst' | 'epic';
 
-let confettiModule: any = null;
+type ConfettiFn = typeof import('canvas-confetti');
 
-// Lazy-load canvas-confetti to avoid blocking initial bundle
-async function getConfetti() {
-    if (confettiModule) return confettiModule.default;
+let confettiFn: ConfettiFn | null = null;
+
+// Lazy-load canvas-confetti to avoid blocking initial bundle.
+// CJS interop: depending on the bundler the callable lives on .default or the module itself.
+async function getConfetti(): Promise<ConfettiFn | null> {
+    if (confettiFn) return confettiFn;
     try {
-        confettiModule = await import('canvas-confetti');
-        return confettiModule.default;
+        const mod: unknown = await import('canvas-confetti');
+        const withDefault = mod as { default?: ConfettiFn };
+        confettiFn = withDefault.default ?? (mod as ConfettiFn);
+        return confettiFn;
     } catch {
         return null;
     }
@@ -52,7 +57,7 @@ export function useCelebration() {
                 });
                 break;
 
-            case 'epic':
+            case 'epic': {
                 // Full explosion — onboarding complete, debt eliminated
                 // Fire from both sides
                 const defaults = {
@@ -68,6 +73,7 @@ export function useCelebration() {
                     confetti({ ...defaults, particleCount: 50, origin: { x: 0.5, y: 0.3 } });
                 }, 300);
                 break;
+            }
         }
     };
 

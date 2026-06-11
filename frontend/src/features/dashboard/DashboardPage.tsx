@@ -47,7 +47,8 @@ import { useWeeklyDigest } from '@/hooks/useWeeklyDigest';
 import { DebtFreeCountdown } from './components/DebtFreeCountdown';
 import { HealthScoreGauge } from './components/HealthScoreGauge';
 import { AchievementWall } from '@/components/AchievementWall';
-import { BeforeAfterCard, recordStartingDebt } from './components/BeforeAfterCard';
+import { BeforeAfterCard } from './components/BeforeAfterCard';
+import { recordStartingDebt } from '@/lib/startingDebt';
 import RecurringConfirmModal from './components/RecurringConfirmModal';
 import { useRecurringDueToday } from '@/hooks/useRecurringDueToday';
 

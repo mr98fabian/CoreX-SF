@@ -16,10 +16,11 @@ interface HealthScoreGaugeProps {
 
 export function HealthScoreGauge(props: HealthScoreGaugeProps) {
     const { language } = useLanguage();
+    const { shieldFillPercent, totalDebt, liquidCash, streakScore, commanderLevel } = props;
 
-    const health: HealthScore = useMemo(() =>
-        calculateHealthScore(props),
-        [props.shieldFillPercent, props.totalDebt, props.liquidCash, props.streakScore, props.commanderLevel]
+    const health: HealthScore = useMemo(
+        () => calculateHealthScore({ shieldFillPercent, totalDebt, liquidCash, streakScore, commanderLevel }),
+        [shieldFillPercent, totalDebt, liquidCash, streakScore, commanderLevel]
     );
 
     const isEs = language === 'es';
