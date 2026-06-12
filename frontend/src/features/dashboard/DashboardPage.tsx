@@ -51,6 +51,7 @@ import { BeforeAfterCard } from './components/BeforeAfterCard';
 import { recordStartingDebt } from '@/lib/startingDebt';
 import RecurringConfirmModal from './components/RecurringConfirmModal';
 import { useRecurringDueToday } from '@/hooks/useRecurringDueToday';
+import { useAccounts } from '@/hooks/useAccounts';
 
 interface VelocityTarget {
     name: string;
@@ -152,6 +153,15 @@ export default function DashboardPage() {
 
     // Recurring confirmation system
     const recurring = useRecurringDueToday();
+
+    // Real account stats for achievements (React Query — shares the cached
+    // ['accounts'] fetch, no extra request). A debt counts as "eliminated"
+    // once its balance reaches zero.
+    const { data: accounts } = useAccounts();
+    const accountCount = accounts?.length ?? 0;
+    const debtsEliminated = accounts?.filter(
+        (a) => a.type === 'debt' && a.balance <= 0
+    ).length ?? 0;
 
     // Reusable function to re-fetch all dashboard data without full page reload
     const loadDashboardData = useCallback(async () => {
@@ -662,8 +672,8 @@ export default function DashboardPage() {
                                     commanderLevel: getCommanderRank(getEffectiveScore(streak.score, (localStorage.getItem('korex-plan') || 'starter') !== 'starter')).level,
                                     shieldPercent: data ? Math.min(100, (data.liquid_cash / Math.max(1, data.shield_target)) * 100) : 0,
                                     totalDebt: data?.total_debt ?? 0,
-                                    debtsEliminated: 0,
-                                    accountCount: 0,
+                                    debtsEliminated,
+                                    accountCount,
                                     interestSaved: interestSaved ?? 0,
                                 }}
                             />
