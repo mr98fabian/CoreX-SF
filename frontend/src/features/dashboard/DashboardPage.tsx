@@ -440,7 +440,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 px-2.5 py-1 rounded-full border border-orange-300 dark:border-orange-500/20 backdrop-blur-sm">
                                     <Flame size={12} className="fill-orange-500" />
                                     <span className="text-xs font-bold tabular-nums">{streak.rawStreak}</span>
-                                    <span className="text-[10px] font-mono">{language === 'es' ? 'días' : 'days'}</span>
+                                    <span className="text-[10px] font-mono">{t('dashboard.streak.days')}</span>
                                     {streak.score !== streak.rawStreak && (
                                         <span className="text-[9px] text-orange-500/50">({streak.score} pts)</span>
                                     )}
@@ -459,9 +459,7 @@ export default function DashboardPage() {
                             </TransactionDialog>
                         </div>
                         <p className="text-[10px] text-gray-400 dark:text-gray-500 italic">
-                            {language === 'es'
-                                ? 'Registra ingresos o gastos no planificados'
-                                : 'Log unplanned income or expenses'}
+                            {t('dashboard.logUnplanned')}
                         </p>
                     </div>
                 </div>

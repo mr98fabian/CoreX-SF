@@ -16,7 +16,7 @@ interface DailyInterestTickerProps {
  * "$0.55 every hour" creates visceral urgency.
  */
 export function DailyInterestTicker({ dailyInterest }: DailyInterestTickerProps) {
-    const { language } = useLanguage();
+    const { t } = useLanguage();
     const [accumulated, setAccumulated] = useState(0);
     const startTime = useRef<number | null>(null);
 
@@ -46,11 +46,11 @@ export function DailyInterestTicker({ dailyInterest }: DailyInterestTickerProps)
             <p className="text-[11px] text-rose-400/90 font-mono">
                 <span className="font-bold tabular-nums">${dailyInterest.toFixed(2)}</span>
                 <span className="text-rose-400/60">
-                    /{language === 'es' ? 'día en intereses' : 'day in interest'}
+                    /{t('dashboard.ticker.dayInInterest')}
                 </span>
                 <span className="mx-1.5 text-rose-400/30">·</span>
                 <span className="text-rose-400/60">
-                    ${hourlyRate.toFixed(2)}/{language === 'es' ? 'hora' : 'hr'}
+                    ${hourlyRate.toFixed(2)}/{t('dashboard.ticker.perHour')}
                 </span>
                 {accumulated > 0.01 && (
                     <>
@@ -59,7 +59,7 @@ export function DailyInterestTicker({ dailyInterest }: DailyInterestTickerProps)
                             +${accumulated.toFixed(4)}
                         </span>
                         <span className="text-rose-400/50 ml-0.5">
-                            {language === 'es' ? 'desde que abriste esta página' : 'since you opened this page'}
+                            {t('dashboard.ticker.sinceOpened')}
                         </span>
                     </>
                 )}

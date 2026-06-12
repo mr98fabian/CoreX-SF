@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Sword, ShieldAlert, Zap, Calendar, Lightbulb, ShieldCheck, Trophy, Banknote, Link2, Home, Loader2 } from 'lucide-react';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import {
@@ -96,6 +97,7 @@ export default function AttackEquityCard({
     executingAttack = false,
 }: AttackEquityCardProps) {
     const { formatMoney } = useFormatMoney();
+    const { t } = useLanguage();
     const [showConfirm, setShowConfirm] = useState(false);
 
     const canFullPayoff = velocityTarget && attackEquity >= velocityTarget.balance;
@@ -254,14 +256,14 @@ export default function AttackEquityCard({
                                         return (
                                             <div className="flex items-center gap-1.5 text-white dark:text-emerald-950 bg-emerald-500 dark:bg-emerald-400 px-3 py-0.5 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-pulse">
                                                 <Calendar className="h-3 w-3" strokeWidth={2} />
-                                                <span className="font-extrabold tracking-tight">HOY</span>
+                                                <span className="font-extrabold tracking-tight">{t('dashboard.attackCard.today')}</span>
                                             </div>
                                         );
                                     } else if (isPast) {
                                         return (
                                             <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/30 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-900/50">
                                                 <ShieldAlert className="h-3 w-3" strokeWidth={1.5} />
-                                                <span className="font-bold">Acción Expirada</span>
+                                                <span className="font-bold">{t('dashboard.attackCard.expired')}</span>
                                             </div>
                                         );
                                     } else {

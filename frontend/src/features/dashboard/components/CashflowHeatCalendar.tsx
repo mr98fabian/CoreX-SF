@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, ArrowUpCircle, ArrowDownCircle, X } from "lucide-react";
 import { apiFetch } from '@/lib/api';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // --- Types ---
 interface CashflowEvent {
@@ -174,6 +175,7 @@ function DayDetailContent({
 
 // --- Main Component ---
 export default function CashflowHeatCalendar() {
+    const { t } = useLanguage();
     const [data, setData] = useState<CashflowProjection | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedDay, setSelectedDay] = useState<ProjectionDay | null>(null);
@@ -302,24 +304,24 @@ export default function CashflowHeatCalendar() {
                 <CardTitle className="flex items-center justify-between text-slate-900 dark:text-white text-base">
                     <div className="flex items-center gap-2">
                         <Calendar className="h-5 w-5 text-cyan-400" />
-                        Cashflow Heat Map
+                        {t('dashboard.cashflowHeat.title')}
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-gray-500 flex-wrap">
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-rose-800" />
-                            Low
+                            {t('dashboard.cashflowHeat.low')}
                         </div>
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-amber-700" />
-                            Tight
+                            {t('dashboard.cashflowHeat.tight')}
                         </div>
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-emerald-700" />
-                            Good
+                            {t('dashboard.cashflowHeat.good')}
                         </div>
                         <div className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-sm bg-cyan-600" />
-                            Surplus
+                            {t('dashboard.cashflowHeat.surplus')}
                         </div>
                     </div>
                 </CardTitle>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { apiFetch } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import { withPlanLimit } from '@/lib/planLimits';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ChartDataPoint {
     month: string;
@@ -21,15 +22,16 @@ interface TooltipProps {
     active?: boolean;
     payload?: { value: number }[];
     label?: string;
+    bankLabel?: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+const CustomTooltip = ({ active, payload, label, bankLabel }: TooltipProps) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white dark:bg-black border border-gray-200 dark:border-neutral-800 p-3 rounded-lg shadow-xl">
                 <p className="text-gray-400 text-xs mb-2">{label}</p>
                 <p className="text-zinc-500 text-sm">
-                    Bank: <span className="text-zinc-600 dark:text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
+                    {bankLabel ?? 'Bank'}: <span className="text-zinc-600 dark:text-zinc-300 ml-1">${payload[0].value.toLocaleString()}</span>
                 </p>
                 <p className="text-blue-500 text-sm font-bold">
                     KoreX: <span className="text-slate-900 dark:text-white ml-1">${payload[1].value.toLocaleString()}</span>
@@ -40,20 +42,20 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     return null;
 };
 
-// Generate month names starting from current month
-const getMonthNames = (): string[] => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Generate locale-aware month abbreviations starting from current month
+const getMonthNames = (locale: string): string[] => {
     const currentMonth = new Date().getMonth();
     const result: string[] = [];
     for (let i = 0; i < 12; i++) {
-        result.push(months[(currentMonth + i) % 12]);
+        const date = new Date(2024, (currentMonth + i) % 12, 1);
+        result.push(date.toLocaleString(locale, { month: 'short' }));
     }
     return result;
 };
 
 // Generate projection data based on actual debt
-const generateProjections = (totalDebt: number, minPayments: number, velocityPower: number): ChartDataPoint[] => {
-    const months = getMonthNames();
+const generateProjections = (totalDebt: number, minPayments: number, velocityPower: number, locale = 'en-US'): ChartDataPoint[] => {
+    const months = getMonthNames(locale);
     const data: ChartDataPoint[] = [];
 
     let bankBalance = totalDebt;
@@ -82,6 +84,8 @@ const generateProjections = (totalDebt: number, minPayments: number, velocityPow
 };
 
 export default function DebtBurndownChart() {
+    const { t, language } = useLanguage();
+    const locale = language === 'es' ? 'es-ES' : 'en-US';
     const [data, setData] = useState<ChartDataPoint[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -91,7 +95,8 @@ export default function DebtBurndownChart() {
                 const projections = generateProjections(
                     velocityData.total_debt || 0,
                     velocityData.total_min_payments || 0,
-                    velocityData.velocity_power || 0
+                    velocityData.velocity_power || 0,
+                    locale
                 );
                 setData(projections);
                 setLoading(false);
@@ -101,7 +106,7 @@ export default function DebtBurndownChart() {
                 setData([]);
                 setLoading(false);
             });
-    }, []);
+    }, [locale]);
 
     if (loading) {
         return (
@@ -116,9 +121,9 @@ export default function DebtBurndownChart() {
     return (
         <Card className="h-full">
             <CardHeader>
-                <CardTitle className="text-zinc-900 dark:text-zinc-100">Debt Burndown Projection</CardTitle>
+                <CardTitle className="text-zinc-900 dark:text-zinc-100">{t('dashboard.burndown.title')}</CardTitle>
                 <CardDescription className="text-zinc-500">
-                    Comparing standard bank payments vs. KoreX Velocity Strategy
+                    {t('dashboard.burndown.desc')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -145,7 +150,7 @@ export default function DebtBurndownChart() {
                                 tick={{ fontSize: 12, fill: '#71717a' }}
                             />
                             <YAxis hide domain={['auto', 'auto']} />
-                            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                            <Tooltip content={<CustomTooltip bankLabel={t('dashboard.burndown.bank')} />} cursor={{ stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '5 5' }} />
                             <Area
                                 type="monotone"
                                 dataKey="bankBalance"

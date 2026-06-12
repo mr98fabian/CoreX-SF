@@ -75,6 +75,33 @@ const translations: Record<string, Record<Language, string>> = {
     "dashboard.cashflowHeat.vsYesterday": { en: "vs yesterday", es: "vs ayer" },
     "dashboard.cashflowHeat.min": { en: "Min", es: "Mín" },
     "dashboard.cashflowHeat.max": { en: "Max", es: "Máx" },
+    "dashboard.cashflowHeat.low": { en: "Low", es: "Bajo" },
+    "dashboard.cashflowHeat.tight": { en: "Tight", es: "Ajustado" },
+    "dashboard.cashflowHeat.good": { en: "Good", es: "Bueno" },
+    "dashboard.cashflowHeat.surplus": { en: "Surplus", es: "Excedente" },
+
+    "dashboard.burndown.title": { en: "Debt Burndown Projection", es: "Proyección de Liquidación" },
+    "dashboard.burndown.desc": { en: "Standard bank payments vs. KoreX Velocity Strategy", es: "Pagos bancarios estándar vs. Estrategia Velocity KoreX" },
+    "dashboard.burndown.bank": { en: "Bank", es: "Banco" },
+
+    "dashboard.tacticalBanner.allExecuted": { en: "All tactical moves executed for now.", es: "Todos los movimientos tácticos ejecutados por ahora." },
+    "dashboard.tacticalBanner.today": { en: "TODAY", es: "HOY" },
+    "dashboard.tacticalBanner.expired": { en: "EXPIRED", es: "VENCIDO" },
+    "dashboard.tacticalBanner.scheduled": { en: "SCHEDULED", es: "PROGRAMADO" },
+
+    "dashboard.attackCard.today": { en: "TODAY", es: "HOY" },
+    "dashboard.attackCard.expired": { en: "Action Expired", es: "Acción Expirada" },
+    "dashboard.attackCard.scheduled": { en: "Scheduled", es: "Programado" },
+
+    "dashboard.ticker.dayInInterest": { en: "day in interest", es: "día en intereses" },
+    "dashboard.ticker.perHour": { en: "hr", es: "hora" },
+    "dashboard.ticker.sinceOpened": { en: "since you opened this page", es: "desde que abriste esta página" },
+
+    "dashboard.logUnplanned": { en: "Log unplanned income or expenses", es: "Registra ingresos o gastos no planificados" },
+    "dashboard.streak.days": { en: "days", es: "días" },
+    "dashboard.debtFree.celebrating": { en: "🎉 YOU ARE DEBT-FREE!", es: "🎉 ¡YA ERES LIBRE DE DEUDAS!" },
+    "dashboard.debtFree.atThisPace": { en: "At this pace, free in", es: "A este ritmo, serás libre en" },
+    "dashboard.debtFree.months": { en: "months", es: "meses" },
 
     "dashboard.recentTx.title": { en: "Recent Transactions", es: "Transacciones Recientes" },
     "dashboard.recentTx.noData": { en: "No transactions yet.", es: "Aún no hay transacciones." },
@@ -897,7 +924,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
 
     const t = (key: string): string => {
-        return translations[key]?.[language] ?? key;
+        const entry = translations[key];
+        if (!entry) return key;
+        return entry[language] || entry['en'] || key;
     };
 
     return (

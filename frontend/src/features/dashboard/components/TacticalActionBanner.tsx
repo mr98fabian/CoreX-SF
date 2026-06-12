@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { ArrowRight, CheckCircle2, RefreshCw, Calendar } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Movement {
     day: number;
@@ -15,6 +16,7 @@ interface Movement {
 }
 
 export default function TacticalActionBanner() {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [nextMove, setNextMove] = useState<Movement | null>(null);
 
@@ -52,7 +54,7 @@ export default function TacticalActionBanner() {
         return (
             <div className="flex items-center justify-center p-2 bg-emerald-50 dark:bg-emerald-950/30 border-t border-emerald-200 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium">
                 <CheckCircle2 size={12} className="mr-2" strokeWidth={1.5} />
-                All tactical moves executed for now.
+                {t('dashboard.tacticalBanner.allExecuted')}
             </div>
         );
     }
@@ -80,8 +82,8 @@ export default function TacticalActionBanner() {
                                 moveDate.setHours(0, 0, 0, 0);
                                 today.setHours(0, 0, 0, 0);
 
-                                if (moveDate.getTime() === today.getTime()) return <span className="text-emerald-600 dark:text-emerald-400 animate-pulse font-extrabold">HOY</span>;
-                                if (moveDate.getTime() < today.getTime()) return <span className="text-rose-500 dark:text-rose-400 font-bold">EXPIRED</span>;
+                                if (moveDate.getTime() === today.getTime()) return <span className="text-emerald-600 dark:text-emerald-400 animate-pulse font-extrabold">{t('dashboard.tacticalBanner.today')}</span>;
+                                if (moveDate.getTime() < today.getTime()) return <span className="text-rose-500 dark:text-rose-400 font-bold">{t('dashboard.tacticalBanner.expired')}</span>;
                                 return nextMove.display_date;
                             })()}
                         </span>
@@ -100,7 +102,7 @@ export default function TacticalActionBanner() {
                 {/* Informational badge — no execute action */}
                 <span className="flex items-center gap-1 h-6 px-2 text-[10px] text-gray-400 dark:text-zinc-500 border border-slate-300 dark:border-zinc-800 rounded-md uppercase tracking-wider">
                     <Calendar size={10} strokeWidth={1.5} />
-                    SCHEDULED
+                    {t('dashboard.tacticalBanner.scheduled')}
                 </span>
             </div>
         </div>
