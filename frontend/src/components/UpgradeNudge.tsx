@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowUpRight, X, AlertTriangle, Crown, Sparkles } from 'lucide-react';
 import UpgradeModal from '@/components/UpgradeModal';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -25,17 +25,18 @@ export default function UpgradeNudge() {
     const isFree = plan === 'starter';
     const isPaid = plan !== 'starter';
 
-    // Don't nudge users with accounts less than 2 days old
-    const isNewAccount = useMemo(() => {
-        const createdAt = user?.created_at;
-        if (!createdAt) return false; // Allow nudge if no date (demo)
-        const ageMs = Date.now() - new Date(createdAt).getTime();
-        const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
-        return ageMs < TWO_DAYS_MS;
-    }, [user?.created_at]);
+    const createdAt = user?.created_at;
 
     useEffect(() => {
-        if (isPaid || isNewAccount) return;
+        if (isPaid) return;
+
+        // Don't nudge users with accounts less than 2 days old
+        // (allow nudge if no creation date — demo accounts)
+        if (createdAt) {
+            const ageMs = Date.now() - new Date(createdAt).getTime();
+            const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+            if (ageMs < TWO_DAYS_MS) return;
+        }
 
         // Initial delay of 30 seconds, then every 2 minutes
         const INITIAL_DELAY = 30_000;
@@ -53,7 +54,7 @@ export default function UpgradeNudge() {
             clearTimeout(initialTimer);
             clearInterval(interval);
         };
-    }, [isPaid, isNewAccount]);
+    }, [isPaid, createdAt]);
 
     const handleDismiss = () => {
         setVisible(false);

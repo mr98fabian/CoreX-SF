@@ -8,7 +8,7 @@ import { Capacitor } from '@capacitor/core';
 const RAILWAY_URL = 'https://korex-sf-production.up.railway.app';
 
 const API_BASE = import.meta.env.DEV
-    ? 'http://localhost:8000'
+    ? (import.meta.env.VITE_API_URL ?? 'http://localhost:8000')
     : Capacitor.isNativePlatform()
         ? RAILWAY_URL
         : '';

@@ -1,15 +1,38 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import LandingNav from './LandingNav';
 import HeroDashboardSVG from './svgs/HeroDashboardSVG';
 import { ArrowRight, Play, ShieldAlert } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* Bilingual copy for the scrolly hero — keeps the landing in one language */
+const heroCopy = {
+    act1Title: { en: 'THE SYSTEM IS RIGGED', es: 'EL SISTEMA ESTÁ EN TU CONTRA' },
+    act1TitleAccent: { en: 'AGAINST YOU.', es: 'POR DISEÑO.' },
+    act1Subtitle: {
+        en: 'Every day you wait, traditional banks siphon your wealth.',
+        es: 'Cada día que esperas, los bancos drenan tu riqueza.',
+    },
+    act2Lead: { en: 'But what if you had access to the', es: '¿Y si tuvieras acceso al' },
+    act2Accent: { en: 'ultimate weapon?', es: 'arma definitiva?' },
+    tagline: {
+        en: "The weapon banks don't want you to have.",
+        es: 'El arma que los bancos no quieren que tengas.',
+    },
+    ctaPrimary: { en: 'Calculate Your Savings', es: 'Calcula Tu Ahorro' },
+    ctaSecondary: { en: 'WATCH DEMO', es: 'VER DEMO' },
+    scroll: { en: 'SCROLL', es: 'DESLIZA' },
+} as const;
 
 export default function ScrollyHeroIntro() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+    const { language } = useLanguage();
+    const L = language as 'en' | 'es';
 
     // Act 1 SVG Configuration
     const act1Lines = Array.from({ length: 12 }).map((_, i) => {
@@ -133,8 +156,6 @@ export default function ScrollyHeroIntro() {
                 ref={containerRef}
                 className="sticky top-0 w-full h-screen overflow-hidden flex items-center justify-center"
             >
-                <LandingNav onOpenWaitlist={() => { }} onOpenLogin={() => { }} />
-
                 {/* Subtle Background Particles */}
                 <div className="absolute inset-0 z-0 pointer-events-none opacity-40 lp-particles-scrolly">
                     <div className="absolute top-[20%] left-[15%] w-[300px] h-[300px] rounded-full bg-amber-600/10 blur-[120px]"></div>
@@ -173,10 +194,10 @@ export default function ScrollyHeroIntro() {
                     <div className="act1-text absolute text-center opacity-0 scale-90 translate-y-8 max-w-2xl px-6">
                         <ShieldAlert className="w-16 h-16 mx-auto mb-6 text-red-500 opacity-80" />
                         <h1 className="text-4xl md:text-6xl font-black text-slate-100 tracking-tight leading-tight">
-                            THE SYSTEM IS RIGGED <span className="text-red-500">AGAINST YOU.</span>
+                            {heroCopy.act1Title[L]} <span className="text-red-500">{heroCopy.act1TitleAccent[L]}</span>
                         </h1>
                         <p className="mt-6 text-xl text-slate-400 font-mono tracking-wide">
-                            Every day you wait, traditional banks siphon your wealth.
+                            {heroCopy.act1Subtitle[L]}
                         </p>
                     </div>
                 </div>
@@ -187,9 +208,9 @@ export default function ScrollyHeroIntro() {
                 <div className="act2-container absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                     <div className="act2-text absolute text-center opacity-0 scale-90 max-w-3xl px-6">
                         <h2 className="text-3xl md:text-5xl font-black text-white tracking-widest leading-snug drop-shadow-xl uppercase">
-                            But what if you had access to the <br />
+                            {heroCopy.act2Lead[L]} <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">
-                                ultimate weapon?
+                                {heroCopy.act2Accent[L]}
                             </span>
                         </h2>
                     </div>
@@ -208,51 +229,37 @@ export default function ScrollyHeroIntro() {
 
                         {/* RIGHT: High-Impact Typography & CTA */}
                         <div className="flex-1 w-full lg:w-1/2 flex flex-col justify-center items-center lg:items-start text-center lg:text-left z-10 mt-8 lg:mt-0">
-                            {/* KOREX BIG TEXT LOGO */}
-                            <div className="act3-content mb-6 flex flex-row items-center justify-center lg:justify-start">
-                                <span className="font-extrabold text-[80px] sm:text-[100px] lg:text-[120px] leading-none tracking-tighter text-white">
-                                    K
-                                </span>
-                                {/* The minimalist geometric raccoon inside the "O" position */}
-                                <div className="mx-1 w-[80px] sm:w-[100px] lg:w-[120px] flex justify-center items-center">
-                                    <svg viewBox="0 0 100 100" className="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M50 85 L20 40 L35 25 L50 45 L65 25 L80 40 Z" fill="white" />
-                                        <path d="M50 45 L35 60 L65 60 Z" fill="#020617" />
-                                        <circle cx="42" cy="40" r="4" fill="#020617" />
-                                        <circle cx="58" cy="40" r="4" fill="#020617" />
-                                        <path d="M50 85 L35 70 L65 70 Z" fill="white" />
-                                        <path d="M30 20 L20 40 L10 20 Z" fill="white" />
-                                        <path d="M70 20 L80 40 L90 20 Z" fill="white" />
-                                        <polygon points="50,75 45,65 55,65" fill="#020617" />
-                                    </svg>
-                                </div>
-                                <span className="font-extrabold text-[80px] sm:text-[100px] lg:text-[120px] leading-none tracking-tighter text-white">
-                                    REX
-                                </span>
+                            {/* KOREX BIG LOGO — official imagotipo (raccoon in the O) */}
+                            <div className="act3-content mb-6 flex justify-center lg:justify-start">
+                                <img
+                                    src="/korex-imagotipo.svg"
+                                    alt="KoreX"
+                                    className="h-[72px] sm:h-[92px] lg:h-[110px] w-auto drop-shadow-2xl"
+                                />
                             </div>
 
                             <p className="act3-content text-xl sm:text-2xl text-slate-300 font-mono tracking-[0.2em] sm:tracking-[0.3em] uppercase max-w-xl mx-auto lg:mx-0 mb-12">
-                                The weapon banks don't want you to have.
+                                {heroCopy.tagline[L]}
                             </p>
 
                             <div className="act3-content flex flex-col sm:flex-row gap-6 items-center w-full justify-center lg:justify-start">
                                 <button
-                                    onClick={() => { }} // Hooked up later
+                                    onClick={() => navigate('/login')}
                                     className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-slate-950 bg-amber-500 rounded-none overflow-hidden transition-all hover:scale-105 active:scale-95"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                     <span className="relative flex items-center gap-3 text-lg tracking-widest uppercase">
-                                        Calculate Your Savings
+                                        {heroCopy.ctaPrimary[L]}
                                         <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
                                     </span>
                                 </button>
 
                                 <button
-                                    onClick={() => { }}
+                                    onClick={() => navigate('/login')}
                                     className="group inline-flex items-center gap-3 px-8 py-4 font-mono text-sm tracking-widest text-slate-400 hover:text-white transition-colors border border-slate-800 hover:border-slate-700 bg-slate-900/30 backdrop-blur-sm"
                                 >
                                     <Play className="w-4 h-4 text-amber-500" />
-                                    <span>WATCH DEMO</span>
+                                    <span>{heroCopy.ctaSecondary[L]}</span>
                                 </button>
                             </div>
                         </div>
@@ -261,7 +268,7 @@ export default function ScrollyHeroIntro() {
 
                 {/* SCROLL INDICATOR */}
                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-slate-500 z-50">
-                    <span className="text-xs font-mono tracking-widest">SCROLL</span>
+                    <span className="text-xs font-mono tracking-widest">{heroCopy.scroll[L]}</span>
                     <div className="w-[1px] h-12 bg-gradient-to-b from-slate-500 to-transparent"></div>
                 </div>
 

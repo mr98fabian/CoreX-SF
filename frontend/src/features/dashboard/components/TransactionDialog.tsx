@@ -116,7 +116,9 @@ export function TransactionDialog({
     const isEs = language === 'es';
     const fundsDialog = useInsufficientFundsDialog();
 
-    const form = useForm<any>({
+    // Generics inferred from zodResolver — coerce/default fields make
+    // the schema's input and output types differ, so explicit generics break.
+    const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             amount: defaultAmount || 0,
@@ -239,6 +241,7 @@ export function TransactionDialog({
                                                 className="pl-8 bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-800"
                                                 placeholder="0.00"
                                                 {...field}
+                                                value={field.value as number}
                                             />
                                         </div>
                                     </FormControl>

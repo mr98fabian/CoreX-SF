@@ -30,19 +30,19 @@ const QUOTES: Quote[] = [
 const STORAGE_KEY = 'korex_quote_index';
 
 export function useMotivationalQuote(language: 'en' | 'es'): string {
-    const [quote, setQuote] = useState('');
-
-    useEffect(() => {
+    // Pick this session's quote once (lazy init — language switches don't advance the pool)
+    const [idx] = useState(() => {
         const stored = localStorage.getItem(STORAGE_KEY);
-        let idx = stored ? parseInt(stored, 10) : 0;
+        let i = stored ? parseInt(stored, 10) : 0;
         // Wrap around if we've shown all quotes
-        if (idx >= QUOTES.length) idx = 0;
+        if (Number.isNaN(i) || i >= QUOTES.length) i = 0;
+        return i;
+    });
 
-        setQuote(QUOTES[idx][language]);
-
-        // Advance index for next session
+    // Advance index for next session
+    useEffect(() => {
         localStorage.setItem(STORAGE_KEY, String(idx + 1));
-    }, [language]);
+    }, [idx]);
 
-    return quote;
+    return QUOTES[idx][language];
 }

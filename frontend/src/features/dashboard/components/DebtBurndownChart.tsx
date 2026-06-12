@@ -17,7 +17,13 @@ interface VelocityData {
     total_min_payments: number;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+    active?: boolean;
+    payload?: { value: number }[];
+    label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-white dark:bg-black border border-gray-200 dark:border-neutral-800 p-3 rounded-lg shadow-xl">

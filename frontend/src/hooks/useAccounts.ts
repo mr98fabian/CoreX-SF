@@ -21,6 +21,14 @@ export interface Account {
     credit_limit?: number;
 }
 
+/** Raw API shape — numeric fields may arrive as strings (Decimal serialization) */
+type RawAccount = Omit<Account, 'balance' | 'interest_rate' | 'min_payment' | 'credit_limit'> & {
+    balance: number | string;
+    interest_rate: number | string;
+    min_payment: number | string;
+    credit_limit?: number | string | null;
+};
+
 // ─── Hooks ─────────────────────────────────────────────────
 
 /** Fetches all accounts with caching + safe number coercion */
@@ -28,8 +36,8 @@ export function useAccounts() {
     return useQuery<Account[]>({
         queryKey: ['accounts'],
         queryFn: async () => {
-            const data = await apiFetch<any[]>('/api/accounts');
-            return data.map((acc: any) => ({
+            const data = await apiFetch<RawAccount[]>('/api/accounts');
+            return data.map((acc) => ({
                 ...acc,
                 balance: Number(acc.balance),
                 interest_rate: Number(acc.interest_rate),

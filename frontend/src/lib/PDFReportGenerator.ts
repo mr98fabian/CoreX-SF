@@ -424,9 +424,14 @@ export async function generateMonthlyReport(
 
         // ── FREE PLAN watermark (diagonal across every page) ──
         if (isFree) {
+            // setGState/GState exist at runtime but are missing from jsPDF's typings
+            type GStateCapable = typeof doc & {
+                setGState(state: unknown): void;
+                GState: new (opts: { opacity: number }) => unknown;
+            };
+            const gDoc = doc as GStateCapable;
             doc.saveGraphicsState();
-            // @ts-ignore — setGState is available in jsPDF
-            doc.setGState(new (doc as any).GState({ opacity: 0.06 }));
+            gDoc.setGState(new gDoc.GState({ opacity: 0.06 }));
             doc.setTextColor(150, 0, 0);
             doc.setFontSize(72);
             doc.setFont('helvetica', 'bold');

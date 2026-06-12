@@ -66,7 +66,7 @@ export default function PeaceShield() {
             toast.success("Peace Shield Updated");
             setEditOpen(false);
             fetchShield();
-        } catch (e) {
+        } catch {
             toast.error("Failed to update shield");
         }
     };

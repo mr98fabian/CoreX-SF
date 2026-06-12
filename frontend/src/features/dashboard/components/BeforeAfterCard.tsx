@@ -1,5 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { getStartingDebt } from '@/lib/startingDebt';
 import { ArrowDown, ArrowUp, TrendingDown } from 'lucide-react';
 
 /**
@@ -12,20 +13,6 @@ interface BeforeAfterCardProps {
     originalDebt?: number;
     /** Current total debt */
     currentDebt: number;
-}
-
-const STORAGE_KEY = 'korex_starting_debt';
-
-/** Call this on first dashboard load to snapshot starting debt */
-export function recordStartingDebt(totalDebt: number): void {
-    if (!localStorage.getItem(STORAGE_KEY) && totalDebt > 0) {
-        localStorage.setItem(STORAGE_KEY, totalDebt.toString());
-    }
-}
-
-export function getStartingDebt(): number | null {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? parseFloat(raw) : null;
 }
 
 export function BeforeAfterCard({ originalDebt, currentDebt }: BeforeAfterCardProps) {

@@ -18,36 +18,39 @@ interface TimeMachineProps {
  * Only appears if user has been registered for 30+ days.
  * Creates healthy urgency without being aggressive.
  */
+interface TimeMachineStats {
+    monthsAgo: number;
+    potentialSavings: number;
+}
+
 export function TimeMachineCard({ dailyInterest, registrationDate }: TimeMachineProps) {
     const { language } = useLanguage();
     const { formatMoney } = useFormatMoney();
-    const [show, setShow] = useState(false);
-    const [monthsAgo, setMonthsAgo] = useState(0);
-    const [potentialSavings, setPotentialSavings] = useState(0);
+
+    // Pure derivation from props — computed in an effect-free way.
+    // "Now" is captured once per mount; day-level precision doesn't need updates.
+    const [stats, setStats] = useState<TimeMachineStats | null>(null);
 
     useEffect(() => {
-        if (dailyInterest <= 0) return;
+        if (dailyInterest <= 0 || !registrationDate) return;
 
-        // Calculate how long user has been registered
-        const regDate = registrationDate ? new Date(registrationDate) : null;
-        if (!regDate) return;
-
-        const now = new Date();
-        const diffMs = now.getTime() - regDate.getTime();
+        const regDate = new Date(registrationDate);
+        const diffMs = Date.now() - regDate.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
         // Only show if user has been around 30+ days
         if (diffDays < 30) return;
 
-        const months = Math.floor(diffDays / 30);
-        const savings = dailyInterest * diffDays * 0.3; // Conservative 30% reduction estimate
-
-        setMonthsAgo(months);
-        setPotentialSavings(savings);
-        setShow(true);
+        // Conservative 30% reduction estimate
+        const id = requestAnimationFrame(() => setStats({
+            monthsAgo: Math.floor(diffDays / 30),
+            potentialSavings: dailyInterest * diffDays * 0.3,
+        }));
+        return () => cancelAnimationFrame(id);
     }, [dailyInterest, registrationDate]);
 
-    if (!show) return null;
+    if (!stats) return null;
+    const { monthsAgo, potentialSavings } = stats;
 
     return (
         <div className="col-span-12 px-4 py-3 rounded-xl border border-amber-500/10 bg-gradient-to-r from-amber-500/5 to-transparent dark:from-amber-950/20 animate-in fade-in slide-in-from-bottom-2 duration-700">

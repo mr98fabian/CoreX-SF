@@ -20,6 +20,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
+.pytest_cache/
 dist/
 build/
 
@@ -41,3 +42,8 @@ Thumbs.db
 .agent/
 .gemini/
 .testsprite/
+*.db.bak
+
+# Backend runtime logs
+backend/uvicorn*.log
+backend/uvicorn*.log.err

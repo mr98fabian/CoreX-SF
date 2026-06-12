@@ -18,7 +18,7 @@ interface DailyInterestTickerProps {
 export function DailyInterestTicker({ dailyInterest }: DailyInterestTickerProps) {
     const { language } = useLanguage();
     const [accumulated, setAccumulated] = useState(0);
-    const startTime = useRef(Date.now());
+    const startTime = useRef<number | null>(null);
 
     // Interest per second = dailyInterest / 86400
     const perSecond = dailyInterest / 86400;
@@ -26,8 +26,10 @@ export function DailyInterestTicker({ dailyInterest }: DailyInterestTickerProps)
     useEffect(() => {
         if (dailyInterest <= 0) return;
 
+        if (startTime.current === null) startTime.current = Date.now();
+
         const interval = setInterval(() => {
-            const elapsed = (Date.now() - startTime.current) / 1000;
+            const elapsed = (Date.now() - (startTime.current ?? Date.now())) / 1000;
             setAccumulated(elapsed * perSecond);
         }, 100); // Update 10x per second for smooth ticking
 

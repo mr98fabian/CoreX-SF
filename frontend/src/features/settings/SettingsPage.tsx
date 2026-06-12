@@ -17,14 +17,12 @@ import {
     CreditCard, Crown, Zap, Rocket, Check, Tag, XCircle,
     TrendingDown, Infinity as InfinityIcon,
 } from "lucide-react";
-import { generateMonthlyReport } from "@/lib/PDFReportGenerator";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/features/auth/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
-import * as XLSX from "xlsx";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { ReferralProgram } from "@/components/ReferralProgram";
 
@@ -147,6 +145,20 @@ const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
     crown: <Crown className="h-5 w-5" />,
 };
 
+// Used when real user data is unavailable (demo, auth issues, no accounts)
+const FALLBACK_SAVINGS: SavingsData = {
+    has_data: true,
+    total_debt: 45000,
+    daily_interest_all: 22.19, // $45K * 18% / 365
+    plans: {
+        starter: { accounts_used: 2, annual_savings: 1296, monthly_savings: 108, daily_interest_burning: 4.93, roi_days: 0, plan_cost_annual: 0, years_without: 30, years_with: 18, total_interest_without: 54000, total_interest_with: 32400 },
+        velocity: { accounts_used: 5, annual_savings: 3240, monthly_savings: 270, daily_interest_burning: 12.33, roi_days: 11, plan_cost_annual: 96.99, years_without: 25, years_with: 15, total_interest_without: 112500, total_interest_with: 67500 },
+        accelerator: { accounts_used: 10, annual_savings: 4860, monthly_savings: 405, daily_interest_burning: 18.49, roi_days: 15, plan_cost_annual: 196.99, years_without: 22, years_with: 13, total_interest_without: 145800, total_interest_with: 87480 },
+        freedom: { accounts_used: 15, annual_savings: 6480, monthly_savings: 540, daily_interest_burning: 22.19, roi_days: 20, plan_cost_annual: 346.99, years_without: 20, years_with: 12, total_interest_without: 162000, total_interest_with: 97200 },
+    },
+    social_proof: { total_accounts_monitored: 2847, total_debt_tracked: 127500000 },
+};
+
 // ═══════════════════════════════════════════════════════════════════
 //  SETTINGS PAGE
 // ═══════════════════════════════════════════════════════════════════
@@ -217,20 +229,6 @@ export default function SettingsPage() {
     const { toast } = useToast();
 
     // Generic estimates based on typical US consumer debt ($45K avg, ~18% APR)
-    // Used when real user data is unavailable (demo, auth issues, no accounts)
-    const FALLBACK_SAVINGS: SavingsData = {
-        has_data: true,
-        total_debt: 45000,
-        daily_interest_all: 22.19, // $45K * 18% / 365
-        plans: {
-            starter: { accounts_used: 2, annual_savings: 1296, monthly_savings: 108, daily_interest_burning: 4.93, roi_days: 0, plan_cost_annual: 0, years_without: 30, years_with: 18, total_interest_without: 54000, total_interest_with: 32400 },
-            velocity: { accounts_used: 5, annual_savings: 3240, monthly_savings: 270, daily_interest_burning: 12.33, roi_days: 11, plan_cost_annual: 96.99, years_without: 25, years_with: 15, total_interest_without: 112500, total_interest_with: 67500 },
-            accelerator: { accounts_used: 10, annual_savings: 4860, monthly_savings: 405, daily_interest_burning: 18.49, roi_days: 15, plan_cost_annual: 196.99, years_without: 22, years_with: 13, total_interest_without: 145800, total_interest_with: 87480 },
-            freedom: { accounts_used: 15, annual_savings: 6480, monthly_savings: 540, daily_interest_burning: 22.19, roi_days: 20, plan_cost_annual: 346.99, years_without: 20, years_with: 12, total_interest_without: 162000, total_interest_with: 97200 },
-        },
-        social_proof: { total_accounts_monitored: 2847, total_debt_tracked: 127500000 },
-    };
-
     // Fetch dynamic savings data — fall back to generic estimates if API fails
     useEffect(() => {
         apiFetch<SavingsData>('/api/subscriptions/savings-estimate')
@@ -267,8 +265,9 @@ export default function SettingsPage() {
     const handleExportExcel = async () => {
         setExportLoading(true);
         try {
-            // Fetch data from API
-            const [debtsRes, transRes, accountsRes] = await Promise.all([
+            // Lazy-load xlsx (~430 KB) only when the user actually exports
+            const [XLSX, debtsRes, transRes, accountsRes] = await Promise.all([
+                import("xlsx"),
                 apiFetch<unknown[]>("/api/debts").catch(() => []),
                 apiFetch<unknown[]>("/api/transactions/recent?limit=100").catch(() => []),
                 apiFetch<unknown[]>("/api/accounts").catch(() => []),
@@ -332,7 +331,8 @@ export default function SettingsPage() {
         }
     };
 
-    const handleDownloadTemplate = () => {
+    const handleDownloadTemplate = async () => {
+        const XLSX = await import("xlsx");
         const wb = XLSX.utils.book_new();
 
         // Debts template
@@ -355,7 +355,7 @@ export default function SettingsPage() {
     const handleImportExcel = async () => {
         if (!importFile) return;
         try {
-            const data = await importFile.arrayBuffer();
+            const [XLSX, data] = await Promise.all([import("xlsx"), importFile.arrayBuffer()]);
             const wb = XLSX.read(data);
             const sheetNames = wb.SheetNames;
 
@@ -620,6 +620,8 @@ export default function SettingsPage() {
                             onClick={async () => {
                                 setPdfLoading(true);
                                 try {
+                                    // Lazy-load jsPDF (~900 KB) only when the user actually exports
+                                    const { generateMonthlyReport } = await import("@/lib/PDFReportGenerator");
                                     await generateMonthlyReport(language as 'en' | 'es', currency);
                                 } catch (err) {
                                     console.error('PDF generation failed:', err);

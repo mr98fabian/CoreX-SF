@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { emitDataChanged, useDataSync } from '@/lib/dataSync';
 import { getUserPlan, getPlanLimit, getPlanName, syncPlanFromBackend } from '@/lib/planLimits';
@@ -136,7 +136,7 @@ export default function AccountsPage() {
     const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
     // API Functions
-    const fetchAccounts = async () => {
+    const fetchAccounts = useCallback(async () => {
         try {
             setErrorMsg(null);
             const data = await apiFetch<Account[]>('/api/accounts');
@@ -155,12 +155,12 @@ export default function AccountsPage() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
         fetchAccounts();
         syncPlanFromBackend(); // Sync plan from backend on mount
-    }, []);
+    }, [fetchAccounts]);
 
     // Listen for data changes from Dashboard or Strategy pages
     useDataSync('accounts', () => {

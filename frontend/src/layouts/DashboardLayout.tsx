@@ -37,16 +37,17 @@ export default function DashboardLayout() {
         syncPlanFromBackend();
     }, []);
 
-    // Auto-close sidebar on mobile when route changes
-    useEffect(() => {
+    // Sidebar sync without effects (avoids cascading renders):
+    // viewport class change → open on desktop, close on mobile;
+    // route change on mobile → auto-close.
+    const [prevNav, setPrevNav] = useState({ path: location.pathname, mobile: isMobile });
+    if (prevNav.mobile !== isMobile) {
+        setPrevNav({ path: location.pathname, mobile: isMobile });
+        setIsSidebarOpen(!isMobile);
+    } else if (prevNav.path !== location.pathname) {
+        setPrevNav({ path: location.pathname, mobile: isMobile });
         if (isMobile) setIsSidebarOpen(false);
-    }, [location.pathname, isMobile]);
-
-    // Close sidebar when switching to mobile viewport
-    useEffect(() => {
-        if (isMobile) setIsSidebarOpen(false);
-        else setIsSidebarOpen(true);
-    }, [isMobile]);
+    }
 
     const isActive = (path: string) => {
         if (path === '/dashboard') return location.pathname === '/dashboard';

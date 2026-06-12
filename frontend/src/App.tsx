@@ -1,19 +1,21 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Suspense } from "react";
-import DashboardLayout from "@/layouts/DashboardLayout";
-import DashboardPage from "@/features/dashboard/DashboardPage";
-import AccountsPage from "@/features/accounts/AccountsPage";
-import ActionPlanPage from "@/features/actionplan/ActionPlanPage";
-import AnalyticsPage from "@/features/analytics/AnalyticsPage";
-import RankingsPage from "@/features/rankings/RankingsPage";
-
-import SettingsPage from "@/features/settings/SettingsPage";
-import LoginPage from "@/features/auth/LoginPage";
+import { Suspense, lazy } from "react";
 import LandingGate from "@/features/landing/LandingGate";
-import TermsOfServicePage from "@/features/legal/TermsOfServicePage";
-import PrivacyPolicyPage from "@/features/legal/PrivacyPolicyPage";
-import NotFoundPage from "@/features/error/NotFoundPage";
 import ErrorBoundary from "@/features/error/ErrorBoundary";
+
+// Route-level code splitting: visitors on the landing page don't download
+// the dashboard bundle (recharts, forms, etc.) and vice versa.
+const DashboardLayout = lazy(() => import("@/layouts/DashboardLayout"));
+const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage"));
+const AccountsPage = lazy(() => import("@/features/accounts/AccountsPage"));
+const ActionPlanPage = lazy(() => import("@/features/actionplan/ActionPlanPage"));
+const AnalyticsPage = lazy(() => import("@/features/analytics/AnalyticsPage"));
+const RankingsPage = lazy(() => import("@/features/rankings/RankingsPage"));
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
+const LoginPage = lazy(() => import("@/features/auth/LoginPage"));
+const TermsOfServicePage = lazy(() => import("@/features/legal/TermsOfServicePage"));
+const PrivacyPolicyPage = lazy(() => import("@/features/legal/PrivacyPolicyPage"));
+const NotFoundPage = lazy(() => import("@/features/error/NotFoundPage"));
 import LoadingScreen from "@/components/LoadingScreen";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
