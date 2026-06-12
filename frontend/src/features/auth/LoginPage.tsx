@@ -286,7 +286,7 @@ export default function LoginPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black">
+            <div className="h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-black">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
             </div>
         );
@@ -295,7 +295,7 @@ export default function LoginPage() {
     // ── Animated Success State ──
     if (view === 'success') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-4">
+            <div className="h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-4">
                 <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
@@ -351,32 +351,38 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-6 py-8">
-            <BackgroundOrbs />
+        <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-gray-100 dark:bg-black relative">
             <Styles />
 
-            {/* Raccoon Watermark — subtle brand presence */}
-            <img
-                src="/korex-isotipo.svg"
-                alt=""
-                aria-hidden="true"
-                className="absolute opacity-[0.08] w-[800px] h-[800px] pointer-events-none select-none"
-                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-            />
+            {/* Decorative background — clipped to the viewport so the oversized
+                orbs/watermark never create scrollbars. */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <BackgroundOrbs />
+                <img
+                    src="/korex-isotipo.svg"
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute opacity-[0.08] w-[800px] h-[800px] select-none"
+                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+                />
+            </div>
 
+            {/* min-h-full centers when content fits (sign in / forgot — no scroll),
+                and allows scrolling only when it overflows (sign up has many fields). */}
+            <div className="relative min-h-full flex items-center justify-center px-6 py-4">
             <div className="relative z-10 w-full max-w-[380px] sm:max-w-md">
                 {/* KoreX Brand Logo */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-4 sm:mb-5">
                     <img
                         src="/korex-imagotipo.svg"
                         alt="KoreX"
-                        className="h-28 sm:h-36 mx-auto mb-3 sm:mb-4 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
+                        className="h-16 sm:h-20 mx-auto mb-2 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
-                    <p className="text-gray-400 text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-8">
+                <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-6">
                     {/* Tabs */}
                     {view !== 'forgot' && (
                         <div className="flex bg-gray-200/60 dark:bg-neutral-800/60 rounded-xl p-1 mb-6">
@@ -671,6 +677,7 @@ export default function LoginPage() {
                         </button>
                     </p>
                 </div>
+            </div>
             </div>
         </div>
     );
