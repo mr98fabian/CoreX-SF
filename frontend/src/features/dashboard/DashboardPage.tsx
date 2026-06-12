@@ -295,7 +295,6 @@ export default function DashboardPage() {
             .finally(() => {
                 setLoading(false);
             });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Greeting based on time of day
