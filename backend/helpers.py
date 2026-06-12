@@ -19,20 +19,21 @@ def bypass_fk(session):
     Needed because cashflow_items, accounts, etc. have FK to auth.users,
     but demo/test users don't exist in that Supabase-managed table.
 
-    Handles both Postgres (production) and SQLite (tests)."""
-    dialect = session.bind.dialect.name if session.bind else "unknown"
+    Handles both Postgres (production) and SQLite (local/tests).
+    Uses the engine URL directly — session.bind is None in SQLAlchemy 2.x."""
+    from database import engine as _engine
+    dialect = _engine.dialect.name  # "sqlite" or "postgresql"
 
     if dialect == "sqlite":
         session.execute(text("PRAGMA foreign_keys = OFF"))
-    else:
-        session.execute(text("SET session_replication_role = 'replica'"))
-    try:
-        yield
-    finally:
-        if dialect == "sqlite":
+        try:
+            yield
+        finally:
             session.execute(text("PRAGMA foreign_keys = ON"))
-        else:
-            session.execute(text("SET session_replication_role = 'origin'"))
+    else:
+        # Supabase pooler doesn't allow session_replication_role.
+        # The demo user exists in auth.users via real JWT, so FK is satisfied.
+        yield
 
 
 def accounts_to_debt_objects(accounts) -> list[DebtAccount]:
