@@ -257,8 +257,15 @@ export default function LoginPage() {
         setError('');
         try {
             await signInWithGoogle();
-        } catch {
-            setError('Google sign-in failed. Please try again.');
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg.includes('redirect') || msg.includes('callback')) {
+                setError('Redirect URL not whitelisted in Supabase. Add http://localhost:5173 to Authentication → URL Configuration.');
+            } else if (msg.includes('provider') || msg.includes('not enabled')) {
+                setError('Google OAuth not configured in Supabase dashboard.');
+            } else {
+                setError(msg || 'Google sign-in failed. Please try again.');
+            }
             setIsGoogleLoading(false);
         }
     };
@@ -270,7 +277,7 @@ export default function LoginPage() {
             await signInAsDemo();
             // Fire-and-forget seed — uses raw fetch (NOT apiFetch) to avoid
             // the 401 auto-signout handler which would kill the demo session.
-            const apiBase = import.meta.env.DEV ? 'http://localhost:8000' : '';
+            const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8001' : '');
             fetch(`${apiBase}/api/dev/seed-stress-test`, {
                 method: 'POST',
                 headers: {
