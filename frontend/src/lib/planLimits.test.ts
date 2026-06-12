@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+// planLimits.ts imports apiFetch which pulls in supabase.ts (throws without env vars).
+// The functions under test don't use the network — mock the whole module.
+vi.mock('@/lib/api', () => ({ apiFetch: vi.fn() }));
 import {
     PLAN_LIMITS,
     getUserPlan,
