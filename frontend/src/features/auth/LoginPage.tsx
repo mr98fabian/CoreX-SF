@@ -125,7 +125,7 @@ function FormInput({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1.5">
+            <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1.5">
                 {label}
             </label>
             <div className="relative">
@@ -136,10 +136,10 @@ function FormInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className={`w-full px-4 py-3 bg-gray-100 dark:bg-neutral-800/60 border rounded-xl text-slate-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none transition-all
+                    className={`w-full px-4 py-3 bg-white/8 border rounded-xl text-white placeholder:text-gray-500 outline-none transition-all
                         ${error
                             ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                            : 'border-slate-300 dark:border-white/10 focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/15'
+                            : 'border-white/15 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/15'
                         } ${children ? 'pr-12' : ''}`}
                 />
                 {children}
@@ -351,7 +351,7 @@ export default function LoginPage() {
     );
 
     return (
-        <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-gray-100 dark:bg-black relative">
+        <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#060810] relative">
             <Styles />
 
             {/* Decorative background — clipped to the viewport so the oversized
@@ -362,7 +362,7 @@ export default function LoginPage() {
                     src="/korex-isotipo.svg"
                     alt=""
                     aria-hidden="true"
-                    className="absolute opacity-[0.08] w-[800px] h-[800px] select-none"
+                    className="absolute opacity-[0.18] w-[700px] h-[700px] select-none drop-shadow-[0_0_80px_rgba(251,191,36,0.12)]"
                     style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
                 />
             </div>
@@ -382,10 +382,10 @@ export default function LoginPage() {
                 </div>
 
                 {/* Card */}
-                <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-5 sm:p-6">
+                <div className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 p-5 sm:p-6">
                     {/* Tabs */}
                     {view !== 'forgot' && (
-                        <div className="flex bg-gray-200/60 dark:bg-neutral-800/60 rounded-xl p-1 mb-6">
+                        <div className="flex bg-white/8 rounded-xl p-1 mb-6">
                             {(['signin', 'signup'] as const).map((tab) => (
                                 <button
                                     key={tab}
@@ -393,7 +393,7 @@ export default function LoginPage() {
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
                                         ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                                        : 'text-gray-400 hover:text-white'
                                         }`}
                                 >
                                     {tab === 'signin' ? 'Sign In' : 'Create Account'}
@@ -615,17 +615,17 @@ export default function LoginPage() {
                     {view !== 'forgot' && (
                         <>
                             <div className="flex items-center gap-4 my-6">
-                                <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
+                                <div className="flex-1 h-px bg-white/15" />
                                 <span className="text-xs text-gray-500 uppercase tracking-wider">or</span>
-                                <div className="flex-1 h-px bg-slate-300 dark:bg-white/10" />
+                                <div className="flex-1 h-px bg-white/15" />
                             </div>
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={isGoogleLoading || isSubmitting}
                                 className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
-                                    bg-gray-100 dark:bg-neutral-800/60 border border-slate-300 dark:border-white/10 text-slate-900 dark:text-white text-sm font-medium
-                                    hover:bg-gray-200 dark:hover:bg-slate-700/60 hover:border-slate-400 dark:hover:border-white/20 transition-all duration-300
+                                    bg-white/8 border border-white/15 text-white text-sm font-medium
+                                    hover:bg-white/15 hover:border-white/25 transition-all duration-300
                                     active:scale-[0.98]
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -655,7 +655,7 @@ export default function LoginPage() {
                         </svg>
                         Secured by Supabase Auth • Google OAuth 2.0
                     </p>
-                    <p className="text-xs text-slate-600 mt-2 flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1.5">
                         KoreX Financial System v1.0
                         <span className="text-slate-700">·</span>
                         <button

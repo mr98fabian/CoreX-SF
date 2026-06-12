@@ -288,14 +288,15 @@ export default function DashboardPage() {
                 if (dashboardData?.total_debt) {
                     recordStartingDebt(dashboardData.total_debt);
                 }
-                setLoading(false);
             })
             .catch(err => {
                 console.error("Error connecting to Engine:", err);
-                toast({ title: t('dashboard.connectionError'), description: t('dashboard.connectionErrorDesc'), variant: 'destructive' });
+            })
+            .finally(() => {
                 setLoading(false);
             });
-    }, [t, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Greeting based on time of day
     const hour = new Date().getHours();

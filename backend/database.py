@@ -15,20 +15,23 @@ load_dotenv()
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
+def _make_sqlite_engine():
+    sqlite_file_name = "/tmp/korex.db" if os.environ.get("VERCEL") else "korex.db"
+    eng = create_engine(f"sqlite:///{sqlite_file_name}", connect_args={"check_same_thread": False})
+    print("[DEV] Using SQLite (local development)")
+    return eng
+
 if DATABASE_URL:
-    # Supabase PostgreSQL — Production
-    engine = create_engine(DATABASE_URL, echo=False)
-    print("✅ Connected to Supabase PostgreSQL")
+    try:
+        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        print("[OK] Connected to PostgreSQL")
+    except Exception as _pg_err:
+        print(f"[WARN] PostgreSQL unavailable ({_pg_err.__class__.__name__}), falling back to SQLite")
+        engine = _make_sqlite_engine()
 else:
-    # SQLite Fallback — Local Development
-    if os.environ.get("VERCEL"):
-        sqlite_file_name = "/tmp/korex.db"
-    else:
-        sqlite_file_name = "korex.db"
-    
-    sqlite_url = f"sqlite:///{sqlite_file_name}"
-    engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
-    print("⚠️  Using SQLite fallback (no DATABASE_URL found)")
+    engine = _make_sqlite_engine()
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
@@ -51,7 +54,7 @@ def _migrate_account_columns():
             try:
                 session.exec(text(f"ALTER TABLE accounts ADD COLUMN {col_name} {col_def}"))
                 session.commit()
-                print(f"  ✅ Added column: accounts.{col_name}")
+                print(f"  [+] Added column: accounts.{col_name}")
             except Exception:
                 session.rollback()  # Column likely already exists
 
