@@ -43,3 +43,7 @@ Thumbs.db
 .gemini/
 .testsprite/
 *.db.bak
+
+# Backend runtime logs
+backend/uvicorn*.log
+backend/uvicorn*.log.err
