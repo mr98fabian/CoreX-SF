@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Download, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-// Storage key to avoid nagging after dismissal
+// Storage key to avoid nagging after the toast has been shown
 const DISMISS_KEY = 'korex-install-dismissed';
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -13,35 +13,68 @@ interface BeforeInstallPromptEvent extends Event {
     userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+/**
+ * InstallPrompt — one-shot toast notification (mobile only).
+ * Replaces the old fixed bottom card to reduce floating UI clutter.
+ * Shows at most once every 7 days.
+ */
 export default function InstallPrompt() {
     const isMobile = useIsMobile();
-    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-    const [isVisible, setIsVisible] = useState(false);
+    const { language } = useLanguage();
+    const { toast } = useToast();
+    const deferredRef = useRef<BeforeInstallPromptEvent | null>(null);
+    const shownRef = useRef(false);
     // Already running as standalone PWA — no need to prompt
     const [isInstalled, setIsInstalled] = useState(
         () => window.matchMedia('(display-mode: standalone)').matches,
     );
 
     useEffect(() => {
-        if (isInstalled) return;
+        if (isInstalled || !isMobile || shownRef.current) return;
 
-        // Check dismissal expiry
+        // Check suppression window (7 days since last shown)
         const dismissedAt = localStorage.getItem(DISMISS_KEY);
-        if (dismissedAt && Date.now() - Number(dismissedAt) < DISMISS_DURATION_MS) {
-            return;
-        }
+        if (dismissedAt && Date.now() - Number(dismissedAt) < DISMISS_DURATION_MS) return;
+
+        const isEs = language === 'es';
 
         const handler = (e: Event) => {
             e.preventDefault();
-            setDeferredPrompt(e as BeforeInstallPromptEvent);
-            setIsVisible(true);
+            deferredRef.current = e as BeforeInstallPromptEvent;
+            if (shownRef.current) return;
+            shownRef.current = true;
+
+            // A toast is transient — record the impression so we don't nag
+            localStorage.setItem(DISMISS_KEY, String(Date.now()));
+
+            toast({
+                title: isEs ? 'Instala KoreX' : 'Install KoreX',
+                description: isEs
+                    ? 'Acceso más rápido, funciona sin conexión'
+                    : 'Faster access, works offline',
+                duration: 12000,
+                action: (
+                    <ToastAction
+                        altText={isEs ? 'Instalar' : 'Install'}
+                        onClick={async () => {
+                            const promptEvent = deferredRef.current;
+                            if (!promptEvent) return;
+                            await promptEvent.prompt();
+                            const { outcome } = await promptEvent.userChoice;
+                            if (outcome === 'accepted') setIsInstalled(true);
+                            deferredRef.current = null;
+                        }}
+                    >
+                        {isEs ? 'Instalar' : 'Install'}
+                    </ToastAction>
+                ),
+            });
         };
 
         // Track successful installs
         const installedHandler = () => {
             setIsInstalled(true);
-            setIsVisible(false);
-            setDeferredPrompt(null);
+            deferredRef.current = null;
         };
 
         window.addEventListener('beforeinstallprompt', handler);
@@ -51,67 +84,8 @@ export default function InstallPrompt() {
             window.removeEventListener('beforeinstallprompt', handler);
             window.removeEventListener('appinstalled', installedHandler);
         };
-    }, [isInstalled]);
+    }, [isInstalled, isMobile, language, toast]);
 
-    const handleInstall = useCallback(async () => {
-        if (!deferredPrompt) return;
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-            setIsInstalled(true);
-        }
-        setIsVisible(false);
-        setDeferredPrompt(null);
-    }, [deferredPrompt]);
-
-    const handleDismiss = useCallback(() => {
-        localStorage.setItem(DISMISS_KEY, String(Date.now()));
-        setIsVisible(false);
-    }, []);
-
-    if (!isVisible || isInstalled || !isMobile) return null;
-
-    return (
-        <div
-            className={cn(
-                "fixed bottom-4 left-4 right-4 z-50 flex items-center gap-3",
-                "rounded-xl border p-4 shadow-2xl backdrop-blur-xl",
-                "bg-white/95 border-gray-200 dark:bg-[#0f0f0f]/95 dark:border-white/10",
-                "animate-in slide-in-from-bottom-8 fade-in duration-500"
-            )}
-        >
-            {/* App icon */}
-            <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 p-2 shadow-lg shadow-amber-900/20">
-                <Download size={20} className="text-slate-900" />
-            </div>
-
-            {/* Text */}
-            <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                    Install KoreX
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    Faster access, works offline
-                </p>
-            </div>
-
-            {/* Actions */}
-            <Button
-                size="sm"
-                variant="premium"
-                className="flex-shrink-0 text-xs h-8 px-3"
-                onClick={handleInstall}
-            >
-                Install
-            </Button>
-            <button
-                onClick={handleDismiss}
-                className="flex-shrink-0 p-1 rounded-md text-gray-400 hover:text-slate-600 dark:hover:text-gray-300 transition-colors"
-                aria-label="Dismiss"
-            >
-                <X size={16} />
-            </button>
-        </div>
-    );
+    // Renders nothing — notification is delivered via the toast system
+    return null;
 }

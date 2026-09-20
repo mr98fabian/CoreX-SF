@@ -26,7 +26,7 @@
     --muted: 0 0% 93%;
     --muted-foreground: 0 0% 29%;     /* #4A4A4A Gris Técnico */
 
-    --accent: 48 96% 51%;             /* Gold — premium accent */
+    --accent: 0 0% 93%;               /* Neutral hover surface (gold es ceremonial, no de hover) */
     --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 51%;         /* Red-500 */
@@ -34,7 +34,7 @@
 
     --border: 0 0% 87%;               /* #dedede light border */
     --input: 0 0% 87%;
-    --ring: 48 96% 51%;               /* Gold ring for focus states */
+    --ring: 9 100% 55%;               /* Ignition ring for focus states */
 
     --radius: 0.75rem;
 
@@ -49,7 +49,15 @@
     --cx-text-secondary: 0 0% 29%;
     --cx-text-muted: 0 0% 45%;
     --cx-gradient-start: rgba(0, 0, 0, 0.03);
-    --cx-gradient-mid: rgba(251, 191, 36, 0.03);
+    --cx-gradient-mid: rgba(0, 0, 0, 0.02);
+
+    /* Fase 2 · MD-2: Elevation scale (light mode) */
+    --cx-surface-0: 0 0% 100%;         /* Base cards */
+    --cx-surface-1: 0 0% 98%;          /* Recessed areas */
+    --cx-surface-2: 0 0% 96%;          /* Hover / sunken */
+    --cx-surface-3: 0 0% 94%;          /* Elevated (modals, drawers) */
+    --cx-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --cx-shadow-elevated: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -57,46 +65,54 @@
      KoreX Brand: Negro Profundo base, Blanco Puro text, gold accents
      ═══════════════════════════════════════════════════════════════════ */
   .dark {
-    --background: 0 0% 0%;            /* #000000 Negro Profundo */
-    --foreground: 0 0% 100%;          /* #FFFFFF Blanco Puro */
+    --background: 220 37% 6%;         /* #0A0E16 negro-carbón frío (nunca #000 puro) */
+    --foreground: 220 16% 96%;        /* #F4F5F7 (nunca blanco puro) */
 
-    --card: 0 0% 6%;                  /* #0f0f0f near-black card */
-    --card-foreground: 0 0% 100%;
+    --card: 221 29% 11%;              /* #141924 surface-1 */
+    --card-foreground: 220 16% 96%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 222 26% 15%;           /* #1C2230 surface-2 */
+    --popover-foreground: 220 16% 96%;
 
-    --primary: 0 0% 100%;             /* Blanco Puro — primary actions */
-    --primary-foreground: 0 0% 0%;    /* Black text on white */
+    --primary: 220 16% 96%;           /* Acciones neutras; CTA energético = variant premium (ignition) */
+    --primary-foreground: 220 37% 6%;
 
-    --secondary: 0 0% 12%;            /* #1f1f1f dark elevated */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 222 26% 15%;         /* surface-2 elevated */
+    --secondary-foreground: 220 16% 96%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 55%;     /* #8c8c8c muted gray */
+    --muted: 221 29% 11%;
+    --muted-foreground: 221 14% 66%;  /* #9BA3B4 */
 
-    --accent: 48 96% 51%;             /* Gold — premium accent */
-    --accent-foreground: 0 0% 0%;
+    --accent: 222 26% 15%;            /* Neutral hover surface (gold es ceremonial, no de hover) */
+    --accent-foreground: 220 16% 96%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;               /* #2e2e2e subtle border */
-    --input: 0 0% 18%;
-    --ring: 48 96% 53%;               /* Gold ring */
+    --border: 220 23% 18%;            /* #232A38 */
+    --input: 220 23% 18%;
+    --ring: 9 100% 62%;               /* Ignition ring */
 
     /* KoreX semantic tokens for dark */
-    --cx-surface: 0 0% 0%;
-    --cx-surface-elevated: 0 0% 6%;
-    --cx-sidebar-bg: 0 0% 2%;
-    --cx-sidebar-border: 0 0% 18%;
-    --cx-glass: 0 0% 4% / 0.6;
-    --cx-glass-border: 0 0% 100% / 0.05;
-    --cx-text-primary: 0 0% 100%;
-    --cx-text-secondary: 0 0% 55%;
-    --cx-text-muted: 0 0% 35%;
-    --cx-gradient-start: rgba(255, 255, 255, 0.03);
-    --cx-gradient-mid: rgba(251, 191, 36, 0.03);
+    --cx-surface: 220 37% 6%;
+    --cx-surface-elevated: 221 29% 11%;
+    --cx-sidebar-bg: 220 40% 5%;
+    --cx-sidebar-border: 220 23% 18%;
+    --cx-glass: 221 29% 11% / 0.6;
+    --cx-glass-border: 220 16% 96% / 0.05;
+    --cx-text-primary: 220 16% 96%;
+    --cx-text-secondary: 221 14% 66%;
+    --cx-text-muted: 221 12% 42%;
+    --cx-gradient-start: rgba(255, 255, 255, 0.02);
+    --cx-gradient-mid: rgba(255, 255, 255, 0.015);
+
+    /* Fase 2 · MD-2: Elevation scale (dark mode) */
+    --cx-surface-0: 221 29% 11%;       /* surface-1 */
+    --cx-surface-1: 220 37% 6%;        /* base */
+    --cx-surface-2: 222 26% 15%;       /* surface-2 */
+    --cx-surface-3: 222 24% 19%;       /* elevated */
+    --cx-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.30);
+    --cx-shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.40);
   }
 }
 
@@ -128,15 +144,37 @@
 @layer utilities {
   /* ─── Glassmorphism (theme-aware) ───────────────────────────── */
   .glass-card {
-    @apply backdrop-blur-xl shadow-xl;
+    @apply backdrop-blur-xl;
     background: hsl(var(--cx-glass));
     border: 1px solid hsl(var(--cx-glass-border));
+    /* Fase 2 · MD-2: sombra sutil y jerárquica en lugar de shadow-xl plano */
+    box-shadow: var(--cx-shadow-card);
   }
 
   .glass-panel {
     @apply backdrop-blur-md;
     background: hsl(var(--cx-glass));
     border: 1px solid hsl(var(--cx-glass-border));
+  }
+
+  /* ─── Fase 2 · MD-2: Elevation utilities (theme-aware) ──────── */
+  .shadow-card {
+    box-shadow: var(--cx-shadow-card);
+  }
+  .shadow-elevated {
+    box-shadow: var(--cx-shadow-elevated);
+  }
+  .surface-0 {
+    background: hsl(var(--cx-surface-0));
+  }
+  .surface-1 {
+    background: hsl(var(--cx-surface-1));
+  }
+  .surface-2 {
+    background: hsl(var(--cx-surface-2));
+  }
+  .surface-3 {
+    background: hsl(var(--cx-surface-3));
   }
 
   /* ─── Theme-aware surface utilities ─────────────────────────── */
@@ -169,10 +207,12 @@
 
   /* ─── Light mode specific card style ────────────────────────── */
   :root .card-elevated {
-    @apply bg-white shadow-md shadow-black/5 border border-gray-200;
+    @apply bg-white border border-gray-200;
+    box-shadow: var(--cx-shadow-elevated);
   }
   .dark .card-elevated {
-    @apply bg-[#0f0f0f] shadow-xl shadow-black/30 border border-white/5;
+    @apply bg-[#0f0f0f] border border-white/5;
+    box-shadow: var(--cx-shadow-elevated);
   }
 
   /* ─── Smooth theme transition ───────────────────────────────── */

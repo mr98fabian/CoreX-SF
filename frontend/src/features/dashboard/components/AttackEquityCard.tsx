@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Sword, ShieldAlert, Zap, Calendar, Lightbulb, ShieldCheck, Trophy, Banknote, Link2, Home, Loader2 } from 'lucide-react';
+import { Sword, ShieldAlert, Zap, Calendar, Lightbulb, ShieldCheck, Trophy, Banknote, Link2, Home, Loader2, Landmark, PiggyBank, CreditCard } from 'lucide-react';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import {
     AlertDialog,
@@ -72,18 +72,18 @@ const SOURCE_ICONS: Record<string, typeof Banknote> = {
 };
 
 const SOURCE_LABELS: Record<string, string> = {
-    cash: '💰 Cash',
-    uil: '🔗 UIL',
-    heloc: '🏠 HELOC',
-    combined: '⚡ Combo',
-    multi: '💰 Multi-Source',
+    cash: 'Cash',
+    uil: 'UIL',
+    heloc: 'HELOC',
+    combined: 'Combo',
+    multi: 'Multi-Source',
 };
 
-const ACCOUNT_TYPE_ICON: Record<string, string> = {
-    checking: '🏦',
-    savings: '🐷',
-    uil: '🔗',
-    heloc: '🏠',
+const ACCOUNT_TYPE_ICON: Record<string, typeof Banknote> = {
+    checking: Landmark,
+    savings: PiggyBank,
+    uil: Link2,
+    heloc: Home,
 };
 
 export default function AttackEquityCard({
@@ -132,18 +132,16 @@ export default function AttackEquityCard({
 
     return (
         <>
-            <Card className="relative overflow-hidden group border-amber-300 dark:border-amber-500/30 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/10 dark:to-black hover:border-amber-400 dark:hover:border-amber-500/60 transition-colors duration-500">
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
+            <Card className="relative overflow-hidden group border-border bg-card hover:border-ignition/40 transition-colors">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-                    <CardTitle className="text-sm font-medium text-amber-600 dark:text-amber-500 flex items-center gap-2">
-                        Attack Equity <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">Action</span>
+                    <CardTitle className="text-sm font-medium text-ignition flex items-center gap-2">
+                        Attack Equity <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-ignition-soft text-ignition border border-ignition/30">Action</span>
                     </CardTitle>
-                    <Sword className="h-4 w-4 text-amber-600 dark:text-amber-500" strokeWidth={1.5} />
+                    <Sword className="h-4 w-4 text-ignition" strokeWidth={1.5} />
                 </CardHeader>
                 <CardContent className="relative z-10">
                     <div className="flex flex-col gap-1 mb-4">
-                        <div className="text-4xl font-extrabold text-amber-700 dark:text-amber-400 drop-shadow-none dark:drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] leading-tight">
+                        <div className="text-4xl font-extrabold font-mono tabular-nums text-ignition leading-tight">
                             {formatMoney(attackEquity)}
                         </div>
 
@@ -206,7 +204,7 @@ export default function AttackEquityCard({
                                     })()}
                                     <span>{rec.reason_es}</span>
                                 </span>
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-ignition-soft text-ignition border border-ignition/30">
                                     {SOURCE_LABELS[rec.type] || rec.type}
                                 </span>
                             </div>
@@ -216,10 +214,9 @@ export default function AttackEquityCard({
                                 onClick={() => setShowConfirm(true)}
                                 disabled={executingAttack}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm
-                                    bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-                                    text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40
-                                    transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]
-                                    disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    bg-ignition hover:bg-ignition-hover text-ignition-ink
+                                    transition-colors duration-200 active:scale-[0.98]
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {executingAttack ? (
                                     <>
@@ -254,7 +251,7 @@ export default function AttackEquityCard({
 
                                     if (isToday) {
                                         return (
-                                            <div className="flex items-center gap-1.5 text-white dark:text-emerald-950 bg-emerald-500 dark:bg-emerald-400 px-3 py-0.5 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)] animate-pulse">
+                                            <div className="flex items-center gap-1.5 text-white dark:text-emerald-950 bg-emerald-500 dark:bg-emerald-400 px-3 py-0.5 rounded-full">
                                                 <Calendar className="h-3 w-3" strokeWidth={2} />
                                                 <span className="font-extrabold tracking-tight">{t('dashboard.attackCard.today')}</span>
                                             </div>
@@ -348,7 +345,7 @@ export default function AttackEquityCard({
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-500 dark:text-zinc-500">Total Ataque:</span>
-                                        <span className="font-bold text-amber-600 dark:text-amber-400">{formatMoney(rec?.amount || 0)}</span>
+                                        <span className="font-bold text-ignition">{formatMoney(rec?.amount || 0)}</span>
                                     </div>
                                 </div>
 
@@ -358,7 +355,10 @@ export default function AttackEquityCard({
                                     {allAllocations.map((a, i) => (
                                         <div key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-base">{ACCOUNT_TYPE_ICON[a.source_type] || '💳'}</span>
+                                                {(() => {
+                                                    const TypeIcon = ACCOUNT_TYPE_ICON[a.source_type] || CreditCard;
+                                                    return <TypeIcon className="h-4 w-4 text-gray-500 dark:text-zinc-400" strokeWidth={1.5} />;
+                                                })()}
                                                 <div className="flex flex-col">
                                                     <span className="text-xs font-medium text-slate-700 dark:text-zinc-300">{a.source_name}</span>
                                                     {a.balance_after !== undefined && (
@@ -369,7 +369,7 @@ export default function AttackEquityCard({
                                                     )}
                                                 </div>
                                             </div>
-                                            <span className="font-bold font-mono text-sm text-amber-600 dark:text-amber-400">{formatMoney(a.amount)}</span>
+                                            <span className="font-bold font-mono text-sm text-ignition">{formatMoney(a.amount)}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -380,9 +380,9 @@ export default function AttackEquityCard({
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleExecute}
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0"
+                            className="bg-ignition hover:bg-ignition-hover text-ignition-ink border-0"
                         >
-                            <Zap className="h-4 w-4 mr-1 fill-white" strokeWidth={1.5} />
+                            <Zap className="h-4 w-4 mr-1" strokeWidth={1.5} />
                             Confirmar Ataque
                         </AlertDialogAction>
                     </AlertDialogFooter>

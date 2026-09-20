@@ -29,12 +29,16 @@ export default function TacticalActionBanner() {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
 
+                    // Midday anchor: a bare YYYY-MM-DD parses as UTC midnight, which lands
+                    // on the previous day in negative-UTC timezones — today's movement
+                    // would then be filtered out as "past".
                     const upcoming = data.filter((m: Movement) => {
-                        const moveDate = new Date(m.date);
+                        const moveDate = new Date(`${m.date}T12:00:00`);
                         return moveDate >= today;
                     });
 
-                    upcoming.sort((a: Movement, b: Movement) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    upcoming.sort((a: Movement, b: Movement) =>
+                        new Date(`${a.date}T12:00:00`).getTime() - new Date(`${b.date}T12:00:00`).getTime());
 
                     setNextMove(upcoming.length > 0 ? upcoming[0] : null);
                 }
@@ -61,13 +65,13 @@ export default function TacticalActionBanner() {
 
     const isAttack = nextMove.type === 'attack' || nextMove.type === 'pump';
     const bgColor = isAttack
-        ? 'bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/50 dark:to-blue-950/50'
-        : 'bg-gray-100/50 dark:bg-zinc-900/50';
+        ? 'bg-emerald-500/5'
+        : 'bg-secondary/50';
 
-    const borderColor = isAttack ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-gray-200 dark:border-zinc-800';
+    const borderColor = isAttack ? 'border-emerald-200 dark:border-emerald-500/20' : 'border-border';
 
     return (
-        <div className={`flex items-center justify-between px-4 py-2 border-t ${borderColor} ${bgColor} backdrop-blur-sm transition-all duration-500`}>
+        <div className={`flex items-center justify-between px-4 py-2 border-t ${borderColor} ${bgColor} transition-colors`}>
             <div className="flex items-center gap-3 overflow-hidden">
                 <div className={`p-1 rounded-full ${isAttack ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                     {isAttack ? <RefreshCw size={12} strokeWidth={1.5} /> : <ArrowRight size={12} strokeWidth={1.5} />}
@@ -77,7 +81,7 @@ export default function TacticalActionBanner() {
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
                             {(() => {
-                                const moveDate = new Date(nextMove.date);
+                                const moveDate = new Date(`${nextMove.date}T12:00:00`);
                                 const today = new Date();
                                 moveDate.setHours(0, 0, 0, 0);
                                 today.setHours(0, 0, 0, 0);

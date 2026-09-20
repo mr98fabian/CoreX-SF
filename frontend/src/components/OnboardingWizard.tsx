@@ -7,6 +7,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/features/auth/AuthContext';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { apiFetch } from '@/lib/api';
 import {
     Rocket, TrendingUp, TrendingDown, Wallet, CreditCard,
@@ -109,6 +111,8 @@ interface OnboardingWizardProps {
 
 export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) {
     const { t, language } = useLanguage();
+    const { isDemo } = useAuth();
+    const { formatMoney } = useFormatMoney();
     const [currentStep, setCurrentStep] = useState(0);
     const [direction, setDirection] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -310,7 +314,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
     };
 
     // ── Format money ─────────────────────────────────────────
-    const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const fmt = formatMoney;
 
     // ── Template click handler ───────────────────────────────
     const applyTemplate = (name: string, freq: string, category: 'income' | 'expense') => {
@@ -489,6 +493,17 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                     {t('onboarding.welcomeDesc')}
                 </p>
             </div>
+
+            {/* Demo Mode notice — replaces the old DemoWelcomeModal */}
+            {isDemo && (
+                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 max-w-md">
+                    <p className="text-xs text-amber-300/90 leading-relaxed">
+                        {language === 'es'
+                            ? 'Modo Demo: exploras KoreX con datos ficticios precargados. Los cambios son temporales y se reinician al cerrar sesión.'
+                            : 'Demo Mode: you are exploring KoreX with pre-loaded fictional data. Changes are temporary and reset after logout.'}
+                    </p>
+                </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3 max-w-sm w-full mt-4">
                 {[

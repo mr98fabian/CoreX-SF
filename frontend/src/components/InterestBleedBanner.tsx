@@ -1,8 +1,9 @@
 /**
- * InterestBleedBanner — Sticky bottom bar (free users only).
- * 
- * Shows real daily interest loss e.g. "💸 Estás perdiendo $13.15/día en intereses"
- * with a CTA to upgrade and stop the bleed.
+ * InterestBleedBanner — Inline dashboard banner (free users only).
+ *
+ * Shows real daily interest loss e.g. "Estás perdiendo $13.15/día en intereses"
+ * with a CTA to upgrade and stop the bleed. Rendered inline at the top of
+ * the dashboard — no longer a fixed overlay.
  *
  * Psychology: Loss aversion + urgency + real data = high conversion.
  * Source: neuromarketing-conversion skill §2
@@ -54,22 +55,22 @@ export function InterestBleedBanner() {
 
     return (
         <>
-            <div className="fixed bottom-0 left-0 right-0 z-[100] animate-in slide-in-from-bottom-4 fade-in duration-500">
-                <div className="bg-gradient-to-r from-rose-950/95 via-red-950/95 to-rose-950/95 backdrop-blur-xl border-t border-rose-500/30 shadow-2xl shadow-rose-900/40">
-                    <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div className="animate-in fade-in duration-500">
+                <div className="bg-card/95 backdrop-blur-xl rounded-xl border border-l-2 border-l-rose-500 border-border">
+                    <div className="px-4 py-3 flex items-center justify-between gap-3">
                         {/* Left: Loss indicator */}
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="flex-shrink-0 p-2 rounded-full bg-rose-500/20 animate-pulse">
+                            <div className="flex-shrink-0 p-2 rounded-full bg-rose-500/10">
                                 <TrendingDown size={18} className="text-rose-400" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-sm font-bold text-white truncate">
-                                    💸 {isEs
+                                <p className="text-sm font-bold text-foreground truncate">
+                                    {isEs
                                         ? `Estás perdiendo $${dailyInterest.toFixed(2)}/día en intereses`
                                         : `You're losing $${dailyInterest.toFixed(2)}/day in interest`
                                     }
                                 </p>
-                                <p className="text-[11px] text-rose-300/70 truncate">
+                                <p className="text-[11px] text-muted-foreground truncate">
                                     {isEs
                                         ? `= $${monthlyLoss}/mes · $${yearlyLoss}/año que le regalas al banco`
                                         : `= $${monthlyLoss}/mo · $${yearlyLoss}/yr gifted to the bank`
@@ -82,7 +83,7 @@ export function InterestBleedBanner() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <button
                                 onClick={() => setShowUpgrade(true)}
-                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-900/30 hover:scale-105 active:scale-95 animate-pulse"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-ignition hover:bg-ignition-hover text-ignition-ink text-xs font-bold transition-colors active:scale-95"
                             >
                                 {isEs ? 'Detener sangría' : 'Stop the bleed'}
                                 <ArrowUpRight size={14} />

@@ -8,14 +8,14 @@ const buttonVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-primary text-primary-foreground hover:bg-gold-400 shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all duration-300 font-bold tracking-wide",
-                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-rose-900/20",
-                outline: "border border-input bg-background/50 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground",
-                secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                ghost: "hover:bg-accent hover:text-accent-foreground",
+                default: "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold",
+                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors",
+                outline: "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground transition-colors",
+                secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors",
+                ghost: "hover:bg-accent hover:text-accent-foreground transition-colors",
                 link: "text-primary underline-offset-4 hover:underline",
-                premium: "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600 text-white border-0 hover:brightness-110 shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] transition-all duration-500 animate-pulse-glow",
-                glow: "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.6)] hover:bg-emerald-400"
+                premium: "bg-ignition text-ignition-ink border-0 hover:bg-ignition-hover transition-colors font-semibold",
+                glow: "bg-emerald-500 text-white hover:bg-emerald-400 transition-colors font-semibold"
             },
             size: {
                 default: "h-10 px-4 py-2",

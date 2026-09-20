@@ -1,9 +1,9 @@
 /**
  * SessionTimeoutWarning — Warns users before their auth token expires.
  *
- * Monitors the Supabase auth session and shows a non-intrusive warning
- * 5 minutes before expiration. Offers "Stay Logged In" (refreshes token)
- * or auto-redirects to login when expired.
+ * Monitors the Supabase auth session and shows a toast notification
+ * 5 minutes before expiration. The toast action refreshes the token;
+ * when the session expires, the user is signed out automatically.
  *
  * Security rationale:
  * - Prevents data loss from mid-workflow logouts
@@ -11,10 +11,11 @@
  * - Logs session events for audit trail
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Clock, RefreshCw, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/components/ui/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 const WARNING_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes before expiry
 const CHECK_INTERVAL_MS = 30 * 1000; // Check every 30 seconds
@@ -22,12 +23,34 @@ const CHECK_INTERVAL_MS = 30 * 1000; // Check every 30 seconds
 export function SessionTimeoutWarning() {
     const { user, signOut } = useAuth();
     const { language } = useLanguage();
-    const [showWarning, setShowWarning] = useState(false);
+    const { toast } = useToast();
     const [timeLeft, setTimeLeft] = useState('');
-    const [refreshing, setRefreshing] = useState(false);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [warningActive, setWarningActive] = useState(false);
+    const toastRef = useRef<ReturnType<typeof toast> | null>(null);
 
     const isEs = language === 'es';
+
+    const dismissWarning = useCallback(() => {
+        toastRef.current?.dismiss();
+        toastRef.current = null;
+    }, []);
+
+    const handleRefresh = useCallback(async () => {
+        try {
+            const { error } = await supabase.auth.refreshSession();
+            if (error) {
+                console.error('[Session] Refresh failed:', error.message);
+                dismissWarning();
+                signOut();
+            } else {
+                console.info('[Session] Token refreshed successfully');
+                setWarningActive(false);
+                dismissWarning();
+            }
+        } catch (err) {
+            console.error('[Session] Refresh error:', err);
+        }
+    }, [signOut, dismissWarning]);
 
     const checkSession = useCallback(async () => {
         if (!user) return;
@@ -36,12 +59,12 @@ export function SessionTimeoutWarning() {
         const session = data?.session;
         if (!session?.expires_at) return;
 
-        const expiresAt = session.expires_at * 1000; // Convert to ms
-        const remaining = expiresAt - Date.now();
+        const remaining = session.expires_at * 1000 - Date.now();
 
         if (remaining <= 0) {
             // Session expired — force signOut
             console.warn('[Session] Token expired, redirecting to login');
+            dismissWarning();
             signOut();
             return;
         }
@@ -50,80 +73,66 @@ export function SessionTimeoutWarning() {
             const mins = Math.floor(remaining / 60000);
             const secs = Math.floor((remaining % 60000) / 1000);
             setTimeLeft(`${mins}:${secs.toString().padStart(2, '0')}`);
-            setShowWarning(true);
+            setWarningActive(true);
         } else {
-            setShowWarning(false);
+            setWarningActive(false);
         }
-    }, [user, signOut]);
+    }, [user, signOut, dismissWarning]);
 
     useEffect(() => {
         if (!user) return;
 
-        checkSession();
-        intervalRef.current = setInterval(checkSession, CHECK_INTERVAL_MS);
-
+        // Deferred to a callback — avoids synchronous setState in the effect body
+        const initial = setTimeout(checkSession, 0);
+        const interval = setInterval(checkSession, CHECK_INTERVAL_MS);
         return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
+            clearTimeout(initial);
+            clearInterval(interval);
         };
     }, [user, checkSession]);
 
-    const handleRefresh = useCallback(async () => {
-        setRefreshing(true);
-        try {
-            const { error } = await supabase.auth.refreshSession();
-            if (error) {
-                console.error('[Session] Refresh failed:', error.message);
-                signOut();
-            } else {
-                console.info('[Session] Token refreshed successfully');
-                setShowWarning(false);
-            }
-        } catch (err) {
-            console.error('[Session] Refresh error:', err);
-        } finally {
-            setRefreshing(false);
+    // Drive the toast from warning state — create once, update the countdown
+    useEffect(() => {
+        if (!warningActive) return;
+
+        const title = isEs ? 'Sesión por expirar' : 'Session Expiring';
+        const description = isEs
+            ? `Tu sesión expira en ${timeLeft}`
+            : `Your session expires in ${timeLeft}`;
+        const action = (
+            <ToastAction
+                altText={isEs ? 'Seguir conectado' : 'Stay Logged In'}
+                onClick={handleRefresh}
+            >
+                {isEs ? 'Seguir conectado' : 'Stay Logged In'}
+            </ToastAction>
+        );
+
+        if (toastRef.current) {
+            toastRef.current.update({
+                id: toastRef.current.id,
+                title,
+                description,
+                action,
+                duration: WARNING_THRESHOLD_MS,
+            });
+        } else {
+            toastRef.current = toast({
+                title,
+                description,
+                action,
+                duration: WARNING_THRESHOLD_MS,
+            });
         }
-    }, [signOut]);
+    }, [warningActive, timeLeft, isEs, handleRefresh, toast]);
 
-    if (!showWarning || !user) return null;
+    // Dismiss the toast if the warning clears or the component unmounts
+    useEffect(() => {
+        if (!warningActive) dismissWarning();
+    }, [warningActive, dismissWarning]);
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:items-end sm:justify-end sm:p-4 pointer-events-none animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <div className="rounded-2xl border border-amber-500/30 bg-[#0f0f0f]/95 backdrop-blur-xl shadow-2xl shadow-amber-500/10 p-4 space-y-3 max-w-sm w-full pointer-events-auto">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-amber-500/15 text-amber-400 animate-pulse">
-                        <Clock size={20} />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-white">
-                            {isEs ? 'Sesión por expirar' : 'Session Expiring'}
-                        </p>
-                        <p className="text-xs text-amber-400/80">
-                            {isEs
-                                ? `Tu sesión expira en ${timeLeft}`
-                                : `Your session expires in ${timeLeft}`}
-                        </p>
-                    </div>
-                </div>
+    useEffect(() => dismissWarning, [dismissWarning]);
 
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold transition-all disabled:opacity-50"
-                    >
-                        <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-                        {isEs ? 'Seguir conectado' : 'Stay Logged In'}
-                    </button>
-                    <button
-                        onClick={signOut}
-                        className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 text-xs font-medium transition-all"
-                    >
-                        <LogOut size={14} />
-                        {isEs ? 'Salir' : 'Logout'}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    // Renders nothing — notification is delivered via the toast system
+    return null;
 }

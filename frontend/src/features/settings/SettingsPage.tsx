@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFormatMoney } from "@/hooks/useFormatMoney";
 import { useAuth } from "@/features/auth/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api";
@@ -164,6 +165,7 @@ const FALLBACK_SAVINGS: SavingsData = {
 // ═══════════════════════════════════════════════════════════════════
 export default function SettingsPage() {
     const { t, language, setLanguage } = useLanguage();
+    const { formatMoney, formatMoneyShort } = useFormatMoney();
     usePageTitle(t("nav.settings"));
     const { user, isDemo } = useAuth();
     const onboarding = useOnboarding();
@@ -946,17 +948,17 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="flex items-center gap-6 text-center">
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">${sd.daily_interest_all.toFixed(2)}</p>
+                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoney(sd.daily_interest_all)}</p>
                                         <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perDay')}</p>
                                     </div>
                                     <div className="h-8 w-px bg-red-500/20" />
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 30).toFixed(0)}</p>
+                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoneyShort(sd.daily_interest_all * 30)}</p>
                                         <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perMonth')}</p>
                                     </div>
                                     <div className="h-8 w-px bg-red-500/20" />
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">${(sd.daily_interest_all * 365).toFixed(0)}</p>
+                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoneyShort(sd.daily_interest_all * 365)}</p>
                                         <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perYear')}</p>
                                     </div>
                                 </div>
@@ -974,14 +976,14 @@ export default function SettingsPage() {
                                     <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">{t('sub.withoutKorex')}</p>
                                     <p className="text-2xl font-black text-red-400">{sd.plans.freedom.years_without} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toPayOff')}</p>
-                                    <p className="text-sm font-bold text-red-400 mt-2">${sd.plans.freedom.total_interest_without.toLocaleString()}</p>
+                                    <p className="text-sm font-bold text-red-400 mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_without)}</p>
                                     <p className="text-[10px] text-red-400/60">{t('sub.totalInterest')}</p>
                                 </div>
                                 <div className="p-5 text-center bg-emerald-500/5">
                                     <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">{t('sub.withKorex')}</p>
                                     <p className="text-2xl font-black text-emerald-400">{sd.plans.freedom.years_with} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toFreedom')}</p>
-                                    <p className="text-sm font-bold text-emerald-400 mt-2">${sd.plans.freedom.total_interest_with.toLocaleString()}</p>
+                                    <p className="text-sm font-bold text-emerald-400 mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_with)}</p>
                                     <p className="text-[10px] text-emerald-400/60">{t('sub.totalInterest')}</p>
                                 </div>
                             </div>
@@ -1136,8 +1138,8 @@ export default function SettingsPage() {
                                     {sd?.has_data && sd.plans?.[plan.id] && sd.plans[plan.id].annual_savings > 0 && (() => {
                                         const s = sd.plans[plan.id];
                                         const displaySavings = billingCycle === 'monthly'
-                                            ? `~$${Math.round(s.monthly_savings).toLocaleString()}/mo`
-                                            : `~$${Math.round(s.annual_savings).toLocaleString()}/yr`;
+                                            ? `~${formatMoneyShort(s.monthly_savings)}/mo`
+                                            : `~${formatMoneyShort(s.annual_savings)}/yr`;
                                         const netGain = s.annual_savings - s.plan_cost_annual;
 
                                         return (

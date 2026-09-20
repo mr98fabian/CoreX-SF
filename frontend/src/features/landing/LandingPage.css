@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   KoreX Landing Page — GTA VI Cinematic Edition
-   Inspired by rockstargames.com/VI: full-bleed hero, film grain,
+   KoreX Landing Page — Premium Fintech Experience
+   Inspired by modern fintech (Revolut, N26, Stripe): full-bleed hero,
    cinematic letterboxing, bold typography, scroll-driven reveals.
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -60,7 +60,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   HERO — Full-Bleed Cinematic (GTA VI Style)
+   HERO — Full-Bleed Cinematic
    ═══════════════════════════════════════════════════════════════════════ */
 .lp-hero {
     min-height: 100vh;
@@ -235,7 +235,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SECTION TYPOGRAPHY — Bold, Impact, GTA Style
+   SECTION TYPOGRAPHY — Bold, Impact, Editorial Style
    ═══════════════════════════════════════════════════════════════════════ */
 .lp-section-label {
     font-family: 'Rajdhani', sans-serif;
@@ -572,6 +572,13 @@
     font-weight: 300;
 }
 
+.lp-step-icon {
+    display: inline-block;
+    vertical-align: -2px;
+    margin-right: 0.45rem;
+    color: var(--lp-accent-gold);
+}
+
 .lp-explainer-insight {
     display: flex;
     gap: 0.75rem;
@@ -585,9 +592,11 @@
 }
 
 .lp-insight-icon {
-    font-size: 1.3rem;
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
     margin-top: 2px;
+    color: var(--lp-accent-emerald);
 }
 
 .lp-explainer-insight p {

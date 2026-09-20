@@ -10,14 +10,11 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import { syncPlanFromBackend } from '@/lib/planLimits';
 import UpgradeNudge from '@/components/UpgradeNudge';
-import { InterestBleedBanner } from '@/components/InterestBleedBanner';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import { SessionTimeoutWarning } from '@/components/SessionTimeoutWarning';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { OnboardingResumePopup } from '@/components/OnboardingResumePopup';
-import DemoWelcomeModal from '@/components/DemoWelcomeModal';
 import { useCelebration } from '@/hooks/useCelebration';
 import { CommanderBadge } from '@/components/CommanderBadge';
 
@@ -36,6 +33,15 @@ export default function DashboardLayout() {
     useEffect(() => {
         syncPlanFromBackend();
     }, []);
+
+    // Listen for onboarding restart requests from the inline resume card
+    // (rendered inside DashboardPage) so the wizard state stays in this hook instance
+    useEffect(() => {
+        const handler = () => { void onboarding.restart(); };
+        window.addEventListener('korex:restart-onboarding', handler);
+        return () => window.removeEventListener('korex:restart-onboarding', handler);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [onboarding.restart]);
 
     // Sidebar sync without effects (avoids cascading renders):
     // viewport class change → open on desktop, close on mobile;
@@ -89,11 +95,11 @@ export default function DashboardLayout() {
                 {navLinks.map(({ path, icon: Icon, label }) => (
                     <Link key={path} to={path} onClick={() => isMobile && setIsSidebarOpen(false)}>
                         <Button
-                            variant={isActive(path) ? "premium" : "ghost"}
+                            variant="ghost"
                             className={cn(
-                                "w-full justify-start gap-2 h-10 transition-all",
+                                "w-full justify-start gap-2 h-10 transition-colors",
                                 isActive(path)
-                                    ? "shadow-lg shadow-black/20 dark:shadow-white/10"
+                                    ? "bg-ignition-soft text-ignition hover:bg-ignition-soft hover:text-ignition"
                                     : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
                             )}
                         >
@@ -184,9 +190,6 @@ export default function DashboardLayout() {
 
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
-                {/* Ambient glow */}
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 via-transparent to-white/3 pointer-events-none dark:from-white/[0.02] dark:to-white/[0.01] opacity-30 dark:opacity-100" />
-
                 {/* TOP BAR / HEADER */}
                 <header className="flex h-14 items-center gap-4 border-b px-4 backdrop-blur-md sticky top-0 z-10 bg-white/60 border-gray-200 dark:bg-black/30 dark:border-white/5">
                     <Button
@@ -225,11 +228,9 @@ export default function DashboardLayout() {
             </main>
             <FeedbackWidget />
             <UpgradeNudge />
-            <InterestBleedBanner />
             <InstallPrompt />
             <OfflineIndicator />
             <SessionTimeoutWarning />
-            <DemoWelcomeModal />
 
             {/* ═══ ONBOARDING WIZARD (fullscreen modal) ═══ */}
             {!onboarding.isLoading && !onboarding.hasCompleted && (
@@ -242,16 +243,6 @@ export default function DashboardLayout() {
                         // Mark complete so wizard closes, but flag as skipped
                         await onboarding.complete();
                         localStorage.setItem('korex_onboarding_skipped', 'true');
-                    }}
-                />
-            )}
-
-            {/* Resume popup — only shown if user skipped the tutorial */}
-            {onboarding.hasCompleted && (
-                <OnboardingResumePopup
-                    onResume={async () => {
-                        localStorage.removeItem('korex_onboarding_skipped');
-                        await onboarding.restart();
                     }}
                 />
             )}

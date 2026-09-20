@@ -294,7 +294,9 @@ export default function ActionPlanPage() {
     // ── Filter movements by selected month ───────────────────
     const filteredMovements = useMemo(() => {
         return movements.filter((m) => {
-            const d = new Date(m.date);
+            // Midday anchor: a bare YYYY-MM-DD parses as UTC midnight, which lands on
+            // the previous day (and previous month) in negative-UTC timezones.
+            const d = new Date(`${m.date}T12:00:00`);
             return d.getMonth() === currentMonth.month && d.getFullYear() === currentMonth.year;
         });
     }, [movements, currentMonth]);

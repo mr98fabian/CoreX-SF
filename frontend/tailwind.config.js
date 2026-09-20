@@ -20,7 +20,8 @@ module.exports = {
         extend: {
             fontFamily: {
                 sans: ["Montserrat", ...defaultTheme.fontFamily.sans],
-                display: ["Rajdhani", "Montserrat", ...defaultTheme.fontFamily.sans],
+                display: ["Space Grotesk", "Montserrat", ...defaultTheme.fontFamily.sans],
+                tech: ["Rajdhani", "Montserrat", ...defaultTheme.fontFamily.sans],
                 mono: ["JetBrains Mono", "Space Mono", ...defaultTheme.fontFamily.mono],
             },
             colors: {
@@ -63,18 +64,37 @@ module.exports = {
                     tech: '#4A4A4A',
                     pure: '#FFFFFF',
                 },
-                // Premium accent — dopamine triggers (CTAs, badges, milestones)
+                // Ignition — ancla de energía (CTAs, estados activos, progreso de ataque)
+                ignition: {
+                    DEFAULT: '#FF5B3D',
+                    hover: '#FF7256',
+                    soft: 'rgba(255, 91, 61, 0.10)',
+                    ink: '#1A0805',
+                },
+                // Gold — SOLO milestones/ranks/tier Freedom (máx. 1 por pantalla)
                 gold: {
-                    400: '#fbbf24',
-                    500: '#f59e0b',
-                    600: '#d97706',
+                    400: '#F5B942',
+                    500: '#D4A017',
+                    600: '#b8890f',
                 },
                 // Semantic financial colors (per neuro-design)
                 emerald: {
                     400: '#34d399',
                     500: '#10b981',
                     600: '#059669',
-                }
+                },
+                // ═══ Fase 2 · MD-1: Unified semantic palette ═══
+                // Regla de diseño: máximo 1 color semántico por card/widget.
+                // SUCCESS — positivo, cash, ahorro
+                success: { DEFAULT: '#10b981', soft: 'rgba(16, 185, 129, 0.10)' },
+                // DANGER — deuda, error, alerta real
+                danger: { DEFAULT: '#f43f5e', soft: 'rgba(244, 63, 94, 0.10)' },
+                // WARNING — atención, no urgente
+                warning: { DEFAULT: '#f59e0b', soft: 'rgba(245, 158, 11, 0.10)' },
+                // PREMIUM — milestones, VIP, ranks (alias ceremonial de gold)
+                premium: { DEFAULT: '#D4A017', soft: 'rgba(212, 160, 23, 0.10)' },
+                // INFO — tips, ayuda, info neutral
+                info: { DEFAULT: '#3b82f6', soft: 'rgba(59, 130, 246, 0.10)' },
             },
             borderRadius: {
                 lg: "var(--radius)",

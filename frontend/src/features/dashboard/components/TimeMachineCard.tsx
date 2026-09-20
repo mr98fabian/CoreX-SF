@@ -53,14 +53,14 @@ export function TimeMachineCard({ dailyInterest, registrationDate }: TimeMachine
     const { monthsAgo, potentialSavings } = stats;
 
     return (
-        <div className="col-span-12 px-4 py-3 rounded-xl border border-amber-500/10 bg-gradient-to-r from-amber-500/5 to-transparent dark:from-amber-950/20 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        <div className="col-span-12 px-4 py-3 rounded-xl border border-border bg-card animate-in fade-in slide-in-from-bottom-2 duration-700">
             <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/10 flex-shrink-0 mt-0.5">
-                    <Clock size={16} className="text-amber-400" />
+                <div className="p-2 rounded-lg bg-ignition-soft flex-shrink-0 mt-0.5">
+                    <Clock size={16} className="text-ignition" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-amber-400/80 font-medium mb-0.5">
-                        {language === 'es' ? '⏰ Máquina del Tiempo' : '⏰ Time Machine'}
+                    <p className="text-[11px] text-ignition/80 font-medium mb-0.5">
+                        {language === 'es' ? 'Máquina del Tiempo' : 'Time Machine'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                         {language === 'es'

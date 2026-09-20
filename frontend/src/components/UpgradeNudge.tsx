@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowUpRight, X, AlertTriangle, Crown, Sparkles } from 'lucide-react';
+import { ArrowUpRight, X, AlertTriangle, Crown, Sparkles, Infinity as InfinityIcon, Shield, Zap, FileText } from 'lucide-react';
 import UpgradeModal from '@/components/UpgradeModal';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -79,14 +79,10 @@ export default function UpgradeNudge() {
                     {/* Modal Card */}
                     <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
                         <div
-                            className="relative w-full max-w-md pointer-events-auto overflow-hidden rounded-3xl border border-amber-500/30 bg-black/98 backdrop-blur-xl shadow-2xl shadow-amber-900/30 animate-in zoom-in-95 slide-in-from-bottom-4 duration-500"
+                            className="relative w-full max-w-md pointer-events-auto overflow-hidden rounded-3xl border border-border bg-card animate-in zoom-in-95 slide-in-from-bottom-4 duration-500"
                         >
-                            {/* Ambient glow effects */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-emerald-500/5 pointer-events-none" />
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/15 rounded-full blur-[100px] -translate-y-1/2 pointer-events-none" />
-
                             {/* Top accent bar */}
-                            <div className="h-1.5 bg-gradient-to-r from-amber-400 via-amber-500 to-emerald-500" />
+                            <div className="h-1.5 bg-ignition" />
 
                             {/* Dismiss button */}
                             <button
@@ -99,9 +95,9 @@ export default function UpgradeNudge() {
 
                             <div className="relative p-8 space-y-6 text-center">
                                 {/* Icon */}
-                                <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-900/20">
+                                <div className={`mx-auto w-20 h-20 rounded-2xl border flex items-center justify-center ${isFree ? 'bg-gold-400/10 border-gold-400/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
                                     {isFree
-                                        ? <Crown size={36} className="text-amber-400" />
+                                        ? <Crown size={36} className="text-gold-400" />
                                         : <AlertTriangle size={36} className="text-rose-400" />
                                     }
                                 </div>
@@ -110,7 +106,7 @@ export default function UpgradeNudge() {
                                 <div className="space-y-2">
                                     <h2 className="text-2xl font-extrabold text-white tracking-tight">
                                         {isFree
-                                            ? <>🚀 {t('upgrade.unlockPower')}</>
+                                            ? t('upgrade.unlockPower')
                                             : t('upgrade.debtsUnmonitored')
                                         }
                                     </h2>
@@ -126,13 +122,13 @@ export default function UpgradeNudge() {
                                 {isFree && (
                                     <div className="grid grid-cols-2 gap-2 text-left">
                                         {[
-                                            { icon: '📊', text: 'Cuentas Ilimitadas' },
-                                            { icon: '🛡️', text: 'Peace Shield™' },
-                                            { icon: '⚡', text: 'Estrategia Avanzada' },
-                                            { icon: '📈', text: 'Reportes PDF' },
+                                            { Icon: InfinityIcon, text: 'Cuentas Ilimitadas' },
+                                            { Icon: Shield, text: 'Peace Shield™' },
+                                            { Icon: Zap, text: 'Estrategia Avanzada' },
+                                            { Icon: FileText, text: 'Reportes PDF' },
                                         ].map((f, i) => (
                                             <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5">
-                                                <span className="text-base">{f.icon}</span>
+                                                <f.Icon size={15} className="text-ignition shrink-0" strokeWidth={1.75} />
                                                 <span className="text-xs text-gray-300 font-medium">{f.text}</span>
                                             </div>
                                         ))}
@@ -142,7 +138,7 @@ export default function UpgradeNudge() {
                                 {/* CTA Button */}
                                 <button
                                     onClick={handleUpgrade}
-                                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black text-sm font-extrabold transition-all shadow-xl shadow-amber-900/40 hover:shadow-amber-900/60 hover:scale-[1.02] active:scale-[0.98] group animate-pulse"
+                                    className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-ignition hover:bg-ignition-hover text-ignition-ink text-sm font-extrabold transition-colors active:scale-[0.98] group"
                                 >
                                     <Sparkles size={16} />
                                     {t('upgrade.viewUpgradePlans')}

@@ -255,10 +255,9 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                 onClick={() => setShowConfirm(true)}
                                 disabled={executingAttack}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-bold text-sm
-                                    bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600
-                                    text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40
-                                    transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]
-                                    disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                    bg-ignition hover:bg-ignition-hover text-ignition-ink
+                                    transition-colors duration-200 active:scale-[0.98]
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {executingAttack ? (
                                     <>
@@ -278,8 +277,8 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                         <button
                             onClick={handleGoToActionPlan}
                             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm
-                                bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500
-                                text-white shadow-lg shadow-amber-900/20 hover:shadow-amber-500/25 transition-all duration-300 active:scale-[0.98]"
+                                bg-ignition hover:bg-ignition-hover text-ignition-ink
+                                transition-colors duration-200 active:scale-[0.98]"
                         >
                             <Rocket className="h-4 w-4 shrink-0" />
                             {t("strategy.morningBriefing.executeFrom")} {t("strategy.morningBriefing.actionPlan")}
@@ -364,7 +363,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                         <AlertDialogAction
                             onClick={handleConfirmedExecute}
                             disabled={executingAttack}
-                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold border-0"
+                            className="bg-ignition hover:bg-ignition-hover text-ignition-ink font-bold border-0"
                         >
                             {executingAttack ? (
                                 <>

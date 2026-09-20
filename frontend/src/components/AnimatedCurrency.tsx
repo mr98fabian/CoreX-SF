@@ -53,7 +53,7 @@ export function AnimatedCurrency({
     }, [value, spring]);
 
     return (
-        <motion.span className={`tabular-nums ${className}`}>
+        <motion.span className={`font-mono tabular-nums ${className}`}>
             {display}
         </motion.span>
     );

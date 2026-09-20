@@ -89,13 +89,13 @@ function groupAccounts(accounts: AccountFull[], isEs: boolean) {
 
     const groups: { label: string; icon: string; accounts: AccountFull[] }[] = [];
     if (bankAccounts.length > 0) {
-        groups.push({ label: isEs ? '🏦 Cuentas Bancarias' : '🏦 Bank Accounts', icon: 'bank', accounts: bankAccounts });
+        groups.push({ label: isEs ? 'Cuentas Bancarias' : 'Bank Accounts', icon: 'bank', accounts: bankAccounts });
     }
     if (creditCards.length > 0) {
-        groups.push({ label: isEs ? '💳 Tarjetas de Crédito' : '💳 Credit Cards', icon: 'cc', accounts: creditCards });
+        groups.push({ label: isEs ? 'Tarjetas de Crédito' : 'Credit Cards', icon: 'cc', accounts: creditCards });
     }
     if (otherDebts.length > 0) {
-        groups.push({ label: isEs ? '📋 Otros Préstamos' : '📋 Other Loans', icon: 'loan', accounts: otherDebts });
+        groups.push({ label: isEs ? 'Otros Préstamos' : 'Other Loans', icon: 'loan', accounts: otherDebts });
     }
 
     return groups;

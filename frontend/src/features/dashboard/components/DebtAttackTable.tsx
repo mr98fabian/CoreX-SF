@@ -84,12 +84,10 @@ export default function DebtAttackTable() {
                     <div className="space-y-6">
                         {/* ACTIVE TARGET */}
                         {velocityTarget && (
-                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent group-hover:translate-x-full duration-1000 transition-transform"></div>
-
+                            <div className="rounded-xl border border-ignition/30 bg-ignition-soft p-4 relative overflow-hidden group">
                                 <div className="flex justify-between items-start relative mb-4">
                                     <div>
-                                        <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <div className="text-xs font-bold text-ignition uppercase tracking-wider mb-1 flex items-center gap-1">
                                             <AlertTriangle className="h-3 w-3" /> Priority Target
                                         </div>
                                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">{velocityTarget.name}</h3>

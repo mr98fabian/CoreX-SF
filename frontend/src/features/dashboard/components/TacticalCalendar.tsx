@@ -43,12 +43,10 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
     if (!days || days.length === 0) return null;
 
     return (
-        <Card className="border-blue-300 dark:border-blue-500/20 bg-white/50 dark:bg-black/40 backdrop-blur-xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
-
+        <Card className="border-border bg-card relative overflow-hidden">
             <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-400 flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                     TACTICAL CASHFLOW MAP
                 </CardTitle>
             </CardHeader>
@@ -88,7 +86,7 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
                                     {day.events.slice(0, 2).map((event, i) => (
                                         <div key={i} className="flex items-center gap-1 w-full">
                                             <div className={cn("w-1.5 h-1.5 rounded-full shrink-0",
-                                                event.type === 'bill' ? "bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.5)]" : "bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"
+                                                event.type === 'bill' ? "bg-rose-500" : "bg-emerald-500"
                                             )} />
                                             <span className="text-[9px] text-zinc-400 truncate leading-none">
                                                 {formatMoney(event.amount)}
@@ -105,10 +103,10 @@ export default function TacticalCalendar({ days, shieldTarget }: TacticalCalenda
 
                                 {/* Status Line */}
                                 {isDanger && (
-                                    <div className="absolute inset-x-0 bottom-0 h-1 bg-rose-500 shadow-[0_0_10px_#f43f5e]" />
+                                    <div className="absolute inset-x-0 bottom-0 h-1 bg-rose-500" />
                                 )}
                                 {day.is_reinforcement && (
-                                    <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500 shadow-[0_0_10px_#10b981]" />
+                                    <div className="absolute inset-x-0 bottom-0 h-1 bg-emerald-500" />
                                 )}
 
                                 {/* Hover Tooltip (Native Title for speed) */}

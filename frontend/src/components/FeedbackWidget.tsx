@@ -63,7 +63,6 @@ export default function FeedbackWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [isSent, setIsSent] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [pulse, setPulse] = useState(false);
     const panelRef = useRef<HTMLDivElement>(null);
 
     // Form state
@@ -71,17 +70,6 @@ export default function FeedbackWidget() {
     const [priority, setPriority] = useState<Priority>('medium');
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
-
-    // Subtle pulse every 45s to hint the button exists
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (!isOpen) {
-                setPulse(true);
-                setTimeout(() => setPulse(false), 2000);
-            }
-        }, 45000);
-        return () => clearInterval(interval);
-    }, [isOpen]);
 
     // Close on outside click/touch
     useEffect(() => {
@@ -318,10 +306,9 @@ export default function FeedbackWidget() {
                             type="submit"
                             disabled={isSubmitting || !email.trim() || !message.trim()}
                             className={cn(
-                                'w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200',
-                                'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-                                'hover:from-amber-400 hover:to-orange-400 hover:shadow-lg hover:shadow-amber-500/20',
-                                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none',
+                                'w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold transition-colors duration-200',
+                                'bg-ignition text-ignition-ink hover:bg-ignition-hover',
+                                'disabled:opacity-50 disabled:cursor-not-allowed',
                                 'active:scale-[0.98]'
                             )}
                         >
@@ -351,7 +338,6 @@ export default function FeedbackWidget() {
                     'hover:bg-amber-500/10 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/10',
                     'active:scale-95',
                     isOpen && 'bg-amber-500/10 border-amber-500/30 rotate-12',
-                    pulse && 'animate-bounce'
                 )}
             >
                 <Bug
@@ -363,10 +349,6 @@ export default function FeedbackWidget() {
                             : 'text-gray-400 dark:text-gray-500 group-hover:text-amber-500'
                     )}
                 />
-                {/* Subtle ping dot */}
-                {!isOpen && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-white dark:border-neutral-800 animate-pulse" />
-                )}
             </button>
         </div>
     );

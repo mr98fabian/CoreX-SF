@@ -1,7 +1,7 @@
 /**
- * LandingPage — GTA VI Cinematic Edition.
+ * LandingPage — Premium Fintech Experience.
  *
- * Inspired by rockstargames.com/VI:
+ * Inspired by modern fintech: Revolut, N26, Stripe.
  * - Full-bleed hero with cinematic letterboxing
  * - Film grain overlay for texture
  * - Bold Oswald typography (uppercase, impactful)
@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Zap, Shield, BarChart3, Award, Lightbulb } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './LandingPage.css';
@@ -31,8 +32,8 @@ gsap.registerPlugin(ScrollTrigger);
 const copy = {
     hero: {
         tagline: {
-            en: 'The weapon banks don\'t want you to have.',
-            es: 'El arma que los bancos no quieren que tengas.',
+            en: 'The strategy banks hope you never discover.',
+            es: 'La estrategia que los bancos esperan que nunca descubras.',
         },
         cta: { en: 'Calculate Your Savings', es: 'Calcula Tu Ahorro' },
         secondary: { en: 'Watch Demo', es: 'Ver Demo' },
@@ -55,8 +56,8 @@ const copy = {
     solution: {
         label: { en: 'THE SOLUTION', es: 'LA SOLUCIÓN' },
         title: {
-            en: 'Turn The Banks\' Math Against Them',
-            es: 'Usa las matemáticas de los bancos en su contra',
+            en: 'Use the Same Math, For Your Benefit',
+            es: 'Usa las mismas matemáticas, a tu favor',
         },
         subtitle: {
             en: 'KoreX uses Velocity Banking — the same compound interest strategy banks use to profit from you, but reversed in your favor.',
@@ -64,25 +65,25 @@ const copy = {
         },
         features: [
             {
-                icon: '⚔️',
+                icon: Zap,
                 bg: 'rgba(139, 92, 246, 0.15)',
-                title: { en: 'Attack Engine', es: 'Motor de Ataque' },
+                title: { en: 'Debt Accelerator', es: 'Acelerador de Deuda' },
                 desc: {
-                    en: 'AI identifies which debt to attack first for maximum interest savings. Each "attack" can save you $200-$2,000.',
-                    es: 'La IA identifica qué deuda atacar primero para máximo ahorro en intereses. Cada "ataque" puede ahorrarte $200-$2,000.',
+                    en: 'AI identifies which debt to pay down first for maximum interest savings. Each optimized payment can save you $200-$2,000.',
+                    es: 'La IA identifica qué deuda pagar primero para máximo ahorro en intereses. Cada pago optimizado puede ahorrarte $200-$2,000.',
                 },
             },
             {
-                icon: '🛡️',
+                icon: Shield,
                 bg: 'rgba(52, 211, 153, 0.15)',
                 title: { en: 'Peace Shield', es: 'Escudo de Paz' },
                 desc: {
-                    en: 'Build an emergency buffer of 2-3 months expenses before attacking debt. Financial peace of mind.',
-                    es: 'Construye un colchón de emergencia de 2-3 meses antes de atacar deuda. Tranquilidad financiera real.',
+                    en: 'Build an emergency buffer of 2-3 months expenses before accelerating debt payoff. Financial peace of mind.',
+                    es: 'Construye un colchón de emergencia de 2-3 meses antes de acelerar el pago de tu deuda. Tranquilidad financiera real.',
                 },
             },
             {
-                icon: '📊',
+                icon: BarChart3,
                 bg: 'rgba(245, 158, 11, 0.15)',
                 title: { en: 'Cashflow GPS', es: 'GPS de Cashflow' },
                 desc: {
@@ -91,7 +92,7 @@ const copy = {
                 },
             },
             {
-                icon: '🎖️',
+                icon: Award,
                 bg: 'rgba(251, 113, 133, 0.15)',
                 title: { en: 'Hero Rank System', es: 'Sistema de Rango' },
                 desc: {
@@ -638,7 +639,7 @@ export default function LandingPage() {
                             <div className="lp-explainer-step">
                                 <span className="lp-step-number">1</span>
                                 <div>
-                                    <strong>{L === 'es' ? '📊 GPS de Cashflow' : '📊 Cashflow GPS'}</strong>
+                                    <strong><BarChart3 size={16} className="lp-step-icon" />{L === 'es' ? 'GPS de Cashflow' : 'Cashflow GPS'}</strong>
                                     <p>{L === 'es'
                                         ? 'La IA analiza tus ingresos, gastos y balances de deuda para crear un mapa completo de tu flujo de dinero.'
                                         : 'AI analyzes your income, expenses and debt balances to create a complete map of your money flow.'
@@ -649,10 +650,10 @@ export default function LandingPage() {
                             <div className="lp-explainer-step">
                                 <span className="lp-step-number">2</span>
                                 <div>
-                                    <strong>{L === 'es' ? '🛡️ Escudo de Paz' : '🛡️ Peace Shield'}</strong>
+                                    <strong><Shield size={16} className="lp-step-icon" />{L === 'es' ? 'Escudo de Paz' : 'Peace Shield'}</strong>
                                     <p>{L === 'es'
-                                        ? 'Primero construye un buffer de emergencia de 2-3 meses. Nunca atacas deuda desde una posición de riesgo.'
-                                        : 'First builds a 2-3 month emergency buffer. You never attack debt from a position of risk.'
+                                        ? 'Primero construye un buffer de emergencia de 2-3 meses. Nunca pagas deuda desde una posición de riesgo.'
+                                        : 'First builds a 2-3 month emergency buffer. You never pay down debt from a position of risk.'
                                     }</p>
                                 </div>
                             </div>
@@ -660,10 +661,10 @@ export default function LandingPage() {
                             <div className="lp-explainer-step">
                                 <span className="lp-step-number">3</span>
                                 <div>
-                                    <strong>{L === 'es' ? '⚔️ Motor de Ataque' : '⚔️ Attack Engine'}</strong>
+                                    <strong><Zap size={16} className="lp-step-icon" />{L === 'es' ? 'Acelerador de Deuda' : 'Debt Accelerator'}</strong>
                                     <p>{L === 'es'
-                                        ? 'Usa tu línea de crédito como arma: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada "ataque" puede ahorrarte $200-$2,000.'
-                                        : 'Uses your credit line as a weapon: deposit paycheck → pay debts with the line → reduce principal + interest. Each "attack" can save you $200-$2,000.'
+                                        ? 'Pone tu línea de crédito a trabajar: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada pago estratégico puede ahorrarte $200-$2,000.'
+                                        : 'Puts your credit line to work: deposit paycheck → pay debts with the line → reduce principal + interest. Each strategic payment can save you $200-$2,000.'
                                     }</p>
                                 </div>
                             </div>
@@ -671,7 +672,7 @@ export default function LandingPage() {
                             <div className="lp-explainer-step">
                                 <span className="lp-step-number">4</span>
                                 <div>
-                                    <strong>{L === 'es' ? '🎖️ Libertad Financiera' : '🎖️ Financial Freedom'}</strong>
+                                    <strong><Award size={16} className="lp-step-icon" />{L === 'es' ? 'Libertad Financiera' : 'Financial Freedom'}</strong>
                                     <p>{L === 'es'
                                         ? 'Proyecciones a 90 días te muestran exactamente cuándo muere cada deuda. Verás tu fecha de libertad desde el día uno.'
                                         : '90-day projections show you exactly when each debt dies. You\'ll see your freedom date from day one.'
@@ -681,7 +682,7 @@ export default function LandingPage() {
                         </div>
 
                         <div className="lp-explainer-insight">
-                            <span className="lp-insight-icon">💡</span>
+                            <span className="lp-insight-icon"><Lightbulb size={20} /></span>
                             <p>{L === 'es'
                                 ? 'La clave: los bancos cobran interés sobre el capital. Al reducir el capital agresivamente con pagos chunk, el interés que pagas se desploma. Es la misma matemática que usan ellos — pero invertida.'
                                 : 'The key: banks charge interest on principal. By aggressively reducing principal with chunk payments, the interest you pay plummets. Same math they use — but reversed.'

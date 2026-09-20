@@ -102,10 +102,7 @@ export default function PeaceShield() {
     const fillPct = Math.min(100, data.fill_percentage);
 
     return (
-        <Card className={`relative overflow-hidden border transition-all duration-500 group h-full flex flex-col justify-center ${isCharged
-            ? 'border-emerald-200 dark:border-emerald-900/40 bg-gradient-to-r from-white dark:from-zinc-950 to-emerald-50 dark:to-emerald-950/10 shadow-lg dark:shadow-[0_0_20px_rgba(16,185,129,0.08)]'
-            : 'border-amber-200 dark:border-amber-900/40 bg-gradient-to-r from-white dark:from-zinc-950 to-amber-50 dark:to-amber-950/10 shadow-lg dark:shadow-[0_0_20px_rgba(245,158,11,0.08)]'
-            }`}>
+        <Card className="relative overflow-hidden border-border bg-card transition-colors group h-full flex flex-col justify-center">
             <CardContent className="p-4">
                 <div className="absolute top-2 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -193,35 +190,18 @@ export default function PeaceShield() {
                         <div className="w-full h-2.5 rounded-full bg-gray-200 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-800/50 overflow-hidden mb-1.5">
                             <div
                                 className={`h-full rounded-full transition-all duration-1000 ease-out ${isCharged
-                                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-400'
-                                    : 'bg-gradient-to-r from-amber-700 to-amber-400'
+                                    ? 'bg-emerald-500'
+                                    : 'bg-ignition'
                                     }`}
-                                style={{
-                                    width: `${fillPct}%`,
-                                    boxShadow: fillPct >= 100
-                                        ? '0 0 20px #10b981, 0 0 40px #10b98155'
-                                        : fillPct >= 75
-                                            ? '0 0 12px #10b98199'
-                                            : fillPct >= 50
-                                                ? '0 0 8px #f59e0b88'
-                                                : 'none',
-                                    animation: fillPct >= 100 ? 'shield-pulse 2s ease-in-out infinite' : 'none',
-                                }}
+                                style={{ width: `${fillPct}%` }}
                             />
                         </div>
-                        {/* Shield pulse animation keyframes */}
-                        <style>{`
-                            @keyframes shield-pulse {
-                                0%, 100% { box-shadow: 0 0 20px #10b981, 0 0 40px #10b98155; }
-                                50% { box-shadow: 0 0 30px #10b981, 0 0 60px #10b98188; }
-                            }
-                        `}</style>
 
                         <div className="flex items-center justify-between text-[11px]">
                             <span className="text-zinc-500 font-mono">
                                 {formatMoney(data.current_fill)} / {formatMoney(data.shield_target)}
                             </span>
-                            <span className={`font-bold ${isCharged ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            <span className={`font-bold ${isCharged ? 'text-emerald-400' : 'text-ignition'}`}>
                                 {fillPct}%
                             </span>
                         </div>
@@ -251,19 +231,19 @@ export default function PeaceShield() {
                 {/* Progressive motivational messages — Skill: neuroventa §5 */}
                 <div className={`mt-3 px-3 py-2 rounded-lg text-xs flex items-center gap-2 ${isCharged
                     ? 'bg-emerald-500/5 border border-emerald-900/20 text-emerald-400/80'
-                    : 'bg-amber-500/5 border border-amber-900/20 text-amber-400/80'
+                    : 'bg-ignition-soft border border-ignition/20 text-ignition/90'
                     }`}>
                     <Shield size={12} className="flex-shrink-0" />
                     <span>
                         {fillPct >= 100
-                            ? '⚡ ESCUDO COMPLETO. Ahora... MODO ATAQUE.'
+                            ? 'Escudo completo. Modo ataque desbloqueado.'
                             : fillPct >= 75
-                                ? '🔥 Casi IRROMPIBLE. Un empujón más.'
+                                ? 'Casi irrompible. Un empujón más.'
                                 : fillPct >= 50
-                                    ? '💪 A mitad de camino a la invencibilidad.'
+                                    ? 'A mitad de camino a la invencibilidad.'
                                     : fillPct >= 25
-                                        ? '🛡️ Ya eres más seguro que la mayoría.'
-                                        : '🌱 Tu escudo se está formando. Cada dólar lo fortalece.'}
+                                        ? 'Ya eres más seguro que la mayoría.'
+                                        : 'Tu escudo se está formando. Cada dólar lo fortalece.'}
                     </span>
                 </div>
             </CardContent>

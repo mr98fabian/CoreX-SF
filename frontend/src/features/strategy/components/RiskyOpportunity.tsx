@@ -186,7 +186,7 @@ export default function RiskyOpportunity({ data, onExecuted }: Props) {
                     </div>
 
                     {/* 🚀 Benefit Summary — What you gain from this action */}
-                    <div className="rounded-xl bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/30 dark:to-blue-950/20 border border-emerald-300 dark:border-emerald-500/20 p-4 space-y-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-300 dark:border-emerald-500/20 p-4 space-y-3">
                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                             <Rocket className="h-4 w-4" />
                             <span className="text-sm font-bold">{t('strategy.riskyOpp.benefitTitle')}</span>

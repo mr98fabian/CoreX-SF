@@ -33,9 +33,6 @@ export function BeforeAfterCard({ originalDebt, currentDebt }: BeforeAfterCardPr
 
     return (
         <div className="rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-white/50 dark:bg-zinc-950/30 p-3 overflow-hidden relative">
-            {/* Decorative gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-transparent to-emerald-500/5 pointer-events-none" />
-
             <div className="relative">
                 <div className="flex items-center gap-2 mb-3">
                     <TrendingDown size={14} className="text-emerald-400" />

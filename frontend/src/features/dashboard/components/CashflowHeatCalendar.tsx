@@ -375,7 +375,7 @@ export default function CashflowHeatCalendar() {
                                                     min-h-[36px] sm:min-h-0
                                                     ${getHeatColor(day.balance, minBal, maxBal)}
                                                     ${day.is_today
-                                                        ? "ring-2 ring-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] z-10"
+                                                        ? "ring-2 ring-ignition z-10"
                                                         : ""}
                                                     ${isSelected
                                                         ? "ring-2 ring-white/60 scale-110"
@@ -383,7 +383,7 @@ export default function CashflowHeatCalendar() {
                                                 `}
                                                 title={`${day.date}: ${formatMoney(day.balance)}`}
                                             >
-                                                <span className={`leading-none ${day.is_today ? "text-amber-500 dark:text-amber-300 font-bold" : "text-slate-600 dark:text-gray-300"}`}>
+                                                <span className={`leading-none ${day.is_today ? "text-ignition font-bold" : "text-slate-600 dark:text-gray-300"}`}>
                                                     {day.day_num}
                                                 </span>
                                                 {/* Event dots */}
@@ -422,8 +422,8 @@ export default function CashflowHeatCalendar() {
                                 transition: 'opacity 150ms ease',
                             }}
                         >
-                            {/* Accent bar */}
-                            <div className="h-1 bg-gradient-to-r from-cyan-500 via-amber-400 to-emerald-500 rounded-t-2xl" />
+                            {/* Accent bar — escala de heat: negativo → positivo */}
+                            <div className="h-1 bg-gradient-to-r from-rose-500 via-zinc-500 to-emerald-500 rounded-t-2xl" />
                             <DayDetailContent
                                 selectedDay={selectedDay}
                                 minBal={minBal}

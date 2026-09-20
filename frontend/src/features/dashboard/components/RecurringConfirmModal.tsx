@@ -79,13 +79,13 @@ export default function RecurringConfirmModal({
 
             {/* Modal */}
             <div className="relative w-full max-w-lg bg-white/95 dark:bg-[#0f0f0f]/95 backdrop-blur-xl border border-gray-200 dark:border-neutral-700/50 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 animate-in zoom-in-95 fade-in duration-300 overflow-hidden">
-                {/* Header — gradient accent bar */}
-                <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-violet-500" />
+                {/* Header — ignition accent bar */}
+                <div className="h-1 bg-ignition" />
 
                 <div className="px-6 pt-5 pb-2 flex items-center justify-between">
                     <div>
                         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            <Sparkles size={18} className="text-amber-400" />
+                            <Sparkles size={18} className="text-ignition" />
                             {isEs ? 'Confirmación del Día' : "Today's Check-In"}
                         </h2>
                         <p className="text-xs text-gray-400 mt-0.5">
@@ -108,7 +108,7 @@ export default function RecurringConfirmModal({
                         <div className="flex items-center gap-3">
                             <div className="flex-1 h-1.5 bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
+                                    className="h-full bg-emerald-500 rounded-full transition-all duration-700 ease-out"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
@@ -213,7 +213,7 @@ export default function RecurringConfirmModal({
                                         <button
                                             onClick={() => handleConfirm(item)}
                                             disabled={isItemConfirming}
-                                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-semibold transition-all disabled:opacity-50 shadow-lg shadow-emerald-900/20"
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors disabled:opacity-50"
                                         >
                                             {isItemConfirming ? (
                                                 <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -275,7 +275,7 @@ export default function RecurringConfirmModal({
                 {/* All confirmed celebration */}
                 {items.length === 0 && confirmedCount > 0 && (
                     <div className="px-6 pb-6 text-center animate-in zoom-in-95 fade-in duration-500">
-                        <div className="text-4xl mb-2">🎯</div>
+                        <CheckCircle2 size={36} className="text-emerald-400 mx-auto mb-2" strokeWidth={1.5} />
                         <p className="text-sm font-bold text-emerald-400">
                             {isEs ? '¡Todo confirmado!' : 'All confirmed!'}
                         </p>

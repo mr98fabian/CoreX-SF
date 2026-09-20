@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Zap, Flame, BarChart3 } from 'lucide-react';
 import { getCommanderRank, getEffectiveScore, type CommanderRank } from '@/hooks/useCommanderRank';
 import { useLoginStreak } from '@/hooks/useLoginStreak';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -34,10 +35,10 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
     if (compact) {
         return (
             <div
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold transition-all"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold transition-colors"
                 style={{
-                    background: `linear-gradient(135deg, ${rank.material.glowColor}, transparent)`,
-                    borderColor: rank.material.color,
+                    background: `${rank.material.color}14`,
+                    borderColor: `${rank.material.color}59`,
                     borderWidth: '1px',
                     borderStyle: 'solid',
                     color: rank.material.color,
@@ -56,27 +57,15 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
 
     return (
         <div
-            className="relative overflow-hidden rounded-xl border p-3 transition-all duration-500 group"
-            style={{
-                borderColor: `${rank.material.color}40`,
-                background: `linear-gradient(135deg, ${rank.material.glowColor}, transparent 70%)`,
-            }}
+            className="relative overflow-hidden rounded-xl border bg-card p-3 transition-colors group"
+            style={{ borderColor: `${rank.material.color}40` }}
         >
-            {/* Ambient glow */}
-            <div
-                className="absolute -top-4 -right-4 w-24 h-24 rounded-full blur-2xl opacity-30 pointer-events-none transition-opacity group-hover:opacity-50"
-                style={{ background: rank.material.color }}
-            />
-
             {/* Rank display */}
             <div className="relative flex items-center gap-2.5">
-                {/* Material emoji with glow */}
+                {/* Material emblem */}
                 <div
                     className="flex items-center justify-center w-10 h-10 rounded-lg text-xl"
-                    style={{
-                        background: `${rank.material.glowColor}`,
-                        boxShadow: `0 0 12px ${rank.material.glowColor}`,
-                    }}
+                    style={{ background: `${rank.material.color}1f` }}
                 >
                     {rank.material.emoji}
                 </div>
@@ -105,8 +94,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
                                     className="h-full rounded-full transition-all duration-1000 ease-out"
                                     style={{
                                         width: `${rank.progressPercent}%`,
-                                        background: `linear-gradient(90deg, ${rank.material.color}80, ${rank.material.color})`,
-                                        boxShadow: `0 0 6px ${rank.material.glowColor}`,
+                                        background: rank.material.color,
                                     }}
                                 />
                             </div>
@@ -139,15 +127,15 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
 
             {/* Paid boost indicator */}
             {isPaid && (
-                <div className="absolute bottom-1.5 right-2 text-[8px] font-bold text-amber-400/60 flex items-center gap-0.5">
-                    ⚡ 2x
+                <div className="absolute bottom-1.5 right-2 text-[8px] font-bold text-gold-400 flex items-center gap-0.5">
+                    <Zap size={9} /> 2x
                 </div>
             )}
 
             {/* Streak info */}
             <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
-                <span>🔥 {streak.rawStreak} {isEs ? 'días racha' : 'day streak'}</span>
-                <span>📊 {streak.score} {isEs ? 'pts' : 'pts'}</span>
+                <span className="flex items-center gap-1"><Flame size={11} className="text-ignition" /> {streak.rawStreak} {isEs ? 'días racha' : 'day streak'}</span>
+                <span className="flex items-center gap-1"><BarChart3 size={11} /> {streak.score} {isEs ? 'pts' : 'pts'}</span>
             </div>
         </div>
     );
