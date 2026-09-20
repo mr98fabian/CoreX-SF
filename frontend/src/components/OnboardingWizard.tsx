@@ -2,9 +2,9 @@
  * OnboardingWizard — 7-step fullscreen modal collecting financial data.
  * Steps: Welcome → Income → Expenses → Assets → Debts → Peace Shield → Success
  * Uses existing APIs (POST /api/cashflow, POST /api/accounts, PUT /api/strategy/peace-shield).
- * All steps except Welcome, Peace Shield, and Success require ≥1 item.
+ * All steps except Welcome, Assets, Peace Shield, and Success require ≥1 item.
  */
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BANK_NAMES, getCardsByBank, getNationalAverageAPR, type CardAPRInfo } from '@/lib/creditCardAPRs';
+import { MoneyAmount } from '@/components/MoneyAmount';
+import { AssumptionsBreakdown, type ProjectionAssumptions } from '@/components/AssumptionsBreakdown';
 
 // ── Types ──────────────────────────────────────────────────
 interface CashflowFormData {
@@ -113,7 +115,16 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
     const { t, language } = useLanguage();
     const { isDemo } = useAuth();
     const { formatMoney } = useFormatMoney();
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep, setCurrentStep] = useState(() => {
+        const saved = Number(localStorage.getItem('korex_onboarding_step'));
+        return Number.isInteger(saved) && saved >= 0 && saved <= 6 ? saved : 0;
+    });
+
+    // Persist so OnboardingResumePopup ('Reanudar') continues where the user
+    // left off instead of restarting the whole flow from step 0.
+    useEffect(() => {
+        localStorage.setItem('korex_onboarding_step', String(currentStep));
+    }, [currentStep]);
     const [direction, setDirection] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -166,13 +177,65 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
         setCurrentStep(prev => Math.max(prev - 1, 0));
     };
 
+    // Seed a real APR default the first time the debts step is reached, so an
+    // unedited field doesn't silently submit 0% (false minimum-payment math).
+    // If the user already calculated a projection on the landing page (no signup
+    // required, see VelocityCalculatorModal), prefill what they typed there
+    // instead of making them re-enter it.
+    // React.StrictMode double-invokes effects in dev; without this ref guard,
+    // the 2nd invocation would find sessionStorage already cleared by the 1st
+    // and fall through to overwrite the just-applied handoff APR with the
+    // plain national-average default.
+    const debtStepSeeded = useRef(false);
+    useEffect(() => {
+        if (currentStep !== 4 || debtStepSeeded.current) return;
+        debtStepSeeded.current = true;
+
+        const handoffRaw = sessionStorage.getItem('korex_calc_handoff');
+        if (handoffRaw) {
+            sessionStorage.removeItem('korex_calc_handoff');
+            try {
+                const handoff = JSON.parse(handoffRaw) as { debt_balance: string; apr: string; monthly_surplus: string };
+                setAccountForm(prev => ({
+                    ...prev,
+                    type: 'debt',
+                    balance: handoff.debt_balance || prev.balance,
+                    interest_rate: handoff.apr || String(getNationalAverageAPR()),
+                }));
+                return;
+            } catch {
+                // fall through to the plain default below
+            }
+        }
+        setAccountForm(prev => ({ ...prev, type: 'debt', interest_rate: String(getNationalAverageAPR()) }));
+    }, [currentStep]);
+
+    // Live projection while adding debts — shows the real debt-free date and
+    // interest saved as soon as there is at least one debt, instead of only
+    // at the very end of the wizard.
+    const [debtProjection, setDebtProjection] = useState<{
+        velocity_debt_free_date: string;
+        interest_saved: number;
+        assumptions: ProjectionAssumptions;
+    } | null>(null);
+
+    useEffect(() => {
+        if (debtItems.length === 0) {
+            setDebtProjection(null);
+            return;
+        }
+        apiFetch<typeof debtProjection>('/api/velocity/projections')
+            .then(setDebtProjection)
+            .catch(() => setDebtProjection(null)); // non-blocking — the wizard still works without it
+    }, [debtItems.length]);
+
     // Can the user proceed to the next step?
     const canProceed = (): boolean => {
         switch (currentStep) {
             case 0: return true; // Welcome — always
             case 1: return incomeItems.length >= 1;
             case 2: return expenseItems.length >= 1;
-            case 3: return assetItems.length >= 1;
+            case 3: return true; // Assets — optional, motor only needs debts + cashflow
             case 4: return debtItems.length >= 1;
             case 5: return parseFloat(shieldAmount) > 0; // Peace Shield
             default: return true;
@@ -291,7 +354,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 setAssetItems(prev => [...prev, newItem]);
             }
 
-            setAccountForm({ ...defaultAccount, type });
+            setAccountForm({ ...defaultAccount, type, interest_rate: type === 'debt' ? String(getNationalAverageAPR()) : defaultAccount.interest_rate });
         } catch (err) {
             console.error('Failed to add account:', err);
         } finally {
@@ -841,6 +904,29 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
             {debtItems.length === 0 && (
                 <p className="text-amber-400/60 text-xs text-center italic">{t('onboarding.minOneRequired')}</p>
             )}
+
+            {/* Live projection — shown as soon as there's at least one debt, not
+                only at the end of the wizard. Uses the real engine, same endpoint
+                the authenticated dashboard uses. */}
+            {debtProjection && (
+                <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-4 space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <p className="text-xs text-emerald-400/80 text-center">
+                        {language === 'es' ? 'A este ritmo, serías libre de deudas para' : 'At this pace, you could be debt-free by'}
+                    </p>
+                    <p className="text-xl font-bold font-display text-center text-emerald-400">
+                        {new Date(`${debtProjection.velocity_debt_free_date}T12:00:00`).toLocaleDateString(
+                            language === 'es' ? 'es-ES' : 'en-US', { month: 'long', year: 'numeric' }
+                        )}
+                    </p>
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
+                        <span>{language === 'es' ? 'Interés ahorrado (estimado):' : 'Interest saved (estimate):'}</span>
+                        <MoneyAmount value={debtProjection.interest_saved} className="text-emerald-400 font-semibold" />
+                    </div>
+                    <div className="flex justify-center">
+                        <AssumptionsBreakdown assumptions={debtProjection.assumptions} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -859,7 +945,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
         const amount = parseFloat(shieldAmount);
         if (!amount || amount <= 0) return;
         try {
-            await apiFetch('/api/strategy/user/me/shield', {
+            await apiFetch('/api/user/me/shield', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ target: amount }),
@@ -1153,6 +1239,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
     const handleFinish = async () => {
         setIsSubmitting(true);
         await onComplete();
+        localStorage.removeItem('korex_onboarding_step');
         setIsSubmitting(false);
     };
 

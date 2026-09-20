@@ -144,7 +144,16 @@ export function VelocityCalculatorModal({ open, onOpenChange, isEs }: Props) {
                         <Button
                             variant="premium"
                             className="w-full"
-                            onClick={() => navigate('/login')}
+                            onClick={() => {
+                                // Handoff to onboarding: prefill the debts step instead of
+                                // making the user re-type what they just entered here.
+                                sessionStorage.setItem('korex_calc_handoff', JSON.stringify({
+                                    debt_balance: debtBalance,
+                                    apr,
+                                    monthly_surplus: monthlySurplus,
+                                }));
+                                navigate('/login');
+                            }}
                         >
                             {isEs ? 'Crear cuenta gratis para guardar esto' : 'Create a free account to save this'}
                             <ArrowRight size={16} className="ml-1.5" />
