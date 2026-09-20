@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KoreX — Dashboard rediseñado (prototipo homogéneo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Montserrat:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #0A0E16;
+    --surface-1: #141924;
+    --surface-2: #1C2230;
+    --border: #232A38;
+    --border-strong: #2E3648;
+    --text-primary: #F4F5F7;
+    --text-secondary: #9BA3B4;
+    --text-muted: #5C6577;
+    --ignition: #FF5B3D;
+    --ignition-soft: rgba(255, 91, 61, 0.10);
+    --gold: #F5B942;
+    --emerald: #10B981;
+    --emerald-soft: rgba(16, 185, 129, 0.10);
+    --rose: #F87171;
+    --rose-soft: rgba(248, 113, 113, 0.10);
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Montserrat', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--text-primary); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+  .app { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  aside { width: 232px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 24px 16px; display: flex; flex-direction: column; }
+  .logo { font-family: var(--font-display); font-weight: 700; font-size: 19px; letter-spacing: 0.5px; padding: 0 12px 24px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px;
+    color: var(--text-secondary); font-weight: 500; font-size: 13.5px; cursor: pointer; margin-bottom: 2px;
+    transition: background .15s ease, color .15s ease;
+  }
+  .nav-item:hover { background: var(--surface-1); color: var(--text-primary); }
+  .nav-item.active { background: var(--ignition-soft); color: var(--ignition); }
+  .nav-item svg { width: 17px; height: 17px; stroke-width: 1.75; }
+  .sidebar-user { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px; border-top: 1px solid var(--border); }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; }
+  .sidebar-user .name { font-size: 12.5px; font-weight: 600; }
+  .sidebar-user .mail { font-size: 11px; color: var(--text-muted); }
+
+  /* Main */
+  main { flex: 1; padding: 28px 32px 64px; max-width: 1080px; }
+
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+  .greeting h1 { font-family: var(--font-display); font-weight: 600; font-size: 24px; margin: 0 0 2px; letter-spacing: -0.01em; }
+  .greeting .date { font-size: 12.5px; color: var(--text-muted); }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .rank-chip {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600;
+    color: var(--gold); border: 1px solid rgba(245, 185, 66, 0.35); padding: 5px 12px; border-radius: 999px;
+  }
+  .rank-chip svg { width: 13px; height: 13px; stroke-width: 2; }
+  .ticker { font-size: 12.5px; color: var(--text-secondary); }
+  .ticker b { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--rose); font-weight: 600; }
+
+  /* Cards base — UNA sola receta para toda la app */
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card .card-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+  .card .card-label svg { width: 14px; height: 14px; stroke-width: 1.75; color: var(--text-muted); }
+  .estimate { font-size: 10.5px; color: var(--text-muted); margin-top: 8px; }
+
+  .hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+  .metric { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 27px; letter-spacing: -0.01em; }
+  .metric.positive { color: var(--emerald); }
+  .delta { font-family: var(--font-mono); font-size: 11.5px; margin-left: 8px; }
+  .delta.up { color: var(--emerald); }
+
+  /* Health ring */
+  .ring-row { display: flex; align-items: center; gap: 14px; }
+  .ring { transform: rotate(-90deg); }
+  .ring .track { stroke: var(--surface-2); }
+  .ring .fill { stroke: var(--emerald); stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .ring-value { font-family: var(--font-mono); font-weight: 600; font-size: 22px; }
+  .ring-value small { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+  .two-col { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* Chart */
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .chart-head .total { font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
+  .legend { display: flex; gap: 16px; font-size: 11px; color: var(--text-muted); margin-top: 10px; }
+  .legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+
+  /* Peace shield */
+  .progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin: 12px 0 8px; }
+  .progress .bar { height: 100%; background: var(--emerald); border-radius: 999px; width: 64%; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-muted); }
+  .progress-meta b { font-family: var(--font-mono); color: var(--text-secondary); font-weight: 600; }
+
+  /* Next attack */
+  .attack-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  .attack-row:last-of-type { border-bottom: none; }
+  .attack-row .k { color: var(--text-secondary); }
+  .attack-row .v { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .btn {
+    font-family: var(--font-body); font-weight: 600; font-size: 13px; border-radius: 8px; cursor: pointer;
+    padding: 10px 18px; transition: background .15s ease, transform .12s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--ignition); color: #1A0805; border: none; }
+  .btn-primary:hover { background: #FF7256; }
+  .btn-ghost { background: none; border: 1px solid var(--border-strong); color: var(--text-secondary); }
+  .btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 0 12px 10px; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 13px 12px; border-bottom: 1px solid var(--border); }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .15s ease; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+  td.num.apr-high { color: var(--rose); }
+  .chip { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .chip.target { background: var(--ignition-soft); color: var(--ignition); }
+  .chip.stable { background: var(--surface-2); color: var(--text-secondary); }
+  .chip.won { background: var(--emerald-soft); color: var(--emerald); }
+  .debt-name { font-weight: 600; font-size: 13px; }
+  .debt-sub { font-size: 11px; color: var(--text-muted); }
+
+  .banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--surface-1); border: 1px solid var(--border); border-left: 3px solid var(--ignition);
+    border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 16px;
+  }
+  .banner .txt { font-size: 13px; color: var(--text-secondary); }
+  .banner .txt b { color: var(--text-primary); font-weight: 600; }
+  .banner .txt .money { font-family: var(--font-mono); color: var(--rose); font-weight: 600; }
+
+  footer { margin-top: 40px; font-size: 11px; color: var(--text-muted); text-align: center; }
+  a.back { color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside>
+    <div class="logo">KOREX</div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      Action plan
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      My accounts
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 21h8M12 17v4M17 4H7v6a5 5 0 0 0 10 0V4Z"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2-2 3-4 3M7 6H4a1 1 0 0 0-1 1c0 2 2 3 4 3"/></svg>
+      Rankings
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+      Settings
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar">CM</div>
+      <div>
+        <div class="name">Carlos Mendoza</div>
+        <div class="mail">carlos@demo.korex.io</div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div class="greeting">
+        <h1>Buenas tardes, Carlos</h1>
+        <div class="date">Viernes 3 de julio, 2026</div>
+      </div>
+      <div class="topbar-right">
+        <div class="ticker">Interés acumulado hoy: <b id="ticker">$142.18</b></div>
+        <div class="rank-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>
+          Commander
+        </div>
+      </div>
+    </div>
+
+    <div class="banner">
+      <div class="txt"><b>Tu ataque de hoy está listo.</b> Un chunk de $2,000 a Visa Signature evita <span class="money">$38.32</span> de interés este mes.</div>
+      <button class="btn btn-primary">Ejecutar ataque</button>
+    </div>
+
+    <div class="hero-grid">
+      <div class="card">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Fecha libre de deudas
+        </div>
+        <div class="metric" style="font-family: var(--font-display);">Mar 2031</div>
+        <div class="estimate">estimado · 4.7 años antes que con pagos mínimos</div>
+      </div>
+      <div class="card">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>
+          Interés total ahorrado
+        </div>
+        <div class="metric positive">$45,280<span class="delta up">+$1,120 este mes</span></div>
+        <div class="estimate">estimado según tus balances y tasas actuales</div>
+      </div>
+      <div class="card">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Health score
+        </div>
+        <div class="ring-row">
+          <svg class="ring" width="56" height="56" viewBox="0 0 56 56">
+            <circle class="track" cx="28" cy="28" r="24" fill="none" stroke-width="5"/>
+            <circle class="fill" cx="28" cy="28" r="24" fill="none" stroke-width="5" stroke-dasharray="150.8" stroke-dashoffset="33.2"/>
+          </svg>
+          <div>
+            <div class="ring-value">78 <small>/ 100</small></div>
+            <div class="estimate" style="margin-top:2px;">en vivo · cashflow positivo</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="chart-head">
+          <div class="card-label" style="margin:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+            Deuda total — proyección de burndown
+          </div>
+          <div class="total">$37,150.00</div>
+        </div>
+        <svg width="100%" height="150" viewBox="0 0 600 150" preserveAspectRatio="none">
+          <line x1="0" y1="37" x2="600" y2="37" stroke="#232A38" stroke-width="1"/>
+          <line x1="0" y1="75" x2="600" y2="75" stroke="#232A38" stroke-width="1"/>
+          <line x1="0" y1="112" x2="600" y2="112" stroke="#232A38" stroke-width="1"/>
+          <path d="M0,20 L60,26 L120,34 L180,45 L240,60 L300,72 L360,88 L420,103 L480,118 L540,132 L600,142 L600,150 L0,150 Z" fill="rgba(16,185,129,0.08)"/>
+          <path d="M0,20 L60,26 L120,34 L180,45 L240,60 L300,72 L360,88 L420,103 L480,118 L540,132 L600,142" fill="none" stroke="#10B981" stroke-width="2"/>
+          <path d="M0,20 L60,24 L120,29 L180,33 L240,38 L300,42 L360,47 L420,51 L480,55 L540,60 L600,64" fill="none" stroke="#5C6577" stroke-width="1.5" stroke-dasharray="4 5"/>
+        </svg>
+        <div class="legend">
+          <span><span class="dot" style="background:#10B981"></span>Con KoreX (estimado)</span>
+          <span><span class="dot" style="background:#5C6577"></span>Solo pagos mínimos</span>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card">
+          <div class="card-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Peace Shield
+          </div>
+          <div style="font-family:var(--font-mono); font-weight:600; font-size:19px;">$3,840 <span style="font-size:12px; color:var(--text-muted); font-weight:500;">de $6,000</span></div>
+          <div class="progress"><div class="bar"></div></div>
+          <div class="progress-meta"><span>64% del buffer de 2 meses</span><b>~9 semanas</b></div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Próximo ataque
+          </div>
+          <div class="attack-row"><span class="k">Objetivo</span><span class="v">Visa Signature</span></div>
+          <div class="attack-row"><span class="k">Chunk sugerido</span><span class="v">$2,000.00</span></div>
+          <div class="attack-row"><span class="k">Interés evitado / mes</span><span class="v" style="color:var(--emerald)">$38.32</span></div>
+          <div class="estimate">estimado · asume pagos puntuales</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label" style="margin-bottom:14px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Tus deudas — orden de ataque
+      </div>
+      <table>
+        <thead>
+          <tr><th>Cuenta</th><th>Balance</th><th>APR</th><th>Pago mínimo</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="debt-name">Visa Signature</div><div class="debt-sub">Tarjeta de crédito</div></td>
+            <td class="num">$8,500.00</td>
+            <td class="num apr-high">22.99%</td>
+            <td class="num">$212.50</td>
+            <td><span class="chip target">Objetivo actual</span></td>
+          </tr>
+          <tr>
+            <td><div class="debt-name">Auto loan — Honda</div><div class="debt-sub">Préstamo amortizado</div></td>
+            <td class="num">$14,200.00</td>
+            <td class="num">6.40%</td>
+            <td class="num">$318.00</td>
+            <td><span class="chip stable">En espera</span></td>
+          </tr>
+          <tr>
+            <td><div class="debt-name">Student loan</div><div class="debt-sub">Préstamo federal</div></td>
+            <td class="num">$14,450.00</td>
+            <td class="num">5.10%</td>
+            <td class="num">$164.00</td>
+            <td><span class="chip stable">En espera</span></td>
+          </tr>
+          <tr>
+            <td><div class="debt-name">Store card — Best Buy</div><div class="debt-sub">Tarjeta de crédito</div></td>
+            <td class="num">$0.00</td>
+            <td class="num">26.99%</td>
+            <td class="num">—</td>
+            <td><span class="chip won">Eliminada</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      Prototipo de dashboard homogéneo · <a class="back" href="index.html">← volver al style tile</a> · cifras de ejemplo, no usa el motor real
+    </footer>
+  </main>
+</div>
+
+<script>
+  let interest = 142.18;
+  const el = document.getElementById('ticker');
+  setInterval(() => {
+    interest += 0.0026 * (Math.random() * 0.6 + 0.7) * 100;
+    el.textContent = '$' + interest.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }, 1200);
+</script>
+</body>
+</html>

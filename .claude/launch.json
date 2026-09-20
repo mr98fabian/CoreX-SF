@@ -7,6 +7,23 @@
       "runtimeArgs": ["vite", "--port", "5173", "--strictPort"],
       "cwd": "frontend",
       "port": 5173
+    },
+    {
+      "name": "korex-backend",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set PYTHONIOENCODING=utf-8&& set ENVIRONMENT=development&& set DATABASE_URL=&& venv\\Scripts\\python.exe -m uvicorn main:app --port 8001"
+      ],
+      "cwd": "backend",
+      "port": 8001
+    },
+    {
+      "name": "korex-design-prototype",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "4173"],
+      "cwd": "docs/claude-optimization/design-prototype",
+      "port": 4173
     }
   ]
 }
