@@ -17,6 +17,7 @@ import { Zap, Shield, BarChart3, Award, Lightbulb } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './LandingPage.css';
+import { VelocityCalculatorModal } from './VelocityCalculatorModal';
 
 import DebtVisualizerSVG from './svgs/DebtVisualizerSVG';
 import MobileAppSVG from './svgs/MobileAppSVG';
@@ -549,6 +550,8 @@ export default function LandingPage() {
     }, []);
 
     const goAuth = useCallback(() => navigate('/login'), [navigate]);
+    const [calculatorOpen, setCalculatorOpen] = useState(false);
+    const openCalculator = useCallback(() => setCalculatorOpen(true), []);
 
     return (
         <div className="landing-page" ref={containerRef}>
@@ -580,7 +583,7 @@ export default function LandingPage() {
                         <span className="lp-lang-divider">/</span>
                         <span className={L === 'es' ? 'active' : ''}>ES</span>
                     </button>
-                    <button className="lp-nav-cta" onClick={goAuth}>
+                    <button className="lp-nav-cta" onClick={openCalculator}>
                         {copy.hero.cta[L]}
                     </button>
                 </div>
@@ -849,6 +852,7 @@ export default function LandingPage() {
                 </div>
                 <p className="lp-footer-copy">{copy.footer.copy}</p>
             </footer>
+            <VelocityCalculatorModal open={calculatorOpen} onOpenChange={setCalculatorOpen} isEs={L === 'es'} />
         </div>
     );
 }

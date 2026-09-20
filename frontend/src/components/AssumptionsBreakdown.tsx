@@ -6,8 +6,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 /** Mirrors the "assumptions" block returned by backend get_projections(). */
 export interface ProjectionAssumptions {
-    attack_percentage: number;
-    liquid_cash_used: number;
+    /** Omitted for the public landing calculator, which takes a direct $ surplus instead of a % of liquid cash. */
+    attack_percentage?: number;
+    liquid_cash_used?: number;
     extra_monthly_payment: number;
     note?: string;
 }
@@ -52,14 +53,18 @@ export function AssumptionsBreakdown({ assumptions, extraRows, className }: Assu
             </button>
             {open && (
                 <div className="mt-2 space-y-1.5 rounded-lg border border-border bg-secondary/40 p-3 text-xs animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">{isEs ? '% de tu efectivo líquido atacado / mes' : '% of your liquid cash attacked / mo'}</span>
-                        <span className="font-mono font-semibold tabular-nums">{assumptions.attack_percentage}%</span>
-                    </div>
-                    <div className="flex items-center justify-between gap-3">
-                        <span className="text-muted-foreground">{isEs ? 'Efectivo líquido usado' : 'Liquid cash used'}</span>
-                        <MoneyAmount value={assumptions.liquid_cash_used} className="font-semibold" />
-                    </div>
+                    {assumptions.attack_percentage !== undefined && (
+                        <div className="flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">{isEs ? '% de tu efectivo líquido atacado / mes' : '% of your liquid cash attacked / mo'}</span>
+                            <span className="font-mono font-semibold tabular-nums">{assumptions.attack_percentage}%</span>
+                        </div>
+                    )}
+                    {assumptions.liquid_cash_used !== undefined && (
+                        <div className="flex items-center justify-between gap-3">
+                            <span className="text-muted-foreground">{isEs ? 'Efectivo líquido usado' : 'Liquid cash used'}</span>
+                            <MoneyAmount value={assumptions.liquid_cash_used} className="font-semibold" />
+                        </div>
+                    )}
                     <div className="flex items-center justify-between gap-3">
                         <span className="text-muted-foreground">{isEs ? 'Pago extra mensual resultante' : 'Resulting extra monthly payment'}</span>
                         <MoneyAmount value={assumptions.extra_monthly_payment} className="font-semibold text-emerald-500" />

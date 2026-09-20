@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 // - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
 const RAILWAY_URL = 'https://korex-sf-production.up.railway.app';
 
-const API_BASE = import.meta.env.DEV
+export const API_BASE = import.meta.env.DEV
     ? (import.meta.env.VITE_API_URL ?? 'http://localhost:8000')
     : Capacitor.isNativePlatform()
         ? RAILWAY_URL

@@ -123,6 +123,6 @@ def health():
 
 # ── Register Routers ─────────────────────────────────────────
 ROUTERS = ["accounts", "cashflow", "dashboard", "strategy", "transactions",
-           "demo", "analytics", "subscriptions", "notifications", "settings_api"]
+           "demo", "analytics", "subscriptions", "notifications", "settings_api", "public"]
 for mod in ROUTERS:
     app.include_router(__import__(f"routers.{mod}", fromlist=["router"]).router)
