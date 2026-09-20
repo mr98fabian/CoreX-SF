@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import TacticalActionBanner from './TacticalActionBanner';
 import { motion } from "framer-motion";
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { AssumptionsBreakdown, type ProjectionAssumptions } from '@/components/AssumptionsBreakdown';
 
 interface FreedomData {
     velocity_debt_free_date: string;
@@ -16,6 +17,7 @@ interface FreedomData {
     interest_saved: number;
     total_debt: number;
     velocity_power: number; // Added for Calculations
+    assumptions?: ProjectionAssumptions;
 }
 
 /**
@@ -171,6 +173,15 @@ export default function FreedomClock() {
                         </p>
                         <div className="h-1 w-12 rounded-full bg-border mt-2" />
                     </div>
+
+                    {data.assumptions && (
+                        <div className="flex justify-center mt-3">
+                            <AssumptionsBreakdown
+                                assumptions={data.assumptions}
+                                extraRows={[{ label: locale.startsWith('es') ? 'Interés total ahorrado' : 'Total interest saved', value: data.interest_saved }]}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Countdown Grid */}

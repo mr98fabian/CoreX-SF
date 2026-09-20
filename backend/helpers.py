@@ -63,6 +63,17 @@ def get_shield_target(session, user_id: str) -> Decimal:
     return Decimal(str(settings.shield_target)) if settings and settings.shield_target is not None else DEFAULT_PEACE_SHIELD
 
 
+def get_attack_percentage(session, user_id: str) -> Decimal:
+    """% of liquid cash attacked monthly — the single assumption behind every
+    velocity banking projection (debt-free date, interest saved). Scoped per
+    user, same pattern as get_shield_target."""
+    from sqlmodel import select
+    from models import UserSettings
+    from velocity_engine import DEFAULT_ATTACK_PERCENTAGE
+    settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    return Decimal(str(settings.attack_percentage)) if settings and settings.attack_percentage is not None else DEFAULT_ATTACK_PERCENTAGE
+
+
 # ── Balance Update Helpers ───────────────────────────────────
 
 def _insufficient_funds_error(account, amount: Decimal):

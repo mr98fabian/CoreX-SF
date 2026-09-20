@@ -13,7 +13,7 @@ from models import Account, CashflowItem, Transaction, MovementLog, UserSettings
 from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
-    find_account_by_name, calc_attack_streak, update_account_balance,
+    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage,
 )
 from auth import get_current_user_id
 
@@ -27,7 +27,7 @@ from velocity_engine import (
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
     detect_float_kill_opportunities, get_closing_day_intelligence,
     get_hybrid_kill_target, detect_interest_rate_arbitrage, calculate_risky_opportunity,
-    DEFAULT_PEACE_SHIELD,
+    DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE,
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 
@@ -59,6 +59,26 @@ def update_shield_target(data: dict, user_id: str = Depends(get_current_user_id)
         return {"ok": True}
 
 
+@router.put("/user/me/attack-percentage")
+def update_attack_percentage(data: dict, user_id: str = Depends(get_current_user_id)):
+    """User-configurable % of liquid cash attacked monthly — the assumption
+    behind every velocity projection. Must stay user-editable, never a silent
+    constant (see get_projections' assumptions block)."""
+    pct = Decimal(str(data.get("percentage", DEFAULT_ATTACK_PERCENTAGE)))
+    if pct < 0 or pct > 100:
+        raise HTTPException(status_code=400, detail="percentage must be between 0 and 100.")
+    with Session(engine) as session:
+        settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+        if settings:
+            settings.attack_percentage = pct
+        else:
+            settings = UserSettings(user_id=user_id, attack_percentage=pct)
+        session.add(settings)
+        with bypass_fk(session):
+            session.commit()
+        return {"ok": True}
+
+
 # ── Velocity Projections ─────────────────────────────────────
 
 @router.get("/velocity/projections")
@@ -69,7 +89,8 @@ async def get_velocity_projections(
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         return get_projections(accounts_to_active_debt_objects(accounts, plan_limit),
-                               Decimal(str(get_liquid_cash(accounts))))
+                               Decimal(str(get_liquid_cash(accounts))),
+                               get_attack_percentage(session, user_id))
 
 
 @router.get("/velocity/freedom-path")
@@ -80,7 +101,8 @@ async def get_freedom_path(
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        velocity = (Decimal(str(get_liquid_cash(accounts))) * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        pct = get_attack_percentage(session, user_id)
+        velocity = (Decimal(str(get_liquid_cash(accounts))) * pct / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return simulate_freedom_path(debts, velocity)
 
 
@@ -94,7 +116,8 @@ async def get_simulation(
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid = Decimal(str(get_liquid_cash(accounts)))
-        return simulate_freedom_path(debts, (liquid * Decimal('0.20')).quantize(Decimal('0.01')) + Decimal(str(extra_cash)))
+        pct = get_attack_percentage(session, user_id)
+        return simulate_freedom_path(debts, (liquid * pct / Decimal('100')).quantize(Decimal('0.01')) + Decimal(str(extra_cash)))
 
 
 # ── Tactical GPS & Execution ─────────────────────────────────
@@ -125,7 +148,7 @@ async def get_tactical_gps(
 
         movements = generate_action_plan(debts, cf_tactical, sum(acc.balance for acc in accounts if acc.type == "checking"),
                                          funding_name, shield_target, weapons)
-        projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))))
+        projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
 
         return {
             "movements": movements,
@@ -216,7 +239,7 @@ async def simulate_purchase_cost(
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        extra = (Decimal(str(get_liquid_cash(accounts))) * Decimal('0.20')).quantize(Decimal('0.01'))
+        extra = (Decimal(str(get_liquid_cash(accounts))) * get_attack_percentage(session, user_id) / Decimal('100')).quantize(Decimal('0.01'))
         return calculate_purchase_time_cost(Decimal(str(req.amount)), debts, extra)
 
 
@@ -305,7 +328,7 @@ async def get_strategy_command_center(
                 confidence_meter["explanation"] = f"Every $100 to {top.name} saves ${float(top.interest_rate)}/yr vs ${float(second.interest_rate)}/yr to {second.name}"
 
         # Freedom Counter
-        projections = get_projections(debt_accounts, liquid_cash)
+        projections = get_projections(debt_accounts, liquid_cash, get_attack_percentage(session, user_id))
         std_date, vel_date = projections.get("standard_debt_free_date", "N/A"), projections.get("velocity_debt_free_date", "N/A")
         try:
             from datetime import datetime as _dt

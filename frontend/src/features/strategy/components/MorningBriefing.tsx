@@ -181,7 +181,7 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                     </div>
 
                     {/* Impact Stats */}
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/10 p-2.5 text-center">
                             <Clock className="h-3.5 w-3.5 text-emerald-400 mx-auto mb-1" />
                             <p className="text-lg font-bold text-emerald-400 font-mono">
@@ -195,13 +195,6 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                 {formatMoney(impact.interest_saved_monthly)}
                             </p>
                             <p className="text-[10px] text-gray-500 dark:text-gray-400">{t("strategy.morningBriefing.savedMonth")}</p>
-                        </div>
-                        <div className="rounded-lg bg-purple-500/5 border border-purple-500/10 p-2.5 text-center">
-                            <Sparkles className="h-3.5 w-3.5 text-purple-400 mx-auto mb-1" />
-                            <p className="text-lg font-bold text-purple-400 font-mono">
-                                {impact.freedom_hours_earned}h
-                            </p>
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400">{t("strategy.morningBriefing.freedomHours")}</p>
                         </div>
                     </div>
 
@@ -347,10 +340,6 @@ export default function MorningBriefing({ data, recommendedSource, onExecuteAtta
                                     <div className="text-center">
                                         <p className="text-sm font-bold text-amber-400 font-mono">{formatMoney(impact.interest_saved_monthly)}</p>
                                         <p className="text-[10px] text-gray-500">/mes</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-sm font-bold text-purple-400 font-mono">{impact.freedom_hours_earned}h</p>
-                                        <p className="text-[10px] text-gray-500">libertad</p>
                                     </div>
                                 </div>
                             </div>

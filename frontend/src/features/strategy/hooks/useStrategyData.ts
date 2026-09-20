@@ -26,7 +26,6 @@ interface RecommendedAction {
 interface Impact {
     days_accelerated: number;
     interest_saved_monthly: number;
-    freedom_hours_earned: number;
 }
 
 export interface MorningBriefingData {

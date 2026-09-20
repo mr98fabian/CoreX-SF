@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 
 DEFAULT_PEACE_SHIELD = Decimal("1000.00")  # Dave Ramsey starter fund
+DEFAULT_ATTACK_PERCENTAGE = Decimal("20")  # % of liquid cash attacked monthly — configurable per user, see UserSettings.attack_percentage
 
 def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
     """
@@ -858,30 +859,38 @@ def generate_action_plan(
     return movements
 
 
-def get_projections(debts: List[DebtAccount], liquid_cash: Decimal) -> Dict:
+def get_projections(
+    debts: List[DebtAccount],
+    liquid_cash: Decimal,
+    attack_percentage: Decimal = DEFAULT_ATTACK_PERCENTAGE,
+) -> Dict:
     """
     Generate complete velocity banking projections.
-    
+
     Args:
         debts: List of debt accounts
         liquid_cash: Available liquid cash for velocity payments
-        
+        attack_percentage: % of liquid_cash attacked monthly (user-configurable,
+            see helpers.get_attack_percentage). Every projection this function
+            returns is downstream of this single assumption — it MUST be
+            surfaced to the user, never left implicit (see assumptions block).
+
     Returns:
-        Complete projection data for dashboard
+        Complete projection data for dashboard, including the "assumptions"
+        block that makes the attack_percentage and its dollar effect explicit.
     """
     total_debt = sum(d.balance for d in debts) if debts else Decimal('0')
     total_min_payments = sum(d.min_payment for d in debts) if debts else Decimal('0')
-    
-    # Assume 20% of liquid cash could be used monthly for velocity
-    extra_monthly = (liquid_cash * Decimal('0.20')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    
+
+    extra_monthly = (liquid_cash * attack_percentage / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
     # Get velocity target
     target = get_velocity_target(debts)
     target_name = target.name if target else "No Active Debts"
-    
+
     # Calculate projections
     projections = calculate_debt_free_date(debts, extra_monthly)
-    
+
     return {
         "total_debt": float(total_debt),
         "total_min_payments": float(total_min_payments),
@@ -892,7 +901,13 @@ def get_projections(debts: List[DebtAccount], liquid_cash: Decimal) -> Dict:
         "velocity_debt_free_date": projections["velocity_date"],
         "months_saved": projections["months_saved"],
         "interest_saved": float(projections["interest_saved"]),
-        "years_saved": round(projections["months_saved"] / 12, 1)
+        "years_saved": round(projections["months_saved"] / 12, 1),
+        "assumptions": {
+            "attack_percentage": float(attack_percentage),
+            "liquid_cash_used": float(liquid_cash),
+            "extra_monthly_payment": float(extra_monthly),
+            "note": "Estimate: assumes you consistently apply this % of your liquid cash to debt each month, with on-time minimum payments on the rest.",
+        },
     }
 
 
