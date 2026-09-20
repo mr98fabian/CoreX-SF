@@ -109,6 +109,7 @@ class UserSettings(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
     onboarding_complete: bool = Field(default=False)
+    shield_target: Decimal = Field(default=Decimal("1000.00"), max_digits=14, decimal_places=2)
 
 
 class TransactionCreate(SQLModel):

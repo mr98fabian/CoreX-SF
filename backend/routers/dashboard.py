@@ -7,11 +7,11 @@ from decimal import Decimal
 from datetime import date, timedelta
 
 from database import engine
-from models import Account, CashflowItem, Transaction, User
-from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects
+from models import Account, CashflowItem, Transaction
+from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
 from auth import get_current_user_id
 from velocity_engine import (
-    DebtAccount, get_velocity_target, DEFAULT_PEACE_SHIELD,
+    DebtAccount, get_velocity_target,
     calculate_safe_attack_equity, detect_debt_alerts,
 )
 
@@ -29,8 +29,7 @@ async def get_dashboard_metrics(
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        user = session.exec(select(User)).first()
-        shield_target = user.shield_target if user else DEFAULT_PEACE_SHIELD
+        shield_target = get_shield_target(session, user_id)
 
         # Plan-aware filtering: only active (unlocked) debts count
         # Note: only debts with balance > 0 are relevant (matches filter_active_debt_accounts)

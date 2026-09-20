@@ -7,11 +7,7 @@ All routes live in backend/routers/. This file handles:
   - Global error handling
   - Router registration
 """
-import os
-import uuid
-import time
-import logging
-import traceback
+import os, uuid, time, logging, traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -23,72 +19,49 @@ from database import create_db_and_tables, seed_data
 from exceptions import KoreXError
 
 # ── Logging ──────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("korex")
 
-# ── CORS: Production domain + local dev servers ──────────────
+# ── CORS ─────────────────────────────────────────────────────
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korexf.com")
-
 ALLOWED_ORIGINS = [
-    "http://localhost:5173",     # Vite dev server
-    "http://localhost:5174",     # Vite fallback port
-    "http://localhost:3000",     # Alternative dev port
-    "http://localhost",          # Capacitor Android (legacy)
-    "https://localhost",         # Capacitor Android WebView (v5+ default scheme)
-    "capacitor://localhost",     # Capacitor iOS WebView
-    "https://korexf.com",       # Production domain
-    "https://www.korexf.com",   # Production domain (www)
-    FRONTEND_URL,               # Env-var override (if different)
+    "http://localhost:5173", "http://localhost:5174", "http://localhost:3000",
+    "http://localhost", "https://localhost", "capacitor://localhost",
+    "https://korexf.com", "https://www.korexf.com", FRONTEND_URL,
 ]
 
-# ── App ──────────────────────────────────────────────────────
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 IS_DEV = ENVIRONMENT == "development"
 
 # ── Rate Limiter ─────────────────────────────────────────────
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["60/minute"],  # Global: 60 req/min per IP
-)
+limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 app = FastAPI(
-    title="KoreX Financial System",
-    version="2.0.0",
-    docs_url="/docs" if IS_DEV else None,      # Security: hide API docs in production
-    redoc_url="/redoc" if IS_DEV else None,     # Security: hide redoc in production
+    title="KoreX Financial System", version="2.0.0",
+    docs_url="/docs" if IS_DEV else None,
+    redoc_url="/redoc" if IS_DEV else None,
     openapi_url="/openapi.json" if IS_DEV else None,
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "Content-Type",
-        "Accept",
-        "Origin",
-        "X-Requested-With",
-    ],
-    expose_headers=["X-Process-Time", "X-Request-Id"],
-    max_age=600,
+    CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True,
+    allow_methods=["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+    allow_headers=["Authorization","Content-Type","Accept","Origin","X-Requested-With"],
+    expose_headers=["X-Process-Time", "X-Request-Id"], max_age=600,
 )
-
 
 # ── Security Headers Middleware ──────────────────────────────
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers.update({
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    })
     if not IS_DEV:
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
@@ -100,7 +73,6 @@ async def add_security_headers(request: Request, call_next):
             "frame-src https://app.lemonsqueezy.com https://cdn.plaid.com;"
         )
     return response
-
 
 # ── Request ID + Process Time Middleware ─────────────────────
 @app.middleware("http")
@@ -115,42 +87,27 @@ async def add_request_id(request: Request, call_next):
     response.headers["X-Process-Time"] = f"{elapsed_ms}ms"
     return response
 
-
-# ── KoreXError Handler (structured business errors) ─────────
+# ── Exception Handlers ───────────────────────────────────────
 @app.exception_handler(KoreXError)
 async def korex_error_handler(request: Request, exc: KoreXError):
     request_id = getattr(request.state, "request_id", "unknown")
-    logger.warning(
-        f"[{request_id}] {exc.error_code}: {exc.message} | details={exc.details}"
-    )
+    logger.warning(f"[{request_id}] {exc.error_code}: {exc.message} | details={exc.details}")
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "error": exc.error_code,
-            "message": exc.message,
-            "details": exc.details,
-            "request_id": request_id,
-        },
+        content={"error": exc.error_code, "message": exc.message,
+                 "details": exc.details, "request_id": request_id},
     )
 
-
-# ── Global Exception Handler (catch-all for unhandled errors) 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     request_id = getattr(request.state, "request_id", "unknown")
-    logger.error(
-        f"[{request_id}] Unhandled error on {request.method} {request.url.path}: "
-        f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}"
-    )
+    logger.error(f"[{request_id}] Unhandled error on {request.method} {request.url.path}: "
+                 f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}")
     return JSONResponse(
         status_code=500,
-        content={
-            "error": "INTERNAL_ERROR",
-            "message": "Something went wrong. Please try again.",
-            "request_id": request_id,
-        },
+        content={"error": "INTERNAL_ERROR", "message": "Something went wrong. Please try again.",
+                 "request_id": request_id},
     )
-
 
 # ── Startup ──────────────────────────────────────────────────
 @app.on_event("startup")
@@ -159,33 +116,13 @@ def on_startup():
     seed_data()
     logger.info("✅ KoreX API ready — tables verified, seed data loaded.")
 
-
 # ── Health Check ─────────────────────────────────────────────
 @app.get("/health")
 def health():
     return {"status": "ok"}
 
-
 # ── Register Routers ─────────────────────────────────────────
-from routers.accounts import router as accounts_router
-from routers.cashflow import router as cashflow_router
-from routers.dashboard import router as dashboard_router
-from routers.strategy import router as strategy_router
-from routers.transactions import router as transactions_router
-from routers.demo import router as demo_router
-from routers.analytics import router as analytics_router
-from routers.subscriptions import router as subscriptions_router
-from routers.notifications import router as notifications_router
-from routers.settings_api import router as settings_router
-
-app.include_router(accounts_router)
-app.include_router(cashflow_router)
-app.include_router(dashboard_router)
-app.include_router(strategy_router)
-app.include_router(transactions_router)
-app.include_router(demo_router)
-app.include_router(analytics_router)
-app.include_router(subscriptions_router)
-app.include_router(notifications_router)
-app.include_router(settings_router)
-
+ROUTERS = ["accounts", "cashflow", "dashboard", "strategy", "transactions",
+           "demo", "analytics", "subscriptions", "notifications", "settings_api"]
+for mod in ROUTERS:
+    app.include_router(__import__(f"routers.{mod}", fromlist=["router"]).router)
