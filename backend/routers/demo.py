@@ -57,10 +57,10 @@ def _seed_impl(user_id: str):
         ]
 
         acc_insert = text(f"""
-            INSERT INTO accounts (user_id, name, type, balance, interest_rate, min_payment,
+            INSERT INTO accounts (user_id, name, type, balance, interest_rate, min_payment, payment_frequency,
                 due_day, closing_day, is_velocity_target, interest_type, debt_subtype,
                 original_amount, loan_term_months, remaining_months, credit_limit)
-            VALUES ({uid_expr}, :name, :type, :balance, :rate, :min_pay,
+            VALUES ({uid_expr}, :name, :type, :balance, :rate, :min_pay, 'monthly',
                 :due_day, :closing_day, :vel_target, :int_type, :debt_sub,
                 :orig_amt, :term, :remaining, :credit_lim)
             RETURNING id, name
