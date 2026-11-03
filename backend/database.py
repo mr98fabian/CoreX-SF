@@ -14,12 +14,28 @@ load_dotenv()
 # ================================================================
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+# SQLite is a LOCAL-DEV convenience only. In production a missing or broken
+# DATABASE_URL must fail loudly at boot — a silent fallback to an ephemeral
+# SQLite file hides a misconfigured/paused database behind a "healthy" service.
+ALLOW_SQLITE_FALLBACK = os.environ.get("ENVIRONMENT", "production") == "development"
+
+
+def _mask_db_url(url: str) -> str:
+    """scheme://host:port/dbname only — never user, password or tenant ref."""
+    try:
+        from sqlalchemy.engine import make_url
+        u = make_url(url)
+        return f"{u.drivername}://{u.host}:{u.port}/{u.database}"
+    except Exception:
+        return "<unparseable DATABASE_URL>"
+
 
 def _make_sqlite_engine():
     sqlite_file_name = "/tmp/korex.db" if os.environ.get("VERCEL") else "korex.db"
     eng = create_engine(f"sqlite:///{sqlite_file_name}", connect_args={"check_same_thread": False})
     print("[DEV] Using SQLite (local development)")
     return eng
+
 
 if DATABASE_URL:
     try:
@@ -28,10 +44,21 @@ if DATABASE_URL:
             conn.execute(text("SELECT 1"))
         print("[OK] Connected to PostgreSQL")
     except Exception as _pg_err:
-        print(f"[WARN] PostgreSQL unavailable ({_pg_err.__class__.__name__}), falling back to SQLite")
+        if not ALLOW_SQLITE_FALLBACK:
+            raise RuntimeError(
+                f"Cannot connect to the database at {_mask_db_url(DATABASE_URL)} "
+                f"({_pg_err.__class__.__name__}). Check that the Supabase project is "
+                "active and that DATABASE_URL is the current pooler connection string."
+            ) from None
+        print(f"[WARN] PostgreSQL unavailable ({_pg_err.__class__.__name__}), falling back to SQLite (ENVIRONMENT=development)")
         engine = _make_sqlite_engine()
-else:
+elif ALLOW_SQLITE_FALLBACK:
     engine = _make_sqlite_engine()
+else:
+    raise RuntimeError(
+        "DATABASE_URL is not set. Production requires a PostgreSQL connection string; "
+        "SQLite is only allowed when ENVIRONMENT=development."
+    )
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
