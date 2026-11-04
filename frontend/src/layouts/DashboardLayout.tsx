@@ -227,7 +227,7 @@ export default function DashboardLayout() {
                 </div>
             </main>
             <FeedbackWidget />
-            <UpgradeNudge />
+            <UpgradeNudge suppressed={onboarding.isLoading || !onboarding.hasCompleted} />
             <InstallPrompt />
             <OfflineIndicator />
             <SessionTimeoutWarning />

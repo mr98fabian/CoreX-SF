@@ -11,10 +11,14 @@ import { useAuth } from '@/features/auth/AuthContext';
  *   1. User has locked accounts (plan limit exceeded), OR
  *   2. User is on the free 'starter' plan (gentle nudge to upgrade)
  *
- * Dismissible, reappears every 2 minutes until the user upgrades.
+ * Shown at most once per browser session, never while the onboarding tour
+ * is open or during the first minutes after entering the dashboard/demo.
  * Does not appear for unlimited plan users.
  */
-export default function UpgradeNudge() {
+const SHOWN_KEY = 'korex_upsell_shown';
+const FIRST_TOUR_DELAY = 5 * 60 * 1000; // let the first walkthrough finish uninterrupted
+
+export default function UpgradeNudge({ suppressed = false }: { suppressed?: boolean }) {
     const { t } = useLanguage();
     const { user } = useAuth();
     const [visible, setVisible] = useState(false);
@@ -28,7 +32,10 @@ export default function UpgradeNudge() {
     const createdAt = user?.created_at;
 
     useEffect(() => {
-        if (isPaid) return;
+        if (isPaid || suppressed) return;
+        try {
+            if (sessionStorage.getItem(SHOWN_KEY)) return;
+        } catch { /* storage blocked: fall through, the timer still limits it */ }
 
         // Don't nudge users with accounts less than 2 days old
         // (allow nudge if no creation date — demo accounts)
@@ -38,23 +45,13 @@ export default function UpgradeNudge() {
             if (ageMs < TWO_DAYS_MS) return;
         }
 
-        // Initial delay of 30 seconds, then every 2 minutes
-        const INITIAL_DELAY = 30_000;
-        const REPEAT_INTERVAL = 2 * 60 * 1000; // 2 minutes
-
-        const initialTimer = setTimeout(() => {
+        const timer = setTimeout(() => {
+            try { sessionStorage.setItem(SHOWN_KEY, '1'); } catch { /* ignore */ }
             setVisible(true);
-        }, INITIAL_DELAY);
+        }, FIRST_TOUR_DELAY);
 
-        const interval = setInterval(() => {
-            setVisible(true);
-        }, REPEAT_INTERVAL);
-
-        return () => {
-            clearTimeout(initialTimer);
-            clearInterval(interval);
-        };
-    }, [isPaid, createdAt]);
+        return () => clearTimeout(timer);
+    }, [isPaid, createdAt, suppressed]);
 
     const handleDismiss = () => {
         setVisible(false);

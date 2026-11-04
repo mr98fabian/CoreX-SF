@@ -551,7 +551,7 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.annual": { en: "Annual", es: "Anual" },
     "upgrade.save": { en: "Save", es: "Ahorra" },
     "upgrade.twoMonthsFree": { en: "2 months free", es: "2 meses gratis" },
-    "upgrade.mostPopular": { en: "Most Popular", es: "Más Popular" },
+    "upgrade.mostPopular": { en: "Recommended", es: "Recomendado" },
     "upgrade.current": { en: "Current", es: "Actual" },
     "upgrade.free": { en: "Free", es: "Gratis" },
     "upgrade.year": { en: "year", es: "año" },
@@ -749,7 +749,7 @@ const translations: Record<string, Record<Language, string>> = {
     "sub.off": { en: "OFF", es: "DESC." },
     "sub.billed": { en: "Billed", es: "Facturado" },
     "sub.year": { en: "/year", es: "/año" },
-    "sub.mostPopular": { en: "⭐ MOST POPULAR", es: "⭐ MÁS POPULAR" },
+    "sub.mostPopular": { en: "⭐ RECOMMENDED", es: "⭐ RECOMENDADO" },
     "sub.yourPlan": { en: "YOUR CURRENT PLAN", es: "TU PLAN ACTUAL" },
     // Savings badges
     "sub.inInterest": { en: "in interest", es: "en intereses" },
