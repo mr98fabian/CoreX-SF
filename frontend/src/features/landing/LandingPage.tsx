@@ -129,20 +129,31 @@ const copy = {
         },
     },
     proof: {
-        label: { en: 'TRUSTED BY', es: 'CONFÍAN EN NOSOTROS' },
+        label: { en: 'WHAT YOU GET', es: 'LO QUE OBTIENES' },
         stats: [
-            { value: '3.2x', label: { en: 'Faster Debt Freedom', es: 'Más Rápido que Pagos Mínimos' } },
-            { value: '$45K', label: { en: 'Avg Interest Saved', es: 'Ahorro Promedio en Intereses' } },
-            { value: '4.9★', label: { en: 'User Rating', es: 'Calificación de Usuarios' } },
-            { value: '24/7', label: { en: 'AI Monitoring', es: 'Monitoreo IA' } },
+            { value: { en: 'Live', es: 'En vivo' }, label: { en: 'Demo, no signup', es: 'Demo, sin registro' } },
+            { value: { en: 'Engine', es: 'Motor' }, label: { en: 'Velocity banking', es: 'De velocity banking' } },
+            { value: { en: '$9.99', es: '$9.99' }, label: { en: 'From, per month', es: 'Desde, al mes' } },
+            { value: { en: 'Anytime', es: 'Cuando quieras' }, label: { en: 'Cancel', es: 'Cancelas' } },
         ],
+    },
+    story: {
+        label: { en: 'OUR STORY', es: 'NUESTRA HISTORIA' },
+        body: {
+            en: "KoreX was born from real debt. Our founder is getting out of his own debt with this very system, step by step. No gurus, no $5,000 courses: the tricks people who know money use, at a fair price.",
+            es: 'KoreX nació de una deuda real. Nuestro fundador está saliendo de sus propias deudas con este mismo sistema, paso a paso. Sin gurús, sin cursos de $5,000: los trucos que usan los que saben de dinero, a un precio justo.',
+        },
+        compare: {
+            en: 'Similar programs sell for up to $5,000 as a one-time payment. KoreX: from $9.99/month.',
+            es: 'Programas similares se venden hasta por $5,000 de pago único. KoreX: desde $9.99/mes.',
+        },
     },
     pricing: {
         label: { en: 'PRICING', es: 'PRECIOS' },
-        title: { en: 'From $0.26/Day', es: 'Desde $0.26/Día' },
+        title: { en: 'From $9.99/month', es: 'Desde $9.99/mes' },
         subtitle: {
-            en: 'You lose ~$65/day in interest. Protect yourself for less than a pack of gum.',
-            es: 'Pierdes ~$65/día en intereses. Protégete por menos que un chicle.',
+            en: 'Pay yearly and get 2 months free. Cancel anytime.',
+            es: 'Paga al año y llévate 2 meses gratis. Cancela cuando quieras.',
         },
         plans: [
             {
@@ -151,7 +162,6 @@ const copy = {
                 period: { en: '', es: '' },
                 popular: false,
                 cta: { en: 'Start Free', es: 'Empieza Gratis' },
-                savings: { en: '~$1,296/yr in interest saved', es: '~$1,296/año en intereses ahorrados' },
                 accounts: { en: '2 debt accounts', es: '2 cuentas de deuda' },
                 features: [
                     { en: 'All features included', es: 'Todas las funciones' },
@@ -162,15 +172,11 @@ const copy = {
             },
             {
                 name: 'Velocity',
-                price: '$8.99',
+                price: '$9.99',
                 period: { en: '/mo', es: '/mes' },
-                originalPrice: '$19.99',
-                discount: { en: '55% OFF', es: '55% OFF' },
-                billedNote: { en: 'Billed $96.99/year', es: 'Facturado $96.99/año' },
+                billedNote: { en: 'or $99.99/year (2 months free)', es: 'o $99.99/año (2 meses gratis)' },
                 popular: false,
                 cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
-                savings: { en: '~$3,240/yr in interest saved', es: '~$3,240/año en intereses ahorrados' },
-                roi: { en: 'Net gain: $3,143/yr · Pays for itself in 11 days', es: 'Ganancia neta: $3,143/año · Se paga solo en 11 días' },
                 accounts: { en: '6 debt accounts', es: '6 cuentas de deuda' },
                 features: [
                     { en: 'All features included', es: 'Todas las funciones' },
@@ -181,16 +187,12 @@ const copy = {
             },
             {
                 name: 'Accelerator',
-                price: '$16.99',
+                price: '$19.99',
                 period: { en: '/mo', es: '/mes' },
-                originalPrice: '$34.99',
-                discount: { en: '51% OFF', es: '51% OFF' },
-                billedNote: { en: 'Billed $196.99/year', es: 'Facturado $196.99/año' },
+                billedNote: { en: 'or $199.99/year (2 months free)', es: 'o $199.99/año (2 meses gratis)' },
                 popular: true,
-                badge: { en: 'MOST POPULAR', es: 'MÁS POPULAR' },
+                badge: { en: 'RECOMMENDED', es: 'RECOMENDADO' },
                 cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
-                savings: { en: '~$4,860/yr in interest saved', es: '~$4,860/año en intereses ahorrados' },
-                roi: { en: 'Net gain: $4,663/yr · Pays for itself in 15 days', es: 'Ganancia neta: $4,663/año · Se paga solo en 15 días' },
                 accounts: { en: '12 debt accounts', es: '12 cuentas de deuda' },
                 features: [
                     { en: 'All features included', es: 'Todas las funciones' },
@@ -201,15 +203,11 @@ const copy = {
             },
             {
                 name: 'Freedom',
-                price: '$28.99',
+                price: '$29.99',
                 period: { en: '/mo', es: '/mes' },
-                originalPrice: '$54.99',
-                discount: { en: '47% OFF', es: '47% OFF' },
-                billedNote: { en: 'Billed $346.99/year', es: 'Facturado $346.99/año' },
+                billedNote: { en: 'or $299.99/year (2 months free)', es: 'o $299.99/año (2 meses gratis)' },
                 popular: false,
                 cta: { en: 'Upgrade Now', es: 'Mejora Ahora' },
-                savings: { en: '~$6,480/yr + no limits', es: '~$6,480/año + sin límites' },
-                roi: { en: 'Net gain: $6,133/yr · Pays for itself in 20 days', es: 'Ganancia neta: $6,133/año · Se paga solo en 20 días' },
                 accounts: { en: 'Unlimited debt accounts', es: 'Cuentas de deuda ilimitadas' },
                 features: [
                     { en: 'All features included', es: 'Todas las funciones' },
@@ -747,11 +745,18 @@ export default function LandingPage() {
                 <div className="lp-stats-row">
                     {copy.proof.stats.map((s, i) => (
                         <div className="lp-stat lp-stat-animated" key={i} style={{ animationDelay: `${i * 0.15}s` }}>
-                            <div className="lp-stat-number">{s.value}</div>
+                            <div className="lp-stat-number">{s.value[L]}</div>
                             <div className="lp-stat-label">{s.label[L]}</div>
                         </div>
                     ))}
                 </div>
+            </section>
+
+            {/* ═══ 5b. OUR STORY ═══════════════════════════ */}
+            <section className="lp-section">
+                <span className="lp-section-label">{copy.story.label[L]}</span>
+                <p className="lp-section-subtitle">{copy.story.body[L]}</p>
+                <p className="lp-section-subtitle">{copy.story.compare[L]}</p>
             </section>
 
             {/* ═══ 6. PRICING ═══════════════════════════════ */}
@@ -776,25 +781,8 @@ export default function LandingPage() {
                                     <span className="lp-plan-period">{plan.period[L]}</span>
                                 )}
                             </div>
-                            {plan.originalPrice && (
-                                <div className="lp-plan-original-price">
-                                    <span className="lp-plan-strikethrough">{plan.originalPrice}/mo</span>
-                                    {plan.discount && (
-                                        <span className="lp-plan-discount">{plan.discount[L]}</span>
-                                    )}
-                                </div>
-                            )}
                             {plan.billedNote && (
                                 <div className="lp-plan-billed">{plan.billedNote[L]}</div>
-                            )}
-
-                            {/* Savings box */}
-                            <div className="lp-plan-savings-box">
-                                <div className="lp-plan-savings-value">{plan.savings[L]}</div>
-                            </div>
-
-                            {plan.roi && (
-                                <div className="lp-plan-roi">{plan.roi[L]}</div>
                             )}
 
                             <ul className="lp-plan-features">

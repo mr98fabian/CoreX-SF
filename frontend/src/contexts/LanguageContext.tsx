@@ -550,6 +550,7 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.monthly": { en: "Monthly", es: "Mensual" },
     "upgrade.annual": { en: "Annual", es: "Anual" },
     "upgrade.save": { en: "Save", es: "Ahorra" },
+    "upgrade.twoMonthsFree": { en: "2 months free", es: "2 meses gratis" },
     "upgrade.mostPopular": { en: "Most Popular", es: "Más Popular" },
     "upgrade.current": { en: "Current", es: "Actual" },
     "upgrade.free": { en: "Free", es: "Gratis" },
@@ -739,7 +740,6 @@ const translations: Record<string, Record<Language, string>> = {
     // Billing toggle
     "sub.monthly": { en: "Monthly", es: "Mensual" },
     "sub.annual": { en: "Annual", es: "Anual" },
-    "sub.saveUpTo": { en: "SAVE UP TO 60%", es: "AHORRA HASTA 60%" },
     // Plan cards
     "sub.accounts": { en: "accounts", es: "cuentas" },
     "sub.unlimited": { en: "Unlimited", es: "Ilimitadas" },
@@ -915,7 +915,8 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>(() => {
         const stored = localStorage.getItem("korex-language");
-        return (stored === "es" ? "es" : "en") as Language;
+        // Spanish first: only an explicit earlier choice of English overrides it
+        return (stored === "en" ? "en" : "es") as Language;
     });
 
     const setLanguage = (lang: Language) => {
