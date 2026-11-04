@@ -278,7 +278,7 @@ export default function LoginPage() {
             // Fire-and-forget seed — uses raw fetch (NOT apiFetch) to avoid
             // the 401 auto-signout handler which would kill the demo session.
             const apiBase = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8001' : '');
-            fetch(`${apiBase}/api/dev/seed-stress-test`, {
+            fetch(`${apiBase}/api/demo/seed`, {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer demo-stress-test-token',

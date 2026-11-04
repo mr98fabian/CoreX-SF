@@ -367,7 +367,7 @@ export default function SettingsPage() {
         if (!confirmed) return;
         setResetLoading(true);
         try {
-            await apiFetch("/api/seed", { method: "POST" });
+            await apiFetch("/api/demo/seed", { method: "POST" });
             window.location.reload();
         } catch (err) {
             console.error("Reset failed:", err);

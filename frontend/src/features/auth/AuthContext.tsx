@@ -24,13 +24,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * Seeds the demo sandbox with Carlos Mendoza's original data.
+ * Seeds the demo sandbox with the relatable example persona (María, ~$35K debt).
  * Uses raw fetch (not apiFetch) to avoid circular dependency issues
  * and because we need to call this before auth state is fully set.
  */
 async function seedDemoData(): Promise<void> {
     try {
-        await fetch(`${API_BASE}/api/dev/seed-stress-test`, {
+        await fetch(`${API_BASE}/api/demo/seed`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${DEMO_TOKEN}`,
@@ -51,8 +51,8 @@ function restoreDemoUser(): User | null {
     if (getDemoToken() !== DEMO_TOKEN) return null;
     return {
         id: DEMO_USER_ID,
-        email: 'carlos@demo.korex.io',
-        user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
+        email: 'maria@demo.korex.io',
+        user_metadata: { full_name: 'María González (Demo)' },
     } as unknown as User;
 }
 
@@ -131,8 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Create a synthetic user object for the frontend
         const demoUser = {
             id: DEMO_USER_ID,
-            email: 'carlos@demo.korex.io',
-            user_metadata: { full_name: 'Carlos Mendoza (Demo)' },
+            email: 'maria@demo.korex.io',
+            user_metadata: { full_name: 'María González (Demo)' },
         } as unknown as User;
 
         setUser(demoUser);

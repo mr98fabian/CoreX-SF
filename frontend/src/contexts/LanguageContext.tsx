@@ -474,7 +474,7 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.data.exportPdfDesc": { en: "Professional monthly financial report.", es: "Reporte financiero mensual profesional." },
     "settings.data.pdfError": { en: "PDF generation failed. Please try again.", es: "Error al generar el PDF. Intenta de nuevo." },
     "settings.data.resetDemo": { en: "Reset Demo Data", es: "Resetear Datos Demo" },
-    "settings.data.resetDemoDesc": { en: "Re-seed the database with fresh stress test data.", es: "Re-crear la base de datos con datos de prueba nuevos." },
+    "settings.data.resetDemoDesc": { en: "Reload the demo example data (María, $35,050 in debt).", es: "Recarga los datos de ejemplo del demo (María, $35,050 en deudas)." },
     "settings.data.clearCache": { en: "Clear Local Cache", es: "Limpiar Caché Local" },
     "settings.data.clearCacheDesc": { en: "Remove all locally stored preferences and cached data.", es: "Elimina todas las preferencias y datos almacenados localmente." },
     "settings.data.dangerZone": { en: "Danger Zone", es: "Zona de Peligro" },

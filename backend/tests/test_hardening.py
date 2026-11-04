@@ -11,7 +11,8 @@ from main import app
 from routers import demo, subscriptions
 
 REAL_USER_ID = "11111111-1111-4111-a111-111111111111"
-SEED_URL = "/api/dev/seed-stress-test"
+SEED_URL = "/api/demo/seed"
+STRESS_URL = "/api/dev/seed-stress-test"
 WEBHOOK_URL = "/api/subscriptions/webhook"
 
 
@@ -28,7 +29,7 @@ def as_user():
 def test_seed_is_404_for_real_users_in_production(client, as_user, monkeypatch):
     monkeypatch.setattr(demo, "IS_DEV", False)
     called = []
-    monkeypatch.setattr(demo, "_seed_impl", lambda uid: called.append(uid))
+    monkeypatch.setattr(demo, "_seed_impl", lambda uid, ds: called.append(uid))
     as_user(REAL_USER_ID)
     assert client.post(SEED_URL).status_code == 404
     assert called == []  # the user's data was never wiped
@@ -36,15 +37,21 @@ def test_seed_is_404_for_real_users_in_production(client, as_user, monkeypatch):
 
 def test_seed_still_works_for_demo_user_in_production(client, as_user, monkeypatch):
     monkeypatch.setattr(demo, "IS_DEV", False)
-    monkeypatch.setattr(demo, "_seed_impl", lambda uid: {"status": "ok"})
+    monkeypatch.setattr(demo, "_seed_impl", lambda uid, ds: {"status": "ok"})
     as_user(DEMO_USER_ID)
     assert client.post(SEED_URL).status_code == 200
+
+
+def test_stress_seed_is_404_in_production_even_for_demo_user(client, as_user, monkeypatch):
+    monkeypatch.setattr(demo, "IS_DEV", False)
+    as_user(DEMO_USER_ID)
+    assert client.post(STRESS_URL).status_code == 404
 
 
 # ── 2. No tracebacks or internals in error responses ─────────
 
 def test_seed_failure_returns_generic_error(client, as_user, monkeypatch):
-    def boom(uid):
+    def boom(uid, ds):
         raise RuntimeError('connection to "aws-0-pooler.supabase.com" failed at /app/backend/database.py')
     monkeypatch.setattr(demo, "IS_DEV", False)
     monkeypatch.setattr(demo, "_seed_impl", boom)
