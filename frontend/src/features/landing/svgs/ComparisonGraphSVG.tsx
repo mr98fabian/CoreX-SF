@@ -152,7 +152,7 @@ export default function ComparisonGraphSVG({ className, style }: ComparisonGraph
             <g className="cg-node cg-gold-text">
                 <path d="M 300 80 L 300 300" stroke="#10B981" strokeWidth="2" strokeDasharray="4 4" />
                 <rect x="310" y="170" width="100" height="30" rx="15" fill="#064E3B" stroke="#10B981" />
-                <text x="360" y="190" fill="#34D399" fontSize="12" fontWeight="bold" fontFamily="monospace" textAnchor="middle">+$45,000</text>
+                <text x="360" y="190" fill="#34D399" fontSize="12" fontWeight="bold" fontFamily="monospace" textAnchor="middle">SAVINGS</text>
             </g>
 
         </svg>

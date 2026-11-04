@@ -46,12 +46,8 @@ const copy = {
             es: 'Mientras lees esto, tu deuda acaba de crecer',
         },
         subtitle: {
-            en: 'Banks designed the system to keep you paying for 30 years. Between your mortgage, 2 car loans, credit cards, and student loans — the average American household hemorrhages over $23,000/year in interest alone.',
-            es: 'Los bancos diseñaron el sistema para mantenerte pagando por 30 años. Entre hipoteca, 2 autos, tarjetas de crédito y préstamos — el hogar promedio americano pierde más de $23,000/año solo en intereses.',
-        },
-        counterLabel: {
-            en: 'lost in interest EVERY MONTH by the average American household',
-            es: 'perdidos en intereses CADA MES por el hogar promedio americano',
+            en: 'Minimum payments are designed to keep you paying for years. Between credit cards, car loans and personal loans, interest quietly eats a part of every paycheck.',
+            es: 'Los pagos mínimos están diseñados para mantenerte pagando por años. Entre tarjetas, préstamos del auto y préstamos personales, los intereses se comen en silencio una parte de cada sueldo.',
         },
     },
     solution: {
@@ -70,8 +66,8 @@ const copy = {
                 bg: 'rgba(139, 92, 246, 0.15)',
                 title: { en: 'Debt Accelerator', es: 'Acelerador de Deuda' },
                 desc: {
-                    en: 'AI identifies which debt to pay down first for maximum interest savings. Each optimized payment can save you $200-$2,000.',
-                    es: 'La IA identifica qué deuda pagar primero para máximo ahorro en intereses. Cada pago optimizado puede ahorrarte $200-$2,000.',
+                    en: 'AI identifies which debt to pay down first for maximum interest savings.',
+                    es: 'La IA identifica qué deuda pagar primero para máximo ahorro en intereses.',
                 },
             },
             {
@@ -112,8 +108,8 @@ const copy = {
         without: {
             heading: { en: 'Without KoreX', es: 'Sin KoreX' },
             items: [
-                { en: '30 years of minimum payments', es: '30 años de pagos mínimos' },
-                { en: '$284,000 in interest to banks', es: '$284,000 en intereses para el banco' },
+                { en: 'Years of minimum payments', es: 'Años de pagos mínimos' },
+                { en: 'Most of your payment goes to interest', es: 'Gran parte de tu pago se va en intereses' },
                 { en: 'No emergency buffer', es: 'Sin colchón de emergencia' },
                 { en: 'Stress, guessing, hoping', es: 'Estrés, adivinanzas, esperanza' },
             ],
@@ -121,8 +117,8 @@ const copy = {
         with: {
             heading: { en: 'With KoreX', es: 'Con KoreX' },
             items: [
-                { en: '7-12 years to total freedom', es: '7-12 años para libertad total' },
-                { en: 'Save $45,000+ in interest', es: 'Ahorra $45,000+ en intereses' },
+                { en: 'Your own debt-free date, estimated from your numbers', es: 'Tu propia fecha libre de deudas, estimada con tus números' },
+                { en: 'Your interest savings, calculated — not promised', es: 'Tu ahorro en intereses, calculado — no prometido' },
                 { en: 'Peace Shield emergency fund', es: 'Escudo de Paz como fondo de emergencia' },
                 { en: 'AI strategy, clear roadmap', es: 'Estrategia IA, hoja de ruta clara' },
             ],
@@ -413,18 +409,6 @@ export default function LandingPage() {
                 delay: 0.2,
             });
 
-            // Counter scale-pop
-            gsap.from('.lp-counter', {
-                scrollTrigger: {
-                    trigger: problemRef.current,
-                    start: 'top 60%',
-                },
-                scale: 0.5,
-                opacity: 0,
-                duration: 0.8,
-                ease: 'back.out(2)',
-            });
-
             // ──── Solution — staggered explainer steps ────
             gsap.from('.lp-explainer-step', {
                 scrollTrigger: {
@@ -599,12 +583,6 @@ export default function LandingPage() {
                     <div className="lp-split-text">
                         <h2 className="lp-section-title" style={{ textAlign: 'left' }}>{copy.problem.title[L]}</h2>
                         <p className="lp-section-subtitle" style={{ textAlign: 'left' }}>{copy.problem.subtitle[L]}</p>
-                        <div className="lp-counter lp-counter-pulse">
-                            $1,975
-                        </div>
-                        <p className="lp-counter-label">
-                            {copy.problem.counterLabel[L]}
-                        </p>
                     </div>
                     {/* Right: Interactive Debt Mountain SVG */}
                     <div className="lp-split-media">
@@ -664,8 +642,8 @@ export default function LandingPage() {
                                 <div>
                                     <strong><Zap size={16} className="lp-step-icon" />{L === 'es' ? 'Acelerador de Deuda' : 'Debt Accelerator'}</strong>
                                     <p>{L === 'es'
-                                        ? 'Pone tu línea de crédito a trabajar: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada pago estratégico puede ahorrarte $200-$2,000.'
-                                        : 'Puts your credit line to work: deposit paycheck → pay debts with the line → reduce principal + interest. Each strategic payment can save you $200-$2,000.'
+                                        ? 'Pone tu línea de crédito a trabajar: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada pago estratégico reduce el interés que pagas.'
+                                        : 'Puts your credit line to work: deposit paycheck → pay debts with the line → reduce principal + interest. Each strategic payment cuts the interest you pay.'
                                     }</p>
                                 </div>
                             </div>

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { PLAN_PRICES } from '@/lib/pricing';
+import { syncPlanFromBackend } from '@/lib/planLimits';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -217,6 +218,35 @@ export default function SettingsPage() {
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const { toast } = useToast();
+
+    // Plan shown here is the server's, never just the cached localStorage value.
+    // Coming back from Lemon Squeezy (?checkout=success) the webhook may land a few
+    // seconds after the redirect, so poll briefly until the paid plan appears.
+    useEffect(() => {
+        const fromCheckout = new URLSearchParams(window.location.search).get('checkout') === 'success';
+        let cancelled = false;
+        let attempts = 0;
+        if (fromCheckout) {
+            toast({ title: t('sub.checkoutReturnTitle'), description: t('sub.checkoutReturnDesc') });
+        }
+        const sync = async () => {
+            const plan = await syncPlanFromBackend();
+            if (cancelled) return;
+            setActivePlan(plan);
+            if (fromCheckout && plan === 'starter' && ++attempts < 8) {
+                setTimeout(sync, 3000);
+            } else if (fromCheckout) {
+                toast({
+                    title: plan === 'starter' ? t('sub.checkoutPendingTitle') : t('sub.checkoutActiveTitle'),
+                    description: plan === 'starter' ? t('sub.checkoutPendingDesc') : undefined,
+                });
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+        };
+        sync();
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+    }, []);
 
     // Savings are only ever the user's own calculated numbers: no data → no figures
     useEffect(() => {

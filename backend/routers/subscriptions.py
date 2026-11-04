@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from database import get_session
 from auth import get_current_user_id
 from models import Subscription
+from plan_guard import PLAN_LIMITS, effective_plan, _parse_ts
 
 logger = logging.getLogger("korex.subscriptions")
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
@@ -29,7 +30,23 @@ PLAN_VARIANTS = {
     "accelerator": {"monthly": os.getenv("LS_VARIANT_ACCELERATOR_MONTHLY", ""), "annual": os.getenv("LS_VARIANT_ACCELERATOR_ANNUAL", "")},
     "freedom":   {"monthly": os.getenv("LS_VARIANT_FREEDOM_MONTHLY", ""),   "annual": os.getenv("LS_VARIANT_FREEDOM_ANNUAL", "")},
 }
-PLAN_LIMITS = {"starter": 12, "velocity": 6, "accelerator": 12, "freedom": 999, "freedom-dev": 999}
+IS_DEV = os.getenv("ENVIRONMENT", "production") == "development"
+
+
+def _parse_legacy_variants(raw: str) -> dict:
+    """LS_LEGACY_VARIANTS="velocity:123,velocity:456,accelerator:789" — archived
+    variants existing subscribers may still be on. LS prices can't be edited,
+    so every price change archives variants; without this map those
+    subscribers would be downgraded on their next subscription_updated."""
+    out = {}
+    for pair in filter(None, (p.strip() for p in raw.split(","))):
+        plan, _, vid = pair.partition(":")
+        if plan.strip() and vid.strip():
+            out[vid.strip()] = plan.strip()
+    return out
+
+
+LEGACY_VARIANTS = _parse_legacy_variants(os.getenv("LS_LEGACY_VARIANTS", ""))
 PLAN_COSTS = {"starter": 0, "velocity": 99.99, "accelerator": 199.99, "freedom": 299.99}  # annual; keep in sync with frontend lib/pricing.ts
 LS_API_BASE = "https://api.lemonsqueezy.com/v1"
 
@@ -71,7 +88,7 @@ async def create_checkout(body: CheckoutRequest, user_id: str = Depends(get_curr
             "type": "checkouts",
             "attributes": {
                 "checkout_data": checkout_data,
-                "product_options": {"redirect_url": f"{FRONTEND_URL}/settings?tab=subscription&checkout=success"},
+                "product_options": {"redirect_url": f"{FRONTEND_URL}/dashboard/settings?tab=subscription&checkout=success"},
                 "checkout_options": {"embed": False},
             },
             "relationships": {
@@ -117,33 +134,57 @@ async def handle_webhook(request: Request, session: Session = Depends(get_sessio
     except json.JSONDecodeError:
         return JSONResponse(status_code=400, content={"error": "Invalid JSON"})
 
-    event_name = payload.get("meta", {}).get("event_name", "")
-    user_id = payload.get("meta", {}).get("custom_data", {}).get("user_id")
-    data_attrs = payload.get("data", {}).get("attributes", {})
-    ls_sub_id = str(payload.get("data", {}).get("id", ""))
+    meta = payload.get("meta", {})
+    data = payload.get("data", {})
+    event_name = meta.get("event_name", "")
+    attrs = data.get("attributes", {})
+    # Payment events carry a subscription *invoice*; everything else a subscription.
+    is_invoice = data.get("type") == "subscription-invoices"
+    ls_sub_id = str(attrs.get("subscription_id", "")) if is_invoice else str(data.get("id", ""))
+    user_id = meta.get("custom_data", {}).get("user_id")
     logger.info(f"Webhook received: event={event_name} user_id={user_id} ls_sub={ls_sub_id}")
 
+    existing = None
+    if user_id:
+        existing = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
+    elif ls_sub_id:
+        existing = session.exec(select(Subscription).where(Subscription.ls_subscription_id == ls_sub_id)).first()
+        user_id = existing.user_id if existing else None
     if not user_id:
         return JSONResponse(status_code=200, content={"ok": True, "warning": "no user_id"})
 
-    plan_name = _variant_to_plan(str(data_attrs.get("variant_id", "")))
+    # Idempotency + ordering: LS retries and may deliver out of order. Ignore any
+    # subscription event not newer than the state we already stored for it.
+    if not is_invoice and existing and existing.ls_subscription_id == ls_sub_id:
+        event_ts = _parse_ts(attrs.get("updated_at"))
+        stored_ts = _parse_ts(existing.updated_at)
+        if event_name == "subscription_created" or (event_ts and stored_ts and event_ts <= stored_ts):
+            logger.info(f"Stale/duplicate webhook ignored: event={event_name} user={user_id}")
+            return JSONResponse(status_code=200, content={"ok": True, "duplicate": True})
 
-    # Map events to upsert calls
-    if event_name in ("subscription_created", "subscription_updated", "subscription_resumed", "subscription_unpaused"):
-        _upsert_subscription(session, user_id, plan_name, data_attrs.get("status", "active"), ls_sub_id,
-                             str(data_attrs.get("customer_id", "")), data_attrs.get("renews_at"),
-                             data_attrs.get("urls", {}).get("update_payment_method"),
-                             data_attrs.get("urls", {}).get("customer_portal"))
-        logger.info(f"Subscription upserted: user={user_id} plan={plan_name}")
-    elif event_name in ("subscription_cancelled", "subscription_expired"):
-        _upsert_subscription(session, user_id, plan_name, data_attrs.get("status", "cancelled"), ls_sub_id,
-                             str(data_attrs.get("customer_id", "")), data_attrs.get("ends_at"))
-        logger.info(f"Subscription cancelled/expired: user={user_id}")
+    if event_name in ("subscription_created", "subscription_updated", "subscription_resumed",
+                      "subscription_unpaused", "subscription_paused", "subscription_cancelled",
+                      "subscription_expired"):
+        plan = _variant_to_plan(str(attrs.get("variant_id", "")))
+        if plan is None:  # unknown variant: never downgrade on a mapping gap
+            plan = existing.plan if existing else "starter"
+            logger.warning(f"Unknown LS variant {attrs.get('variant_id')} for user={user_id}; kept plan={plan}")
+        status = attrs.get("status") or "active"
+        period_end = attrs.get("ends_at") if status in ("cancelled", "expired") else attrs.get("renews_at")
+        if event_name == "subscription_expired" or status == "expired":
+            plan, status = "starter", "expired"
+        _upsert_subscription(session, user_id, plan, status, ls_sub_id,
+                             str(attrs.get("customer_id", "")), period_end,
+                             attrs.get("urls", {}).get("update_payment_method"),
+                             attrs.get("urls", {}).get("customer_portal"),
+                             updated_at=attrs.get("updated_at"))
+        logger.info(f"Subscription {event_name}: user={user_id} plan={plan} status={status}")
     elif event_name == "subscription_payment_failed":
-        _upsert_subscription(session, user_id, plan_name, "past_due", ls_sub_id, str(data_attrs.get("customer_id", "")))
+        if existing:  # keep plan + subscription id; LS retries the charge (dunning)
+            existing.status = "past_due"
+            session.add(existing); session.commit()
         logger.warning(f"Payment failed: user={user_id}")
     elif event_name in ("subscription_payment_success", "subscription_payment_recovered"):
-        existing = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
         if existing and existing.status == "past_due":
             existing.status = "active"
             session.add(existing); session.commit()
@@ -162,20 +203,11 @@ async def get_subscription_status(user_id: str = Depends(get_current_user_id), s
     if not sub:
         return {"plan": "starter", "status": "active", "accounts_limit": 2, "customer_portal_url": None, "current_period_end": None}
 
-    # Expiration guard
-    if sub.status == "active" and sub.current_period_end and sub.ls_subscription_id != "dev-license":
-        try:
-            period_end = datetime.fromisoformat(sub.current_period_end.replace("Z", "+00:00"))
-            if datetime.now(period_end.tzinfo or None) > period_end:
-                sub.status = "expired"; sub.plan = "starter"
-                session.add(sub); session.commit()
-                logger.warning(f"Auto-expired subscription for user={user_id}")
-        except (ValueError, TypeError):
-            pass
-
+    plan = effective_plan(sub)
+    limit = PLAN_LIMITS.get(plan)
     return {
-        "plan": sub.plan, "status": sub.status,
-        "accounts_limit": PLAN_LIMITS.get(sub.plan, 2),
+        "plan": plan, "status": sub.status,
+        "accounts_limit": limit if limit is not None else 999,
         "customer_portal_url": sub.customer_portal_url,
         "current_period_end": sub.current_period_end,
         "ls_subscription_id": sub.ls_subscription_id,
@@ -215,8 +247,8 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
     total_daily_interest = sum(float(a.balance or 0) * float(a.interest_rate or 0) / 100 / 365 for a in sorted_accounts)
 
     plans_result = {}
-    for plan_name, limit in PLAN_LIMITS.items():
-        plan_accounts = sorted_accounts[:limit]
+    for plan_name in PLAN_COSTS:
+        plan_accounts = sorted_accounts[:PLAN_LIMITS[plan_name]]
         n_used = len(plan_accounts)
         annual_interest_without = sum(float(a.balance or 0) * float(a.interest_rate or 0) / 100 for a in plan_accounts)
         annual_interest_with = annual_interest_without * (1 - VELOCITY_ACCELERATION)
@@ -255,7 +287,8 @@ class PromoRequest(BaseModel):
 @router.post("/apply-promo")
 async def apply_promo_code(body: PromoRequest, user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
     code = body.code.strip().upper()
-    if code == "KOREX-DEV-UNLIMITED":
+    # Dev-only: this code is in a public repo, so outside development it must not exist.
+    if IS_DEV and code == "KOREX-DEV-UNLIMITED":
         _upsert_subscription(session, user_id, "freedom-dev", "active", "dev-license", "developer")
         logger.info(f"Developer license activated for user={user_id}")
         return {"valid": True, "plan": "freedom-dev", "label": "Freedom (Developer)",
@@ -265,20 +298,25 @@ async def apply_promo_code(body: PromoRequest, user_id: str = Depends(get_curren
 
 # ── Helpers ──────────────────────────────────────────────────
 
-def _variant_to_plan(variant_id: str) -> str:
+def _variant_to_plan(variant_id: str) -> Optional[str]:
+    """Plan for a LS variant id (current or legacy); None if unknown."""
+    if not variant_id:
+        return None
     for plan_name, variants in PLAN_VARIANTS.items():
         if variant_id in (variants.get("monthly"), variants.get("annual")):
             return plan_name
-    return "starter"
+    return LEGACY_VARIANTS.get(variant_id)
 
 
 def _upsert_subscription(
     session: Session, user_id: str, plan: str, status: str, ls_subscription_id: str,
     ls_customer_id: str = "", current_period_end: Optional[str] = None,
     update_payment_method_url: Optional[str] = None, customer_portal_url: Optional[str] = None,
+    updated_at: Optional[str] = None,
 ):
     existing = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
-    now = datetime.utcnow().isoformat()
+    # updated_at keeps LS's own timestamp when we have it, so webhook ordering can be checked
+    now = updated_at or datetime.utcnow().isoformat() + "Z"
     if existing:
         existing.plan = plan; existing.status = status; existing.ls_subscription_id = ls_subscription_id
         existing.ls_customer_id = ls_customer_id or existing.ls_customer_id

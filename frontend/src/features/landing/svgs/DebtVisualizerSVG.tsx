@@ -123,13 +123,13 @@ export default function DebtVisualizerSVG({ className, style }: DebtVisualizerSV
 
             <g className="dv-debt-text">
                 <rect x="250" y="150" width="140" height="30" rx="4" fill="#0F172A" stroke="#EF4444" strokeWidth="1" />
-                <text x="320" y="170" fill="#F87171" fontSize="12" fontFamily="monospace" textAnchor="middle">$23,000 INTEREST</text>
+                <text x="320" y="170" fill="#F87171" fontSize="12" fontFamily="monospace" textAnchor="middle">INTEREST</text>
             </g>
 
             <g className="dv-debt-text">
                 <rect x="420" y="40" width="150" height="50" rx="4" fill="#450A0A" stroke="#EF4444" strokeWidth="2" />
                 <text x="495" y="60" fill="#FECACA" fontSize="10" fontFamily="sans-serif" textAnchor="middle">BANKS WON</text>
-                <text x="495" y="80" fill="#F87171" fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">-$284,000</text>
+                <text x="495" y="80" fill="#F87171" fontSize="16" fontWeight="bold" fontFamily="monospace" textAnchor="middle">YOUR INTEREST</text>
             </g>
 
         </svg>
