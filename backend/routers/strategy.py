@@ -16,6 +16,7 @@ from helpers import (
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage,
 )
 from auth import get_current_user_id
+from plan_guard import effective_plan_limit
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -84,7 +85,7 @@ def update_attack_percentage(data: dict, user_id: str = Depends(get_current_user
 @router.get("/velocity/projections")
 async def get_velocity_projections(
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -96,7 +97,7 @@ async def get_velocity_projections(
 @router.get("/velocity/freedom-path")
 async def get_freedom_path(
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -110,7 +111,7 @@ async def get_freedom_path(
 async def get_simulation(
     extra_cash: float,
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -125,7 +126,7 @@ async def get_simulation(
 @router.get("/strategy/tactical-gps")
 async def get_tactical_gps(
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -232,7 +233,7 @@ async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
 async def simulate_purchase_cost(
     req: SimulatorRequest,
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive.")
@@ -269,7 +270,7 @@ async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id))
 @router.get("/strategy/command-center")
 async def get_strategy_command_center(
     user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Query(None),
+    plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
