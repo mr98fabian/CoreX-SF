@@ -10,6 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 # Ensure core_engine is on the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+os.environ.setdefault("ENVIRONMENT", "development")  # tests use in-memory SQLite; set before importing database
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
