@@ -27,6 +27,7 @@ from sqlmodel import Session, select
 import database
 from auth import API_TOKEN_PREFIX, get_current_user_id
 from models import ApiToken, ApiTokenAudit
+from plan_guard import ai_access_for
 
 SCOPES = {
     "read:accounts": "Ver mis cuentas",
@@ -66,6 +67,10 @@ def _authenticate_token(raw: str, scope: str) -> ApiToken:
             raise HTTPException(status_code=401, detail="Invalid or revoked API token")
         if scope not in (row.scopes or []):
             raise HTTPException(status_code=403, detail=f"Token lacks scope {scope}")
+        # Checked on every request, not only at creation: a cancelled/expired plan
+        # stops existing tokens on the very next call (and a webhook upgrade revives them)
+        if not ai_access_for(session, row.user_id)[0]:
+            raise HTTPException(status_code=403, detail="AI connection requires a paid plan")
         if _rate_limited(row.id):
             raise HTTPException(status_code=429, detail="Rate limit exceeded (60 requests/minute)")
         row.last_used_at = datetime.utcnow()

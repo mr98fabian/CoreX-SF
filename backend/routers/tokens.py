@@ -15,6 +15,7 @@ import database
 from api_tokens import SCOPES, generate_token, hash_token
 from auth import get_current_user_id, DEMO_USER_ID
 from models import ApiToken
+from plan_guard import ai_access_for
 
 router = APIRouter(prefix="/api/tokens", tags=["tokens"])
 MAX_ACTIVE_TOKENS = 10
@@ -38,10 +39,24 @@ def list_scopes():
     return [{"scope": k, "label": v} for k, v in SCOPES.items()]
 
 
+@router.get("/access")
+def token_access(user_id: str = Depends(get_current_user_id)):
+    """What the Settings screen shows: locked (free / demo) or open (paid). The UI
+    never decides this itself."""
+    if user_id == DEMO_USER_ID:
+        return {"allowed": False, "reason": "demo", "plan": "demo"}
+    with Session(database.engine) as session:
+        allowed, plan = ai_access_for(session, user_id)
+    return {"allowed": allowed, "reason": None if allowed else "free_plan", "plan": plan}
+
+
 @router.post("")
 def create_token(body: TokenCreate, user_id: str = Depends(get_current_user_id)):
     if user_id == DEMO_USER_ID:
         raise HTTPException(status_code=403, detail="Demo accounts can't create API tokens")
+    with Session(database.engine) as session:
+        if not ai_access_for(session, user_id)[0]:
+            raise HTTPException(status_code=403, detail="AI connection requires a paid plan")
     unknown = set(body.scopes) - set(SCOPES)
     if unknown:
         raise HTTPException(status_code=400, detail=f"Unknown scopes: {sorted(unknown)}")

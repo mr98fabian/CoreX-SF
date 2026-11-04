@@ -43,6 +43,14 @@ def effective_plan(sub: Optional[Subscription], now: Optional[datetime] = None) 
     return sub.plan if sub.plan in PLAN_LIMITS else "starter"
 
 
+def ai_access_for(session: Session, user_id: str) -> tuple[bool, str]:
+    """AI connection (API tokens / MCP) is a paid feature: any paid plan the user
+    is entitled to *right now* (see effective_plan) opens it; Starter doesn't."""
+    sub = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
+    plan = effective_plan(sub)
+    return plan != "starter", plan
+
+
 def plan_limit_for(session: Session, user_id: str) -> Optional[int]:
     if user_id == DEMO_USER_ID:
         return None  # the shared demo sandbox shows the full product

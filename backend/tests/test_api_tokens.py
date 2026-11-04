@@ -9,7 +9,7 @@ import api_tokens
 import database
 from auth import get_current_user_id, DEMO_USER_ID
 from main import app
-from models import Account, ApiToken, ApiTokenAudit, Transaction
+from models import Account, ApiToken, ApiTokenAudit, Subscription, Transaction
 
 A = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa"
 B = "bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb"
@@ -22,7 +22,7 @@ def clean():
     yield
     app.dependency_overrides.pop(get_current_user_id, None)
     with Session(database.engine) as s:
-        for model in (ApiTokenAudit, ApiToken, Transaction, Account):
+        for model in (ApiTokenAudit, ApiToken, Transaction, Account, Subscription):
             for row in s.exec(select(model).where(model.user_id.in_([A, B]))).all():
                 s.delete(row)
         s.commit()
@@ -32,7 +32,16 @@ def login(user):
     app.dependency_overrides[get_current_user_id] = lambda: user
 
 
+def set_plan(user, plan="velocity", status="active"):
+    """AI tokens are a paid feature (Fase 6 addendum 2)."""
+    with Session(database.engine) as s:
+        sub = s.exec(select(Subscription).where(Subscription.user_id == user)).first() or Subscription(user_id=user)
+        sub.plan, sub.status = plan, status
+        s.add(sub); s.commit()
+
+
 def make_token(client, user, scopes=ALL, name="agent"):
+    set_plan(user)
     login(user)
     r = client.post("/api/tokens", json={"name": name, "scopes": scopes})
     assert r.status_code == 200, r.text
