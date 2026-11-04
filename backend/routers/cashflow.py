@@ -11,6 +11,8 @@ from database import engine
 from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
+from api_tokens import require_scope
+from schemas import CashflowUpdate
 
 logger = logging.getLogger("korex.cashflow")
 router = APIRouter(prefix="/api", tags=["cashflow"])
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/api", tags=["cashflow"])
 # ── Cashflow Item CRUD ───────────────────────────────────────
 
 @router.get("/cashflow")
-async def get_cashflow(user_id: str = Depends(get_current_user_id)):
+async def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
     with Session(engine) as session:
         result = [item.model_dump() for item in
                   session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()]
@@ -39,10 +41,39 @@ async def get_cashflow(user_id: str = Depends(get_current_user_id)):
         return result
 
 
+def _check_own_account(session, account_id, user_id):
+    """A cashflow item may only point at one of the caller's own accounts."""
+    if account_id is not None and not session.exec(
+        select(Account).where(Account.id == account_id, Account.user_id == user_id)
+    ).first():
+        raise HTTPException(status_code=404, detail="Account not found")
+
+
 @router.post("/cashflow", response_model=CashflowItem)
-async def create_cashflow(item: CashflowItem, user_id: str = Depends(get_current_user_id)):
+async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_scope("write:payments"))):
     with Session(engine) as session:
         item.user_id = user_id
+        item.id = None  # never let the client pick (or collide with) a primary key
+        _check_own_account(session, item.account_id, user_id)
+        with bypass_fk(session):
+            session.add(item); session.commit()
+        session.refresh(item)
+        return item
+
+
+@router.put("/cashflow/{id}", response_model=CashflowItem)
+async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(require_scope("write:payments"))):
+    with Session(engine) as session:
+        item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="Cashflow item not found")
+        changes = data.model_dump(exclude_unset=True)
+        if "account_id" in changes:
+            _check_own_account(session, changes["account_id"], user_id)
+        for field, value in changes.items():
+            if field == "amount" and value is not None:
+                value = Decimal(str(value))
+            setattr(item, field, value)
         with bypass_fk(session):
             session.add(item); session.commit()
         session.refresh(item)
@@ -50,11 +81,13 @@ async def create_cashflow(item: CashflowItem, user_id: str = Depends(get_current
 
 
 @router.delete("/cashflow/{id}")
-async def delete_cashflow(id: int, user_id: str = Depends(get_current_user_id)):
+async def delete_cashflow(id: int, user_id: str = Depends(require_scope("write:payments"))):
     with Session(engine) as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
-        if item: session.delete(item); session.commit()
-        return {"ok": True}
+        if not item:
+            raise HTTPException(status_code=404, detail="Cashflow item not found")
+        session.delete(item); session.commit()
+        return {"ok": True, "deleted_cashflow_id": id}
 
 
 # ── Unified Trigger Logic ────────────────────────────────────

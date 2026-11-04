@@ -42,3 +42,19 @@ class AccountUpdate(BaseModel):
     interest_type: Optional[str] = None
     payment_frequency: Optional[str] = None
     debt_subtype: Optional[str] = None
+
+
+class CashflowUpdate(BaseModel):
+    """Partial cashflow update (income/expense item); id and user_id are not editable."""
+    name: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    frequency: Optional[str] = None
+    is_variable: Optional[bool] = None
+    day_of_month: Optional[int] = None
+    day_of_week: Optional[int] = None
+    date_specific_1: Optional[int] = None
+    date_specific_2: Optional[int] = None
+    month_of_year: Optional[int] = None
+    account_id: Optional[int] = None
+    is_income: Optional[bool] = None
