@@ -13,7 +13,7 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": [
         "/c",
-        "set PYTHONIOENCODING=utf-8&& set ENVIRONMENT=development&& set DATABASE_URL=&& venv\\Scripts\\python.exe -m uvicorn main:app --port 8001"
+        "set PYTHONIOENCODING=utf-8&& set ENVIRONMENT=development&& set \"DATABASE_URL=sqlite:///./korex.db\"&& venv\\Scripts\\python.exe -m uvicorn main:app --port 8001"
       ],
       "cwd": "backend",
       "port": 8001
