@@ -1222,7 +1222,7 @@ export default function SettingsPage() {
                 {sd?.has_data && (
                     <Card className="border-gray-200 dark:border-white/5 bg-gradient-to-r from-blue-950/20 via-purple-950/10 to-blue-950/20">
                         <CardContent className="p-5">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div className="grid grid-cols-2 gap-4 text-center">
                                 <div>
                                     <p className="text-2xl font-black text-blue-400">{sd.social_proof.total_accounts_monitored}</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.accountsMonitored')}</p>
@@ -1230,14 +1230,6 @@ export default function SettingsPage() {
                                 <div>
                                     <p className="text-2xl font-black text-purple-400">${(sd.total_debt / 1000).toFixed(0)}K</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.debtOptimized')}</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-emerald-400">3.2x</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.fasterThanBanks')}</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-amber-400">40%</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.avgInterestSaved')}</p>
                                 </div>
                             </div>
                         </CardContent>
