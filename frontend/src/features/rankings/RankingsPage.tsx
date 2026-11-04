@@ -84,21 +84,22 @@ export default function RankingsPage() {
                     </div>
 
                     <div className="text-center md:text-left flex-1">
-                        <p className="text-xs text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
+                        <p className="text-xs text-slate-300 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
                             {es ? 'Tu Rango Actual' : 'Your Current Rank'}
                         </p>
-                        <h1 className="text-2xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent"
-                            style={{ backgroundImage: `linear-gradient(135deg, ${currentRank.material.color}, ${currentRank.material.color}88, white)` }}>
+                        {/* Solid light text: low-tier material colors (Wood, Stone) vanished on the dark card */}
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-50"
+                            style={{ textShadow: `0 0 24px ${currentRank.material.glowColor}` }}>
                             {es ? currentRank.fullDisplayEs : currentRank.fullDisplayEn}
                         </h1>
-                        <p className="text-gray-400 mt-2 text-sm">
+                        <p className="text-slate-300 mt-2 text-sm">
                             {es ? `Nivel ${currentRank.level} de 90` : `Level ${currentRank.level} of 90`}
                         </p>
                         {!currentRank.isMaxRank && (
-                            <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                            <p className="text-slate-400 text-xs mt-1 flex items-center gap-1">
                                 <span className="text-amber-500">▸</span>
                                 {es ? 'Siguiente:' : 'Next:'}{' '}
-                                <span className="text-gray-300 font-semibold">
+                                <span className="text-slate-100 font-semibold">
                                     {es ? currentRank.nextRankEs : currentRank.nextRankEn}
                                 </span>
                             </p>
@@ -106,7 +107,7 @@ export default function RankingsPage() {
 
                         {/* Progress to next rank */}
                         <div className="mt-4 max-w-md">
-                            <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
                                 <span>{es ? 'Progreso al siguiente rango' : 'Progress to next rank'}</span>
                                 <span>{Math.round(currentRank.progressPercent)}%</span>
                             </div>
@@ -127,12 +128,12 @@ export default function RankingsPage() {
                             <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
                                 <Flame size={14} className="text-orange-400" />
                                 <span className="text-xs font-bold text-white">{streak.score}</span>
-                                <span className="text-[10px] text-gray-400">{es ? 'pts racha' : 'streak pts'}</span>
+                                <span className="text-[10px] text-slate-300">{es ? 'pts racha' : 'streak pts'}</span>
                             </div>
                             <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
                                 <Zap size={14} className="text-amber-400" />
                                 <span className="text-xs font-bold text-white">{effectiveScore}</span>
-                                <span className="text-[10px] text-gray-400">{es ? 'XP efectivo' : 'effective XP'}</span>
+                                <span className="text-[10px] text-slate-300">{es ? 'XP efectivo' : 'effective XP'}</span>
                             </div>
                             {isPaid && (
                                 <div className="flex items-center gap-1.5 bg-amber-500/10 rounded-lg px-3 py-1.5 border border-amber-500/20">
@@ -154,7 +155,7 @@ export default function RankingsPage() {
                         {es ? '¿Cómo Funciona?' : 'How Does It Work?'}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-xs text-gray-400">
+                <CardContent className="space-y-3 text-xs text-slate-300">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
                             <p className="font-bold text-emerald-400 mb-1">✅ {es ? 'Sube de Rango' : 'Rank Up'}</p>
@@ -291,7 +292,7 @@ export default function RankingsPage() {
                                                         ) : rank.isCurrent ? (
                                                             <Star size={12} className="text-amber-400 animate-pulse" />
                                                         ) : (
-                                                            <Lock size={12} className="text-slate-700" />
+                                                            <Lock size={12} className="text-slate-500" />
                                                         )}
                                                     </div>
                                                 </div>
