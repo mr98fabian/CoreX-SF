@@ -104,6 +104,38 @@ def add_account(name: str, type: str, balance: float, interest_rate: float = 0, 
     return {k: acc.get(k) for k in ("id", "name", "type", "balance", "interest_rate", "min_payment")}
 
 
+EDITABLE = ("name", "balance", "interest_rate", "min_payment", "credit_limit", "closing_day",
+            "due_day", "interest_type", "payment_frequency", "debt_subtype")
+
+
+@mcp.tool()
+def update_account(account: str, name: Optional[str] = None, balance: Optional[float] = None,
+                   interest_rate: Optional[float] = None, min_payment: Optional[float] = None,
+                   credit_limit: Optional[float] = None, closing_day: Optional[int] = None,
+                   due_day: Optional[int] = None, interest_type: Optional[str] = None,
+                   payment_frequency: Optional[str] = None, debt_subtype: Optional[str] = None) -> dict:
+    """Correct an account. `account` is its id or (part of) its name; only the fields you pass change.
+    interest_type: revolving | fixed. payment_frequency: monthly | biweekly | weekly. Scope: write:accounts."""
+    values = locals()
+    changes = {k: values[k] for k in EDITABLE if values[k] is not None}
+    if not changes:
+        raise KorexError("Pass at least one field to change.")
+    acc = _resolve_account(account)
+    updated = _call("PUT", f"/api/accounts/{acc['id']}", changes)
+    return {"updated": True, "account": {k: updated.get(k) for k in ("id",) + EDITABLE}}
+
+
+@mcp.tool()
+def delete_account(account: str, confirm: bool = False) -> dict:
+    """Permanently delete an account and its transactions (income/bills linked to it are kept, unlinked).
+    `account` is its id or (part of) its name. Requires confirm=true — ask the user first. Scope: write:accounts."""
+    acc = _resolve_account(account)
+    if not confirm:
+        raise KorexError(f"Not deleted. Ask the user to confirm deleting '{acc['name']}', then call again with confirm=true.")
+    res = _call("DELETE", f"/api/accounts/{acc['id']}")
+    return {"deleted": True, "account": acc["name"], "deleted_transactions": res.get("deleted_transactions", 0)}
+
+
 @mcp.tool()
 def run_purchase_simulation(amount: float) -> dict:
     """Estimate how much a purchase of `amount` dollars delays the user's debt-free date and costs in interest. Scope: run:simulations."""
