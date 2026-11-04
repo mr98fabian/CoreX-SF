@@ -1,7 +1,8 @@
 """
 Demo Router — Development & stress-test seeding endpoints.
 """
-from fastapi import APIRouter, Depends
+import os, logging
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from sqlalchemy import text
 from datetime import datetime, timedelta
@@ -10,17 +11,26 @@ from database import engine
 from auth import get_current_user_id
 from helpers import bypass_fk, DEMO_USER_ID
 
+logger = logging.getLogger("korex.demo")
+IS_DEV = os.getenv("ENVIRONMENT", "production") == "development"
+
 router = APIRouter(prefix="/api", tags=["demo"])
 
 
 @router.post("/dev/seed-stress-test")
 async def seed_stress_test(user_id: str = Depends(get_current_user_id)):
-    """Seed Carlos Mendoza stress-test dataset."""
+    """Seed Carlos Mendoza stress-test dataset.
+
+    The seed WIPES the caller's data, so outside development it only exists
+    for the shared demo user (the landing's "Try Demo" calls it); any real
+    account gets a 404 as if the route didn't exist."""
+    if not IS_DEV and user_id != DEMO_USER_ID:
+        raise HTTPException(status_code=404, detail="Not Found")
     try:
         return _seed_impl(user_id)
-    except Exception as e:
-        import traceback
-        return {"status": "error", "detail": str(e), "tb": traceback.format_exc()}
+    except Exception:
+        logger.exception("Demo seed failed for user=%s", user_id)
+        raise HTTPException(status_code=500, detail="Demo seed failed.")
 
 
 def _seed_impl(user_id: str):

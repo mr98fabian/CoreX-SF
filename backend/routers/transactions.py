@@ -1,6 +1,7 @@
 """
 Transactions Router — Create, list, sync, and Plaid integration.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from decimal import Decimal
@@ -131,8 +132,9 @@ def _plaid_call(fn_name: str, *args, fallback_msg: str = "Plaid service error"):
         from plaid_service import create_link_token, exchange_public_token, get_accounts, sync_transactions
         return {"create_link_token": create_link_token, "exchange_public_token": exchange_public_token,
                 "get_accounts": get_accounts, "sync_transactions": sync_transactions}[fn_name](*args)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logging.getLogger("korex.transactions").exception("Plaid call %s failed", fn_name)
+        raise HTTPException(status_code=500, detail=fallback_msg)
 
 
 @router.get("/plaid/create_link_token")

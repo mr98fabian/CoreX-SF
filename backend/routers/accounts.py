@@ -1,6 +1,7 @@
 """
 Accounts Router — CRUD operations for financial accounts.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from decimal import Decimal
@@ -147,5 +148,6 @@ async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
 
             session.commit()
         return {"ok": True, "message": "System Hard Reset Complete"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logging.getLogger("korex.accounts").exception("Hard reset failed")
+        raise HTTPException(status_code=500, detail="Reset failed. Please try again.")
