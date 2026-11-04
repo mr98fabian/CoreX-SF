@@ -3,6 +3,7 @@ Plaid API Service for KoreX Financial System.
 Handles bank account linking and transaction syncing.
 """
 import os
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
 from dotenv import load_dotenv
@@ -70,14 +71,16 @@ def create_link_token(user_id: str = "korex_user_001") -> dict:
             "expiration": str(response.expiration)
         }
     except plaid.ApiException as e:
+        logging.getLogger("korex.plaid").error("Plaid link_token_create failed: %s", e.body)
         return {
             "error": True,
-            "message": f"Plaid API error: {e.body}"
+            "message": "Plaid API error"
         }
-    except Exception as e:
+    except Exception:
+        logging.getLogger("korex.plaid").exception("Error creating link token")
         return {
             "error": True,
-            "message": f"Error creating link token: {str(e)}"
+            "message": "Error creating link token"
         }
 
 

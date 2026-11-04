@@ -101,11 +101,16 @@ async def create_checkout(body: CheckoutRequest, user_id: str = Depends(get_curr
 async def handle_webhook(request: Request, session: Session = Depends(get_session)):
     raw_body = await request.body()
 
-    if LS_WEBHOOK_SECRET:
-        expected = hmac.new(LS_WEBHOOK_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(expected, request.headers.get("X-Signature", "")):
-            logger.warning("Webhook signature mismatch")
-            return JSONResponse(status_code=403, content={"error": "Invalid signature"})
+    # Fail closed: without a secret we can't tell Lemon Squeezy from a forger.
+    # 503 (not 401) because it's our misconfiguration, and LS retries non-2xx
+    # deliveries, so no real event is lost once the secret is set.
+    if not LS_WEBHOOK_SECRET:
+        logger.error("LEMONSQUEEZY_WEBHOOK_SECRET is not set — rejecting webhook")
+        return JSONResponse(status_code=503, content={"error": "Webhook not configured"})
+    expected = hmac.new(LS_WEBHOOK_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(expected, request.headers.get("X-Signature", "")):
+        logger.warning("Webhook signature mismatch")
+        return JSONResponse(status_code=401, content={"error": "Invalid signature"})
 
     try:
         payload = json.loads(raw_body)

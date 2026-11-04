@@ -216,8 +216,8 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
                 "source_found": bool(source_acc), "dest_found": bool(dest_acc),
             }
         except Exception as e:
-            logger.error(f"Execute commit failed: user={user_id} error={e}")
-            raise HTTPException(status_code=400, detail=f"Execution Failed: {str(e)}")
+            logger.exception(f"Execute commit failed: user={user_id} error={e}")
+            raise HTTPException(status_code=400, detail="Execution failed. No changes were saved.")
 
 
 @router.get("/strategy/executed-logs")
