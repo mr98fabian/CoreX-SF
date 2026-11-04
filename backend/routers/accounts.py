@@ -12,6 +12,7 @@ from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
 from schemas import BalanceUpdate
 from helpers import bypass_fk
 from auth import get_current_user_id
+from api_tokens import require_scope
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -21,15 +22,16 @@ router = APIRouter(prefix="/api", tags=["accounts"])
 
 
 @router.get("/accounts", response_model=List[Account])
-async def get_accounts(user_id: str = Depends(get_current_user_id)):
+async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
     with Session(engine) as session:
         return session.exec(select(Account).where(Account.user_id == user_id)).all()
 
 
 @router.post("/accounts", response_model=Account)
-async def create_account(account: Account, user_id: str = Depends(get_current_user_id)):
+async def create_account(account: Account, user_id: str = Depends(require_scope("write:accounts"))):
     with Session(engine) as session:
         account.user_id = user_id
+        account.id = None  # never let the client pick (or collide with) a primary key
         if account.type == "debt":
             if account.min_payment is None or account.min_payment == 0:
                 account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)

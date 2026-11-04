@@ -18,6 +18,9 @@ DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
 # Enabled by default — demo token only accesses a synthetic sandbox account
 DEMO_MODE_ENABLED = os.getenv("DEMO_MODE_ENABLED", "true").lower() == "true"
 
+# Personal API tokens (see api_tokens.py) start with this prefix
+API_TOKEN_PREFIX = "kx_"
+
 
 async def get_current_user_id(authorization: Optional[str] = Header(None)) -> str:
     """Extract and validate user_id from Supabase JWT via /auth/v1/user."""
@@ -25,6 +28,10 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
     token = authorization.replace("Bearer ", "") if authorization.startswith("Bearer ") else authorization
+
+    # Default deny for API tokens: only endpoints using api_tokens.require_scope accept them
+    if token.startswith(API_TOKEN_PREFIX):
+        raise HTTPException(status_code=403, detail="API tokens are not accepted on this endpoint")
 
     # -- Demo Mode Bypass (only when explicitly enabled via env var) --
     if DEMO_MODE_ENABLED and token == DEMO_TOKEN:

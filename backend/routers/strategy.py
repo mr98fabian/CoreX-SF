@@ -16,7 +16,8 @@ from helpers import (
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage,
 )
 from auth import get_current_user_id
-from plan_guard import effective_plan_limit
+from api_tokens import require_scope
+from plan_guard import effective_plan_limit, scoped_plan_limit
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -125,8 +126,8 @@ async def get_simulation(
 
 @router.get("/strategy/tactical-gps")
 async def get_tactical_gps(
-    user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Depends(effective_plan_limit),
+    user_id: str = Depends(require_scope("read:plan")),
+    plan_limit: int | None = Depends(scoped_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -232,8 +233,8 @@ async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
 @router.post("/simulator/time-cost")
 async def simulate_purchase_cost(
     req: SimulatorRequest,
-    user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Depends(effective_plan_limit),
+    user_id: str = Depends(require_scope("run:simulations")),
+    plan_limit: int | None = Depends(scoped_plan_limit),
 ):
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive.")

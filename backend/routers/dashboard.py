@@ -10,7 +10,8 @@ from database import engine
 from models import Account, CashflowItem, Transaction
 from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
 from auth import get_current_user_id
-from plan_guard import effective_plan_limit
+from api_tokens import require_scope
+from plan_guard import effective_plan_limit, scoped_plan_limit
 from velocity_engine import (
     DebtAccount, get_velocity_target,
     calculate_safe_attack_equity, detect_debt_alerts,
@@ -25,8 +26,8 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 
 @router.get("/dashboard")
 async def get_dashboard_metrics(
-    user_id: str = Depends(get_current_user_id),
-    plan_limit: int | None = Depends(effective_plan_limit),
+    user_id: str = Depends(require_scope("read:dashboard")),
+    plan_limit: int | None = Depends(scoped_plan_limit),
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()

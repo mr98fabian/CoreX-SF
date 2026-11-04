@@ -1,7 +1,7 @@
 from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel, Relationship, Column
+from sqlmodel import Field, SQLModel, Relationship, Column, JSON
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
@@ -120,3 +120,28 @@ class TransactionCreate(SQLModel):
     category: str
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
 
+
+
+class ApiToken(SQLModel, table=True):
+    """Personal API token. Only the SHA-256 of the token is stored; the plain
+    value is shown once at creation and never persisted or logged."""
+    __tablename__ = "api_tokens"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    name: str
+    token_hash: str = Field(index=True, unique=True, max_length=64)
+    scopes: List[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_used_at: Optional[datetime] = Field(default=None)
+    revoked_at: Optional[datetime] = Field(default=None)
+
+
+class ApiTokenAudit(SQLModel, table=True):
+    """Every write performed with an API token (who, which token, what, when)."""
+    __tablename__ = "api_token_audit"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token_id: int = Field(index=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    action: str
+    detail: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
