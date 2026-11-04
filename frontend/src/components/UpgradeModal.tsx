@@ -11,6 +11,7 @@ import { Zap, Rocket, Crown, Check, Sparkles, TrendingDown, Infinity as Infinity
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PLAN_PRICES } from '@/lib/pricing';
 
 // ─── Savings estimate shape from backend ───
 interface PlanSavings {
@@ -34,8 +35,8 @@ const PLANS = [
         name: 'Starter',
         icon: Zap,
         accounts: 2,
-        monthly: 0,
-        annual: 0,
+        monthly: PLAN_PRICES.starter.monthly,
+        annual: PLAN_PRICES.starter.annual,
         color: 'slate',
         gradient: 'from-slate-500 to-slate-600',
         featureKeys: ['upgrade.feature.debtAccounts2', 'upgrade.feature.basicVelocity', 'upgrade.feature.monthlyProjections'],
@@ -45,8 +46,8 @@ const PLANS = [
         name: 'Velocity',
         icon: Zap,
         accounts: 6,
-        monthly: 19.99,
-        annual: 96.99,
+        monthly: PLAN_PRICES.velocity.monthly,
+        annual: PLAN_PRICES.velocity.annual,
         color: 'amber',
         gradient: 'from-amber-500 to-orange-500',
         featureKeys: ['upgrade.feature.debtAccounts6', 'upgrade.feature.fullVelocity', 'upgrade.feature.actionPlanGPS', 'upgrade.feature.prioritySupport'],
@@ -56,8 +57,8 @@ const PLANS = [
         name: 'Accelerator',
         icon: Rocket,
         accounts: 12,
-        monthly: 34.99,
-        annual: 196.99,
+        monthly: PLAN_PRICES.accelerator.monthly,
+        annual: PLAN_PRICES.accelerator.annual,
         color: 'purple',
         gradient: 'from-purple-500 to-indigo-500',
         popular: true,
@@ -68,8 +69,8 @@ const PLANS = [
         name: 'Freedom',
         icon: Crown,
         accounts: Infinity,
-        monthly: 54.99,
-        annual: 346.99,
+        monthly: PLAN_PRICES.freedom.monthly,
+        annual: PLAN_PRICES.freedom.annual,
         color: 'yellow',
         gradient: 'from-amber-400 to-yellow-500',
         featureKeys: ['upgrade.feature.unlimitedAccounts', 'upgrade.feature.allAccelerator', 'upgrade.feature.apiAccess', 'upgrade.feature.whiteGlove'],
@@ -183,7 +184,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 : 'text-zinc-500 hover:text-zinc-300'
                                 }`}
                         >
-                            {t('upgrade.annual')} <span className="text-emerald-400 ml-1">{t('upgrade.save')} 60%</span>
+                            {t('upgrade.annual')} <span className="text-emerald-400 ml-1">{t('upgrade.twoMonthsFree')}</span>
                         </button>
                     </div>
                 </div>
@@ -195,9 +196,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                         const isCurrent = plan.id === currentPlan;
                         const isDowngrade = idx < currentIdx;
                         const price = billing === 'annual' ? plan.annual : plan.monthly * 12;
-                        const monthlyPrice = billing === 'annual'
-                            ? (plan.annual / 12).toFixed(0)
-                            : plan.monthly;
+                        const monthlyPrice = plan.monthly;
                         const isPopular = 'popular' in plan && plan.popular;
 
                         return (
@@ -244,7 +243,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                             </div>
                                             {billing === 'annual' && (
                                                 <p className="text-xs text-zinc-500 mt-1">
-                                                    ${price}/{t('upgrade.year')} · <span className="text-emerald-400 font-semibold">{t('upgrade.save')} ${plan.monthly * 12 - plan.annual}</span>
+                                                    ${price}/{t('upgrade.year')} · <span className="text-emerald-400 font-semibold">{t('upgrade.twoMonthsFree')}</span>
                                                 </p>
                                             )}
                                         </>

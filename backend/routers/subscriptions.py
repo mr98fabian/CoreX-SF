@@ -30,7 +30,7 @@ PLAN_VARIANTS = {
     "freedom":   {"monthly": os.getenv("LS_VARIANT_FREEDOM_MONTHLY", ""),   "annual": os.getenv("LS_VARIANT_FREEDOM_ANNUAL", "")},
 }
 PLAN_LIMITS = {"starter": 12, "velocity": 6, "accelerator": 12, "freedom": 999, "freedom-dev": 999}
-PLAN_COSTS = {"starter": 0, "velocity": 96.99, "accelerator": 196.99, "freedom": 346.99}
+PLAN_COSTS = {"starter": 0, "velocity": 99.99, "accelerator": 199.99, "freedom": 299.99}  # annual; keep in sync with frontend lib/pricing.ts
 LS_API_BASE = "https://api.lemonsqueezy.com/v1"
 
 

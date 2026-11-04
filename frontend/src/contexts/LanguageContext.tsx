@@ -474,7 +474,7 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.data.exportPdfDesc": { en: "Professional monthly financial report.", es: "Reporte financiero mensual profesional." },
     "settings.data.pdfError": { en: "PDF generation failed. Please try again.", es: "Error al generar el PDF. Intenta de nuevo." },
     "settings.data.resetDemo": { en: "Reset Demo Data", es: "Resetear Datos Demo" },
-    "settings.data.resetDemoDesc": { en: "Re-seed the database with fresh stress test data.", es: "Re-crear la base de datos con datos de prueba nuevos." },
+    "settings.data.resetDemoDesc": { en: "Reload the demo example data (María, $35,050 in debt).", es: "Recarga los datos de ejemplo del demo (María, $35,050 en deudas)." },
     "settings.data.clearCache": { en: "Clear Local Cache", es: "Limpiar Caché Local" },
     "settings.data.clearCacheDesc": { en: "Remove all locally stored preferences and cached data.", es: "Elimina todas las preferencias y datos almacenados localmente." },
     "settings.data.dangerZone": { en: "Danger Zone", es: "Zona de Peligro" },
@@ -550,7 +550,8 @@ const translations: Record<string, Record<Language, string>> = {
     "upgrade.monthly": { en: "Monthly", es: "Mensual" },
     "upgrade.annual": { en: "Annual", es: "Anual" },
     "upgrade.save": { en: "Save", es: "Ahorra" },
-    "upgrade.mostPopular": { en: "Most Popular", es: "Más Popular" },
+    "upgrade.twoMonthsFree": { en: "2 months free", es: "2 meses gratis" },
+    "upgrade.mostPopular": { en: "Recommended", es: "Recomendado" },
     "upgrade.current": { en: "Current", es: "Actual" },
     "upgrade.free": { en: "Free", es: "Gratis" },
     "upgrade.year": { en: "year", es: "año" },
@@ -739,7 +740,6 @@ const translations: Record<string, Record<Language, string>> = {
     // Billing toggle
     "sub.monthly": { en: "Monthly", es: "Mensual" },
     "sub.annual": { en: "Annual", es: "Anual" },
-    "sub.saveUpTo": { en: "SAVE UP TO 60%", es: "AHORRA HASTA 60%" },
     // Plan cards
     "sub.accounts": { en: "accounts", es: "cuentas" },
     "sub.unlimited": { en: "Unlimited", es: "Ilimitadas" },
@@ -749,7 +749,7 @@ const translations: Record<string, Record<Language, string>> = {
     "sub.off": { en: "OFF", es: "DESC." },
     "sub.billed": { en: "Billed", es: "Facturado" },
     "sub.year": { en: "/year", es: "/año" },
-    "sub.mostPopular": { en: "⭐ MOST POPULAR", es: "⭐ MÁS POPULAR" },
+    "sub.mostPopular": { en: "⭐ RECOMMENDED", es: "⭐ RECOMENDADO" },
     "sub.yourPlan": { en: "YOUR CURRENT PLAN", es: "TU PLAN ACTUAL" },
     // Savings badges
     "sub.inInterest": { en: "in interest", es: "en intereses" },
@@ -915,7 +915,8 @@ const LanguageContext = createContext<LanguageContextType | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguageState] = useState<Language>(() => {
         const stored = localStorage.getItem("korex-language");
-        return (stored === "es" ? "es" : "en") as Language;
+        // Spanish first: only an explicit earlier choice of English overrides it
+        return (stored === "en" ? "en" : "es") as Language;
     });
 
     const setLanguage = (lang: Language) => {

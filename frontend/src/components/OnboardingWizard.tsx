@@ -562,8 +562,8 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 max-w-md">
                     <p className="text-xs text-amber-300/90 leading-relaxed">
                         {language === 'es'
-                            ? 'Modo Demo: exploras KoreX con datos ficticios precargados. Los cambios son temporales y se reinician al cerrar sesión.'
-                            : 'Demo Mode: you are exploring KoreX with pre-loaded fictional data. Changes are temporary and reset after logout.'}
+                            ? 'Modo Demo: datos de ejemplo de María González (persona ficticia). Cobra $1,850 cada quincena, tiene $3,350 entre cheques y ahorro, y $35,050 en 5 deudas: 3 tarjetas, el préstamo del auto y un préstamo personal. Los cambios son temporales y se reinician al cerrar sesión.'
+                            : 'Demo Mode: example data for María González (a fictional person). She is paid $1,850 every two weeks, has $3,350 in checking and savings, and $35,050 across 5 debts: 3 credit cards, a car loan and a personal loan. Changes are temporary and reset after logout.'}
                     </p>
                 </div>
             )}

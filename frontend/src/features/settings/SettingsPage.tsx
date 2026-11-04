@@ -18,6 +18,7 @@ import {
     TrendingDown, Infinity as InfinityIcon,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { PLAN_PRICES } from '@/lib/pricing';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -101,8 +102,8 @@ const SUBSCRIPTION_PLANS = [
         name: 'Velocity',
         iconKey: 'zap' as const,
         accounts: 6,
-        monthly: 19.99,
-        annual: 96.99,
+        monthly: PLAN_PRICES.velocity.monthly,
+        annual: PLAN_PRICES.velocity.annual,
         color: 'from-amber-500 to-orange-500',
         borderColor: 'border-amber-300 dark:border-amber-700',
         iconBg: 'bg-amber-500/10',
@@ -115,13 +116,13 @@ const SUBSCRIPTION_PLANS = [
         name: 'Accelerator',
         iconKey: 'rocket' as const,
         accounts: 12,
-        monthly: 34.99,
-        annual: 196.99,
+        monthly: PLAN_PRICES.accelerator.monthly,
+        annual: PLAN_PRICES.accelerator.annual,
         color: 'from-purple-500 to-indigo-500',
         borderColor: 'border-purple-400 dark:border-purple-600',
         iconBg: 'bg-purple-500/10',
         iconColor: 'text-purple-500',
-        badge: 'MOST POPULAR' as string | null,
+        badge: 'RECOMMENDED' as string | null,
         popular: true,
     },
     {
@@ -129,8 +130,8 @@ const SUBSCRIPTION_PLANS = [
         name: 'Freedom',
         iconKey: 'crown' as const,
         accounts: Infinity,
-        monthly: 54.99,
-        annual: 346.99,
+        monthly: PLAN_PRICES.freedom.monthly,
+        annual: PLAN_PRICES.freedom.annual,
         color: 'from-amber-400 to-yellow-500',
         borderColor: 'border-yellow-400 dark:border-yellow-600',
         iconBg: 'bg-yellow-500/10',
@@ -147,19 +148,6 @@ const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 // Used when real user data is unavailable (demo, auth issues, no accounts)
-const FALLBACK_SAVINGS: SavingsData = {
-    has_data: true,
-    total_debt: 45000,
-    daily_interest_all: 22.19, // $45K * 18% / 365
-    plans: {
-        starter: { accounts_used: 2, annual_savings: 1296, monthly_savings: 108, daily_interest_burning: 4.93, roi_days: 0, plan_cost_annual: 0, years_without: 30, years_with: 18, total_interest_without: 54000, total_interest_with: 32400 },
-        velocity: { accounts_used: 5, annual_savings: 3240, monthly_savings: 270, daily_interest_burning: 12.33, roi_days: 11, plan_cost_annual: 96.99, years_without: 25, years_with: 15, total_interest_without: 112500, total_interest_with: 67500 },
-        accelerator: { accounts_used: 10, annual_savings: 4860, monthly_savings: 405, daily_interest_burning: 18.49, roi_days: 15, plan_cost_annual: 196.99, years_without: 22, years_with: 13, total_interest_without: 145800, total_interest_with: 87480 },
-        freedom: { accounts_used: 15, annual_savings: 6480, monthly_savings: 540, daily_interest_burning: 22.19, roi_days: 20, plan_cost_annual: 346.99, years_without: 20, years_with: 12, total_interest_without: 162000, total_interest_with: 97200 },
-    },
-    social_proof: { total_accounts_monitored: 2847, total_debt_tracked: 127500000 },
-};
-
 // ═══════════════════════════════════════════════════════════════════
 //  SETTINGS PAGE
 // ═══════════════════════════════════════════════════════════════════
@@ -230,15 +218,14 @@ export default function SettingsPage() {
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const { toast } = useToast();
 
-    // Generic estimates based on typical US consumer debt ($45K avg, ~18% APR)
-    // Fetch dynamic savings data — fall back to generic estimates if API fails
+    // Savings are only ever the user's own calculated numbers: no data → no figures
     useEffect(() => {
         apiFetch<SavingsData>('/api/subscriptions/savings-estimate')
             .then(data => {
-                setSavingsData(data.has_data ? data : FALLBACK_SAVINGS);
+                setSavingsData(data.has_data ? data : null);
             })
             .catch(() => {
-                setSavingsData(FALLBACK_SAVINGS);
+                setSavingsData(null);
             });
     }, []);
 
@@ -380,7 +367,7 @@ export default function SettingsPage() {
         if (!confirmed) return;
         setResetLoading(true);
         try {
-            await apiFetch("/api/seed", { method: "POST" });
+            await apiFetch("/api/demo/seed", { method: "POST" });
             window.location.reload();
         } catch (err) {
             console.error("Reset failed:", err);
@@ -1016,7 +1003,7 @@ export default function SettingsPage() {
                     >
                         {t('sub.annual')}
                         <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
-                            {t('sub.saveUpTo')}
+                            {t('upgrade.twoMonthsFree')}
                         </span>
                     </button>
                 </div>
@@ -1025,12 +1012,6 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                     {SUBSCRIPTION_PLANS.map((plan, idx) => {
                         const price = billingCycle === 'annual' ? plan.annual : plan.monthly;
-                        const monthlyEquiv = billingCycle === 'annual' && plan.annual > 0
-                            ? (plan.annual / 12).toFixed(2)
-                            : null;
-                        const saving = billingCycle === 'annual' && plan.monthly > 0
-                            ? Math.round((1 - plan.annual / (plan.monthly * 12)) * 100)
-                            : 0;
                         const isCurrent = plan.id === currentPlan;
                         const currentIdx = SUBSCRIPTION_PLANS.findIndex(p => p.id === currentPlan);
                         const isDowngrade = idx < currentIdx;
@@ -1111,23 +1092,13 @@ export default function SettingsPage() {
                                             <>
                                                 <div className="flex items-baseline gap-1">
                                                     <span className="text-3xl font-black text-white">
-                                                        ${billingCycle === 'annual' ? monthlyEquiv : price}
+                                                        ${billingCycle === 'annual' ? plan.annual : plan.monthly}
                                                     </span>
-                                                    <span className="text-sm text-zinc-500">{t('sub.mo')}</span>
+                                                    <span className="text-sm text-zinc-500">{billingCycle === 'annual' ? t('sub.year') : t('sub.mo')}</span>
                                                 </div>
                                                 {billingCycle === 'annual' && (
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-zinc-500 line-through">
-                                                            ${plan.monthly}/mo
-                                                        </span>
-                                                        <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
-                                                            {saving}% {t('sub.off')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {billingCycle === 'annual' && (
-                                                    <p className="text-xs text-zinc-500">
-                                                        {t('sub.billed')} ${plan.annual}{t('sub.year')}
+                                                    <p className="text-xs text-emerald-500 font-semibold">
+                                                        {t('upgrade.twoMonthsFree')}
                                                     </p>
                                                 )}
                                             </>
@@ -1251,7 +1222,7 @@ export default function SettingsPage() {
                 {sd?.has_data && (
                     <Card className="border-gray-200 dark:border-white/5 bg-gradient-to-r from-blue-950/20 via-purple-950/10 to-blue-950/20">
                         <CardContent className="p-5">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div className="grid grid-cols-2 gap-4 text-center">
                                 <div>
                                     <p className="text-2xl font-black text-blue-400">{sd.social_proof.total_accounts_monitored}</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.accountsMonitored')}</p>
@@ -1259,14 +1230,6 @@ export default function SettingsPage() {
                                 <div>
                                     <p className="text-2xl font-black text-purple-400">${(sd.total_debt / 1000).toFixed(0)}K</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.debtOptimized')}</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-emerald-400">3.2x</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.fasterThanBanks')}</p>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-black text-amber-400">40%</p>
-                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.avgInterestSaved')}</p>
                                 </div>
                             </div>
                         </CardContent>
