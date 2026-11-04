@@ -642,8 +642,8 @@ export default function LandingPage() {
                                 <div>
                                     <strong><Zap size={16} className="lp-step-icon" />{L === 'es' ? 'Acelerador de Deuda' : 'Debt Accelerator'}</strong>
                                     <p>{L === 'es'
-                                        ? 'Pone tu línea de crédito a trabajar: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada pago estratégico puede ahorrarte $200-$2,000.'
-                                        : 'Puts your credit line to work: deposit paycheck → pay debts with the line → reduce principal + interest. Each strategic payment can save you $200-$2,000.'
+                                        ? 'Pone tu línea de crédito a trabajar: deposita tu sueldo → paga tus deudas con la línea → reduce capital + interés. Cada pago estratégico reduce el interés que pagas.'
+                                        : 'Puts your credit line to work: deposit paycheck → pay debts with the line → reduce principal + interest. Each strategic payment cuts the interest you pay.'
                                     }</p>
                                 </div>
                             </div>
