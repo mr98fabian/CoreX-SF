@@ -52,6 +52,8 @@ Optional: `KOREX_API_URL` (default `https://corex-sf-production.up.railway.app`;
 | `get_action_plan` | Which debt to attack next, freedom dates (estimates) | `read:plan` |
 | `register_payment` | Record a payment `{account (id or name), amount, date?}` | `write:payments` |
 | `add_account` | Add `{name, type, balance, interest_rate, min_payment}` | `write:accounts` |
+| `update_account` | Correct an account: only the fields you pass `{account, name?, balance?, interest_rate?, min_payment?, ...}` | `write:accounts` |
+| `delete_account` | Delete an account and its transactions `{account, confirm}`; asks for confirmation first | `write:accounts` |
 | `run_purchase_simulation` | Cost of a purchase `{amount}` on your freedom date | `run:simulations` |
 | `get_settings` | Your app settings | `read:dashboard` |
 
