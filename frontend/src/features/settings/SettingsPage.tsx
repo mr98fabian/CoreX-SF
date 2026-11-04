@@ -10,7 +10,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-    User, Palette, Bell, Database, Info, Flame,
+    User, Palette, Bell, Database, Info, Flame, Bot,
     Download, Upload, Trash2, RefreshCw, FileSpreadsheet,
     FileJson, FileText, CheckCircle, AlertTriangle, Globe, DollarSign,
     Calendar, Shield, Sparkles, ExternalLink, Github, BookOpen,
@@ -28,9 +28,10 @@ import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { ReferralProgram } from "@/components/ReferralProgram";
+import { ConnectAI } from "@/components/ConnectAI";
 
 // ─── Types ──────────────────────────────────────────────────────────
-type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "about";
+type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "ai" | "about";
 
 interface NavItem {
     id: Section;
@@ -46,6 +47,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: "notifications", labelKey: "settings.nav.notifications", icon: <Bell className="h-4 w-4" /> },
     { id: "data", labelKey: "settings.nav.data", icon: <Database className="h-4 w-4" /> },
     { id: "subscription", labelKey: "settings.nav.subscription", icon: <CreditCard className="h-4 w-4" /> },
+    { id: "ai", labelKey: "settings.nav.ai", icon: <Bot className="h-4 w-4" /> },
     { id: "about", labelKey: "settings.nav.about", icon: <Info className="h-4 w-4" /> },
 ];
 
@@ -1429,6 +1431,7 @@ export default function SettingsPage() {
         notifications: renderNotifications,
         data: renderDataManagement,
         subscription: renderSubscription,
+        ai: () => <ConnectAI />,
         about: renderAbout,
     };
 
