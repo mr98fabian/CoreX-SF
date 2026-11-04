@@ -47,3 +47,11 @@ Thumbs.db
 # Backend runtime logs
 backend/uvicorn*.log
 backend/uvicorn*.log.err
+
+# Stray artifacts (never commit logs or loose screenshots at the root)
+*.log
+*.log.err
+/*.png
+/*.jpg
+/*.jpeg
+/action_plan_*
