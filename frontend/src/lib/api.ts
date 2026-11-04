@@ -5,10 +5,10 @@ import { Capacitor } from '@capacitor/core';
 // - Dev: connect directly to local backend
 // - Capacitor (native app): connect directly to Railway (no Vercel proxy available)
 // - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
-const RAILWAY_URL = 'https://korex-sf-production.up.railway.app';
+const RAILWAY_URL = 'https://corex-sf-production.up.railway.app';
 
 export const API_BASE = import.meta.env.DEV
-    ? (import.meta.env.VITE_API_URL ?? 'http://localhost:8000')
+    ? (import.meta.env.VITE_API_URL ?? 'http://localhost:8001')
     : Capacitor.isNativePlatform()
         ? RAILWAY_URL
         : '';
