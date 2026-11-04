@@ -4,7 +4,7 @@ from models import User, Account, Transaction, CashflowItem, MovementLog, Subscr
 from decimal import Decimal
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
 
@@ -18,6 +18,14 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 # DATABASE_URL must fail loudly at boot — a silent fallback to an ephemeral
 # SQLite file hides a misconfigured/paused database behind a "healthy" service.
 ALLOW_SQLITE_FALLBACK = os.environ.get("ENVIRONMENT", "production") == "development"
+
+# Development never connects to the database URL stored in backend/.env (that is
+# PRODUCTION). Shell quirks (cmd's `set X=` deletes X) silently let load_dotenv()
+# fill it in, and the startup create_all then wrote tables into prod (2026-11-03).
+# A remote DB in development must come from the real environment, not the file.
+if ALLOW_SQLITE_FALLBACK and DATABASE_URL and DATABASE_URL == dotenv_values().get("DATABASE_URL"):
+    print("[DEV] Ignoring DATABASE_URL from .env in development — using local SQLite")
+    DATABASE_URL = None
 
 
 def _mask_db_url(url: str) -> str:
@@ -42,7 +50,7 @@ if DATABASE_URL:
         engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        print("[OK] Connected to PostgreSQL")
+        print(f"[OK] Connected to {_mask_db_url(DATABASE_URL)}")  # says which DB, so a dev server on prod is obvious
     except Exception as _pg_err:
         if not ALLOW_SQLITE_FALLBACK:
             raise RuntimeError(

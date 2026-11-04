@@ -708,6 +708,7 @@ const translations: Record<string, Record<Language, string>> = {
     "settings.nav.notifications": { en: "Notifications", es: "Notificaciones" },
     "settings.nav.data": { en: "Data Management", es: "Gestión de Datos" },
     "settings.nav.subscription": { en: "Subscription", es: "Suscripción" },
+    "settings.nav.ai": { en: "Connect your AI", es: "Conecta tu IA" },
     "settings.nav.about": { en: "About", es: "Acerca de" },
     "settings.profile.title": { en: "Profile Information", es: "Información del Perfil" },
     "settings.profile.subtitle": { en: "Manage your personal data and account identity.", es: "Administra tus datos personales e identidad de cuenta." },

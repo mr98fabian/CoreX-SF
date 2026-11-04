@@ -11,6 +11,7 @@ from database import engine
 from models import UserSettings
 from helpers import bypass_fk
 from auth import get_current_user_id
+from api_tokens import require_scope
 
 logger = logging.getLogger("korex.settings")
 
@@ -36,7 +37,7 @@ def _get_or_create(session: Session, user_id: str) -> UserSettings:
 
 
 @router.get("/settings")
-async def get_settings(user_id: str = Depends(get_current_user_id)):
+async def get_settings(user_id: str = Depends(require_scope("read:dashboard"))):
     with Session(engine) as session:
         settings = _get_or_create(session, user_id)
         return {

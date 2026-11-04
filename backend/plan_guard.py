@@ -10,6 +10,7 @@ from fastapi import Depends
 from sqlmodel import Session, select
 
 import database
+from fastapi import Request
 from auth import get_current_user_id, DEMO_USER_ID
 from models import Subscription
 
@@ -52,3 +53,11 @@ def plan_limit_for(session: Session, user_id: str) -> Optional[int]:
 def effective_plan_limit(user_id: str = Depends(get_current_user_id)) -> Optional[int]:
     with Session(database.engine) as session:
         return plan_limit_for(session, user_id)
+
+
+def scoped_plan_limit(request: Request) -> Optional[int]:
+    """Same as effective_plan_limit for endpoints authenticated with
+    api_tokens.require_scope (declared before this param, so it already set
+    request.state.auth_user_id for either a token or a normal session)."""
+    with Session(database.engine) as session:
+        return plan_limit_for(session, request.state.auth_user_id)

@@ -13,6 +13,7 @@ from database import engine
 from models import Account, Transaction, TransactionCreate, MovementLog
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
+from api_tokens import require_scope
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -39,10 +40,11 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
     )
     session.add(db_tx)
     update_account_balance(account, Decimal(str(tx.amount)), tx.category)
-    if account.type == "debt":
-        account.min_payment = calculate_minimum_payment(
-            account.balance, account.interest_rate, account.interest_type, account.remaining_months
-        )
+    # Revolving debt: the minimum moves with the balance. Fixed loans keep their
+    # contractual installment. (The deployed core_engine takes (balance, apr) only;
+    # the old 4-arg call raised TypeError, so every payment to a debt returned 500.)
+    if account.type == "debt" and account.interest_type != "fixed":
+        account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
     session.add(account)
     with bypass_fk(session):
         session.commit()
@@ -51,13 +53,13 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
 
 
 @router.post("/transactions", response_model=Transaction)
-async def create_transaction(tx: TransactionCreate, user_id: str = Depends(get_current_user_id)):
+async def create_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
     with Session(engine) as session:
         return _create_tx_record(session, tx, user_id)
 
 
 @router.post("/transactions/manual")
-async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(get_current_user_id)):
+async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
     with Session(engine) as session:
         return _create_tx_record(session, tx, user_id, manual=True)
 
