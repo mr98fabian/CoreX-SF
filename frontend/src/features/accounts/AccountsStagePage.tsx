@@ -17,6 +17,8 @@ import { apiFetch } from '@/lib/api';
 import { useKxSummary, type StagedAccount } from '@/hooks/useKxSummary';
 import { STAGE_ORDER, localDay, type Stage } from '@/lib/stage';
 import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageBar, StageChip, StatePhrase } from '@/components/kx';
+import { StampDrop } from '@/components/kx/motion';
+import { useJustPaid } from '@/hooks/useJustPaid';
 
 const MAX_PER_SECTION = 4; // rule 4: sections of 3–4 items; longer groups split into named parts
 
@@ -41,6 +43,7 @@ export default function AccountsStagePage() {
     const [history, setHistory] = useState<Tx[] | null>(null);
     const [amount, setAmount] = useState('');
     const [saving, setSaving] = useState(false);
+    const justPaid = useJustPaid(s.staged);
 
     const groups = useMemo(() => {
         const byStage: Record<Stage, StagedAccount[]> = { debt: [], almost: [], paid: [], support: [] };
@@ -103,7 +106,6 @@ export default function AccountsStagePage() {
         </div>;
     }
 
-    const [dollars, cents] = formatMoney(s.totalDebt).split('.');
     const support = groups.support;
     const mainChecking = support.find((a) => a.type === 'checking');
     const phrase = s.debts.length === 0
@@ -118,7 +120,7 @@ export default function AccountsStagePage() {
                 <BankHeader title={es ? 'Cuentas' : 'Accounts'} greeting={es ? 'agrupadas por etapa, no en lista plana' : 'grouped by stage, not a flat list'} />
                 <AmberRule />
                 <StatePhrase>{phrase}</StatePhrase>
-                <HeroNumber label={es ? 'Deuda total' : 'Total debt'} value={dollars} cents={cents ? `.${cents}` : undefined}
+                <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
                     phrase={<>{es ? 'Disponible ' : 'Available '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b>
                         {mainChecking && <span className="text-kx-ink3"> · {mainChecking.name}</span>}</>} />
 
@@ -142,6 +144,7 @@ export default function AccountsStagePage() {
                                             <span className="mt-1.5 flex items-center gap-2">
                                                 <StageChip stage={stage} suffix={stage === 'paid' ? ' ✓' : ''} />
                                                 <span className="text-xs text-kx-ink2">{note(a)}</span>
+                                                {stage === 'paid' && <span className="ml-auto"><StampDrop drop={justPaid.has(a.id)}><PaidStamp /></StampDrop></span>}
                                             </span>
                                             <StageBar stage={stage} pct={a.paid} />
                                         </>

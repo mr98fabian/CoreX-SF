@@ -13,7 +13,9 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { nextCut, useKxSummary } from '@/hooks/useKxSummary';
-import { AmberStripe, BankHeader, HeroNumber, Section, StatePhrase } from '@/components/kx';
+import { AmberStripe, BankHeader, HeroNumber, PaidStamp, Section, StatePhrase } from '@/components/kx';
+import { StampDrop } from '@/components/kx/motion';
+import { useJustPaid } from '@/hooks/useJustPaid';
 import { DebtCalendar } from '@/components/kx/DebtCalendar';
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -28,6 +30,7 @@ export default function HomePage() {
     const navigate = useNavigate();
     const s = useKxSummary();
     const [showDetail, setShowDetail] = useState(false);
+    const justPaid = useJustPaid(s.staged);
     const names = es ? MONTHS_ES : MONTHS_EN;
     const firstName = (user?.user_metadata?.full_name || '').split(' ')[0];
 
@@ -54,7 +57,6 @@ export default function HomePage() {
         );
     }
 
-    const [dollars, cents] = formatMoney(s.totalDebt).split('.');
     const cut = nextCut(s.debts);
     const noDebt = s.debts.length === 0 || s.totalDebt <= 0;
     const freedomLabel = s.freedom ? `${names[s.freedom.month]} ${s.freedom.year}` : null;
@@ -83,8 +85,14 @@ export default function HomePage() {
 
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <StatePhrase tone={s.counts.paid > 0 || noDebt ? 'paid' : 'amber'}>{phrase}</StatePhrase>
+                {justPaid.size > 0 && (
+                    <p className="flex items-center gap-3 text-sm text-kx-ink2">
+                        <StampDrop drop><PaidStamp /></StampDrop>
+                        {es ? `${s.staged.filter((a) => justPaid.has(a.id)).map((a) => a.name).join(', ')} llegó a $0.` : `${s.staged.filter((a) => justPaid.has(a.id)).map((a) => a.name).join(', ')} hit $0.`}
+                    </p>
+                )}
 
-                <HeroNumber label={es ? 'Deuda total' : 'Total debt'} value={dollars} cents={cents ? `.${cents}` : undefined}
+                <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
                     phrase={<>{es ? 'Disponible para tu plan: ' : 'Available for your plan: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b></>} />
 
                 {/* HOY — the single active signal */}

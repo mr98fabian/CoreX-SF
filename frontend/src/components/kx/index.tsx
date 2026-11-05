@@ -8,13 +8,25 @@ import { NavLink } from 'react-router-dom';
 import { Home, Wallet, Activity, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 import { STAGE_LABEL, type Stage } from '@/lib/stage';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { prefersReducedMotion } from '@/lib/motion';
+import { useStripeScroll } from '@/hooks/useStripeScroll';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { CountUp } from './motion';
+import { motion } from 'framer-motion';
+import { tx } from '@/lib/motion';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
+function StripeLight() {
+    return <span aria-hidden="true" data-kx-motion="stripe" className="kx-stripe-light" />;
+}
+
 // ── Amber stripe — the signature. Swept band from the approved v8 header. ──
 export function AmberStripe({ children, height = 158, className }: { children?: ReactNode; height?: number; className?: string }) {
+    const ref = useStripeScroll<HTMLDivElement>();
+    const still = prefersReducedMotion();
     return (
-        <div className={cx('relative overflow-hidden px-6 pt-4', className)} style={{ height }}>
+        <div ref={ref} className={cx('relative overflow-hidden px-6 pt-4', className)} style={{ height }}>
             <svg className="absolute inset-0 h-full w-full" viewBox="0 0 390 158" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
                     <linearGradient id="kxStripe" x1="0" y1="0" x2="1" y2="0.55">
@@ -26,6 +38,7 @@ export function AmberStripe({ children, height = 158, className }: { children?: 
                 <path d="M0,0 L390,0 L390,52 C300,92 210,120 120,132 C70,139 30,143 0,146 Z" fill="url(#kxStripe)" />
                 <path d="M0,146 C30,143 70,139 120,132 C210,120 300,92 390,52 L390,64 C300,104 215,130 128,141 C75,148 32,152 0,155 Z" fill="#FDE68A" opacity="0.35" />
             </svg>
+            {!still && <StripeLight />}
             <div className="relative z-[1] flex h-full flex-col">{children}</div>
         </div>
     );
@@ -33,7 +46,12 @@ export function AmberStripe({ children, height = 158, className }: { children?: 
 
 /** Thin stripe accent for screens other than Inicio ("equilibrio, no repetición"). */
 export function AmberRule({ className }: { className?: string }) {
-    return <div aria-hidden="true" className={cx('h-[5px] w-full rounded-full', className)} style={{ background: 'var(--kx-stripe)' }} />;
+    const ref = useStripeScroll<HTMLDivElement>();
+    return (
+        <div ref={ref} aria-hidden="true" className={cx('relative h-[5px] w-full overflow-hidden rounded-full', className)} style={{ background: 'var(--kx-stripe)' }}>
+            {!prefersReducedMotion() && <StripeLight />}
+        </div>
+    );
 }
 
 // ── Bank header: greeting + visible security line ──
@@ -66,13 +84,18 @@ export function StatePhrase({ children, tone = 'amber' }: { children: ReactNode;
 }
 
 // ── Hero number: ONE per screen, with its interpreting phrase ──
-export function HeroNumber({ label, value, cents, phrase }: { label: string; value: string; cents?: string; phrase: ReactNode }) {
+export function HeroNumber({ label, amount, phrase }: { label: string; amount: number; phrase: ReactNode }) {
+    const { formatMoney } = useFormatMoney();
+    // Counts from the previous value after a payment; the final value is the server's
+    const render = (n: number) => {
+        const [d, c] = formatMoney(n).split('.');
+        return <>{d}{c && <sup className="ml-0.5 align-super text-[23px] text-kx-ink3">.{c}</sup>}</>;
+    };
     return (
         <div>
             <p className="kx-label">{label}</p>
             <p className="kx-hero-number mt-1.5 text-[52px] text-kx-ink">
-                {value}
-                {cents && <sup className="ml-0.5 align-super text-[23px] text-kx-ink3">{cents}</sup>}
+                <CountUp value={amount} format={render} label={formatMoney} />
             </p>
             <p className="mt-2.5 text-[13.5px] text-kx-ink2">{phrase}</p>
         </div>
@@ -95,7 +118,7 @@ export function StageChip({ stage, pct, suffix }: { stage: Stage; pct?: number |
     const label = STAGE_LABEL[stage][language === 'es' ? 'es' : 'en'];
     const extra = suffix ?? (pct != null && stage !== 'paid' ? ` · ${Math.round(pct * 100)}%` : stage === 'paid' ? ' ✓' : '');
     return (
-        <span className={cx('whitespace-nowrap rounded-full px-2 py-[3px] text-[10px] font-bold tracking-[.07em]', CHIP[stage])}>
+        <span className={cx('kx-stage-tint whitespace-nowrap rounded-full px-2 py-[3px] text-[10px] font-bold tracking-[.07em]', CHIP[stage])}>
             {label}{extra}
         </span>
     );
@@ -106,7 +129,7 @@ export function StageBar({ stage, pct }: { stage: Stage; pct: number | null }) {
     return (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar"
             aria-valuenow={pct == null ? undefined : Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}>
-            <i className={cx('block h-full rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
+            <i className={cx('kx-stage-tint block h-full origin-left rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
         </div>
     );
 }
@@ -155,7 +178,7 @@ export function LedgerRow({ title, sub, amount, stage, onClick, children }: {
     return (
         <Tag onClick={onClick} className={cx('relative block w-full border-t border-[var(--kx-line-soft)] py-3 pl-3 text-left first:border-t-0 first:pt-0.5',
             onClick && 'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber')}>
-            <span aria-hidden="true" className={cx('absolute bottom-3 left-0 top-3 w-[3px] rounded-full first:top-0.5', band)} />
+            <span aria-hidden="true" className={cx('kx-stage-tint absolute bottom-3 left-0 top-3 w-[3px] rounded-full first:top-0.5', band)} />
             <span className="flex items-baseline justify-between gap-2.5">
                 <span className="min-w-0 truncate text-[15px] font-semibold text-kx-ink">
                     {title}{sub && <span className="ml-1.5 text-[12.5px] font-normal text-kx-ink3">{sub}</span>}
@@ -173,7 +196,7 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
 }) {
     return (
         <button type={type} onClick={onClick} disabled={disabled}
-            className="block w-full rounded-xl bg-kx-amber px-4 py-3 text-center text-sm font-bold text-[#111418] transition-opacity hover:opacity-90 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kx-amber">
+            className="kx-press block w-full rounded-xl bg-kx-amber px-4 py-3 text-center text-sm font-bold text-[#111418] hover:opacity-90 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kx-amber">
             {children}
         </button>
     );
@@ -194,9 +217,17 @@ export function TabBar() {
             className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,env(safe-area-inset-bottom))] pt-2.5 lg:hidden">
             {tabs.map(({ to, end, icon: Icon, label }) => (
                 <NavLink key={to} to={to} end={end}
-                    className={({ isActive }) => cx('flex-1 text-center text-[10.5px]', isActive ? 'font-semibold text-kx-amber' : 'text-kx-ink3')}>
-                    <Icon className="mx-auto mb-1 h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
-                    {label}
+                    className={({ isActive }) => cx('kx-press relative flex-1 text-center text-[10.5px] transition-colors duration-[var(--kx-dur-base)]', isActive ? 'font-semibold text-kx-amber' : 'text-kx-ink3')}>
+                    {({ isActive }) => (
+                        <>
+                            {isActive && (
+                                <motion.span layoutId="kx-tab-indicator" transition={tx('base', prefersReducedMotion())}
+                                    aria-hidden="true" className="absolute -top-2.5 left-1/2 -ml-4 h-[3px] w-8 rounded-full bg-kx-amber" />
+                            )}
+                            <Icon className="mx-auto mb-1 h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
+                            {label}
+                        </>
+                    )}
                 </NavLink>
             ))}
         </nav>
