@@ -17,7 +17,7 @@ from models import Subscription
 # Debt accounts included in the calculations per plan (None = unlimited).
 # Keep in sync with frontend lib/planLimits.ts and the landing copy.
 PLAN_LIMITS: dict[str, Optional[int]] = {
-    "starter": 2, "velocity": 6, "accelerator": 12, "freedom": None, "freedom-dev": None,
+    "starter": 2, "velocity": 15, "accelerator": None, "freedom": None, "freedom-dev": None,
 }
 PAID_ACCESS_STATUSES = {"active", "on_trial", "past_due", "cancelled"}  # cancelled = paid until period end
 

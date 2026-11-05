@@ -165,7 +165,7 @@ def test_plan_limits_come_from_the_server(client):
         assert plan_limit_for(s, DEMO_USER_ID) is None  # demo sandbox shows everything
     send(client, sub_event("subscription_created", variant="201"))
     with Session(database.engine) as s:
-        assert plan_limit_for(s, USER) == 12
+        assert plan_limit_for(s, USER) is None  # Accelerator: unlimited
 
 
 def test_client_plan_limit_param_is_ignored(client, monkeypatch):
