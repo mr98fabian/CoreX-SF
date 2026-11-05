@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useCallback, useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { emitDataChanged, useDataSync } from '@/lib/dataSync';
@@ -1146,7 +1147,7 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
                 amount: finalAmount,
                 description: desc || (type === 'payment' ? `Debt Payment — ${account.name}` : type === 'deposit' ? 'Manual Deposit' : 'Manual Expense'),
                 category: type === 'payment' ? 'payment' : 'manual',
-                date: new Date().toISOString().split('T')[0]
+                date: localDay()
             };
 
             await apiFetch('/api/transactions', {
@@ -1258,7 +1259,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                     amount: finalAmount,
                     description: "Manual Adjustment",
                     category: "Adjustment",
-                    date: new Date().toISOString().split('T')[0]
+                    date: localDay()
                 })
             });
 
@@ -1405,7 +1406,7 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
                 amount: finalAmount,
                 description: values.description,
                 category: values.category,
-                date: new Date().toISOString().split('T')[0]
+                date: localDay()
             };
 
             await apiFetch('/api/transactions', {

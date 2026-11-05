@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +68,7 @@ export default function RiskyOpportunity({ data, onExecuted }: Props) {
                     movement_key: `risky-${Date.now()}`,
                     title: `Shield Sacrifice → ${data.destination}`,
                     amount: data.risk_amount,
-                    date_planned: new Date().toISOString().split('T')[0],
+                    date_planned: localDay(),
                     source: data.source_account,
                     destination: data.destination,
                 }),

@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -171,7 +172,7 @@ export function TransactionDialog({
                     amount: finalAmount,
                     description: values.description,
                     category: values.category || (values.type === 'income' ? 'Income' : 'General'),
-                    date: new Date().toISOString().split('T')[0],
+                    date: localDay(),
                 }),
             });
 
