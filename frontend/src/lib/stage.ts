@@ -46,3 +46,8 @@ export function stageOf(acc: StageInput): Stage {
 }
 
 export const STAGE_ORDER: Stage[] = ['debt', 'almost', 'paid'];
+
+/** YYYY-MM-DD in the user's LOCAL time (toISOString() is UTC and shifts evenings to tomorrow). */
+export function localDay(d: Date = new Date()): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}

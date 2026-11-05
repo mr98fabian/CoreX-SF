@@ -15,7 +15,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useKxSummary, type StagedAccount } from '@/hooks/useKxSummary';
-import { STAGE_ORDER, type Stage } from '@/lib/stage';
+import { STAGE_ORDER, localDay, type Stage } from '@/lib/stage';
 import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageBar, StageChip, StatePhrase } from '@/components/kx';
 
 const MAX_PER_SECTION = 4; // rule 4: sections of 3–4 items; longer groups split into named parts
@@ -64,7 +64,7 @@ export default function AccountsStagePage() {
             await apiFetch('/api/transactions/manual', {
                 method: 'POST',
                 body: JSON.stringify({ account_id: open.id, amount: value, description: es ? 'Pago registrado' : 'Payment recorded',
-                    category: 'payment', date: new Date().toISOString().slice(0, 10) }),
+                    category: 'payment', date: localDay() }),
             });
             toast({ title: es ? `Pago de ${formatMoney(value)} registrado` : `Payment of ${formatMoney(value)} recorded` });
             setOpen(null);
