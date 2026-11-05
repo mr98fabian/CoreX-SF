@@ -15,7 +15,7 @@ DEFAULT_PEACE_SHIELD = Decimal("1000.00")  # Dave Ramsey starter fund
 DEFAULT_ATTACK_PERCENTAGE = Decimal("20")  # % of liquid cash attacked monthly — configurable per user, see UserSettings.attack_percentage
 
 def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
-    """The system's single minimum-payment rule (interest + 1% of balance, $25
+    """The system's single minimum-payment rule (interest + 1% of balance, $35
     floor, whole balance if smaller). Delegates to core_engine.calculators so
     accounts, transactions and every simulation use the same number."""
     from core_engine.calculators import calculate_minimum_payment as _core_minimum

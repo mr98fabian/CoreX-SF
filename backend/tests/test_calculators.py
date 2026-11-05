@@ -24,10 +24,10 @@ class TestRevolvingMinPayment:
         assert result == expected.quantize(Decimal("0.01"))
 
     def test_small_balance_applies_floor(self):
-        """$100 @ 20% → calculated = $2.67, floor $25 wins."""
+        """$100 @ 20% → calculated = $2.67, floor $35 wins (owner decision 2026-11-04)."""
         result = calculate_minimum_payment(Decimal("100"), Decimal("20"))
-        # Formula: max($25, interest + 1%) = max($25, $1.67 + $1) = $25
-        assert result == Decimal("25.00")
+        # Formula: max($35, interest + 1%) = max($35, $1.67 + $1) = $35
+        assert result == Decimal("35.00")
 
     def test_zero_balance_returns_zero(self):
         result = calculate_minimum_payment(Decimal("0"), Decimal("24"))

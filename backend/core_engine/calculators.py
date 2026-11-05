@@ -9,7 +9,7 @@ from decimal import Decimal, ROUND_HALF_UP
 def calculate_minimum_payment(balance, apr) -> Decimal:
     """
     Calculates minimum monthly payment: (Balance * (APR / 12)) + (Balance * 0.01)
-    Floor: $25 or Total Balance if less.
+    Floor: $35 or Total Balance if less (owner decision 2026-11-04).
     """
     # Enforce Decimal types to avoid float/Decimal mix errors
     try:
@@ -26,7 +26,7 @@ def calculate_minimum_payment(balance, apr) -> Decimal:
     principal_payment = b * Decimal("0.01")
     calculated = monthly_interest + principal_payment
 
-    floor = Decimal("25.00")
+    floor = Decimal("35.00")
 
     if b < floor:
         result = b

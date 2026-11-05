@@ -153,7 +153,7 @@ def test_exam_freedom_route():
 def test_exam_minimums_only_route():
     r = simulate_freedom_path(OWNER, D("0"), roll_freed_payments=False, recalc_minimums=True, start=START)
     assert float(r["total_interest_paid"]) == pytest.approx(19600, rel=0.05)
-    # Target was ≈ Sept 2042. The tail is the Amex alone paying the $25-floor
-    # minimum; with the system's $25 floor it ends Sept 2043 (a $28 floor gives
-    # Oct 2042, $35 gives Dec 2040). Documented in the calibration report.
-    assert r["freedom_month_display"] == "September 2043"
+    # Target was ≈ Sept 2042. The tail is the Amex alone paying the floor
+    # minimum, so the end date follows the floor: with the owner's $35 floor it
+    # ends Dec 2040 ($25 → Sept 2043, $28 → Oct 2042). Documented in the report.
+    assert r["freedom_month_display"] == "December 2040"
