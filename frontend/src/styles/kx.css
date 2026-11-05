@@ -1,0 +1,113 @@
+/*
+ * KoreX Fase 6 design tokens — dark-first, one saturated moment per screen
+ * (the amber stripe). Values taken from the approved previews (v7 / v8 / ★ Lo mejor).
+ *
+ * Stage colors are FUNCTIONAL (debt status), never decoration, and never travel
+ * alone: always color + text label + progress bar (see components/kx/StageChip).
+ * Blue is reserved for paydays in the calendar. Purple is not a brand color.
+ */
+:root,
+.dark {
+  --kx-bg: #020617;
+  --kx-surface: #0F172A;
+  --kx-raised: #131E33;
+  --kx-line: #1E293B;
+  --kx-line-soft: rgba(255, 255, 255, 0.06);
+  --kx-ink: #F8FAFC;
+  --kx-ink-2: #94A3B8;
+  --kx-ink-3: #64748B;
+
+  --kx-amber: #F59E0B;
+  --kx-amber-soft: #FBBF24;
+  --kx-stripe: linear-gradient(100deg, #FDE68A 0%, #F59E0B 45%, #D97706 80%, #B45309 100%);
+
+  /* Stage triad — also separated by luminance so it reads without hue */
+  --kx-debt: #F87171;
+  --kx-debt-bar: #EF4444;
+  --kx-debt-chip-bg: rgba(239, 68, 68, 0.16);
+  --kx-debt-chip-ink: #FCA5A5;
+  --kx-debt-sec-bg: rgba(239, 68, 68, 0.06);
+  --kx-debt-sec-line: rgba(239, 68, 68, 0.35);
+
+  --kx-almost: #FBBF24;
+  --kx-almost-bar: #FBBF24;
+  --kx-almost-chip-bg: rgba(251, 191, 36, 0.16);
+  --kx-almost-chip-ink: #FDE68A;
+  --kx-almost-sec-bg: rgba(251, 191, 36, 0.06);
+  --kx-almost-sec-line: rgba(251, 191, 36, 0.35);
+
+  --kx-paid: #34D399;
+  --kx-paid-bar: #34D399;
+  --kx-paid-chip-bg: rgba(52, 211, 153, 0.16);
+  --kx-paid-chip-ink: #6EE7B7;
+  --kx-paid-sec-bg: rgba(52, 211, 153, 0.06);
+  --kx-paid-sec-line: rgba(52, 211, 153, 0.32);
+
+  --kx-warm: #FB923C;   /* PAGADA stamp / warm alert */
+  --kx-pay: #38BDF8;    /* paydays in the calendar — nowhere else */
+
+  --kx-radius-card: 20px;
+  --kx-radius-row: 12px;
+  --kx-radius-pill: 999px;
+}
+
+/* Light theme: secondary, derived from the same system (same structure, stripe and stages) */
+:root:not(.dark) .kx-scope {
+  --kx-bg: #F8FAFC;
+  --kx-surface: #FFFFFF;
+  --kx-raised: #F1F5F9;
+  --kx-line: #E2E8F0;
+  --kx-line-soft: rgba(15, 23, 42, 0.07);
+  --kx-ink: #0F172A;
+  --kx-ink-2: #475569;
+  --kx-ink-3: #64748B;
+  --kx-debt: #B91C1C;
+  --kx-debt-chip-ink: #991B1B;
+  --kx-almost: #A16207;
+  --kx-almost-chip-ink: #854D0E;
+  --kx-paid: #047857;
+  --kx-paid-chip-ink: #065F46;
+  --kx-pay: #0284C7;
+}
+
+.kx-scope {
+  background: var(--kx-bg);
+  color: var(--kx-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.kx-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.kx-hero-number {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 340;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  font-variant-numeric: tabular-nums;
+}
+
+.kx-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--kx-ink-3);
+}
+
+.kx-tech {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-scope *,
+  .kx-scope *::before,
+  .kx-scope *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

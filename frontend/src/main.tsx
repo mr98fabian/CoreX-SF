@@ -1,7 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
-import './index.css' // <--- ESTA LINEA ES LA CLAVE
+import './index.css'
+import './styles/kx.css' // <--- ESTA LINEA ES LA CLAVE
 
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { QueryProvider } from './providers/QueryProvider.tsx'

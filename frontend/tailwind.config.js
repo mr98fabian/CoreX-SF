@@ -23,6 +23,10 @@ module.exports = {
                 display: ["Space Grotesk", "Montserrat", ...defaultTheme.fontFamily.sans],
                 tech: ["Rajdhani", "Montserrat", ...defaultTheme.fontFamily.sans],
                 mono: ["JetBrains Mono", "Space Mono", ...defaultTheme.fontFamily.mono],
+                // Fase 6 system (see src/styles/kx.css): editorial hero numbers, UI text, technical data
+                editorial: ["Fraunces", "Georgia", ...defaultTheme.fontFamily.serif],
+                ui: ["Inter", ...defaultTheme.fontFamily.sans],
+                plex: ["IBM Plex Mono", ...defaultTheme.fontFamily.mono],
             },
             colors: {
                 border: "hsl(var(--border))",
@@ -57,6 +61,23 @@ module.exports = {
                 card: {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
+                },
+                // Fase 6 tokens — values live as CSS variables in src/styles/kx.css (dark-first)
+                kx: {
+                    bg: "var(--kx-bg)",
+                    surface: "var(--kx-surface)",
+                    raised: "var(--kx-raised)",
+                    line: "var(--kx-line)",
+                    ink: "var(--kx-ink)",
+                    ink2: "var(--kx-ink-2)",
+                    ink3: "var(--kx-ink-3)",
+                    amber: "var(--kx-amber)",
+                    "amber-soft": "var(--kx-amber-soft)",
+                    debt: "var(--kx-debt)",
+                    almost: "var(--kx-almost)",
+                    paid: "var(--kx-paid)",
+                    warm: "var(--kx-warm)",
+                    pay: "var(--kx-pay)",
                 },
                 // KoreX Brand Colors
                 neutral: {
