@@ -19,6 +19,7 @@ import { STAGE_ORDER, localDay, type Stage } from '@/lib/stage';
 import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageBar, StageChip, StatePhrase } from '@/components/kx';
 import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
+import { findFundingAccount } from '@/lib/funding';
 
 const MAX_PER_SECTION = 4; // rule 4: sections of 3–4 items; longer groups split into named parts
 
@@ -107,7 +108,7 @@ export default function AccountsStagePage() {
     }
 
     const support = groups.support;
-    const mainChecking = support.find((a) => a.type === 'checking');
+    const mainChecking = findFundingAccount(support);
     const phrase = s.debts.length === 0
         ? (es ? 'Aún no tienes deudas registradas.' : 'No debts on record yet.')
         : (es ? `${s.staged.length} cuentas: ${s.counts.debt} en deuda, ${s.counts.almost} casi, ${s.counts.paid} pagadas.`
