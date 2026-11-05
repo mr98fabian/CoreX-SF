@@ -11,6 +11,13 @@ const AccountsPage = lazy(() => import("@/features/accounts/AccountsPage"));
 const ActionPlanPage = lazy(() => import("@/features/actionplan/ActionPlanPage"));
 const AnalyticsPage = lazy(() => import("@/features/analytics/AnalyticsPage"));
 const RankingsPage = lazy(() => import("@/features/rankings/RankingsPage"));
+const HomePage = lazy(() => import("@/features/home/HomePage"));
+const CalendarPage = lazy(() => import("@/features/home/CalendarPage"));
+const AccountsStagePage = lazy(() => import("@/features/accounts/AccountsStagePage"));
+const ActivityPage = lazy(() => import("@/features/activity/ActivityPage"));
+const AttackPage = lazy(() => import("@/features/attack/AttackPage"));
+const SettingsHome = lazy(() => import("@/features/settings/SettingsHome"));
+const PlansPage = lazy(() => import("@/features/settings/PlansPage"));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const LoginPage = lazy(() => import("@/features/auth/LoginPage"));
 const TermsOfServicePage = lazy(() => import("@/features/legal/TermsOfServicePage"));
@@ -59,12 +66,19 @@ function AppShell() {
                     </ProtectedRoute>
                   }
                 >
-                  <Route index element={<DashboardPage />} />
-                  <Route path="action-plan" element={<ActionPlanPage />} />
-                  <Route path="accounts" element={<AccountsPage />} />
+                  <Route index element={<HomePage />} />
+                  <Route path="calendar" element={<CalendarPage />} />
+                  <Route path="panel" element={<DashboardPage />} />
+                  <Route path="action-plan" element={<AttackPage />} />
+                  <Route path="action-plan/full" element={<ActionPlanPage />} />
+                  <Route path="accounts" element={<AccountsStagePage />} />
+                  <Route path="accounts/manage" element={<AccountsPage />} />
+                  <Route path="activity" element={<ActivityPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="rankings" element={<RankingsPage />} />
-                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="settings" element={<SettingsHome />} />
+                  <Route path="settings/plans" element={<PlansPage />} />
+                  <Route path="settings/advanced" element={<SettingsPage />} />
                 </Route>
 
                 {/* 404 — Raccoon says hi 🦝 */}

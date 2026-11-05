@@ -8,7 +8,7 @@
 import { Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/features/auth/AuthContext';
-import LandingPage from './LandingPage';
+import LandingPage from './KxLanding';
 
 export default function LandingGate() {
     const { user, loading } = useAuth();

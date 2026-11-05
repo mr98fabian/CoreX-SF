@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Copy, Check, KeyRound, ShieldCheck, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Bot, Copy, Check, KeyRound, Lock, ShieldCheck, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -59,9 +60,17 @@ export function ConnectAI() {
     const [newToken, setNewToken] = useState<string | null>(null);
     const [copied, setCopied] = useState<'token' | 'config' | null>(null);
 
+    // The lock is the server's answer (GET /api/tokens/access), never decided here
+    const [access, setAccess] = useState<{ allowed: boolean; reason: string | null } | null>(null);
+    const locked = !access?.allowed;
+
     const load = () => {
-        if (isDemo) return;
-        apiFetch<ApiTokenRow[]>('/api/tokens').then(setTokens).catch(() => setTokens([]));
+        apiFetch<{ allowed: boolean; reason: string | null }>('/api/tokens/access')
+            .then((a) => {
+                setAccess(a);
+                if (a.allowed) apiFetch<ApiTokenRow[]>('/api/tokens').then(setTokens).catch(() => setTokens([]));
+            })
+            .catch(() => setAccess({ allowed: false, reason: 'error' }));
     };
     useEffect(load, [isDemo]);
 
@@ -120,10 +129,24 @@ export function ConnectAI() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                    {isDemo ? (
-                        <p className="text-sm text-muted-foreground">
-                            {es ? 'Crea una cuenta para conectar tu IA: el demo es compartido.' : 'Create an account to connect your AI: the demo is shared.'}
-                        </p>
+                    {access === null ? (
+                        <div className="h-16 animate-pulse rounded-xl bg-white/5" aria-busy="true" />
+                    ) : locked ? (
+                        <div className="space-y-3 rounded-xl border border-white/10 p-4">
+                            <p className="flex items-center gap-2 text-sm font-semibold">
+                                <Lock className="h-4 w-4 text-amber-500" />
+                                {access.reason === 'demo'
+                                    ? (es ? 'El demo es compartido: crea tu cuenta para conectar tu IA.' : 'The demo is shared: create your account to connect your AI.')
+                                    : access.reason === 'error'
+                                        ? (es ? 'No pudimos comprobar tu plan. Recarga la página.' : "We couldn't check your plan. Reload the page.")
+                                        : (es ? 'Conectar tu IA viene con los planes de pago.' : 'Connecting your AI comes with paid plans.')}
+                            </p>
+                            {access.reason === 'free_plan' && (
+                                <Link to="/dashboard/settings/plans" className="inline-block rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-[#111418]">
+                                    {es ? 'Ver planes' : 'See plans'}
+                                </Link>
+                            )}
+                        </div>
                     ) : newToken ? (
                         <div className="space-y-4">
                             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
@@ -182,7 +205,7 @@ export function ConnectAI() {
                 </CardContent>
             </Card>
 
-            {!isDemo && (
+            {!locked && (
                 <Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-black/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">

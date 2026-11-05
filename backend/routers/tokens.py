@@ -14,7 +14,8 @@ from sqlmodel import Session, select
 import database
 from api_tokens import SCOPES, generate_token, hash_token
 from auth import get_current_user_id, DEMO_USER_ID
-from models import ApiToken
+from models import ApiToken, ApiTokenAudit
+from plan_guard import ai_access_for
 
 router = APIRouter(prefix="/api/tokens", tags=["tokens"])
 MAX_ACTIVE_TOKENS = 10
@@ -38,10 +39,38 @@ def list_scopes():
     return [{"scope": k, "label": v} for k, v in SCOPES.items()]
 
 
+@router.get("/audit")
+def token_audit(limit: int = 100, user_id: str = Depends(get_current_user_id)):
+    """Read-only: the writes the user's AI made with their tokens (owner-scope;
+    the demo sees only its own rows). Normal session only — a token can't read
+    the audit of itself. Newest first."""
+    limit = max(1, min(limit, 200))
+    with Session(database.engine) as session:
+        rows = session.exec(select(ApiTokenAudit).where(ApiTokenAudit.user_id == user_id)
+                            .order_by(ApiTokenAudit.created_at.desc()).limit(limit)).all()
+        names = {t.id: t.name for t in session.exec(select(ApiToken).where(ApiToken.user_id == user_id)).all()}
+        return [{"id": r.id, "token_id": r.token_id, "token_name": names.get(r.token_id), "action": r.action,
+                 "scope": r.detail, "created_at": r.created_at} for r in rows]
+
+
+@router.get("/access")
+def token_access(user_id: str = Depends(get_current_user_id)):
+    """What the Settings screen shows: locked (free / demo) or open (paid). The UI
+    never decides this itself."""
+    if user_id == DEMO_USER_ID:
+        return {"allowed": False, "reason": "demo", "plan": "demo"}
+    with Session(database.engine) as session:
+        allowed, plan = ai_access_for(session, user_id)
+    return {"allowed": allowed, "reason": None if allowed else "free_plan", "plan": plan}
+
+
 @router.post("")
 def create_token(body: TokenCreate, user_id: str = Depends(get_current_user_id)):
     if user_id == DEMO_USER_ID:
         raise HTTPException(status_code=403, detail="Demo accounts can't create API tokens")
+    with Session(database.engine) as session:
+        if not ai_access_for(session, user_id)[0]:
+            raise HTTPException(status_code=403, detail="AI connection requires a paid plan")
     unknown = set(body.scopes) - set(SCOPES)
     if unknown:
         raise HTTPException(status_code=400, detail=f"Unknown scopes: {sorted(unknown)}")
