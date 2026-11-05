@@ -25,3 +25,10 @@ def test_plans_follow_a_change_in_plan_guard(monkeypatch):
 def test_plans_is_read_only():
     with TestClient(app) as c:
         assert c.post("/api/public/plans", json={}).status_code == 405
+
+
+def test_commercial_table_2026_11_04():
+    """Owner decision: Gratis 2 · Velocity 15 · Accelerator and Freedom unlimited."""
+    with TestClient(app) as c:
+        got = {p["plan"]: p["debt_limit"] for p in c.get("/api/public/plans").json()}
+    assert got == {"starter": 2, "velocity": 15, "accelerator": None, "freedom": None}
