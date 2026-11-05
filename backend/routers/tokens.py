@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 import database
 from api_tokens import SCOPES, generate_token, hash_token
 from auth import get_current_user_id, DEMO_USER_ID
-from models import ApiToken
+from models import ApiToken, ApiTokenAudit
 from plan_guard import ai_access_for
 
 router = APIRouter(prefix="/api/tokens", tags=["tokens"])
@@ -37,6 +37,20 @@ def _public(t: ApiToken) -> dict:
 @router.get("/scopes")
 def list_scopes():
     return [{"scope": k, "label": v} for k, v in SCOPES.items()]
+
+
+@router.get("/audit")
+def token_audit(limit: int = 100, user_id: str = Depends(get_current_user_id)):
+    """Read-only: the writes the user's AI made with their tokens (owner-scope;
+    the demo sees only its own rows). Normal session only — a token can't read
+    the audit of itself. Newest first."""
+    limit = max(1, min(limit, 200))
+    with Session(database.engine) as session:
+        rows = session.exec(select(ApiTokenAudit).where(ApiTokenAudit.user_id == user_id)
+                            .order_by(ApiTokenAudit.created_at.desc()).limit(limit)).all()
+        names = {t.id: t.name for t in session.exec(select(ApiToken).where(ApiToken.user_id == user_id)).all()}
+        return [{"id": r.id, "token_id": r.token_id, "token_name": names.get(r.token_id), "action": r.action,
+                 "scope": r.detail, "created_at": r.created_at} for r in rows]
 
 
 @router.get("/access")

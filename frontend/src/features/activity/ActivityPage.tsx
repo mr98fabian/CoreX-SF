@@ -6,8 +6,8 @@
  *
  * Sources: /api/transactions/all (applied movements) and
  * /api/strategy/executed-logs (plan moves: executed = registrado, verified =
- * confirmado). AI (token/MCP) events live in api_token_audit, which has no
- * read endpoint yet — documented in the Fase 6 report, not invented here.
+ * confirmado), plus /api/tokens/audit: writes your AI made with a token,
+ * shown with an amber edge and the "vía tu IA" mark.
  */
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -19,9 +19,10 @@ import { localDay } from '@/lib/stage';
 
 interface Tx { id: number; date: string; amount: number; description: string; category: string; account_id: number | null; account_name: string }
 interface Move { id: number; title: string; amount: number | string; date_executed: string; status: string }
+interface AiEvent { id: number; token_name: string | null; action: string; scope: string; created_at: string }
 
 type Status = 'registered' | 'applied' | 'confirmed';
-type Kind = 'payment' | 'income' | 'spend' | 'plan';
+type Kind = 'payment' | 'income' | 'spend' | 'plan' | 'ai';
 interface Entry { key: string; date: string; kind: Kind; status: Status; amount: number; text: string; sub: string; audit: [string, string][] }
 
 const PER_BLOCK = 4; // rule 4
@@ -32,8 +33,8 @@ export default function ActivityPage() {
     const es = language === 'es';
     usePageTitle(es ? 'Actividad' : 'Activity');
     const { formatMoney, formatDateShort } = useFormatMoney();
-    const [data, setData] = useState<{ loading: boolean; error: boolean; txs: Tx[]; moves: Move[] }>({ loading: true, error: false, txs: [], moves: [] });
-    const [filter, setFilter] = useState<'all' | 'payment' | 'income' | 'plan'>('all');
+    const [data, setData] = useState<{ loading: boolean; error: boolean; txs: Tx[]; moves: Move[]; ai: AiEvent[] }>({ loading: true, error: false, txs: [], moves: [], ai: [] });
+    const [filter, setFilter] = useState<'all' | 'payment' | 'income' | 'plan' | 'ai'>('all');
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
     const [openEntry, setOpenEntry] = useState<string | null>(null);
     const [now] = useState(() => Date.now()); // render must stay pure: one clock read per mount
@@ -42,7 +43,8 @@ export default function ActivityPage() {
         Promise.all([
             apiFetch<{ transactions: Tx[] }>('/api/transactions/all?limit=100'),
             apiFetch<Move[]>('/api/strategy/executed-logs').catch(() => [] as Move[]),
-        ]).then(([t, m]) => setData({ loading: false, error: false, txs: t.transactions, moves: m }))
+            apiFetch<AiEvent[]>('/api/tokens/audit').catch(() => [] as AiEvent[]),
+        ]).then(([t, m, ai]) => setData({ loading: false, error: false, txs: t.transactions, moves: m, ai }))
             .catch(() => setData((d) => ({ ...d, loading: false, error: true })));
     useEffect(() => { fetchAll(); }, []);
     const load = () => { setData((d) => ({ ...d, loading: true, error: false })); fetchAll(); };
@@ -69,6 +71,19 @@ export default function ActivityPage() {
                 sub: `${formatMoney(Math.abs(Number(m.amount)))} · ${d ? formatDateShort(d) : ''}`,
                 audit: [[es ? 'Origen' : 'Source', 'POST /api/strategy/execute'], [es ? 'Estado' : 'Status', m.status], ['ID', String(m.id)]] });
         }
+        for (const a of data.ai) {
+            const when = new Date(`${a.created_at}Z`);
+            const [method, path] = a.action.split(' ');
+            const what = path.startsWith('/api/transactions') ? (es ? 'registró un pago' : 'recorded a payment')
+                : path.startsWith('/api/cashflow') ? (method === 'DELETE' ? (es ? 'quitó un ingreso o gasto' : 'removed an income or bill') : (es ? 'actualizó tus ingresos o gastos' : 'updated your income or bills'))
+                    : method === 'POST' ? (es ? 'agregó una cuenta' : 'added an account')
+                        : method === 'DELETE' ? (es ? 'eliminó una cuenta' : 'deleted an account')
+                            : (es ? 'corrigió una cuenta' : 'corrected an account');
+            out.push({ key: `a${a.id}`, date: localDay(when), kind: 'ai', status: 'applied', amount: 0,
+                text: es ? `Tu IA ${what}` : `Your AI ${what}`,
+                sub: `${es ? 'vía tu IA' : 'via your AI'}${a.token_name ? ` · ${a.token_name}` : ''} · ${when.toLocaleTimeString(es ? 'es-ES' : 'en-US', { hour: 'numeric', minute: '2-digit' })}`,
+                audit: [[es ? 'Origen' : 'Source', a.action], [es ? 'Permiso' : 'Scope', a.scope], ['Token', a.token_name ?? `#${a.id}`], [es ? 'Hora' : 'Time', when.toLocaleString(es ? 'es-ES' : 'en-US')]] });
+        }
         return out.sort((a, b) => b.date.localeCompare(a.date));
     }, [data, es, formatMoney, formatDateShort]);
 
@@ -79,7 +94,7 @@ export default function ActivityPage() {
         const weekAgo = dayKey(new Date(now - 6 * 864e5));
         const monthStart = today.slice(0, 8) + '01';
         const def = [
-            { id: 'today', title: es ? 'Hoy' : 'Today', test: (d: string) => d === today },
+            { id: 'today', title: es ? 'Hoy' : 'Today', test: (d: string) => d >= today }, // future-dated entries land in Hoy, never vanish
             { id: 'week', title: es ? 'Esta semana' : 'This week', test: (d: string) => d < today && d >= weekAgo },
             { id: 'month', title: es ? 'Este mes' : 'This month', test: (d: string) => d < weekAgo && d >= monthStart },
             { id: 'before', title: es ? 'Antes' : 'Earlier', test: (d: string) => d < monthStart && d < weekAgo },
@@ -93,8 +108,10 @@ export default function ActivityPage() {
         const parts: string[] = [];
         if (paid.length) parts.push(es ? `${paid.length} ${paid.length === 1 ? 'pago' : 'pagos'} por ${formatMoney(paid.reduce((s, e) => s + e.amount, 0))}`
             : `${paid.length} payment${paid.length === 1 ? '' : 's'} for ${formatMoney(paid.reduce((s, e) => s + e.amount, 0))}`);
+        const ai = items.filter((e) => e.kind === 'ai');
+        if (ai.length) parts.push(es ? `${ai.length} ${ai.length === 1 ? 'acción' : 'acciones'} de tu IA` : `${ai.length} AI action${ai.length === 1 ? '' : 's'}`);
         if (inc.length) parts.push(es ? `${inc.length} ${inc.length === 1 ? 'ingreso' : 'ingresos'}` : `${inc.length} income`);
-        const rest = items.length - paid.length - inc.length;
+        const rest = items.length - paid.length - inc.length - ai.length;
         if (rest) parts.push(es ? `${rest} ${rest === 1 ? 'movimiento más' : 'movimientos más'}` : `${rest} more`);
         return parts.join(' · ');
     };
@@ -104,7 +121,7 @@ export default function ActivityPage() {
         applied: [es ? 'Aplicado' : 'Applied', 'bg-[var(--kx-almost-chip-bg)] text-[var(--kx-almost-chip-ink)]'],
         confirmed: [es ? 'Confirmado' : 'Confirmed', 'bg-[var(--kx-paid-chip-bg)] text-[var(--kx-paid-chip-ink)]'],
     };
-    const DOT: Record<Kind, string> = { payment: 'bg-kx-paid', income: 'bg-kx-pay', spend: 'bg-kx-ink3', plan: 'bg-kx-amber' };
+    const DOT: Record<Kind, string> = { payment: 'bg-kx-paid', income: 'bg-kx-pay', spend: 'bg-kx-ink3', plan: 'bg-kx-ink2', ai: 'bg-kx-amber' };
 
     const weekPaid = entries.filter((e) => e.kind === 'payment' && e.date >= dayKey(new Date(now - 6 * 864e5)));
     const phrase = entries.length === 0
@@ -131,7 +148,7 @@ export default function ActivityPage() {
                         <StatePhrase tone={weekPaid.length ? 'paid' : 'amber'}>{phrase}</StatePhrase>
 
                         <div className="flex flex-wrap gap-2" role="tablist" aria-label={es ? 'Filtrar actividad' : 'Filter activity'}>
-                            {([['all', es ? 'Todo' : 'All'], ['payment', es ? 'Pagos' : 'Payments'], ['income', es ? 'Ingresos' : 'Income'], ['plan', es ? 'Plan' : 'Plan']] as const).map(([id, label]) => (
+                            {([['all', es ? 'Todo' : 'All'], ['payment', es ? 'Pagos' : 'Payments'], ['income', es ? 'Ingresos' : 'Income'], ['plan', es ? 'Plan' : 'Plan'], ['ai', es ? 'Tu IA' : 'Your AI']] as const).map(([id, label]) => (
                                 <button key={id} role="tab" aria-selected={filter === id} onClick={() => setFilter(id)}
                                     className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${filter === id ? 'border-kx-amber bg-kx-amber text-[#111418]' : 'border-[#263449] bg-kx-surface text-kx-ink2'}`}>
                                     {label}
@@ -152,7 +169,9 @@ export default function ActivityPage() {
                                 <Section key={b.id} tone="neutral" title={b.title}>
                                     <p className="-mt-1.5 mb-2 text-[12.5px] text-kx-ink2">{summary(b.items)}</p>
                                     {shown.map((e) => (
-                                        <div key={e.key} className="border-t border-[var(--kx-line-soft)] py-2.5 first-of-type:border-t-0">
+                                        <div key={e.key} className={e.kind === 'ai'
+                                            ? 'my-1.5 rounded-xl border-l-[3px] border-kx-amber bg-[rgba(245,158,11,.06)] px-3 py-2.5'
+                                            : 'border-t border-[var(--kx-line-soft)] py-2.5 first-of-type:border-t-0'}>
                                             <button className="flex w-full items-start gap-3 text-left" onClick={() => setOpenEntry(openEntry === e.key ? null : e.key)} aria-expanded={openEntry === e.key}>
                                                 <span className={`mt-[6px] h-2.5 w-2.5 flex-none rounded-full ${DOT[e.kind]}`} aria-hidden="true" />
                                                 <span className="min-w-0 flex-1">
@@ -179,7 +198,7 @@ export default function ActivityPage() {
 
                         <div className="rounded-2xl border border-kx-line bg-kx-surface p-4 text-[12.5px] leading-relaxed text-kx-ink2">
                             <b className="text-kx-ink">{es ? 'Nada se mueve sin quedar escrito.' : 'Nothing moves without being written down.'}</b>{' '}
-                            {es ? 'Cada pago y movimiento de tu plan aparece aquí. Toca uno para ver su detalle.' : 'Every payment and plan move shows up here. Tap one to see its detail.'}
+                            {es ? 'Cada pago, movimiento de tu plan y acción de tu IA aparece aquí: es tu registro y tu auditoría. Toca uno para ver su detalle.' : 'Every payment, plan move and AI action shows up here: your record and your audit. Tap one to see its detail.'}
                         </div>
                     </>
                 )}
