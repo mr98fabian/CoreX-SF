@@ -15,33 +15,49 @@ DEFAULT_PEACE_SHIELD = Decimal("1000.00")  # Dave Ramsey starter fund
 DEFAULT_ATTACK_PERCENTAGE = Decimal("20")  # % of liquid cash attacked monthly — configurable per user, see UserSettings.attack_percentage
 
 def calculate_minimum_payment(balance: Decimal, apr: Decimal) -> Decimal:
-    """
-    Calculates minimum monthly payment: (Balance * (APR / 12)) + (Balance * 0.01)
-    Floor: $25 or Total Balance if less.
-    """
-    # Enforce Decimal types to avoid float errors
-    try:
-        b = Decimal(str(balance)) if balance is not None else Decimal("0")
-        a = Decimal(str(apr)) if apr is not None else Decimal("0")
-    except (ValueError, ArithmeticError):
-        return Decimal("0.00")
+    """The system's single minimum-payment rule (interest + 1% of balance, $25
+    floor, whole balance if smaller). Delegates to core_engine.calculators so
+    accounts, transactions and every simulation use the same number."""
+    from core_engine.calculators import calculate_minimum_payment as _core_minimum
+    return _core_minimum(balance, apr)
 
-    if b <= 0:
-        return Decimal("0.00")
-    
-    # Formula: (Balance * (APR% / 12)) + (Balance * 1%)
-    monthly_interest = b * (a / Decimal("100") / Decimal("12"))
-    principal_payment = b * Decimal("0.01")
-    calculated = monthly_interest + principal_payment
-    
-    floor = Decimal("25.00")
-    
-    if b < floor:
-        result = b
-    else:
-        result = max(floor, calculated)
-    
-    return result.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+FIXED_SUBTYPES = ("auto_loan", "mortgage", "personal_loan", "student_loan")
+
+# Occurrences per month for each cashflow frequency
+MONTHLY_FACTOR = {
+    "monthly": Decimal("1"), "semi_monthly": Decimal("2"), "biweekly": Decimal("26") / Decimal("12"),
+    "weekly": Decimal("52") / Decimal("12"), "annually": Decimal("1") / Decimal("12"),
+}
+
+
+def monthly_surplus(cashflow_items, debts: List["DebtAccount"]) -> Optional[Decimal]:
+    """The user's real monthly attack: income − expenses − debt payments
+    (plan_minimum of each debt), floored at $0. `cashflow_items` are
+    (amount, frequency, is_income) tuples. None when there is no income on
+    record, so the caller can fall back to its declared default."""
+    income = expenses = Decimal("0")
+    for amount, frequency, is_income in cashflow_items:
+        monthly = Decimal(str(amount)) * MONTHLY_FACTOR.get(frequency, Decimal("1"))
+        if is_income:
+            income += monthly
+        else:
+            expenses += monthly
+    if income <= 0:
+        return None
+    payments = sum((plan_minimum(d) for d in debts if d.balance > 0), Decimal("0"))
+    return max(Decimal("0"), income - expenses - payments).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def plan_minimum(debt: "DebtAccount") -> Decimal:
+    """Payment used by projections: installment loans keep their contractual
+    payment; revolving debt pays at least the single rule above (a stored value
+    can be stale — e.g. Amex $99.96 stored vs $112.97 by the rule), or more if
+    the user says they pay more."""
+    stored = Decimal(str(debt.min_payment or 0))
+    if debt.debt_subtype in FIXED_SUBTYPES:
+        return stored
+    return max(stored, calculate_minimum_payment(debt.balance, debt.interest_rate))
 
 
 @dataclass
@@ -187,7 +203,8 @@ def calculate_months_to_payoff(
 
 def calculate_debt_free_date(
     debts: List[DebtAccount],
-    extra_monthly: Decimal = Decimal('0')
+    extra_monthly: Decimal = Decimal('0'),
+    start: Optional[date] = None,
 ) -> Dict:
     """
     Calculate the debt-free date using standard vs. velocity strategy.
@@ -210,10 +227,11 @@ def calculate_debt_free_date(
         }
     
     # 1. Standard Strategy (Min Payments Only)
-    standard_sim = simulate_freedom_path(debts, Decimal('0'))
-    
-    # 2. Velocity Strategy (Min + Extra)
-    velocity_sim = simulate_freedom_path(debts, extra_monthly)
+    # Minimums only, recalculated from the balance each month (what a card bills)
+    standard_sim = simulate_freedom_path(debts, Decimal('0'), roll_freed_payments=False, recalc_minimums=True, start=start)
+
+    # 2. Velocity Strategy (Min + Extra, freed payments roll)
+    velocity_sim = simulate_freedom_path(debts, extra_monthly, start=start)
     
     months_saved = standard_sim["total_months"] - velocity_sim["total_months"]
     interest_saved = Decimal(str(standard_sim["total_interest_paid"])) - Decimal(str(velocity_sim["total_interest_paid"]))
@@ -859,10 +877,58 @@ def generate_action_plan(
     return movements
 
 
+def monthly_attack(surplus: Optional[Decimal], liquid_cash: Decimal, attack_percentage: Decimal) -> Decimal:
+    """Monthly attack for simulations: the cashflow surplus when known, else the
+    declared default (attack_percentage of liquid cash)."""
+    if surplus is not None:
+        return surplus
+    return (Decimal(str(liquid_cash)) * attack_percentage / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
+def attack_impact(
+    debts: List[DebtAccount],
+    target: DebtAccount,
+    effective_attack: Decimal,
+    liquid_cash: Decimal,
+    extra_monthly: Decimal,
+    start: Optional[date] = None,
+) -> Dict:
+    """Today's recommended attack and its consequence, computed honestly.
+
+    - amount is capped at min(attack, target balance, liquid cash): never
+      recommend sending more than the debt owes or the user holds.
+    - days_accelerated = freedom date WITHOUT the payment minus freedom date
+      WITH it, on the same plan route (simulate_freedom_path). The route is
+      monthly, so the result is in whole months (0 if the month doesn't move).
+    """
+    amount = max(Decimal('0'), min(effective_attack, target.balance, Decimal(str(liquid_cash))))
+    amount = amount.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    base = simulate_freedom_path(debts, extra_monthly, start=start)
+    after = [
+        DebtAccount(name=d.name, balance=(d.balance - amount if d.name == target.name else d.balance),
+                    interest_rate=d.interest_rate, min_payment=d.min_payment, due_day=d.due_day,
+                    debt_subtype=d.debt_subtype)
+        for d in debts
+    ]
+    # If today's payment kills the target, its payment is freed from now on and
+    # rolls like any other (otherwise the "after" route would lose it and the
+    # payment would look worthless).
+    freed = plan_minimum(target) if amount >= target.balance else Decimal('0')
+    with_payment = simulate_freedom_path(after, extra_monthly + freed, start=start)
+    days = (date.fromisoformat(base["freedom_date"]) - date.fromisoformat(with_payment["freedom_date"])).days
+    return {
+        "amount": amount,
+        "days_accelerated": max(0, days),
+        "interest_saved_monthly": ((amount * (target.interest_rate / Decimal('100'))) / Decimal('12')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        "interest_saved_total": max(Decimal('0'), Decimal(str(base["total_interest_paid"])) - Decimal(str(with_payment["total_interest_paid"]))).quantize(Decimal('0.01')),
+    }
+
+
 def get_projections(
     debts: List[DebtAccount],
     liquid_cash: Decimal,
     attack_percentage: Decimal = DEFAULT_ATTACK_PERCENTAGE,
+    extra_monthly: Optional[Decimal] = None,
 ) -> Dict:
     """
     Generate complete velocity banking projections.
@@ -882,7 +948,11 @@ def get_projections(
     total_debt = sum(d.balance for d in debts) if debts else Decimal('0')
     total_min_payments = sum(d.min_payment for d in debts) if debts else Decimal('0')
 
-    extra_monthly = (liquid_cash * attack_percentage / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    # Real attack = the user's cashflow surplus when known (helpers.get_attack_extra);
+    # otherwise the declared default: attack_percentage of liquid cash.
+    from_cashflow = extra_monthly is not None
+    if not from_cashflow:
+        extra_monthly = (liquid_cash * attack_percentage / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     # Get velocity target
     target = get_velocity_target(debts)
@@ -906,7 +976,10 @@ def get_projections(
             "attack_percentage": float(attack_percentage),
             "liquid_cash_used": float(liquid_cash),
             "extra_monthly_payment": float(extra_monthly),
-            "note": "Estimate: assumes you consistently apply this % of your liquid cash to debt each month, with on-time minimum payments on the rest.",
+            "extra_source": "cashflow_surplus" if from_cashflow else "attack_percentage_default",
+            "note": ("Estimate: assumes your monthly surplus (income − expenses − debt payments) goes to debt every month, and paid-off debts' payments roll to the next."
+                     if from_cashflow else
+                     "Estimate: no income on record, so it assumes this % of your liquid cash goes to debt each month, and paid-off debts' payments roll to the next."),
         },
     }
 
@@ -1356,25 +1429,36 @@ def calculate_purchase_time_cost(
 
 def simulate_freedom_path(
     debts: List[DebtAccount],
-    extra_monthly_payment: Decimal = Decimal('0')
+    extra_monthly_payment: Decimal = Decimal('0'),
+    roll_freed_payments: bool = True,
+    recalc_minimums: bool = False,
+    start: Optional[date] = None,
 ) -> Dict:
     """
     Simulates the journey to zero debt month-by-month.
     Supports 'What-If' scenarios by accepting extra monthly payment.
+
+    Plan route (defaults): each debt keeps paying its starting minimum
+    (plan_minimum) and, when a debt dies, its freed payment ROLLS into the
+    avalanche attack on the next one.
+    Baseline route (roll_freed_payments=False, recalc_minimums=True): minimums
+    only, revolving minimums recalculated each month from the balance like a
+    real card — the honest comparison.
     """
-    # 1. Clone debts
+    # 1. Clone debts (keep the subtype: it decides fixed vs revolving minimums)
     sim_debts = [
         DebtAccount(
             name=d.name,
             balance=d.balance,
             interest_rate=d.interest_rate,
-            min_payment=d.min_payment,
-            due_day=d.due_day
+            min_payment=plan_minimum(d),
+            due_day=d.due_day,
+            debt_subtype=d.debt_subtype,
         ) for d in debts if d.balance > 0
     ]
-    
+
     timeline = []
-    current_date = date.today().replace(day=1) 
+    current_date = (start or date.today()).replace(day=1)
     total_interest_paid = Decimal('0')
     months_elapsed = 0
     max_months = 600
@@ -1398,7 +1482,10 @@ def simulate_freedom_path(
         for debt in sim_debts:
             if debt.balance <= Decimal('0'):
                 continue
-                
+
+            if recalc_minimums and debt.debt_subtype not in FIXED_SUBTYPES:
+                debt.min_payment = calculate_minimum_payment(debt.balance, debt.interest_rate)
+
             interest = (debt.balance * debt.monthly_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             debt.balance += interest
             monthly_interest_sum += interest
@@ -1406,7 +1493,7 @@ def simulate_freedom_path(
             
             payment = min(debt.balance, debt.min_payment)
             debt.balance -= payment
-            
+
             if debt.balance <= Decimal('0.01'):
                  debt.balance = Decimal('0')
                  month_events.append(f"{debt.name} Paid Off")
@@ -1417,7 +1504,9 @@ def simulate_freedom_path(
         active_debts = [d for d in sim_debts if d.balance > 0]
         
         if active_debts:
-            available_for_attack = extra_monthly_payment
+            # Freed payments of debts already gone keep working (they roll)
+            available_for_attack = extra_monthly_payment + (
+                sum((d.min_payment for d in sim_debts if d.balance <= 0), Decimal('0')) if roll_freed_payments else Decimal('0'))
             
             # --- Step A: Cover interest gaps first ---
             for debt in active_debts:

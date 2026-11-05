@@ -345,11 +345,15 @@ class TestDebtFreeDate:
         result = calculate_debt_free_date(debts, Decimal("500"))
         assert result["interest_saved"] > Decimal("0")
 
-    def test_no_extra_cash_no_savings(self):
-        """With $0 extra, velocity = standard."""
+    def test_no_extra_cash_still_beats_declining_minimums(self):
+        """Calibration 2026-11-04 (D3): the baseline recalculates the card's
+        minimum from the balance every month, as a real card bills, so it
+        shrinks. With $0 extra the plan keeps paying the starting $200 — never
+        slower, and faster than minimums-only."""
         debts = [_debt("Card", balance=5000, rate=20, min_pay=200)]
         result = calculate_debt_free_date(debts, Decimal("0"))
-        assert result["months_saved"] == 0
+        assert result["velocity_months"] <= result["standard_months"]
+        assert result["months_saved"] > 0
 
     def test_empty_debts_returns_today(self):
         """No debts: freedom date = today."""
