@@ -15,6 +15,7 @@ const HomePage = lazy(() => import("@/features/home/HomePage"));
 const CalendarPage = lazy(() => import("@/features/home/CalendarPage"));
 const AccountsStagePage = lazy(() => import("@/features/accounts/AccountsStagePage"));
 const ActivityPage = lazy(() => import("@/features/activity/ActivityPage"));
+const AttackPage = lazy(() => import("@/features/attack/AttackPage"));
 const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const LoginPage = lazy(() => import("@/features/auth/LoginPage"));
 const TermsOfServicePage = lazy(() => import("@/features/legal/TermsOfServicePage"));
@@ -66,7 +67,8 @@ function AppShell() {
                   <Route index element={<HomePage />} />
                   <Route path="calendar" element={<CalendarPage />} />
                   <Route path="panel" element={<DashboardPage />} />
-                  <Route path="action-plan" element={<ActionPlanPage />} />
+                  <Route path="action-plan" element={<AttackPage />} />
+                  <Route path="action-plan/full" element={<ActionPlanPage />} />
                   <Route path="accounts" element={<AccountsStagePage />} />
                   <Route path="accounts/manage" element={<AccountsPage />} />
                   <Route path="activity" element={<ActivityPage />} />
