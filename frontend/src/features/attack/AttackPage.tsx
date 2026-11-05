@@ -22,6 +22,7 @@ import { apiFetch } from '@/lib/api';
 import { localDay } from '@/lib/stage';
 import { useKxSummary } from '@/hooks/useKxSummary';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
+import { DrawnCheck } from '@/components/kx/motion';
 
 interface CommandCenter {
     morning_briefing: {
@@ -133,7 +134,8 @@ export default function AttackPage() {
                         <div>
                             <p className="kx-label">{es ? 'Tu ataque de hoy' : 'Today’s attack'}</p>
                             <p className="mt-1.5 text-[17px] text-kx-ink2">{done ? (es ? `Atacaste la ${rec.destination} con` : `You attacked ${rec.destination} with`) : (es ? `Ataca la ${rec.destination} con` : `Attack ${rec.destination} with`)}</p>
-                            <p className="kx-hero-number text-[52px] text-kx-ink">{formatMoney(amount)}</p>
+                            {/* The v9 editorial graft: the giant number is the hero of the screen where you act */}
+                            <p className="kx-hero-number text-[68px] leading-[0.95] text-kx-ink sm:text-[88px]">{formatMoney(amount)}</p>
                             <p className="mt-2 text-[13.5px] text-kx-ink2">
                                 {es ? 'Sale de ' : 'From '}<b className="font-semibold text-kx-ink">{checking?.name}</b>
                                 {!done && <>{es ? ` · tasa de la deuda ` : ` · debt rate `}<span className="kx-tech">{rec.destination_apr.toFixed(2)}%</span></>}
@@ -141,7 +143,7 @@ export default function AttackPage() {
                         </div>
 
                         <div className="space-y-2.5">
-                            <PrimaryPill onClick={confirm} disabled={busy || !!done}>{done ? (es ? 'Confirmado ✓' : 'Confirmed ✓') : (es ? 'Confirmar' : 'Confirm')}</PrimaryPill>
+                            <PrimaryPill onClick={confirm} disabled={busy || !!done}>{done ? <span className="inline-flex items-center gap-1.5">{es ? 'Confirmado' : 'Confirmed'}<DrawnCheck /></span> : (es ? 'Confirmar' : 'Confirm')}</PrimaryPill>
                             {saved > 0 && !done && (
                                 <p className="text-center text-[13px] text-kx-ink2">
                                     {es ? 'Si pagas hoy, dejas de pagar ≈ ' : 'If you pay today, you stop paying ≈ '}

@@ -46,6 +46,13 @@
   --kx-warm: #FB923C;   /* PAGADA stamp / warm alert */
   --kx-pay: #38BDF8;    /* paydays in the calendar — nowhere else */
 
+  /* Motion tokens — mirror of lib/motion.ts (the only allowed durations/curves) */
+  --kx-dur-fast: 120ms;
+  --kx-dur-base: 240ms;
+  --kx-dur-slow: 480ms;
+  --kx-dur-celebration: 700ms;
+  --kx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
   --kx-radius-card: 20px;
   --kx-radius-row: 12px;
   --kx-radius-pill: 999px;
@@ -103,7 +110,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Living stripe: a light that travels with scroll (--kx-scroll 0→1, set by
+   useStripeScroll). Only transform/opacity move; the sweep plays once per screen. */
+.kx-stripe-light {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 55%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(254, 243, 199, 0.55) 0%, rgba(253, 230, 138, 0.18) 38%, rgba(253, 230, 138, 0) 70%);
+  transform: translate3d(calc(var(--kx-scroll, 0) * 140% - 30%), 0, 0);
+  will-change: transform;
+  animation: kx-stripe-sweep var(--kx-dur-slow) var(--kx-ease-out) both;
+}
+@keyframes kx-stripe-sweep {
+  from { opacity: 0; transform: translate3d(-90%, 0, 0); }
+  to   { opacity: 1; transform: translate3d(calc(var(--kx-scroll, 0) * 140% - 30%), 0, 0); }
+}
+
+/* Stage colors transition when a debt changes stage (label + bar stay put) */
+.kx-stage-tint {
+  transition: background-color 400ms var(--kx-ease-out), color 400ms var(--kx-ease-out), border-color 400ms var(--kx-ease-out);
+}
+
+/* Press state for buttons (transform only) */
+.kx-press {
+  transition: transform var(--kx-dur-fast) var(--kx-ease-out), opacity var(--kx-dur-fast) var(--kx-ease-out);
+}
+.kx-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Calendar cells blend from the outgoing month's tone to the incoming one */
+.kx-cal-cell {
+  transition: background-color var(--kx-dur-slow) var(--kx-ease-out), color var(--kx-dur-slow) var(--kx-ease-out);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .kx-stripe-light { display: none; }
   .kx-scope *,
   .kx-scope *::before,
   .kx-scope *::after {

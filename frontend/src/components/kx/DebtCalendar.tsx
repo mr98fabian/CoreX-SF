@@ -7,7 +7,9 @@
  * Data: months from lib/calendarSeries (engine monthly series, days
  * interpolated — documented tech debt). `compact` = heat-map only, for Inicio.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAnimate } from 'framer-motion';
+import { tx, useReducedMotion } from '@/lib/motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
@@ -35,6 +37,16 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
     // Projections are estimates: show them rounded to the dollar ("≈ $23,900"), never with cents
     const approx = (n: number) => formatMoney(Math.round(n)).replace(/[.,]00$/, '');
     const [idx, setIdx] = useState(0);
+    // Living calendar: the grid slides in the direction you navigate while each
+    // cell's background blends from the outgoing month's tone (.kx-cal-cell)
+    const reduced = useReducedMotion();
+    const [gridRef, animateGrid] = useAnimate<HTMLDivElement>();
+    const dir = useRef(0);
+    const go = (step: number) => { dir.current = step; setIdx((i) => Math.max(0, Math.min(months.length - 1, i + step))); };
+    useEffect(() => {
+        if (!dir.current || reduced || !gridRef.current) return;
+        animateGrid(gridRef.current, { x: [dir.current * 18, 0], opacity: [0.35, 1] }, tx('slow'));
+    }, [idx, reduced, animateGrid, gridRef]);
     const mo = months[Math.min(idx, months.length - 1)];
     const names = MONTHS[es ? 'es' : 'en'];
 
@@ -75,13 +87,13 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                 <>
                     <p className="text-[15px] font-semibold text-kx-ink">{phrase}</p>
                     <div className="mt-3 flex items-center justify-between">
-                        <button type="button" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={idx === 0}
+                        <button type="button" onClick={() => go(-1)} disabled={idx === 0}
                             aria-label={es ? 'Mes anterior' : 'Previous month'}
                             className="flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
                             <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
                         </button>
                         <p className="text-xl font-bold capitalize tracking-tight text-kx-ink" aria-live="polite">{monthName} {mo.year}</p>
-                        <button type="button" onClick={() => setIdx((i) => Math.min(months.length - 1, i + 1))} disabled={idx >= months.length - 1}
+                        <button type="button" onClick={() => go(1)} disabled={idx >= months.length - 1}
                             aria-label={es ? 'Mes siguiente' : 'Next month'}
                             className="flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
                             <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
@@ -106,14 +118,14 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
             <div className="mb-1 grid grid-cols-7 gap-[5px]" aria-hidden="true">
                 {DOW[es ? 'es' : 'en'].map((d, i) => <span key={i} className="text-center text-[10px] font-semibold tracking-wide text-kx-ink3">{d}</span>)}
             </div>
-            <div className="grid grid-cols-7 gap-[5px]" role="grid" aria-label={`${monthName} ${mo.year}`}>
+            <div ref={gridRef} className="grid grid-cols-7 gap-[5px]" role="grid" aria-label={`${monthName} ${mo.year}`}>
                 {cells.map((c, i) => {
                     if (c.day === null) return <div key={i} />;
                     const style = c.free ? { background: '#34D399', color: '#052E1B', fontWeight: 700 } : debtColor(c.debt, maxDebt);
                     const label = `${c.day}: ${c.debt <= 0 ? (es ? 'sin deuda' : 'no debt') : `≈ ${approx(c.debt)}`}${c.pay ? (es ? ', día de pago' : ', payday') : ''}${c.cut ? `, ${c.cut}` : ''}${c.free ? (es ? ', ¡libre!' : ', free!') : ''}`;
                     return (
                         <div key={i} role="gridcell" aria-label={label} title={label}
-                            className="kx-num relative flex aspect-square items-center justify-center rounded-[9px] text-[12.5px]" style={style}>
+                            className="kx-num kx-cal-cell relative flex aspect-square items-center justify-center rounded-[9px] text-[12.5px]" style={style}>
                             {c.day}
                             {c.free && <span className="absolute -right-0.5 -top-1.5 text-[10px] text-kx-amber" aria-hidden="true">★</span>}
                             {c.cut && !compact && <span className="absolute left-1 top-0.5 text-[8px] font-bold opacity-80" aria-hidden="true">{c.cut}</span>}
