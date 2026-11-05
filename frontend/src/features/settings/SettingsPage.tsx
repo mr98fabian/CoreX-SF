@@ -189,7 +189,12 @@ export default function SettingsPage() {
     };
 
     // ─── Local state ────────────────────────────────────────────
-    const [activeSection, setActiveSection] = useState<Section>("profile");
+    // Opened from the new Ajustes screen with ?section=… (or ?tab=subscription after checkout)
+    const [activeSection, setActiveSection] = useState<Section>(() => {
+        const q = new URLSearchParams(window.location.search);
+        const wanted = (q.get("section") || q.get("tab")) as Section | null;
+        return wanted && NAV_ITEMS.some((n) => n.id === wanted) ? wanted : "profile";
+    });
 
     const [currency, setCurrency] = useState(() => localStorage.getItem("korex-currency") || "USD");
     const [dateFormat, setDateFormat] = useState(() => localStorage.getItem("korex-date-format") || "MM/DD/YYYY");
