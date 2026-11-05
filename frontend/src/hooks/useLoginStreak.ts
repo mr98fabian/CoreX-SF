@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useState, useEffect, useCallback } from 'react';
 
 /**
@@ -42,7 +43,7 @@ interface StoredStreak {
 }
 
 function todayStr(): string {
-    return new Date().toISOString().split('T')[0];
+    return localDay();
 }
 
 function daysBetween(dateA: string, dateB: string): number {

@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiFetch } from '@/lib/api';
@@ -429,7 +430,7 @@ export default function ActionPlanPage() {
         );
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDay();
 
     return (
         <>

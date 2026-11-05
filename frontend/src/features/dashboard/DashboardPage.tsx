@@ -1,3 +1,4 @@
+import { localDay } from '@/lib/localDay';
 import { useEffect, useState, useCallback } from 'react';
 import { WidgetHelp } from '@/components/WidgetHelp';
 import UpgradeModal from '@/components/UpgradeModal';
@@ -204,7 +205,7 @@ export default function DashboardPage() {
                         movement_key: `attack-equity-${Date.now()}-${tx.source.replace(/\s/g, '')}`,
                         title: tx.title,
                         amount: tx.amount,
-                        date_planned: new Date().toISOString().split('T')[0],
+                        date_planned: localDay(),
                         source: tx.source,
                         destination: tx.dest,
                     }),
