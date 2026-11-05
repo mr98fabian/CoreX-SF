@@ -13,7 +13,7 @@ from models import Account, CashflowItem, Transaction, MovementLog, UserSettings
 from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
-    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage,
+    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -25,7 +25,7 @@ from core_engine.calculators import calculate_minimum_payment
 
 from velocity_engine import (
     CashflowTactical, VelocityWeapon, get_projections, get_velocity_target,
-    get_peace_shield_status, calculate_safe_attack_equity, simulate_freedom_path,
+    get_peace_shield_status, calculate_safe_attack_equity, simulate_freedom_path, monthly_attack, attack_impact,
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
     detect_float_kill_opportunities, get_closing_day_intelligence,
     get_hybrid_kill_target, detect_interest_rate_arbitrage, calculate_risky_opportunity,
@@ -90,9 +90,10 @@ async def get_velocity_projections(
 ):
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        return get_projections(accounts_to_active_debt_objects(accounts, plan_limit),
-                               Decimal(str(get_liquid_cash(accounts))),
-                               get_attack_percentage(session, user_id))
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
+        return get_projections(debts, Decimal(str(get_liquid_cash(accounts))),
+                               get_attack_percentage(session, user_id),
+                               extra_monthly=get_cashflow_surplus(session, user_id, debts))
 
 
 @router.get("/velocity/freedom-path")
@@ -103,8 +104,8 @@ async def get_freedom_path(
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        pct = get_attack_percentage(session, user_id)
-        velocity = (Decimal(str(get_liquid_cash(accounts))) * pct / Decimal('100')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        velocity = monthly_attack(get_cashflow_surplus(session, user_id, debts),
+                                  Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
         return simulate_freedom_path(debts, velocity)
 
 
@@ -117,9 +118,9 @@ async def get_simulation(
     with Session(engine) as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        liquid = Decimal(str(get_liquid_cash(accounts)))
-        pct = get_attack_percentage(session, user_id)
-        return simulate_freedom_path(debts, (liquid * pct / Decimal('100')).quantize(Decimal('0.01')) + Decimal(str(extra_cash)))
+        base = monthly_attack(get_cashflow_surplus(session, user_id, debts),
+                              Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
+        return simulate_freedom_path(debts, base + Decimal(str(extra_cash)))
 
 
 # ── Tactical GPS & Execution ─────────────────────────────────
@@ -135,7 +136,7 @@ async def get_tactical_gps(
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         cf_tactical = [CashflowTactical(name=cf.name, amount=cf.amount, day_of_month=cf.day_of_month, category=cf.category) for cf in cashflows]
 
-        asset_accounts = sorted([acc for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0],
+        asset_accounts = sorted([acc for acc in accounts if acc.type != "debt" and acc.balance > 0],
                                 key=lambda x: x.balance, reverse=True)
         funding_name = asset_accounts[0].name if asset_accounts else "Checking"
         shield_target = get_shield_target(session, user_id)
@@ -148,9 +149,11 @@ async def get_tactical_gps(
             if acc.type == "debt" and acc.debt_subtype in ("heloc", "uil") and (acc.credit_limit or 0) > acc.balance
         ]
 
-        movements = generate_action_plan(debts, cf_tactical, sum(acc.balance for acc in accounts if acc.type == "checking"),
+        # All liquid cash (checking + savings + cash), not just "checking": a cash-only user simulated from $0
+        movements = generate_action_plan(debts, cf_tactical, Decimal(str(get_liquid_cash(accounts))),
                                          funding_name, shield_target, weapons)
-        projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
+        projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id),
+                                      extra_monthly=get_cashflow_surplus(session, user_id, debts))
 
         return {
             "movements": movements,
@@ -296,8 +299,13 @@ async def get_strategy_command_center(
                     total_gap_cost += shortfall
                     gap_debts.append({"name": d.name, "shortfall": float(shortfall), "apr": float(d.interest_rate)})
             effective_attack = max(attack_amount - total_gap_cost, Decimal('0'))
-            interest_saved_monthly = ((effective_attack * (target.interest_rate / Decimal('100'))) / Decimal('12')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            days_accelerated = int((effective_attack / target.min_payment * Decimal('30')).quantize(Decimal('1'))) if target.min_payment > 0 else 0
+            # Engine: amount capped at the debt balance / cash; days from the same simulation route
+            impact = attack_impact(debt_accounts, target, effective_attack, liquid_cash,
+                                   monthly_attack(get_cashflow_surplus(session, user_id, debt_accounts),
+                                                  liquid_cash, get_attack_percentage(session, user_id)))
+            effective_attack = impact["amount"]
+            interest_saved_monthly = impact["interest_saved_monthly"]
+            days_accelerated = impact["days_accelerated"]
             freedom_hours = (interest_saved_monthly * Decimal('12') / Decimal('25')).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
             reason = (f"Gap-First Strategy: ${float(total_gap_cost):,.2f}/mo covers interest gaps on {len(gap_debts)} debt(s). "
                       f"Remaining ${float(effective_attack):,.2f} attacks {target.name} at {float(target.interest_rate)}% APR"
@@ -330,7 +338,8 @@ async def get_strategy_command_center(
                 confidence_meter["explanation"] = f"Every $100 to {top.name} saves ${float(top.interest_rate)}/yr vs ${float(second.interest_rate)}/yr to {second.name}"
 
         # Freedom Counter
-        projections = get_projections(debt_accounts, liquid_cash, get_attack_percentage(session, user_id))
+        projections = get_projections(debt_accounts, liquid_cash, get_attack_percentage(session, user_id),
+                                      extra_monthly=get_cashflow_surplus(session, user_id, debt_accounts))
         std_date, vel_date = projections.get("standard_debt_free_date", "N/A"), projections.get("velocity_debt_free_date", "N/A")
         try:
             from datetime import datetime as _dt
@@ -355,14 +364,15 @@ async def get_strategy_command_center(
         # Decision Options
         decision_options = None
         if target and attack_amount > 0:
-            full_savings = float((attack_amount * (target.interest_rate / Decimal('100'))) / Decimal('12'))
+            full_attack = min(attack_amount, target.balance)  # never more than the target owes (D6)
+            full_savings = float((full_attack * (target.interest_rate / Decimal('100'))) / Decimal('12'))
             shield_boost = min(Decimal('100'), ((liquid_cash + attack_amount) / shield_target) * Decimal('100')) if shield_target > 0 else Decimal('100')
             half_savings = float((attack_amount / Decimal('2') * (target.interest_rate / Decimal('100'))) / Decimal('12'))
             shield_pct = shield.get("fill_percentage", 100)
             recommended = "shield" if shield_pct < 50 else ("split" if shield_pct < 80 else "attack")
             decision_options = {
                 "options": [
-                    {"id": "attack", "label": "Full Attack", "amount": float(attack_amount),
+                    {"id": "attack", "label": "Full Attack", "amount": float(full_attack),
                      "impact": f"Save ${full_savings:.2f}/mo in interest", "description": f"Apply all to {target.name}"},
                     {"id": "shield", "label": "Boost Shield", "amount": float(attack_amount),
                      "impact": f"Shield reaches {float(shield_boost):.0f}%", "description": "Strengthen your emergency fund"},

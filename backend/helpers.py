@@ -74,6 +74,16 @@ def get_attack_percentage(session, user_id: str) -> Decimal:
     return Decimal(str(settings.attack_percentage)) if settings and settings.attack_percentage is not None else DEFAULT_ATTACK_PERCENTAGE
 
 
+def get_cashflow_surplus(session, user_id: str, debts):
+    """The user's monthly surplus from their cashflow (velocity_engine.monthly_surplus),
+    or None when no income is on record (callers then use the declared default)."""
+    from sqlmodel import select
+    from models import CashflowItem
+    from velocity_engine import monthly_surplus
+    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+    return monthly_surplus([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)
+
+
 # ── Balance Update Helpers ───────────────────────────────────
 
 def _insufficient_funds_error(account, amount: Decimal):

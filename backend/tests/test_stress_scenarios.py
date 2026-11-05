@@ -47,11 +47,13 @@ class TestIncomeLoss:
         assert result["total_months"] > 0
         assert result["total_interest_paid"] > 0
 
-    def test_zero_extra_equals_standard(self):
-        """$0 extra = standard timeline (min payments only)."""
+    def test_zero_extra_never_worse_than_minimums(self):
+        """$0 extra: the plan holds the starting payment while the minimums-only
+        baseline lets it decline with the balance (calibration D3)."""
         debts = [_debt("Card", balance=10000, rate=24, min_pay=200)]
-        standard = calculate_debt_free_date(debts, Decimal("0"))
-        assert standard["months_saved"] == 0
+        result = calculate_debt_free_date(debts, Decimal("0"))
+        assert result["velocity_months"] <= result["standard_months"]
+        assert Decimal(str(result["interest_saved"])) >= 0
 
     def test_shield_blocks_attacks_when_broke(self):
         """When cash < shield, attacks should be blocked."""
