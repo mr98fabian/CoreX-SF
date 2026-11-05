@@ -120,11 +120,19 @@
   background: radial-gradient(ellipse at center, rgba(254, 243, 199, 0.55) 0%, rgba(253, 230, 138, 0.18) 38%, rgba(253, 230, 138, 0) 70%);
   transform: translate3d(calc(var(--kx-scroll, 0) * 140% - 30%), 0, 0);
   will-change: transform;
-  animation: kx-stripe-sweep var(--kx-dur-slow) var(--kx-ease-out) both;
+  /* backwards, not both: once the entry sweep ends the base transform (live
+     --kx-scroll) owns the position. With fill forwards Chrome Android froze it. */
+  animation: kx-stripe-sweep var(--kx-dur-slow) var(--kx-ease-out) backwards;
+}
+/* Registered so Chrome treats it as a number that updates the transform live */
+@property --kx-scroll {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
 }
 @keyframes kx-stripe-sweep {
   from { opacity: 0; transform: translate3d(-90%, 0, 0); }
-  to   { opacity: 1; transform: translate3d(calc(var(--kx-scroll, 0) * 140% - 30%), 0, 0); }
+  to   { opacity: 1; }
 }
 
 /* Stage colors transition when a debt changes stage (label + bar stay put) */

@@ -3,8 +3,8 @@ import { prefersReducedMotion } from '@/lib/motion';
 
 /**
  * The living stripe: writes --kx-scroll (0→1, page scroll progress) on the
- * element so its light travels as you scroll. Reads the nearest scrolling
- * ancestor (the app scrolls a div, the landing the window), one rAF per frame,
+ * element so its light travels as you scroll. Reads whichever scrolled last:
+ * the nearest scrolling ancestor or the window/document. One rAF per frame,
  * no React re-renders. Reduced motion, or a device that can't keep up (≤ 2
  * cores), keeps the stripe static — no errors.
  */
@@ -22,19 +22,29 @@ export function useStripeScroll<T extends HTMLElement>() {
         const el = ref.current;
         if (!el || prefersReducedMotion() || (navigator.hardwareConcurrency || 4) <= 2) return;
         try {
+            // Listen where the scroll really happens: the nearest scrolling ancestor
+            // if it scrolls, and the document as a fallback (on mobile Chrome the
+            // page often scrolls the window even when a div is overflow:auto).
             const box = scrollParent(el);
-            const target: HTMLElement | Window = box ?? window;
+            const doc = () => document.scrollingElement ?? document.documentElement;
+            let source: HTMLElement | null = box;
             let frame = 0;
             const update = () => {
                 frame = 0;
-                const top = box ? box.scrollTop : window.scrollY;
-                const max = box ? box.scrollHeight - box.clientHeight : document.documentElement.scrollHeight - window.innerHeight;
-                el.style.setProperty('--kx-scroll', (max > 0 ? Math.min(1, Math.max(0, top / max)) : 0).toFixed(3));
+                const s = source ?? doc();
+                const max = s.scrollHeight - s.clientHeight;
+                el.style.setProperty('--kx-scroll', (max > 0 ? Math.min(1, Math.max(0, s.scrollTop / max)) : 0).toFixed(3));
             };
-            const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+            const fromBox = () => { source = box; if (!frame) frame = requestAnimationFrame(update); };
+            const fromWindow = () => { source = null; if (!frame) frame = requestAnimationFrame(update); };
             update();
-            target.addEventListener('scroll', onScroll, { passive: true });
-            return () => { target.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
+            box?.addEventListener('scroll', fromBox, { passive: true });
+            window.addEventListener('scroll', fromWindow, { passive: true });
+            return () => {
+                box?.removeEventListener('scroll', fromBox);
+                window.removeEventListener('scroll', fromWindow);
+                if (frame) cancelAnimationFrame(frame);
+            };
         } catch {
             return undefined; // static stripe
         }
