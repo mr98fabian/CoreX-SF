@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, Trophy } from 'lucide-react';
+import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -9,6 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import { syncPlanFromBackend } from '@/lib/planLimits';
+import { TabBar } from '@/components/kx';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -60,12 +61,14 @@ export default function DashboardLayout() {
         return location.pathname.startsWith(path);
     };
 
+    // Fase 6 navigation: the 4 tabs of the mobile tab bar + the calendar (signature piece) and the plan
+    const es = language === 'es';
     const navLinks = [
-        { path: '/dashboard', icon: LayoutDashboard, label: t("nav.dashboard") },
-        { path: '/dashboard/action-plan', icon: ListChecks, label: t("nav.actionPlan") },
-        { path: '/dashboard/accounts', icon: Wallet, label: t("nav.accounts") },
-        { path: '/dashboard/rankings', icon: Trophy, label: t("nav.rankings") },
-        { path: '/dashboard/settings', icon: Settings, label: t("nav.settings") },
+        { path: '/dashboard', icon: LayoutDashboard, label: es ? 'Inicio' : 'Home' },
+        { path: '/dashboard/calendar', icon: CalendarDays, label: es ? 'Calendario' : 'Calendar' },
+        { path: '/dashboard/accounts', icon: Wallet, label: es ? 'Cuentas' : 'Accounts' },
+        { path: '/dashboard/action-plan', icon: ListChecks, label: es ? 'Plan de ataque' : 'Attack plan' },
+        { path: '/dashboard/settings', icon: Settings, label: es ? 'Ajustes' : 'Settings' },
     ];
 
     const sidebarContent = (
@@ -226,6 +229,7 @@ export default function DashboardLayout() {
                     </div>
                 </div>
             </main>
+            <TabBar />
             <FeedbackWidget />
             <UpgradeNudge suppressed={onboarding.isLoading || !onboarding.hasCompleted} />
             <InstallPrompt />

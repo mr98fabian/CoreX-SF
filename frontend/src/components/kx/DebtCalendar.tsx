@@ -32,6 +32,8 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
     const { language } = useLanguage();
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
+    // Projections are estimates: show them rounded to the dollar ("≈ $23,900"), never with cents
+    const approx = (n: number) => formatMoney(Math.round(n)).replace(/[.,]00$/, '');
     const [idx, setIdx] = useState(0);
     const mo = months[Math.min(idx, months.length - 1)];
     const names = MONTHS[es ? 'es' : 'en'];
@@ -64,7 +66,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                 : (es ? `En ${monthName}, ya vas en amarillo.` : `In ${monthName}, you're into yellow.`);
     const heroNote = isAfter || mo.zeroDay
         ? (es ? 'deuda proyectada al cierre del mes' : 'projected debt at month close')
-        : (es ? `al cierre del mes (estimado) · bajas ≈ ${formatMoney(mo.start - mo.end)}` : `at month close (estimate) · down ≈ ${formatMoney(mo.start - mo.end)}`);
+        : (es ? `al cierre del mes (estimado) · bajas ≈ ${approx(mo.start - mo.end)}` : `at month close (estimate) · down ≈ ${approx(mo.start - mo.end)}`);
     const progress = maxDebt > 0 ? (1 - mo.end / maxDebt) * 100 : 100;
 
     return (
@@ -87,7 +89,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                     </div>
                     <div className="mb-1 mt-2.5 text-center">
                         <p className="text-[10.5px] font-bold uppercase tracking-[.15em] text-kx-ink2">{es ? 'Debes' : 'You owe'}</p>
-                        <p className="kx-hero-number mt-0.5 text-[36px] text-kx-ink">{mo.end <= 0 ? formatMoney(0) : `≈ ${formatMoney(mo.end)}`}</p>
+                        <p className="kx-hero-number mt-0.5 text-[36px] text-kx-ink">{mo.end <= 0 ? approx(0) : `≈ ${approx(mo.end)}`}</p>
                         <p className="text-xs text-kx-ink2">{heroNote}</p>
                     </div>
                     <div className="relative mx-0.5 mt-3.5 h-2 rounded-full" style={{ background: 'linear-gradient(90deg,#DC2626,#F97316 42%,#FBBF24 68%,#34D399)' }}>
@@ -108,7 +110,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                 {cells.map((c, i) => {
                     if (c.day === null) return <div key={i} />;
                     const style = c.free ? { background: '#34D399', color: '#052E1B', fontWeight: 700 } : debtColor(c.debt, maxDebt);
-                    const label = `${c.day}: ${c.debt <= 0 ? (es ? 'sin deuda' : 'no debt') : `≈ ${formatMoney(c.debt)}`}${c.pay ? (es ? ', día de pago' : ', payday') : ''}${c.cut ? `, ${c.cut}` : ''}${c.free ? (es ? ', ¡libre!' : ', free!') : ''}`;
+                    const label = `${c.day}: ${c.debt <= 0 ? (es ? 'sin deuda' : 'no debt') : `≈ ${approx(c.debt)}`}${c.pay ? (es ? ', día de pago' : ', payday') : ''}${c.cut ? `, ${c.cut}` : ''}${c.free ? (es ? ', ¡libre!' : ', free!') : ''}`;
                     return (
                         <div key={i} role="gridcell" aria-label={label} title={label}
                             className="kx-num relative flex aspect-square items-center justify-center rounded-[9px] text-[12.5px]" style={style}>

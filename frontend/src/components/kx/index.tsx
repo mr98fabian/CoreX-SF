@@ -41,10 +41,10 @@ export function BankHeader({ greeting, title }: { greeting?: string; title?: str
     const { language } = useLanguage();
     const es = language === 'es';
     return (
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0">
                 {greeting && <p className="text-sm text-kx-ink2">{greeting}</p>}
-                {title && <h1 className="truncate text-[22px] font-semibold tracking-tight text-kx-ink">{title}</h1>}
+                {title && <h1 className="text-[22px] font-semibold tracking-tight text-kx-ink">{title}</h1>}
             </div>
             <p className="flex shrink-0 items-center gap-1.5 text-[11px] text-kx-ink3">
                 <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
