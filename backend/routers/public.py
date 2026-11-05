@@ -70,3 +70,14 @@ def velocity_preview(req: VelocityPreviewRequest, request: Request):
             ),
         },
     }
+
+
+# ── Plan limits (single source for Settings "Mi plan" and the landing table) ──
+
+@router.get("/plans")
+def public_plans():
+    """Read-only, no auth: debt-account limit per plan, straight from the same
+    plan_guard.PLAN_LIMITS the server enforces (null = unlimited). Prices are
+    not here on purpose: they live in the billing config (pricing.ts / LS)."""
+    from plan_guard import PLAN_LIMITS
+    return [{"plan": name, "debt_limit": limit} for name, limit in PLAN_LIMITS.items() if name != "freedom-dev"]
