@@ -20,6 +20,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { localDay } from '@/lib/stage';
+import { findFundingAccount } from '@/lib/funding';
 import { useKxSummary } from '@/hooks/useKxSummary';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
 import { DrawnCheck } from '@/components/kx/motion';
@@ -67,18 +68,18 @@ export default function AttackPage() {
         return map;
     }, [s.path, names]);
 
-    const checking = s.staged.find((a) => a.type === 'checking');
+    const funding = findFundingAccount(s.staged);
     // After confirming, keep showing what was just paid (the engine already recommends the next one)
     const rec = done ? { amount: done.amount, destination: done.destination, destination_balance: done.amount, destination_apr: cc?.morning_briefing.recommended_action?.destination_apr ?? 0, reason: '' }
         : (cc?.morning_briefing.recommended_action ?? null);
     // Presentation cap only: never ask to send more than the debt owes or the account holds
-    const amount = rec ? Math.min(rec.amount, rec.destination_balance, checking?.bal ?? rec.amount) : 0;
+    const amount = rec ? Math.min(rec.amount, rec.destination_balance, funding?.bal ?? rec.amount) : 0;
     const ranked = (cc?.confidence_meter?.debts_ranked ?? []).slice(0, STEPS);
     const stageByName = new Map(s.debts.map((d) => [d.name, d.stage]));
     const saved = cc?.morning_briefing.impact?.interest_saved_monthly ?? 0;
 
     const confirm = async () => {
-        if (!rec || !checking || amount <= 0) return;
+        if (!rec || !funding || amount <= 0) return;
         setBusy(true);
         try {
             await apiFetch('/api/strategy/execute', {
@@ -86,7 +87,7 @@ export default function AttackPage() {
                 body: JSON.stringify({
                     movement_key: `attack-${localDay()}-${rec.destination.replace(/\s/g, '')}`,
                     title: es ? `Ataque a ${rec.destination}` : `Attack on ${rec.destination}`,
-                    amount, date_planned: localDay(), source: checking.name, destination: rec.destination,
+                    amount, date_planned: localDay(), source: funding.name, destination: rec.destination,
                 }),
             });
             setDone({ destination: rec.destination, amount });
@@ -137,13 +138,20 @@ export default function AttackPage() {
                             {/* The v9 editorial graft: the giant number is the hero of the screen where you act */}
                             <p className="kx-hero-number text-[68px] leading-[0.95] text-kx-ink sm:text-[88px]">{formatMoney(amount)}</p>
                             <p className="mt-2 text-[13.5px] text-kx-ink2">
-                                {es ? 'Sale de ' : 'From '}<b className="font-semibold text-kx-ink">{checking?.name}</b>
+                                {funding && <>{es ? 'Sale de ' : 'From '}<b className="font-semibold text-kx-ink">{funding.name}</b></>}
                                 {!done && <>{es ? ` · tasa de la deuda ` : ` · debt rate `}<span className="kx-tech">{rec.destination_apr.toFixed(2)}%</span></>}
                             </p>
                         </div>
 
                         <div className="space-y-2.5">
-                            <PrimaryPill onClick={confirm} disabled={busy || !!done}>{done ? <span className="inline-flex items-center gap-1.5">{es ? 'Confirmado' : 'Confirmed'}<DrawnCheck /></span> : (es ? 'Confirmar' : 'Confirm')}</PrimaryPill>
+                            {!funding && !done && (
+                                <p role="alert" className="rounded-[14px] border border-kx-line bg-kx-raised px-4 py-3 text-[13.5px] text-kx-ink">
+                                    {es ? 'Te falta una cuenta de fondeo: agrega la cuenta de donde sale el dinero para poder confirmar ataques.'
+                                        : 'You need a funding account: add the account the money comes from to confirm attacks.'}
+                                    {' '}<Link to="/accounts" className="font-semibold text-kx-amber">{es ? 'Agregar cuenta' : 'Add account'}</Link>
+                                </p>
+                            )}
+                            <PrimaryPill onClick={confirm} disabled={busy || !!done || !funding}>{done ? <span className="inline-flex items-center gap-1.5">{es ? 'Confirmado' : 'Confirmed'}<DrawnCheck /></span> : (es ? 'Confirmar' : 'Confirm')}</PrimaryPill>
                             {saved > 0 && !done && (
                                 <p className="text-center text-[13px] text-kx-ink2">
                                     {es ? 'Si pagas hoy, dejas de pagar ≈ ' : 'If you pay today, you stop paying ≈ '}
