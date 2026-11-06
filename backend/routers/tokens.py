@@ -51,7 +51,7 @@ def token_audit(limit: int = 100, user_id: str = Depends(get_current_user_id)):
                             .order_by(ApiTokenAudit.created_at.desc()).limit(limit)).all()
         names = {t.id: t.name for t in session.exec(select(ApiToken).where(ApiToken.user_id == user_id)).all()}
         return [{"id": r.id, "token_id": r.token_id, "token_name": names.get(r.token_id), "action": r.action,
-                 "scope": r.detail, "created_at": r.created_at} for r in rows]
+                 "scope": r.detail, "summary": r.summary, "note": r.note, "created_at": r.created_at} for r in rows]
 
 
 @router.get("/access")
