@@ -1427,7 +1427,50 @@ def calculate_purchase_time_cost(
 # FREEDOM PATH SIMULATOR
 # ================================================================
 
+# ── Memo for simulate_freedom_path (perf 2026-11-05) ─────────
+# Dashboard, freedom-path, projections and command-center all simulate the
+# same inputs on every screen. The key is the FULL input fingerprint (every
+# debt's name/balance/rate/payment/subtype + extra + flags + start month):
+# - any write (payment, edit, new account, cashflow change) changes the
+#   inputs, so a stale projection can never be served;
+# - the result depends only on these numbers, so two users can't leak into
+#   each other (identical inputs ⇒ identical, user-free output).
+# TTL 60 s bounds memory and the month rollover; callers get a deep copy.
+_SIM_TTL_S = 60
+_SIM_MAX = 512
+_sim_cache: Dict[tuple, tuple] = {}
+
+
+def _sim_key(debts, extra, roll, recalc, start) -> tuple:
+    return (
+        tuple((d.name, str(d.balance), str(d.interest_rate), str(d.min_payment), d.debt_subtype, d.due_day) for d in debts),
+        str(extra), roll, recalc, (start or date.today()).replace(day=1).isoformat(),
+    )
+
+
 def simulate_freedom_path(
+    debts: List[DebtAccount],
+    extra_monthly_payment: Decimal = Decimal('0'),
+    roll_freed_payments: bool = True,
+    recalc_minimums: bool = False,
+    start: Optional[date] = None,
+) -> Dict:
+    """Memoized front for _simulate_freedom_path (see the memo note above)."""
+    import copy
+    import time as _time
+    key = _sim_key(debts, extra_monthly_payment, roll_freed_payments, recalc_minimums, start)
+    now = _time.monotonic()
+    hit = _sim_cache.get(key)
+    if hit and now - hit[0] < _SIM_TTL_S:
+        return copy.deepcopy(hit[1])
+    result = _simulate_freedom_path(debts, extra_monthly_payment, roll_freed_payments, recalc_minimums, start)
+    if len(_sim_cache) >= _SIM_MAX:
+        _sim_cache.clear()
+    _sim_cache[key] = (now, result)
+    return copy.deepcopy(result)
+
+
+def _simulate_freedom_path(
     debts: List[DebtAccount],
     extra_monthly_payment: Decimal = Decimal('0'),
     roll_freed_payments: bool = True,
