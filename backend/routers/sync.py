@@ -26,7 +26,7 @@ WINDOWS = [{"label": "Tanda de la mañana", "time": "07:00"},
 MONTHS = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
           "agosto", "septiembre", "octubre", "noviembre", "diciembre")
 BASE_ES = ("Tus datos bancarios se sincronizan en tandas: tu banco publica movimientos "
-           "de 1 a 4 veces al día y KoreX los recoge a las 07:00 y a las 17:15.")
+           "de 1 a 4 veces al día y KoreX los recoge a las 07:00 y a las 17:15, hora local.")
 
 
 class MarkBody(BaseModel):
