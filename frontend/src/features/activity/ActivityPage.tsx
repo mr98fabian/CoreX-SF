@@ -186,10 +186,10 @@ export default function ActivityPage() {
                                 <Section key={b.id} tone="neutral" title={b.title}>
                                     <p className="-mt-1.5 mb-2 text-[12.5px] text-kx-ink2">{summary(b.items)}</p>
                                     {shown.map((e) => (
-                                        <div key={e.key} className={e.kind === 'ai'
-                                            ? 'my-1.5 rounded-xl border-l-[3px] border-kx-amber bg-[rgba(245,158,11,.06)] px-3 py-2.5'
-                                            : 'border-t border-[var(--kx-line-soft)] py-2.5 first-of-type:border-t-0'}>
-                                            <button className="flex w-full items-start gap-3 text-left" onClick={() => setOpenEntry(openEntry === e.key ? null : e.key)} aria-expanded={openEntry === e.key}>
+                                        // Every row is a ledger line; an AI row keeps its amber band (no box inside the panel)
+                                        <div key={e.key} className={`relative border-t border-[var(--kx-line-soft)] py-2.5 first-of-type:border-t-0 ${e.kind === 'ai' ? '-mx-4 bg-[rgba(245,158,11,.06)] px-4' : ''}`}>
+                                            {e.kind === 'ai' && <span aria-hidden="true" className="absolute bottom-2.5 left-0 top-2.5 w-[3px] rounded-full bg-kx-amber" />}
+                                            <button className="kx-press flex w-full items-start gap-3 text-left" onClick={() => setOpenEntry(openEntry === e.key ? null : e.key)} aria-expanded={openEntry === e.key}>
                                                 <span className={`mt-[6px] h-2.5 w-2.5 flex-none rounded-full ${DOT[e.kind]}`} aria-hidden="true" />
                                                 <span className="min-w-0 flex-1">
                                                     <span className="block text-[14.5px] font-semibold leading-snug text-kx-ink">{e.text}</span>

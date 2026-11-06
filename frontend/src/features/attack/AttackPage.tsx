@@ -163,17 +163,18 @@ export default function AttackPage() {
                 )}
 
                 {!loading && ranked.length > 0 && (
-                    <Section tone="neutral" title={es ? 'Tu ruta · avalancha' : 'Your route · avalanche'}>
-                        <ol className="relative space-y-0">
+                    <Section tone="neutral" bare title={es ? 'Tu ruta · avalancha' : 'Your route · avalanche'}>
+                        {/* One ledger: editorial step numbers, hairlines, amber band = today's target */}
+                        <ol className="kx-rows overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface">
                             {ranked.map((d, i) => {
                                 const active = d.is_target || (i === 0 && !ranked.some((x) => x.is_target));
                                 const stage = stageByName.get(d.name) ?? 'debt';
                                 const when = payoff.get(d.name);
                                 return (
-                                    <li key={d.name} className={`relative flex gap-3.5 pb-4 last:pb-0 ${active ? '' : 'opacity-60'}`}>
-                                        {i < ranked.length - 1 && <span aria-hidden="true" className="absolute left-[15px] top-8 h-[calc(100%-20px)] w-px bg-kx-line" />}
-                                        <span className={`flex h-[31px] w-[31px] flex-none items-center justify-center rounded-full text-[13px] font-bold ${active ? 'bg-kx-amber text-[#111418]' : 'border border-kx-line bg-kx-raised text-kx-ink2'}`}>{i + 1}</span>
-                                        <span className="min-w-0 flex-1 pt-1">
+                                    <li key={d.name} className={`relative flex items-start gap-3.5 border-t border-[var(--kx-line-soft)] px-4 py-3 first:border-t-0 ${active ? 'bg-[rgba(245,158,11,.06)]' : ''}`}>
+                                        {active && <span aria-hidden="true" className="absolute bottom-3 left-0 top-3 w-[3px] rounded-full bg-kx-amber" />}
+                                        <span className={`kx-num font-editorial w-6 flex-none text-right text-[26px] leading-none ${active ? 'text-kx-amber' : 'text-kx-ink3'}`}>{i + 1}</span>
+                                        <span className={`min-w-0 flex-1 ${active ? '' : 'opacity-70'}`}>
                                             <span className="flex items-center justify-between gap-2">
                                                 <span className="truncate text-[15px] font-semibold text-kx-ink">{d.name}</span>
                                                 <StageChip stage={stage} suffix="" />

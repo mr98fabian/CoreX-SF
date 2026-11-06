@@ -99,7 +99,7 @@ export default function HomePage() {
                 {cut && (
                     <Section tone="amber" title={es ? 'Hoy · tu único pendiente' : 'Today · your one to-do'}>
                         <div className="flex items-center gap-4">
-                            <div className="flex-none rounded-xl border border-[rgba(245,158,11,.4)] px-3 py-1.5 text-center">
+                            <div className="flex-none border-r border-[rgba(245,158,11,.3)] pr-4 text-center">
                                 <p className="kx-num font-editorial text-2xl text-kx-ink">{cut.date.getDate()}</p>
                                 <p className="kx-tech text-[10px] uppercase text-kx-amber-soft">{names[cut.date.getMonth()].slice(0, 3)}</p>
                             </div>
@@ -116,7 +116,7 @@ export default function HomePage() {
 
                 {/* TU AVANCE — the calendar (heat map here; full piece one tap away) */}
                 {!noDebt && (
-                    <Section tone="neutral" title={es ? 'Tu avance · el color es tu deuda' : 'Your progress · color is your debt'}
+                    <Section tone="neutral" bare title={es ? 'Tu avance · el color es tu deuda' : 'Your progress · color is your debt'}
                         action={<Link to="/dashboard/calendar" className="flex items-center text-xs font-semibold text-kx-amber">{es ? 'Ver calendario' : 'Open calendar'}<ChevronRight className="h-4 w-4" /></Link>}>
                         <DebtCalendar compact months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} cutDays={s.cutDays} dayDetail={s.dayDetail} />
                     </Section>
@@ -124,9 +124,9 @@ export default function HomePage() {
 
                 {/* TUS DEUDAS EN 3 COLORES — tap filters Cuentas */}
                 {s.debts.length > 0 && (
-                    <Section tone="neutral" title={es ? 'Tus deudas en 3 colores' : 'Your debts in 3 colors'}>
+                    <Section tone="neutral" bare title={es ? 'Tus deudas en 3 colores' : 'Your debts in 3 colors'}>
                         {/* One continuous panel, ledger rows — same treatment as the calendar */}
-                        <div className="overflow-hidden rounded-[18px] border border-white/10">
+                        <div className="kx-rows overflow-hidden rounded-[18px] border border-white/10">
                             {([
                                 ['debt', es ? 'En deuda' : 'In debt', 'text-kx-debt', 'var(--kx-debt-bar)'],
                                 ['almost', es ? 'Casi' : 'Almost', 'text-kx-almost', 'var(--kx-almost-bar)'],

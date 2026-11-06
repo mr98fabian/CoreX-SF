@@ -132,7 +132,7 @@ export function ConnectAI() {
                     {access === null ? (
                         <div className="h-16 animate-pulse rounded-xl bg-white/5" aria-busy="true" />
                     ) : locked ? (
-                        <div className="space-y-3 rounded-xl border border-white/10 p-4">
+                        <div className="space-y-3 border-t border-[var(--kx-line-soft)] pt-4">
                             <p className="flex items-center gap-2 text-sm font-semibold">
                                 <Lock className="h-4 w-4 text-amber-500" />
                                 {access.reason === 'demo'
