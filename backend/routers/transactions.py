@@ -27,13 +27,39 @@ router = APIRouter(prefix="/api", tags=["transactions"])
 
 # ── Core Transaction Creation ────────────────────────────────
 
-def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool = False):
-    """Create transaction + update account balance. Returns (tx_record, account)."""
+def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool = False) -> dict:
+    """Create transaction + update account balance(s). Returns the transaction plus
+    `funding_applied`.
+
+    Two-sided payment (2026-11-06): a payment with `funding_account_id` lowers the
+    debt AND the non-debt account the money left from, by the SAME applied amount
+    (capped at the debt balance). Everything is validated before any mutation, and
+    both sides commit in one session: all or nothing. Without it, legacy behaviour."""
     account = session.exec(
         select(Account).where(Account.id == tx.account_id, Account.user_id == user_id)
     ).first()
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
+
+    funding = None
+    if tx.category == "payment" and tx.funding_account_id is not None:
+        if tx.funding_account_id == tx.account_id:
+            raise HTTPException(status_code=400, detail="La cuenta de origen no puede ser la misma que la de destino.")
+        funding = session.exec(
+            select(Account).where(Account.id == tx.funding_account_id, Account.user_id == user_id)
+        ).first()
+        if not funding:
+            raise HTTPException(status_code=404, detail="Funding account not found")
+        if funding.type == "debt":
+            raise HTTPException(status_code=400, detail="La cuenta de origen debe ser una cuenta de dinero, no una deuda.")
+        requested = abs(Decimal(str(tx.amount)))
+        applied = min(requested, account.balance) if account.type == "debt" else requested
+        if funding.balance < applied:
+            raise HTTPException(status_code=400, detail={
+                "code": "INSUFFICIENT_FUNDS",
+                "message": f"Fondos insuficientes. {funding.name} tiene ${funding.balance:,.2f}; el pago aplicado es ${applied:,.2f}.",
+                "account_name": funding.name,
+            })
 
     db_tx = Transaction(
         account_id=tx.account_id, amount=tx.amount, description=tx.description,
@@ -41,7 +67,10 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
         plaid_transaction_id=f"manual-{uuid.uuid4()}" if manual else None,
     )
     session.add(db_tx)
-    update_account_balance(account, Decimal(str(tx.amount)), tx.category)
+    applied = update_account_balance(account, Decimal(str(tx.amount)), tx.category)
+    if funding is not None:
+        funding.balance -= applied
+        session.add(funding)
     # Revolving debt: the minimum moves with the balance. Fixed loans keep their
     # contractual installment. (The deployed core_engine takes (balance, apr) only;
     # the old 4-arg call raised TypeError, so every payment to a debt returned 500.)
@@ -51,11 +80,14 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
     with bypass_fk(session):
         session.commit()
     session.refresh(db_tx)
-    audit_summary(audit_text.transaction_recorded(tx.amount, tx.category, account.name))
-    return db_tx
+    if funding is not None:
+        audit_summary(audit_text.transaction_recorded(applied, tx.category, account.name, funding.name))
+    else:
+        audit_summary(audit_text.transaction_recorded(tx.amount, tx.category, account.name))
+    return {**db_tx.model_dump(), "funding_applied": funding is not None}
 
 
-@router.post("/transactions", response_model=Transaction)
+@router.post("/transactions")
 async def create_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         return _create_tx_record(session, tx, user_id)

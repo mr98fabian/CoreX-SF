@@ -119,6 +119,8 @@ class TransactionCreate(SQLModel):
     description: str
     category: str
     date: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
+    # Two-sided payment: the non-debt account the money leaves from (optional, legacy = None)
+    funding_account_id: Optional[int] = None
 
 
 

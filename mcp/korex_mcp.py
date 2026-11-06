@@ -85,17 +85,25 @@ def get_action_plan() -> dict:
 
 
 @mcp.tool()
-def register_payment(account: str, amount: float, date: Optional[str] = None, description: str = "Pago registrado por IA") -> dict:
+def register_payment(account: str, amount: float, date: Optional[str] = None, description: str = "Pago registrado por IA",
+                     funding_account: Optional[str] = None) -> dict:
     """Record a payment to a debt account. `account` is the account id or (part of) its name; `amount` in dollars, > 0;
-    `date` as YYYY-MM-DD (default today). Lowers the debt balance. Scope: write:payments."""
+    `date` as YYYY-MM-DD (default today). Lowers the debt balance.
+    `funding_account`: the checking/savings/cash account the money LEFT FROM (id or name). ALWAYS pass it whenever the
+    source is known — a payment has two sides, and without it the source keeps showing money that already left
+    (inflated cash). Both balances move by the applied amount, atomically; insufficient funds = nothing is written.
+    Scope: write:payments."""
     if amount <= 0:
         raise KorexError("amount must be positive")
     acc = _resolve_account(account)
-    tx = _call("POST", "/api/transactions/manual", {
-        "account_id": acc["id"], "amount": amount, "description": description,
-        "category": "payment", "date": date or _date.today().isoformat(),
-    })
-    return {"recorded": True, "account": acc["name"], "amount": amount, "transaction_id": tx.get("id")}
+    body = {"account_id": acc["id"], "amount": amount, "description": description,
+            "category": "payment", "date": date or _date.today().isoformat()}
+    src = _resolve_account(funding_account) if funding_account else None
+    if src:
+        body["funding_account_id"] = src["id"]
+    tx = _call("POST", "/api/transactions/manual", body)
+    return {"recorded": True, "account": acc["name"], "amount": amount, "transaction_id": tx.get("id"),
+            "funding_account": src["name"] if src else None, "funding_applied": tx.get("funding_applied", False)}
 
 
 @mcp.tool()

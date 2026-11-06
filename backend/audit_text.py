@@ -53,7 +53,9 @@ def account_deleted(name: str, n_transactions: int) -> str:
     return f"Eliminó la cuenta {name}{extra}"
 
 
-def transaction_recorded(amount: Any, category: str, account_name: str) -> str:
+def transaction_recorded(amount: Any, category: str, account_name: str, funding_name: str | None = None) -> str:
+    if category == "payment" and funding_name:
+        return f"Pago {_fmt('amount', amount)} a {account_name} desde {funding_name}"
     if category == "payment":
         return f"Pago de {_fmt('amount', amount)} a {account_name}"
     return f"Movimiento de {_fmt('amount', amount)} en {account_name} ({category})"
