@@ -12,7 +12,8 @@ from database import request_session
 from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
-from api_tokens import require_scope
+from api_tokens import require_scope, audit_summary
+import audit_text
 from schemas import CashflowUpdate
 
 logger = logging.getLogger("korex.cashflow")
@@ -59,6 +60,7 @@ async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_sco
         with bypass_fk(session):
             session.add(item); session.commit()
         session.refresh(item)
+        audit_summary(audit_text.cashflow_created(item))
         return item
 
 
@@ -68,6 +70,7 @@ async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")
+        before = audit_text.snapshot(item, audit_text.CASHFLOW_FIELDS)
         changes = data.model_dump(exclude_unset=True)
         if "account_id" in changes:
             _check_own_account(session, changes["account_id"], user_id)
@@ -78,6 +81,7 @@ async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(
         with bypass_fk(session):
             session.add(item); session.commit()
         session.refresh(item)
+        audit_summary(audit_text.cashflow_updated(before, item))
         return item
 
 
@@ -87,7 +91,9 @@ async def delete_cashflow(id: int, user_id: str = Depends(require_scope("write:p
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")
+        name = item.name
         session.delete(item); session.commit()
+        audit_summary(audit_text.cashflow_deleted(name))
         return {"ok": True, "deleted_cashflow_id": id}
 
 

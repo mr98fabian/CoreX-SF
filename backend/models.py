@@ -143,5 +143,7 @@ class ApiTokenAudit(SQLModel, table=True):
     token_id: int = Field(index=True)
     user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
     action: str
-    detail: Optional[str] = Field(default=None)
+    detail: Optional[str] = Field(default=None)   # the scope used (e.g. write:accounts)
+    summary: Optional[str] = Field(default=None)  # what changed, in plain words (set by the handler)
+    note: Optional[str] = Field(default=None, max_length=140)  # the AI's "why" (X-Korex-Note header)
     created_at: datetime = Field(default_factory=datetime.utcnow)

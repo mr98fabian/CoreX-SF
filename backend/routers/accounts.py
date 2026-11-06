@@ -13,7 +13,8 @@ from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
 from schemas import BalanceUpdate, AccountUpdate
 from helpers import bypass_fk
 from auth import get_current_user_id
-from api_tokens import require_scope
+from api_tokens import require_scope, audit_summary
+import audit_text
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -41,6 +42,7 @@ async def create_account(account: Account, user_id: str = Depends(require_scope(
             session.add(account)
             session.commit()
         session.refresh(account)
+        audit_summary(audit_text.account_created(account))  # no-op unless written by the user's AI
         return account
 
 
@@ -55,6 +57,7 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
 
+        before = audit_text.snapshot(account)
         for field, value in data.model_dump(exclude_unset=True).items():
             if field in DECIMAL_FIELDS and value is not None:
                 value = Decimal(str(value))
@@ -67,6 +70,7 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
             session.add(account)
             session.commit()
         session.refresh(account)
+        audit_summary(audit_text.account_updated(before, account))
         return account
 
 
@@ -117,8 +121,10 @@ async def delete_account(id: int, user_id: str = Depends(require_scope("write:ac
 
         for tx in transactions:
             session.delete(tx)
+        item_name = item.name
         session.delete(item)
         session.commit()
+        audit_summary(audit_text.account_deleted(item_name, len(tx_ids)))
         return {"ok": True, "deleted_account_id": id, "deleted_transactions": len(tx_ids)}
 
 
