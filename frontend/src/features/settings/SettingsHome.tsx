@@ -20,8 +20,8 @@ interface Status { plan: string; status: string; current_period_end: string | nu
 
 function Row({ to, icon: Icon, title, sub, value }: { to: string; icon: typeof User; title: string; sub?: string; value?: string }) {
     return (
-        <Link to={to} className="flex items-center gap-3 border-t border-[var(--kx-line-soft)] py-3 first:border-t-0 first:pt-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
-            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[11px] bg-kx-raised"><Icon className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} /></span>
+        <Link to={to} className="kx-press flex items-center gap-3 border-t border-[var(--kx-line-soft)] py-3 first:border-t-0 first:pt-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
+            <span className="flex w-6 flex-none items-center justify-center"><Icon className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} /></span>
             <span className="min-w-0 flex-1">
                 <span className="block text-[14.5px] font-semibold text-kx-ink">{title}</span>
                 {sub && <span className="block truncate text-xs text-kx-ink2">{sub}</span>}
@@ -89,14 +89,14 @@ export default function SettingsHome() {
 
                 <Section tone="neutral" title={es ? 'Seguridad' : 'Security'}>
                     <div className="flex items-center gap-3 pb-3">
-                        <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[11px] bg-kx-raised"><ShieldCheck className="h-[18px] w-[18px] text-kx-paid" strokeWidth={1.75} /></span>
+                        <span className="flex w-6 flex-none items-center justify-center"><ShieldCheck className="h-[18px] w-[18px] text-kx-paid" strokeWidth={1.75} /></span>
                         <span>
                             <span className="block text-[14.5px] font-semibold text-kx-ink">{es ? 'Conexión segura · Sesión protegida' : 'Secure connection · Protected session'}</span>
                             <span className="block text-xs text-kx-ink2">{es ? 'Tus datos solo los ves tú (y tu IA, si la conectas).' : 'Only you see your data (and your AI, if you connect it).'}</span>
                         </span>
                     </div>
                     <Row to={advanced('data')} icon={CreditCard} title={es ? 'Mis datos' : 'My data'} sub={es ? 'Exportar o reiniciar' : 'Export or reset'} />
-                    <button onClick={() => signOut()} className="mt-1 flex w-full items-center gap-3 border-t border-[var(--kx-line-soft)] pt-3 text-left text-[14.5px] font-semibold text-kx-debt">
+                    <button onClick={() => signOut()} className="kx-press mt-1 flex w-full items-center gap-3 border-t border-[var(--kx-line-soft)] pt-3 text-left text-[14.5px] font-semibold text-kx-debt">
                         <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />{es ? 'Cerrar sesión' : 'Sign out'}
                     </button>
                 </Section>
