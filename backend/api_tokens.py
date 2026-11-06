@@ -15,6 +15,8 @@ Security model
   api_token_audit after it succeeds (token, user, action, date).
 """
 import hashlib
+import re
+from contextvars import ContextVar
 import secrets
 import time
 from collections import defaultdict, deque
@@ -39,6 +41,33 @@ SCOPES = {
     "run:simulations": "Simular compras",
 }
 RATE_LIMIT_PER_MIN = 60
+
+# What an AI write changed (perf/actividad-detalle 2026-11-05). require_scope
+# installs a holder for kx_ requests; the handler fills it with audit_summary();
+# require_scope writes ONE audit row per request with it. With a normal session
+# there is no holder and audit_summary() does nothing (the audit is AI-only).
+_audit_holder: ContextVar = ContextVar("kx_audit_holder", default=None)
+NOTE_MAX = 140
+SUMMARY_MAX = 300
+_CTRL = re.compile(r"[\x00-\x1f\x7f<>]")
+
+
+def audit_summary(text: str) -> None:
+    """Record what this write changed (plain words; no emails or UUIDs)."""
+    holder = _audit_holder.get()
+    if holder is not None and text:
+        holder["summary"] = text[:SUMMARY_MAX]
+
+
+def sanitize_note(raw: Optional[str]) -> Optional[str]:
+    """X-Korex-Note: the AI's short reason. HTTP headers are ASCII, so non-ASCII
+    text travels percent-encoded (UTF-8) and is decoded here. Control chars and
+    angle brackets stripped, whitespace collapsed, ≤ 140 characters; empty → None."""
+    if not raw:
+        return None
+    from urllib.parse import unquote
+    clean = " ".join(_CTRL.sub(" ", unquote(raw)).split())[:NOTE_MAX].strip()
+    return clean or None
 _hits: dict[int, deque] = defaultdict(deque)
 
 
@@ -93,12 +122,21 @@ def require_scope(scope: str):
         if raw.startswith(API_TOKEN_PREFIX):
             token = _authenticate_token(raw, scope)
             request.state.auth_user_id = token.user_id
-            yield token.user_id
-            if scope.startswith("write:"):  # reached only if the endpoint didn't raise
-                with request_session() as session:
-                    session.add(ApiTokenAudit(token_id=token.id, user_id=token.user_id,
-                                              action=f"{request.method} {request.url.path}", detail=scope))
-                    session.commit()
+            holder = {"summary": None}
+            ctx = _audit_holder.set(holder)
+            try:
+                yield token.user_id
+                if scope.startswith("write:"):  # reached only if the endpoint didn't raise
+                    with request_session() as session:
+                        session.add(ApiTokenAudit(token_id=token.id, user_id=token.user_id,
+                                                  action=f"{request.method} {request.url.path}", detail=scope,
+                                                  summary=holder["summary"], note=sanitize_note(request.headers.get("X-Korex-Note"))))
+                        session.commit()
+            finally:
+                try:
+                    _audit_holder.reset(ctx)
+                except ValueError:
+                    pass
         else:
             # Called directly (not via Depends), so honour test overrides explicitly
             auth_fn = request.app.dependency_overrides.get(get_current_user_id, get_current_user_id)

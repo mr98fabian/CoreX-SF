@@ -14,7 +14,8 @@ from database import request_session
 from models import Account, Transaction, TransactionCreate, MovementLog
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
-from api_tokens import require_scope
+from api_tokens import require_scope, audit_summary
+import audit_text
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -50,6 +51,7 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
     with bypass_fk(session):
         session.commit()
     session.refresh(db_tx)
+    audit_summary(audit_text.transaction_recorded(tx.amount, tx.category, account.name))
     return db_tx
 
 

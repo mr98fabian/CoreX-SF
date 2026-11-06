@@ -17,7 +17,7 @@ export const ACTIVITY_STALE_MS = 45_000;
 
 export interface ActivityTx { id: number; date: string; amount: number; description: string; category: string; account_id: number | null; account_name: string }
 export interface ActivityMove { id: number; title: string; amount: number | string; date_executed: string; status: string }
-export interface ActivityAiEvent { id: number; token_name: string | null; action: string; scope: string; created_at: string }
+export interface ActivityAiEvent { id: number; token_name: string | null; action: string; scope: string; summary?: string | null; note?: string | null; created_at: string }
 
 interface ActivityData { txs: ActivityTx[]; moves: ActivityMove[]; ai: ActivityAiEvent[] }
 

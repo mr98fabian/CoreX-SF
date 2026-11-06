@@ -7,7 +7,10 @@
  * Sources: /api/transactions/all (applied movements) and
  * /api/strategy/executed-logs (plan moves: executed = registrado, verified =
  * confirmado), plus /api/tokens/audit: writes your AI made with a token,
- * shown with an amber edge and the "vía tu IA" mark.
+ * shown with an amber edge and the "vía tu IA" mark. Each AI row says WHAT
+ * changed (the audit summary; older rows fall back to the generic phrase),
+ * identical bursts collapse into one "×N · 19:42–19:44" row, and tapping
+ * opens the full detail in place (action, summary, reason, date, token).
  */
 import { Fragment, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,11 +19,12 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useActivityData } from '@/hooks/useActivityData';
 import { AmberRule, BankHeader, Section, StatePhrase } from '@/components/kx';
 import { localDay } from '@/lib/stage';
+import { groupAiBursts, type Grouped } from '@/lib/activityGroups';
 
 
 type Status = 'registered' | 'applied' | 'confirmed';
 type Kind = 'payment' | 'income' | 'spend' | 'plan' | 'ai';
-interface Entry { key: string; date: string; kind: Kind; status: Status; amount: number; text: string; sub: string; audit: [string, string][] }
+interface Entry { key: string; date: string; kind: Kind; status: Status; amount: number; text: string; sub: string; audit: [string, string][]; ts?: number; label?: string; summary?: string }
 
 const PER_BLOCK = 4; // rule 4
 const dayKey = (d: Date) => localDay(d);
@@ -39,7 +43,7 @@ export default function ActivityPage() {
 
     const load = data.reload;
 
-    const entries: Entry[] = useMemo(() => {
+    const entries: Grouped<Entry>[] = useMemo(() => {
         const out: Entry[] = [];
         for (const t of data.txs) {
             const amt = Math.abs(Number(t.amount));
@@ -69,12 +73,25 @@ export default function ActivityPage() {
                     : method === 'POST' ? (es ? 'agregó una cuenta' : 'added an account')
                         : method === 'DELETE' ? (es ? 'eliminó una cuenta' : 'deleted an account')
                             : (es ? 'corrigió una cuenta' : 'corrected an account');
-            out.push({ key: `a${a.id}`, date: localDay(when), kind: 'ai', status: 'applied', amount: 0,
+            const via = `${es ? 'vía tu IA' : 'via your AI'}${a.token_name ? ` · ${a.token_name}` : ''} · ${when.toLocaleTimeString(es ? 'es-ES' : 'en-US', { hour: 'numeric', minute: '2-digit' })}`;
+            const detail: [string, string][] = [
+                [es ? 'Qué hizo' : 'What it did', what.charAt(0).toUpperCase() + what.slice(1)],
+                ...(a.summary ? [[es ? 'Detalle' : 'Detail', a.summary] as [string, string]] : []),
+                ...(a.note ? [[es ? 'Motivo' : 'Reason', a.note] as [string, string]] : []),
+                [es ? 'Fecha y hora' : 'Date and time', when.toLocaleString(es ? 'es-ES' : 'en-US', { dateStyle: 'full', timeStyle: 'short' })],
+                ['Token', a.token_name ?? `#${a.id}`],
+                [es ? 'Estado' : 'Status', es ? 'Aplicado' : 'Applied'],
+            ];
+            out.push({ key: `a${a.id}`, date: localDay(when), kind: 'ai', status: 'applied', amount: 0, ts: when.getTime(),
                 text: es ? `Tu IA ${what}` : `Your AI ${what}`,
-                sub: `${es ? 'vía tu IA' : 'via your AI'}${a.token_name ? ` · ${a.token_name}` : ''} · ${when.toLocaleTimeString(es ? 'es-ES' : 'en-US', { hour: 'numeric', minute: '2-digit' })}`,
-                audit: [[es ? 'Origen' : 'Source', a.action], [es ? 'Permiso' : 'Scope', a.scope], ['Token', a.token_name ?? `#${a.id}`], [es ? 'Hora' : 'Time', when.toLocaleString(es ? 'es-ES' : 'en-US')]] });
+                // the specific summary when the row has one; older rows keep the generic line
+                sub: a.summary ? `${a.summary} · ${via}` : via,
+                label: a.summary ?? what, summary: a.summary ?? undefined,
+                audit: detail });
         }
-        return out.sort((a, b) => b.date.localeCompare(a.date));
+        // Newest first (AI rows by exact time), then bursts of the same AI action collapse into one row
+        out.sort((a, b) => b.date.localeCompare(a.date) || (b.ts ?? 0) - (a.ts ?? 0));
+        return groupAiBursts(out);
     }, [data, es, formatMoney, formatDateShort]);
 
     const visible = entries.filter((e) => filter === 'all' || e.kind === filter);
@@ -99,11 +116,21 @@ export default function ActivityPage() {
         if (paid.length) parts.push(es ? `${paid.length} ${paid.length === 1 ? 'pago' : 'pagos'} por ${formatMoney(paid.reduce((s, e) => s + e.amount, 0))}`
             : `${paid.length} payment${paid.length === 1 ? '' : 's'} for ${formatMoney(paid.reduce((s, e) => s + e.amount, 0))}`);
         const ai = items.filter((e) => e.kind === 'ai');
-        if (ai.length) parts.push(es ? `${ai.length} ${ai.length === 1 ? 'acción' : 'acciones'} de tu IA` : `${ai.length} AI action${ai.length === 1 ? '' : 's'}`);
+        const aiCount = ai.reduce((n, e) => n + ((e as Grouped<Entry>).group?.length ?? 1), 0);
+        if (ai.length) parts.push(es ? `${aiCount} ${aiCount === 1 ? 'acción' : 'acciones'} de tu IA` : `${aiCount} AI action${aiCount === 1 ? '' : 's'}`);
         if (inc.length) parts.push(es ? `${inc.length} ${inc.length === 1 ? 'ingreso' : 'ingresos'}` : `${inc.length} income`);
         const rest = items.length - paid.length - inc.length - ai.length;
         if (rest) parts.push(es ? `${rest} ${rest === 1 ? 'movimiento más' : 'movimientos más'}` : `${rest} more`);
         return parts.join(' · ');
+    };
+
+    const timeOf = (e: Entry) => (e.ts ? new Date(e.ts).toLocaleTimeString(es ? 'es-ES' : 'en-US', { hour: 'numeric', minute: '2-digit' }) : '');
+    // "Amex Gold · saldo … · ×53 · 19:42–19:44" for a collapsed burst
+    const burstLine = (e: Grouped<Entry>) => {
+        const g = e.group ?? [e];
+        const times = g.map((x) => x.ts ?? 0);
+        const range = `${timeOf({ ...e, ts: Math.min(...times) })}–${timeOf({ ...e, ts: Math.max(...times) })}`;
+        return `${e.summary ? `${e.summary} · ` : ''}×${g.length} · ${range}`;
     };
 
     const CHIP: Record<Status, [string, string]> = {
@@ -166,13 +193,21 @@ export default function ActivityPage() {
                                                 <span className={`mt-[6px] h-2.5 w-2.5 flex-none rounded-full ${DOT[e.kind]}`} aria-hidden="true" />
                                                 <span className="min-w-0 flex-1">
                                                     <span className="block text-[14.5px] font-semibold leading-snug text-kx-ink">{e.text}</span>
-                                                    <span className="mt-0.5 block text-[12.5px] text-kx-ink2">{e.sub}</span>
+                                                    <span className="mt-0.5 block text-[12.5px] text-kx-ink2">{e.group ? burstLine(e) : e.sub}</span>
                                                 </span>
                                                 <span className={`mt-0.5 flex-none rounded-full px-2 py-[3px] text-[10px] font-bold tracking-[.06em] ${CHIP[e.status][1]}`}>{CHIP[e.status][0]}</span>
                                             </button>
                                             {openEntry === e.key && (
                                                 <dl className="kx-tech ml-6 mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-xl bg-kx-raised p-3 text-[11.5px]">
                                                     {e.audit.map(([k, v]) => <Fragment key={k}><dt className="text-kx-ink3">{k}</dt><dd className="text-kx-ink">{v}</dd></Fragment>)}
+                                                    {e.group && (
+                                                        <>
+                                                            <dt className="text-kx-ink3">{es ? 'Veces' : 'Times'}</dt>
+                                                            <dd className="text-kx-ink">
+                                                                {e.group.map((g) => <span key={g.key} className="block">{timeOf(g)}</span>)}
+                                                            </dd>
+                                                        </>
+                                                    )}
                                                 </dl>
                                             )}
                                         </div>

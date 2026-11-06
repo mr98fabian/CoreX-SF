@@ -46,3 +46,17 @@ def test_audit_is_read_only(client):
     assert client.post("/api/tokens/audit", json={}).status_code in (404, 405)
     assert client.delete("/api/tokens/audit").status_code in (404, 405, 422)
     app.dependency_overrides.pop(get_current_user_id, None)
+
+
+def test_audit_returns_summary_and_note(client):
+    from urllib.parse import quote
+    acc = add_account(A, "Amex Gold", "3327.50")
+    tok = make_token(client, A, name="Mijo Vault")
+    client.put(f"/api/accounts/{acc}", headers={**bearer(tok), "X-Korex-Note": quote("Sincronicé el estado de cuenta")},
+               json={"balance": 3440.68})
+    login(A)
+    (row,) = client.get("/api/tokens/audit").json()
+    app.dependency_overrides.pop(get_current_user_id, None)
+    assert row["summary"] == "Amex Gold · saldo $3,327.50 → $3,440.68"
+    assert row["note"] == "Sincronicé el estado de cuenta"
+    assert row["scope"] == "write:accounts" and row["token_name"] == "Mijo Vault"  # compatibility kept
