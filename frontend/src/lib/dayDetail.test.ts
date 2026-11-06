@@ -62,3 +62,11 @@ describe('buildDayDetail', () => {
         expect(day.projected).toBe(35050);
     });
 });
+
+describe('biweekly parity across daylight saving', () => {
+    it('a Friday biweekly paycheck still lands on Fridays in June 2026 (DST), in step with November', () => {
+        const june = Array.from({ length: 30 }, (_, i) => new Date(2026, 5, i + 1)).filter((d) => occursOn(cashflow[0], d));
+        expect(june.map((d) => d.getDate())).toEqual([5, 19]); // 14-day steps back from Nov 6
+        expect(june.every((d) => d.getDay() === 5)).toBe(true);
+    });
+});

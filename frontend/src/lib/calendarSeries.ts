@@ -88,7 +88,11 @@ export interface IncomeItem {
     is_income?: boolean; category?: string; name?: string; amount?: number | string; is_debt_virtual?: boolean;
 }
 
-const BIWEEKLY_EPOCH = new Date(2024, 0, 1); // same biweekly epoch as the backend (_item_triggers)
+// Same biweekly epoch as the backend (_item_triggers): Monday 2024-01-01.
+// Pure calendar days in UTC, so daylight-saving shifts never flip the parity.
+const BIWEEKLY_EPOCH_UTC = Date.UTC(2024, 0, 1);
+const calendarDaysSinceEpoch = (date: Date) =>
+    Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - BIWEEKLY_EPOCH_UTC) / 864e5);
 
 /** Does a recurring cashflow item fall on `date`? Mirrors backend cashflow._item_triggers
  *  (day_of_week: 0 = Monday). */
@@ -101,7 +105,7 @@ export function occursOn(it: IncomeItem, date: Date): boolean {
         case 'semi_monthly': return d === Math.min(it.date_specific_1 || 15, n) || d === Math.min(it.date_specific_2 || 30, n);
         case 'weekly': return mondayFirst === (it.day_of_week ?? 4);
         case 'biweekly': return mondayFirst === (it.day_of_week ?? 4)
-            && Math.floor((date.getTime() - BIWEEKLY_EPOCH.getTime()) / (7 * 864e5)) % 2 === 0;
+            && Math.floor(calendarDaysSinceEpoch(date) / 7) % 2 === 0;
         case 'annually': return date.getMonth() + 1 === (it.month_of_year || 1) && d === (it.day_of_month || 1);
         default: return false;
     }
