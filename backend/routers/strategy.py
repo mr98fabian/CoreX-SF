@@ -9,11 +9,12 @@ from datetime import date
 from typing import List
 
 from database import engine
+from database import request_session
 from models import Account, CashflowItem, Transaction, MovementLog, UserSettings
 from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
-    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus,
+    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, funding_accounts,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/api", tags=["strategy"])
 
 @router.get("/peace-shield")
 async def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         shield_target = get_shield_target(session, user_id)
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         return get_peace_shield_status(Decimal(str(get_liquid_cash(accounts))), shield_target)
@@ -49,7 +50,7 @@ async def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
 @router.put("/user/me/shield")
 def update_shield_target(data: dict, user_id: str = Depends(get_current_user_id)):
     target = Decimal(str(data.get("target", DEFAULT_PEACE_SHIELD)))
-    with Session(engine) as session:
+    with request_session() as session:
         settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
         if settings:
             settings.shield_target = target
@@ -69,7 +70,7 @@ def update_attack_percentage(data: dict, user_id: str = Depends(get_current_user
     pct = Decimal(str(data.get("percentage", DEFAULT_ATTACK_PERCENTAGE)))
     if pct < 0 or pct > 100:
         raise HTTPException(status_code=400, detail="percentage must be between 0 and 100.")
-    with Session(engine) as session:
+    with request_session() as session:
         settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
         if settings:
             settings.attack_percentage = pct
@@ -88,7 +89,7 @@ async def get_velocity_projections(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         return get_projections(debts, Decimal(str(get_liquid_cash(accounts))),
@@ -101,7 +102,7 @@ async def get_freedom_path(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         velocity = monthly_attack(get_cashflow_surplus(session, user_id, debts),
@@ -115,7 +116,7 @@ async def get_simulation(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         base = monthly_attack(get_cashflow_surplus(session, user_id, debts),
@@ -130,14 +131,13 @@ async def get_tactical_gps(
     user_id: str = Depends(require_scope("read:plan")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         cf_tactical = [CashflowTactical(name=cf.name, amount=cf.amount, day_of_month=cf.day_of_month, category=cf.category) for cf in cashflows]
 
-        asset_accounts = sorted([acc for acc in accounts if acc.type != "debt" and acc.balance > 0],
-                                key=lambda x: x.balance, reverse=True)
+        asset_accounts = funding_accounts(accounts)
         funding_name = asset_accounts[0].name if asset_accounts else "Checking"
         shield_target = get_shield_target(session, user_id)
 
@@ -174,7 +174,7 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
     import logging
     logger = logging.getLogger("korex.execute")
 
-    with Session(engine) as session:
+    with request_session() as session:
         amount = Decimal(str(data.amount))
         all_accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
 
@@ -227,7 +227,7 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
 
 @router.get("/strategy/executed-logs")
 async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         return session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
 
 
@@ -241,7 +241,7 @@ async def simulate_purchase_cost(
 ):
     if req.amount <= 0:
         raise HTTPException(status_code=400, detail="Amount must be positive.")
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         extra = (Decimal(str(get_liquid_cash(accounts))) * get_attack_percentage(session, user_id) / Decimal('100')).quantize(Decimal('0.01'))
@@ -252,7 +252,7 @@ async def simulate_purchase_cost(
 
 @router.get("/transactions/classified")
 async def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         txs = session.exec(select(Transaction).where(Transaction.user_id == user_id)
                           .order_by(Transaction.date.desc()).limit(limit)).all()
         return classify_batch([{"id": tx.id, "account_id": tx.account_id, "amount": float(tx.amount),
@@ -261,7 +261,7 @@ async def get_classified_transactions(limit: int = 50, user_id: str = Depends(ge
 
 @router.get("/cashflow/summary")
 async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         txs = session.exec(select(Transaction).where(Transaction.user_id == user_id)
                           .order_by(Transaction.date.desc()).limit(100)).all()
         return get_cashflow_summary(classify_batch(
@@ -276,7 +276,7 @@ async def get_strategy_command_center(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         shield_target = get_shield_target(session, user_id)
         debt_accounts = accounts_to_active_debt_objects(accounts, plan_limit)
@@ -385,8 +385,7 @@ async def get_strategy_command_center(
         # Risky Opportunity
         risky_opportunity = None
         if morning_briefing is None:
-            asset_accounts = sorted([acc for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0],
-                                    key=lambda x: x.balance, reverse=True)
+            asset_accounts = funding_accounts(accounts)
             risky_opportunity = calculate_risky_opportunity(liquid_cash, shield_target, debt_accounts,
                                                             asset_accounts[0].name if asset_accounts else "Checking")
 
@@ -402,6 +401,6 @@ async def get_strategy_command_center(
             "hybrid_kill_analysis": get_hybrid_kill_target(debt_accounts, attack_amount),
             "arbitrage_alerts": detect_interest_rate_arbitrage(
                 [{"name": acc.name, "balance": float(acc.balance), "apy": float(acc.apy) if acc.apy else 0.5}
-                 for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0], debt_accounts),
+                 for acc in funding_accounts(accounts)], debt_accounts),
             "risky_opportunity": risky_opportunity,
         }
