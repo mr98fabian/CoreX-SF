@@ -155,8 +155,10 @@ const SEC: Record<Tone, { box: string; title: string }> = {
     amber: { box: 'bg-[rgba(245,158,11,.07)] border-[rgba(245,158,11,.4)]', title: 'text-kx-amber-soft' },
 };
 
-export function Section({ tone = 'neutral', title, children, className, action }: {
+export function Section({ tone = 'neutral', title, children, className, action, bare = false }: {
     tone?: Tone; title: ReactNode; children: ReactNode; className?: string; action?: ReactNode;
+    /** children already are the panel (calendar grid, stage ledger): no second frame */
+    bare?: boolean;
 }) {
     return (
         // Continuous language (calendar family): the title sits flush above ONE
@@ -166,9 +168,11 @@ export function Section({ tone = 'neutral', title, children, className, action }
                 <h2 className={cx('text-[11px] font-bold uppercase tracking-[.16em]', SEC[tone].title)}>{title}</h2>
                 {action}
             </div>
-            <div className={cx('kx-rows rounded-[var(--kx-radius-card)] border px-4 py-3.5', SEC[tone].box)}>
-                {children}
-            </div>
+            {bare ? children : (
+                <div className={cx('kx-rows rounded-[var(--kx-radius-card)] border px-4 py-3.5', SEC[tone].box)}>
+                    {children}
+                </div>
+            )}
         </section>
     );
 }
