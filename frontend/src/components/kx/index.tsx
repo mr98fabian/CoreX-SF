@@ -159,12 +159,16 @@ export function Section({ tone = 'neutral', title, children, className, action }
     tone?: Tone; title: ReactNode; children: ReactNode; className?: string; action?: ReactNode;
 }) {
     return (
-        <section className={cx('rounded-[var(--kx-radius-card)] border p-[18px]', SEC[tone].box, className)}>
-            <div className="mb-3.5 flex items-center justify-between gap-2">
+        // Continuous language (calendar family): the title sits flush above ONE
+        // panel; the panel is the only frame — no box-in-box.
+        <section className={className}>
+            <div className="mb-2 flex items-center justify-between gap-2 px-1">
                 <h2 className={cx('text-[11px] font-bold uppercase tracking-[.16em]', SEC[tone].title)}>{title}</h2>
                 {action}
             </div>
-            {children}
+            <div className={cx('kx-rows rounded-[var(--kx-radius-card)] border px-4 py-3.5', SEC[tone].box)}>
+                {children}
+            </div>
         </section>
     );
 }
@@ -176,14 +180,14 @@ export function LedgerRow({ title, sub, amount, stage, onClick, children }: {
     const band = stage && stage !== 'support' ? BAR[stage] : 'bg-transparent';
     const Tag = onClick ? 'button' : 'div';
     return (
-        <Tag onClick={onClick} className={cx('relative block w-full border-t border-[var(--kx-line-soft)] py-3 pl-3 text-left first:border-t-0 first:pt-0.5',
-            onClick && 'cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber')}>
+        <Tag onClick={onClick} className={cx('kx-row relative block w-full border-t border-[var(--kx-line-soft)] py-3 pl-3 text-left first:border-t-0 first:pt-0.5',
+            onClick && 'kx-press cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber')}>
             <span aria-hidden="true" className={cx('kx-stage-tint absolute bottom-3 left-0 top-3 w-[3px] rounded-full first:top-0.5', band)} />
             <span className="flex items-baseline justify-between gap-2.5">
                 <span className="min-w-0 truncate text-[15px] font-semibold text-kx-ink">
                     {title}{sub && <span className="ml-1.5 text-[12.5px] font-normal text-kx-ink3">{sub}</span>}
                 </span>
-                {amount != null && <span className="kx-num whitespace-nowrap text-base font-semibold text-kx-ink">{amount}</span>}
+                {amount != null && <span className="kx-num font-editorial whitespace-nowrap text-[17px] text-kx-ink">{amount}</span>}
             </span>
             {children}
         </Tag>

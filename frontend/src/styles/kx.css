@@ -148,6 +148,21 @@
   transform: scale(0.97);
 }
 
+/* Rows of a continuous panel breathe in on mount: short stagger, transform +
+   opacity only. Direct children of .kx-rows (or any .kx-row) take part. */
+@keyframes kx-row-in {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.kx-rows > *, .kx-row {
+  animation: kx-row-in var(--kx-dur-base) var(--kx-ease-out) backwards;
+}
+.kx-rows > :nth-child(2) { animation-delay: 40ms; }
+.kx-rows > :nth-child(3) { animation-delay: 80ms; }
+.kx-rows > :nth-child(4) { animation-delay: 120ms; }
+.kx-rows > :nth-child(5) { animation-delay: 160ms; }
+.kx-rows > :nth-child(n+6) { animation-delay: 200ms; }
+
 /* Calendar cells blend from the outgoing month's tone to the incoming one */
 .kx-cal-cell {
   transition: background-color var(--kx-dur-slow) var(--kx-ease-out), color var(--kx-dur-slow) var(--kx-ease-out);
@@ -155,6 +170,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .kx-stripe-light { display: none; }
+  .kx-rows > *, .kx-row { animation: none; }
   .kx-scope *,
   .kx-scope *::before,
   .kx-scope *::after {
