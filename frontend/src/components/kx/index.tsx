@@ -5,7 +5,7 @@
  */
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Wallet, Activity, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { Home, Wallet, Repeat, Activity, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
 import { STAGE_LABEL, type Stage } from '@/lib/stage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { prefersReducedMotion } from '@/lib/motion';
@@ -178,8 +178,8 @@ export function Section({ tone = 'neutral', title, children, className, action, 
 }
 
 // ── Ledger row (fila-libro): name, tabular amount, optional stage band ──
-export function LedgerRow({ title, sub, amount, stage, onClick, children }: {
-    title: ReactNode; sub?: ReactNode; amount?: ReactNode; stage?: Stage; onClick?: () => void; children?: ReactNode;
+export function LedgerRow({ title, sub, amount, stage, onClick, children, logo }: {
+    title: ReactNode; sub?: ReactNode; amount?: ReactNode; stage?: Stage; onClick?: () => void; children?: ReactNode; logo?: ReactNode;
 }) {
     const band = stage && stage !== 'support' ? BAR[stage] : 'bg-transparent';
     const Tag = onClick ? 'button' : 'div';
@@ -187,9 +187,12 @@ export function LedgerRow({ title, sub, amount, stage, onClick, children }: {
         <Tag onClick={onClick} className={cx('kx-row relative block w-full border-t border-[var(--kx-line-soft)] py-3 pl-3 text-left first:border-t-0 first:pt-0.5',
             onClick && 'kx-press cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber')}>
             <span aria-hidden="true" className={cx('kx-stage-tint absolute bottom-3 left-0 top-3 w-[3px] rounded-full first:top-0.5', band)} />
-            <span className="flex items-baseline justify-between gap-2.5">
-                <span className="min-w-0 truncate text-[15px] font-semibold text-kx-ink">
-                    {title}{sub && <span className="ml-1.5 text-[12.5px] font-normal text-kx-ink3">{sub}</span>}
+            <span className={cx('flex justify-between gap-2.5', logo ? 'items-center' : 'items-baseline')}>
+                <span className="flex min-w-0 items-center gap-2.5">
+                    {logo}
+                    <span className="min-w-0 truncate text-[15px] font-semibold text-kx-ink">
+                        {title}{sub && <span className="ml-1.5 text-[12.5px] font-normal text-kx-ink3">{sub}</span>}
+                    </span>
                 </span>
                 {amount != null && <span className="kx-num font-editorial whitespace-nowrap text-[17px] text-kx-ink">{amount}</span>}
             </span>
@@ -210,13 +213,14 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
     );
 }
 
-// ── Bottom tab bar: Inicio · Cuentas · Actividad · Ajustes ──
+// ── Bottom tab bar: Inicio · Cuentas · Suscripciones · Actividad · Ajustes ──
 export function TabBar() {
     const { language } = useLanguage();
     const es = language === 'es';
     const tabs = [
         { to: '/dashboard', end: true, icon: Home, label: es ? 'Inicio' : 'Home' },
         { to: '/dashboard/accounts', icon: Wallet, label: es ? 'Cuentas' : 'Accounts' },
+        { to: '/dashboard/subscriptions', icon: Repeat, label: es ? 'Suscripciones' : 'Subscriptions' },
         { to: '/dashboard/activity', icon: Activity, label: es ? 'Actividad' : 'Activity' },
         { to: '/dashboard/settings', icon: SettingsIcon, label: es ? 'Ajustes' : 'Settings' },
     ];

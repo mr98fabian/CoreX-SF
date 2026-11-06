@@ -15,6 +15,7 @@ from helpers import bypass_fk
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
 import audit_text
+from logos import clean_logo
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -34,6 +35,7 @@ async def create_account(account: Account, user_id: str = Depends(require_scope(
     with request_session() as session:
         account.user_id = user_id
         account.id = None  # never let the client pick (or collide with) a primary key
+        account.logo_url = clean_logo(account.logo_url)
         if account.type == "debt":
             if account.min_payment is None or account.min_payment == 0:
                 account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
@@ -61,6 +63,8 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
         for field, value in data.model_dump(exclude_unset=True).items():
             if field in DECIMAL_FIELDS and value is not None:
                 value = Decimal(str(value))
+            if field == "logo_url":
+                value = clean_logo(value)
             setattr(account, field, value)
 
         if account.type == "debt" and (account.min_payment is None or account.min_payment == 0):

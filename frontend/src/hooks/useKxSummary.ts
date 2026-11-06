@@ -21,6 +21,7 @@ import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type Income
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 
 export interface KxAccount {
+    logo_url?: string | null;
     id: number;
     name: string;
     type: string;

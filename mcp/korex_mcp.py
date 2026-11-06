@@ -170,5 +170,34 @@ def korex_sync_status() -> dict:
     return _call("GET", "/api/sync/status")
 
 
+
+@mcp.tool()
+def korex_list_subscriptions() -> dict:
+    """The user's recurring charges (Netflix, gym…) ordered by next charge, cancelled ones last ("Ya no pagas"),
+    plus monthly_total and annual_total of the ACTIVE ones (annual/12, weekly×52/12; estimates). Scope: read:accounts."""
+    return _call("GET", "/api/subscriptions")
+
+
+@mcp.tool()
+def korex_upsert_subscription(name: str, amount: Optional[float] = None, frequency: Optional[str] = None,
+                              next_charge_date: Optional[str] = None, account: Optional[str] = None,
+                              logo_url: Optional[str] = None, status: Optional[str] = None) -> dict:
+    """Create or update a recurring charge, matched by name (case-insensitive). frequency: monthly | annual | weekly.
+    next_charge_date: YYYY-MM-DD. `account`: the card/account that pays it (id or name). logo_url: the merchant's
+    official logo from Plaid (`logo_url`, https) — never invent one. status: active | cancelled (cancel keeps history).
+    Creating requires amount. Scope: write:accounts."""
+    existing = [x for x in _call("GET", "/api/subscriptions")["items"] if x["name"].lower() == name.strip().lower()]
+    body: dict = {k: v for k, v in {"amount": amount, "frequency": frequency, "next_charge_date": next_charge_date,
+                                    "logo_url": logo_url, "status": status}.items() if v is not None}
+    if account:
+        body["account_id"] = _resolve_account(account)["id"]
+    if existing:
+        return {"updated": True, "subscription": _call("PATCH", f"/api/subscriptions/{existing[0]['id']}", body)}
+    if amount is None:
+        raise KorexError("amount is required to create a subscription")
+    body.pop("status", None)
+    return {"created": True, "subscription": _call("POST", "/api/subscriptions", {"name": name.strip(), **body})}
+
+
 if __name__ == "__main__":
     mcp.run()

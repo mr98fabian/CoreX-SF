@@ -20,6 +20,7 @@ import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, S
 import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { findFundingAccount } from '@/lib/funding';
+import { AccountLogo } from '@/components/AccountLogo';
 
 const MAX_PER_SECTION = 4; // rule 4: sections of 3–4 items; longer groups split into named parts
 
@@ -139,7 +140,7 @@ export default function AccountsStagePage() {
                         <Section key={`${stage}-${pi}`} tone={stage}
                             title={parts.length > 1 ? `${titles[stage]} · ${pi + 1}/${parts.length}` : titles[stage]}>
                             {part.map((a) => (
-                                <LedgerRow key={a.id} title={a.name} amount={formatMoney(a.bal)} stage={stage} onClick={() => openDetail(a)}>
+                                <LedgerRow key={a.id} title={a.name} logo={<AccountLogo name={a.name} src={a.logo_url} />} amount={formatMoney(a.bal)} stage={stage} onClick={() => openDetail(a)}>
                                     {stage !== 'support' && (
                                         <>
                                             <span className="mt-1.5 flex items-center gap-2">

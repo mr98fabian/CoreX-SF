@@ -19,6 +19,7 @@ export interface Account {
     loan_term_months?: number;
     remaining_months?: number;
     credit_limit?: number;
+    logo_url?: string | null;
 }
 
 /** Raw API shape — numeric fields may arrive as strings (Decimal serialization) */
@@ -72,4 +73,11 @@ export function useDeleteAccount() {
             queryClient.invalidateQueries({ queryKey: ['dashboard'] });
         },
     });
+}
+
+/** name (lower-case) → official logo, for screens that only know a debt by name (attack route, day sheet). */
+export function useAccountLogos(): (name: string) => string | null {
+    const { data } = useAccounts();
+    const map = new Map((data ?? []).map((a) => [a.name.trim().toLowerCase(), a.logo_url ?? null]));
+    return (name: string) => map.get(name.trim().toLowerCase()) ?? null;
 }

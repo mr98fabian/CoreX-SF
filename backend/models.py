@@ -2,6 +2,7 @@ from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
 from sqlmodel import Field, SQLModel, Relationship, Column, JSON
+from sqlalchemy import Text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
@@ -39,6 +40,7 @@ class Account(SQLModel, table=True):
     # Credit Card / Revolving Specific
     credit_limit: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2, description="Credit limit for revolving accounts (credit cards, HELOCs)")
     apy: Optional[Decimal] = Field(default=None, max_digits=5, decimal_places=2, description="Annual Percentage Yield for savings/checking accounts")
+    logo_url: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))  # official logo (Plaid): https or data:image base64
     
     transactions: List["Transaction"] = Relationship(back_populates="account")
 
@@ -159,3 +161,20 @@ class SyncState(SQLModel, table=True):
     user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
     last_sync_at: Optional[datetime] = Field(default=None)   # UTC, naive
     last_source: Optional[str] = Field(default=None, max_length=40)
+
+
+class RecurringSubscription(SQLModel, table=True):
+    """A recurring charge the user pays (Netflix, gym…). Not to be confused with
+    `Subscription` (the user's KoreX plan). Cancelling is soft (status), so the
+    history shows what the user no longer pays."""
+    __tablename__ = "recurring_subscriptions"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    name: str = Field(max_length=80)
+    amount: Decimal = Field(max_digits=14, decimal_places=2)
+    frequency: str = Field(default="monthly", max_length=10)  # monthly | annual | weekly
+    next_charge_date: Optional[str] = Field(default=None, max_length=10)  # YYYY-MM-DD
+    account_id: Optional[int] = Field(default=None)
+    logo_url: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    status: str = Field(default="active", max_length=10)  # active | cancelled
+    created_at: datetime = Field(default_factory=datetime.utcnow)
