@@ -82,23 +82,78 @@ export function debtColor(debt: number, maxDebt: number): { background: string; 
     return { background: `rgba(${r},${g},${b},${(0.3 + 0.62 * t).toFixed(2)})`, color: '#F8FAFC', fontWeight: 500 };
 }
 
-export interface IncomeItem { frequency: string; day_of_month?: number | null; day_of_week?: number | null; is_income?: boolean; category?: string }
+export interface IncomeItem {
+    frequency: string; day_of_month?: number | null; day_of_week?: number | null;
+    date_specific_1?: number | null; date_specific_2?: number | null; month_of_year?: number | null;
+    is_income?: boolean; category?: string; name?: string; amount?: number | string; is_debt_virtual?: boolean;
+}
 
-/** Paydays in a month from the user's income cashflow (day_of_week: 0 = Monday). */
+const BIWEEKLY_EPOCH = new Date(2024, 0, 1); // same biweekly epoch as the backend (_item_triggers)
+
+/** Does a recurring cashflow item fall on `date`? Mirrors backend cashflow._item_triggers
+ *  (day_of_week: 0 = Monday). */
+export function occursOn(it: IncomeItem, date: Date): boolean {
+    const d = date.getDate();
+    const n = daysIn(date.getFullYear(), date.getMonth());
+    const mondayFirst = (date.getDay() + 6) % 7;
+    switch (it.frequency) {
+        case 'monthly': return d === Math.min(it.day_of_month || 1, n);
+        case 'semi_monthly': return d === Math.min(it.date_specific_1 || 15, n) || d === Math.min(it.date_specific_2 || 30, n);
+        case 'weekly': return mondayFirst === (it.day_of_week ?? 4);
+        case 'biweekly': return mondayFirst === (it.day_of_week ?? 4)
+            && Math.floor((date.getTime() - BIWEEKLY_EPOCH.getTime()) / (7 * 864e5)) % 2 === 0;
+        case 'annually': return date.getMonth() + 1 === (it.month_of_year || 1) && d === (it.day_of_month || 1);
+        default: return false;
+    }
+}
+
+const isIncome = (it: IncomeItem) => !!(it.is_income || it.category === 'income');
+
+/** Paydays in a month from the user's income cashflow. */
 export function paydaysIn(year: number, month: number, income: IncomeItem[]): Set<number> {
     const days = new Set<number>();
-    const n = daysIn(year, month);
-    const epoch = new Date(2024, 0, 1); // same biweekly epoch as the backend
     for (const it of income) {
-        if (!(it.is_income || it.category === 'income')) continue;
-        for (let d = 1; d <= n; d++) {
-            const date = new Date(year, month, d);
-            const mondayFirst = (date.getDay() + 6) % 7;
-            if (it.frequency === 'monthly' && d === Math.min(it.day_of_month || 1, n)) days.add(d);
-            if (it.frequency === 'weekly' && mondayFirst === (it.day_of_week ?? 4)) days.add(d);
-            if (it.frequency === 'biweekly' && mondayFirst === (it.day_of_week ?? 4)
-                && Math.floor((date.getTime() - epoch.getTime()) / (7 * 864e5)) % 2 === 0) days.add(d);
-        }
+        if (!isIncome(it)) continue;
+        for (let d = 1; d <= daysIn(year, month); d++) if (occursOn(it, new Date(year, month, d))) days.add(d);
     }
     return days;
+}
+
+// ── Day detail (the popup when you tap a day) ────────────────
+
+export interface DayLine { name: string; amount: number }
+export interface DayCut { name: string; balance: number }
+export interface DayDebt { name: string; type: string; balance: number | string; min_payment: number | string; due_day?: number | null; closing_day?: number | null }
+
+export interface DayDetail {
+    date: Date;
+    projected: number;      // interpolated projection (label it "Proyección")
+    incoming: DayLine[];    // COBRAS: income that lands that day
+    expenses: DayLine[];    // TE COBRAN: bills that day
+    minimums: DayLine[];    // TE COBRAN: minimum payments due that day
+    cuts: DayCut[];         // TE COBRAN: cards that close that day (target: report $0)
+    totalIn: number;        // = Σ incoming
+    totalOut: number;       // = Σ expenses + Σ minimums (a cut is a target, not a charge)
+}
+
+const num = (v: unknown) => Number(v) || 0;
+const dayMatches = (day: number | null | undefined, date: Date) =>
+    !!day && date.getDate() === Math.min(day, daysIn(date.getFullYear(), date.getMonth()));
+
+/** Everything that happens on one day, from the same summary the screens use. */
+export function buildDayDetail(date: Date, months: CalendarMonth[], cashflow: IncomeItem[], debts: DayDebt[]): DayDetail {
+    const mo = months.find((m) => m.year === date.getFullYear() && m.month === date.getMonth());
+    const real = cashflow.filter((it) => !it.is_debt_virtual); // virtual debt rows are the minimums below
+    const incoming = real.filter((it) => isIncome(it) && occursOn(it, date)).map((it) => ({ name: it.name ?? '', amount: num(it.amount) }));
+    const expenses = real.filter((it) => !isIncome(it) && occursOn(it, date)).map((it) => ({ name: it.name ?? '', amount: num(it.amount) }));
+    const open = debts.filter((a) => a.type === 'debt' && num(a.balance) > 0);
+    const minimums = open.filter((a) => dayMatches(a.due_day, date) && num(a.min_payment) > 0)
+        .map((a) => ({ name: a.name, amount: num(a.min_payment) }));
+    const cuts = open.filter((a) => dayMatches(a.closing_day, date)).map((a) => ({ name: a.name, balance: num(a.balance) }));
+    const sum = (xs: DayLine[]) => Math.round(xs.reduce((s, x) => s + x.amount, 0) * 100) / 100;
+    return {
+        date, projected: mo ? debtOn(mo, date.getDate()) : 0,
+        incoming, expenses, minimums, cuts,
+        totalIn: sum(incoming), totalOut: sum([...expenses, ...minimums]),
+    };
 }
