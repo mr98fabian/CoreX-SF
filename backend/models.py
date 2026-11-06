@@ -147,3 +147,13 @@ class ApiTokenAudit(SQLModel, table=True):
     summary: Optional[str] = Field(default=None)  # what changed, in plain words (set by the handler)
     note: Optional[str] = Field(default=None, max_length=140)  # the AI's "why" (X-Korex-Note header)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class SyncState(SQLModel, table=True):
+    """When the user's bank data was last synced (one row per user). Written only
+    by POST /api/sync/mark; GET /api/sync/status never invents a time."""
+    __tablename__ = "sync_state"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
+    last_sync_at: Optional[datetime] = Field(default=None)   # UTC, naive
+    last_source: Optional[str] = Field(default=None, max_length=40)

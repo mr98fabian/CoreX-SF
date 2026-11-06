@@ -7,7 +7,8 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut } from 'lucide-react';
+import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -17,6 +18,33 @@ import { AmberRule, BankHeader, Section } from '@/components/kx';
 import { ConnectAI } from '@/components/ConnectAI';
 
 interface Status { plan: string; status: string; current_period_end: string | null }
+interface SyncStatus { cadence: { min: number; max: number }; windows: { label: string; time: string }[]; last_sync_at: string | null }
+
+/** Sincronización: cadence + last sync, straight from GET /api/sync/status (never guessed here). */
+function SyncRow({ es }: { es: boolean }) {
+    const { data, isError } = useQuery({
+        queryKey: ['sync-status'],
+        queryFn: () => apiFetch<SyncStatus>('/api/sync/status'),
+        staleTime: 45_000,
+    });
+    const times = data?.windows.map((w) => w.time).join(es ? ' y ' : ' and ');
+    const cadence = data ? (es ? `De ${data.cadence.min} a ${data.cadence.max} veces al día · ${times}` : `${data.cadence.min} to ${data.cadence.max} times a day · ${times}`) : '';
+    const last = data?.last_sync_at
+        ? new Date(data.last_sync_at).toLocaleString(es ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        : null;
+    return (
+        <div className="flex items-center gap-3 border-t border-[var(--kx-line-soft)] py-3">
+            <span className="flex w-6 flex-none items-center justify-center"><RefreshCw className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} /></span>
+            <span className="min-w-0 flex-1">
+                <span className="block text-[14.5px] font-semibold text-kx-ink">{es ? 'Sincronización' : 'Sync'}</span>
+                <span className="block truncate text-xs text-kx-ink2">
+                    {isError ? (es ? 'No se pudo consultar' : 'Could not load') : data ? cadence : (es ? 'Cargando…' : 'Loading…')}
+                </span>
+            </span>
+            {data && <span className="kx-num flex-none text-[13px] text-kx-ink2">{last ?? (es ? 'Aún sin sync' : 'Not yet')}</span>}
+        </div>
+    );
+}
 
 function Row({ to, icon: Icon, title, sub, value }: { to: string; icon: typeof User; title: string; sub?: string; value?: string }) {
     return (
@@ -95,6 +123,7 @@ export default function SettingsHome() {
                             <span className="block text-xs text-kx-ink2">{es ? 'Tus datos solo los ves tú (y tu IA, si la conectas).' : 'Only you see your data (and your AI, if you connect it).'}</span>
                         </span>
                     </div>
+                    <SyncRow es={es} />
                     <Row to={advanced('data')} icon={CreditCard} title={es ? 'Mis datos' : 'My data'} sub={es ? 'Exportar o reiniciar' : 'Export or reset'} />
                     <button onClick={() => signOut()} className="kx-press mt-1 flex w-full items-center gap-3 border-t border-[var(--kx-line-soft)] pt-3 text-left text-[14.5px] font-semibold text-kx-debt">
                         <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />{es ? 'Cerrar sesión' : 'Sign out'}
