@@ -4,10 +4,8 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { apiFetch } from '@/lib/api';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { AmberRule, BankHeader, Section } from '@/components/kx';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import UpgradeModal from '@/components/UpgradeModal';
 import { WidgetHelp } from '@/components/WidgetHelp';
@@ -31,7 +29,6 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-    ListChecks,
     ChevronLeft,
     ChevronRight,
     Zap,
@@ -40,8 +37,6 @@ import {
     Clock,
     CheckCircle2,
     Loader2,
-    Calendar,
-    History,
     Play,
     TrendingDown,
     Timer,
@@ -112,33 +107,23 @@ interface TacticalGPSResponse {
 
 /** Color & icon mapping by movement type */
 const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode; labelKey: string }> = {
-    attack: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeAttack' },
-    shield: { bg: 'bg-sky-500/10', text: 'text-sky-400', border: 'border-sky-500/30', icon: <Shield size={14} />, labelKey: 'actionPlan.badgeShield' },
-    min_payment: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.badgeMinPayment' },
-    income: { bg: 'bg-violet-500/10', text: 'text-violet-400', border: 'border-violet-500/30', icon: <DollarSign size={14} />, labelKey: 'actionPlan.badgeIncome' },
-    expense: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/30', icon: <ArrowRightLeft size={14} />, labelKey: 'actionPlan.badgeExpense' },
-    float_kill: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', border: 'border-cyan-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeFloatKill' },
-    hybrid_kill: { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30', icon: <Zap size={14} />, labelKey: 'actionPlan.badgeHybridKill' },
-    velocity_chunk: { bg: 'bg-purple-500/10', text: 'text-purple-400', border: 'border-purple-500/30', icon: <Zap size={14} className="fill-purple-400" />, labelKey: 'actionPlan.badgeVelocityChunk' },
+    // Continuous language: color only where it already means something —
+    // amber = an attack (action), payday blue = income, debt rose = expense; the rest stay ink.
+    attack: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeAttack' },
+    shield: { bg: 'bg-kx-ink3', text: 'text-kx-ink2', border: 'border-kx-line', icon: <Shield size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeShield' },
+    min_payment: { bg: 'bg-kx-ink3', text: 'text-kx-ink2', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeMinPayment' },
+    income: { bg: 'bg-kx-pay', text: 'text-kx-pay', border: 'border-kx-line', icon: <DollarSign size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeIncome' },
+    expense: { bg: 'bg-kx-debt', text: 'text-kx-debt', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeExpense' },
+    float_kill: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeFloatKill' },
+    hybrid_kill: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeHybridKill' },
+    velocity_chunk: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeVelocityChunk' },
 };
 
 const getTypeStyle = (type: string) =>
     TYPE_STYLES[type] ?? TYPE_STYLES['expense'];
 
 /** Category color mapping for transaction badges */
-const getCategoryColor = (category: string): string => {
-    const lower = category.toLowerCase();
-    if (lower.includes('income') || lower.includes('salary') || lower.includes('deposit')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-    if (lower.includes('food') || lower.includes('dining') || lower.includes('restaurant')) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300';
-    if (lower.includes('transport') || lower.includes('auto') || lower.includes('gas')) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300';
-    if (lower.includes('entertainment') || lower.includes('streaming')) return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300';
-    if (lower.includes('shopping') || lower.includes('retail')) return 'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300';
-    if (lower.includes('util') || lower.includes('bill') || lower.includes('electric')) return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300';
-    if (lower.includes('health') || lower.includes('medical')) return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
-    if (lower.includes('housing') || lower.includes('rent') || lower.includes('mortgage')) return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300';
-    if (lower.includes('payment') || lower.includes('velocity') || lower.includes('attack')) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300';
-    return 'bg-gray-100 text-slate-700 dark:bg-neutral-800/60 dark:text-gray-300';
-};
+const getCategoryColor = (): string => 'bg-transparent border border-kx-line text-kx-ink2';
 
 // ═══════════════════════════════════════════════════════════════
 // ACTION PLAN PAGE
@@ -421,10 +406,10 @@ export default function ActionPlanPage() {
     // ── Loading State ────────────────────────────────────────
     if (isLoading) {
         return (
-            <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-                <div className="text-xl font-mono text-emerald-400 animate-pulse flex flex-col items-center gap-4">
-                    <div className="h-12 w-12 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 animate-spin" />
-                    {t('actionPlan.loading')}
+            <div className="kx-scope -m-4 min-h-full md:-m-8">
+                <div className="mx-auto max-w-5xl space-y-4 px-5 pt-6" aria-busy="true">
+                    <p className="text-sm text-kx-ink2">{t('actionPlan.loading')}</p>
+                    <div className="h-48 animate-pulse rounded-[var(--kx-radius-card)] bg-kx-surface" />
                 </div>
             </div>
         );
@@ -434,7 +419,8 @@ export default function ActionPlanPage() {
 
     return (
         <>
-            <div className="space-y-8">
+            <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+            <div className="mx-auto max-w-5xl space-y-6 px-5 pt-6">
                 {/* ────── CONFIRMATION DIALOG ────── */}
                 <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
                     <AlertDialogContent className="bg-white dark:bg-black border-gray-200 dark:border-white/10 max-w-md">
@@ -484,141 +470,94 @@ export default function ActionPlanPage() {
                 </AlertDialog>
 
                 {/* ────── HEADER ────── */}
+                {/* same order as before: title, then its line */}
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent">
-                        {t('actionPlan.title')}
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {t('actionPlan.battlePlan')}
-                    </p>
+                    <BankHeader title={t('actionPlan.title')} />
+                    <p className="mt-1.5 text-[13.5px] text-kx-ink2">{t('actionPlan.battlePlan')}</p>
                 </div>
+                <AmberRule />
 
-                {/* ────── FREEDOM DATES BANNER ────── */}
+                {/* ────── FREEDOM DATES — one ledger, the dates are the heroes ────── */}
                 {freedomDateVelocity && freedomDateStandard && (
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 p-3 rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-amber-950/40">
-                        {/* WITH KoreX */}
-                        <div className="flex-1 flex items-center gap-2">
-                            <Zap size={16} className="text-emerald-400 shrink-0" />
-                            <div>
-                                <p className="text-[10px] uppercase tracking-wider text-emerald-500/70 font-medium">{t('actionPlan.withKorex')}</p>
-                                <p className="text-sm font-bold text-emerald-400">{formatFreedomDate(freedomDateVelocity)}</p>
-                            </div>
+                    <div className="kx-rows overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface">
+                        <div className="relative flex items-baseline justify-between gap-3 px-4 py-3">
+                            <span aria-hidden="true" className="absolute bottom-3 left-0 top-3 w-[3px] rounded-full bg-kx-paid" />
+                            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-kx-paid">{t('actionPlan.withKorex')}</span>
+                            <span className="kx-num font-editorial text-[22px] leading-none text-kx-ink">{formatFreedomDate(freedomDateVelocity)}</span>
                         </div>
-
-                        {/* Arrow / separator */}
-                        <div className="hidden sm:flex items-center text-slate-600">←</div>
-
-                        {/* WITHOUT KoreX */}
-                        <div className="flex-1 flex items-center gap-2">
-                            <Clock size={16} className="text-red-400/70 shrink-0" />
-                            <div>
-                                <p className="text-[10px] uppercase tracking-wider text-red-400/50 font-medium">{t('actionPlan.withoutKorex')}</p>
-                                <p className="text-sm font-semibold text-red-400/80 line-through decoration-red-500/40">{formatFreedomDate(freedomDateStandard)}</p>
-                            </div>
+                        <div className="flex items-baseline justify-between gap-3 border-t border-[var(--kx-line-soft)] px-4 py-3">
+                            <span className="text-[11px] font-bold uppercase tracking-[.14em] text-kx-ink3">{t('actionPlan.withoutKorex')}</span>
+                            <span className="kx-num font-editorial text-[17px] leading-none text-kx-ink3 line-through decoration-kx-debt/50">{formatFreedomDate(freedomDateStandard)}</span>
                         </div>
-
-                        {/* Months saved pill */}
                         {monthsSaved > 0 && (
-                            <div className="flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-3 py-1.5 self-center">
-                                <Timer size={14} className="text-emerald-400" />
-                                <span className="text-xs font-bold text-emerald-400">
-                                    {monthsSaved} {t('actionPlan.monthsCut')}
-                                </span>
+                            <div className="flex items-center gap-2 border-t border-[var(--kx-line-soft)] px-4 py-2.5 text-[12.5px] text-kx-ink2">
+                                <Timer size={14} strokeWidth={1.75} className="text-kx-paid" />
+                                <span><b className="kx-num font-editorial text-[15px] font-normal text-kx-paid">{monthsSaved}</b> {t('actionPlan.monthsCut')}</span>
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* ────── MONTH NAVIGATOR ────── */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="ghost"
-                            size="icon"
+                {/* ────── MONTH NAVIGATOR — the calendar's arrows and editorial month ────── */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <button
                             onClick={() => setMonthOffset(prev => Math.max(prev - 1, 0))}
                             disabled={monthOffset === 0}
-                            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30"
+                            aria-label={language === 'es' ? 'Mes anterior' : 'Previous month'}
+                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
                         >
-                            <ChevronLeft size={20} />
-                        </Button>
-
-                        <div className="flex items-center gap-2 min-w-[180px] justify-center">
-                            <Calendar size={16} className="text-amber-400" />
-                            <span className="text-lg font-semibold text-slate-900 dark:text-white">{monthLabel}</span>
+                            <ChevronLeft size={18} />
+                        </button>
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-editorial whitespace-nowrap text-[21px] leading-none text-kx-ink">{monthLabel}</span>
                             {monthOffset === 0 && (
-                                <span className="text-[10px] font-mono uppercase tracking-wider bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">
+                                <span className="kx-tech rounded-sm bg-kx-amber px-1.5 text-[10px] font-bold uppercase leading-[16px] text-[#111418]">
                                     {t('actionPlan.current')}
                                 </span>
                             )}
                         </div>
-
-                        <Button
-                            variant="ghost"
-                            size="icon"
+                        <button
                             onClick={() => setMonthOffset(prev => Math.min(prev + 1, 1))}
                             disabled={monthOffset >= 1}
-                            className="h-9 w-9 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 disabled:opacity-30"
+                            aria-label={language === 'es' ? 'Mes siguiente' : 'Next month'}
+                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
                         >
-                            <ChevronRight size={20} />
-                        </Button>
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
 
-                    {/* Month summary pills — scrollable on mobile */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap scrollbar-none">
+                    {/* Month summary — one quiet line of marks, scrollable on mobile */}
+                    <div className="flex items-center gap-x-4 gap-y-1 overflow-x-auto px-1 text-[12px] text-kx-ink2 scrollbar-none md:flex-wrap">
                         {summary.incomeCount > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-full px-3 py-1 whitespace-nowrap">
-                                <DollarSign size={12} />
-                                {summary.incomeCount} {t('actionPlan.summaryIncome')} · {formatMoney(summary.totalIncome)}
-                            </div>
+                            <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="h-2 w-2 rounded-full bg-kx-pay" aria-hidden="true" />{summary.incomeCount} {t('actionPlan.summaryIncome')} · <span className="kx-num">{formatMoney(summary.totalIncome)}</span></span>
                         )}
                         {summary.attackCount > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 whitespace-nowrap">
-                                <Zap size={12} />
-                                {summary.attackCount} {t('actionPlan.summaryAttacks')} · {formatMoney(summary.totalAttack)}
-                            </div>
+                            <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="h-2 w-2 rounded-full bg-kx-amber" aria-hidden="true" />{summary.attackCount} {t('actionPlan.summaryAttacks')} · <span className="kx-num">{formatMoney(summary.totalAttack)}</span></span>
                         )}
                         {summary.minCount > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-full px-3 py-1 whitespace-nowrap">
-                                <ArrowRightLeft size={12} />
-                                {summary.minCount} {t('actionPlan.summaryMinPayments')} · {formatMoney(summary.totalMin)}
-                            </div>
+                            <span className="flex items-center gap-1.5 whitespace-nowrap"><span className="h-2 w-2 rounded-full bg-kx-ink3" aria-hidden="true" />{summary.minCount} {t('actionPlan.summaryMinPayments')} · <span className="kx-num">{formatMoney(summary.totalMin)}</span></span>
                         )}
                         {summary.shieldCount > 0 && (
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-full px-3 py-1 whitespace-nowrap">
-                                <Shield size={12} />
-                                {summary.shieldCount} {t('actionPlan.summaryShields')} · {formatMoney(summary.totalShield)}
-                            </div>
+                            <span className="flex items-center gap-1.5 whitespace-nowrap"><Shield size={11} strokeWidth={1.75} className="text-kx-ink3" aria-hidden="true" />{summary.shieldCount} {t('actionPlan.summaryShields')} · <span className="kx-num">{formatMoney(summary.totalShield)}</span></span>
                         )}
                     </div>
                 </div>
 
-                {/* ────── ACTION QUEUE TABLE ────── */}
-                <Card className="relative overflow-hidden border-gray-200 dark:border-white/5 bg-white dark:bg-black/60 backdrop-blur-xl group">
-                    {/* Ambient glow */}
-                    <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                    <WidgetHelp helpKey="actionPlanTable" />
-
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-black dark:text-zinc-200 flex items-center gap-2">
-                            <ListChecks className="text-emerald-400" size={20} />
-                            {t('actionPlan.scheduledMoves')}
-                            <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-2">
-                                {filteredMovements.length} {filteredMovements.length !== 1 ? t('actionPlan.movementsThisMonth') : t('actionPlan.movement')}
-                            </span>
-                        </CardTitle>
-                    </CardHeader>
-
-                    <CardContent>
+                {/* ────── ACTION QUEUE — one ledger panel, hairline rows ────── */}
+                <Section tone="neutral" bare
+                    title={<>{t('actionPlan.scheduledMoves')} <span className="ml-1 font-normal normal-case tracking-normal text-kx-ink3">{filteredMovements.length} {filteredMovements.length !== 1 ? t('actionPlan.movementsThisMonth') : t('actionPlan.movement')}</span></>}
+                    action={<WidgetHelp helpKey="actionPlanTable" />}>
+                    <div className="kx-rows overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface">
                         {filteredMovements.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
-                                <Calendar size={40} className="mb-3 opacity-30" />
-                                <p className="text-sm font-medium">{t('actionPlan.noMovements')} {monthLabel}</p>
-                                <p className="text-xs mt-1 text-gray-500 dark:text-slate-600">{t('actionPlan.addAccountsHint')}</p>
+                            <div className="px-4 py-10 text-center">
+                                <p className="text-sm font-semibold text-kx-ink">{t('actionPlan.noMovements')} {monthLabel}</p>
+                                <p className="mt-1 text-xs text-kx-ink2">{t('actionPlan.addAccountsHint')}</p>
                             </div>
                         ) : (
-                            <div className="space-y-2">
-                                {/* Table Header — hidden on mobile */}
-                                <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 border-b border-gray-200 dark:border-white/5">
+                            <>
+                                {/* Table header — desktop only */}
+                                <div className="hidden grid-cols-12 gap-3 px-4 py-2.5 text-[10.5px] font-bold uppercase tracking-[.12em] text-kx-ink3 md:grid">
                                     <div className="col-span-2">{t('actionPlan.tableDate')}</div>
                                     <div className="col-span-3">{t('actionPlan.tableAction')}</div>
                                     <div className="col-span-2">{t('actionPlan.tableFrom')}</div>
@@ -628,328 +567,163 @@ export default function ActionPlanPage() {
                                     <div className="col-span-1 text-center">{t('actionPlan.tableExec')}</div>
                                 </div>
 
-                                {/* Movement Rows */}
                                 {filteredMovements.map((m, i) => {
                                     const style = getTypeStyle(m.type);
                                     const key = `${m.date}-${m.title}`;
                                     const isToday = m.date === today;
                                     const isPast = m.date < today;
                                     const isExecuting = executingKey === key;
+                                    const rowTone = isToday ? 'bg-[rgba(245,158,11,.06)]' : isPast ? 'opacity-50' : '';
+                                    const band = isToday && <span aria-hidden="true" className="absolute bottom-3 left-0 top-3 w-[3px] rounded-full bg-kx-amber" />;
+                                    const typeMark = (
+                                        <span className={`inline-flex items-center gap-1 text-[10.5px] font-semibold uppercase tracking-[.08em] ${style.text}`}>
+                                            {style.icon}{t(style.labelKey)}
+                                        </span>
+                                    );
+                                    const todayMark = isToday && (
+                                        <span className="kx-tech rounded-sm bg-kx-amber px-1 text-[9px] font-bold uppercase leading-[14px] text-[#111418]">{t('actionPlan.today')}</span>
+                                    );
+                                    const impact = m.type === 'attack' && m.daily_interest_saved > 0 && (
+                                        <>
+                                            <span className="kx-num">{formatMoney(m.balance_before)} → {formatMoney(m.balance_after)}</span>
+                                            {m.debt_progress_pct > 0 && <span className="font-semibold text-kx-paid"> ({m.debt_progress_pct}%)</span>}
+                                            {' · '}{t('actionPlan.savesDay')} <span className="kx-num text-kx-paid">{formatMoney(m.total_interest_saved)}</span> {t('actionPlan.inInterest')}
+                                        </>
+                                    );
+                                    const exec = isPast ? (
+                                        <Clock size={14} strokeWidth={1.75} className="shrink-0 text-kx-ink3" />
+                                    ) : (
+                                        <button
+                                            disabled={isExecuting}
+                                            onClick={() => handleRequestExecute(m)}
+                                            aria-label={t('actionPlan.tableExec')}
+                                            className={`kx-press flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber ${isToday ? 'bg-kx-amber text-[#111418]' : 'border border-[#263449] bg-kx-raised text-kx-ink2'}`}
+                                        >
+                                            {isExecuting ? <Loader2 size={14} className="animate-spin" /> : <Play size={12} />}
+                                        </button>
+                                    );
 
                                     return isMobile ? (
-                                        /* ═══ MOBILE: Stacked card layout ═══ */
-                                        <div
-                                            key={`${m.date}-${m.title}-${i}`}
-                                            className={`
-                                            rounded-lg p-3 space-y-3 transition-all duration-200 overflow-hidden
-                                            ${isToday
-                                                    ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
-                                                    : isPast
-                                                        ? 'opacity-50 bg-gray-50 dark:bg-white/[0.01]'
-                                                        : 'bg-gray-50 dark:bg-white/[0.02] border border-transparent hover:border-gray-200 dark:hover:border-white/5'
-                                                }
-                                        `}
-                                        >
-                                            {/* Row 1: Date + Type + Execute */}
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="flex items-center gap-1.5 min-w-0 overflow-hidden flex-wrap">
-                                                    {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
-                                                    <span className={`text-xs font-mono shrink-0 ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-gray-300'}`}>
-                                                        {m.display_date}
-                                                    </span>
-                                                    {isToday && (
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
-                                                            {t('actionPlan.today')}
-                                                        </span>
-                                                    )}
-                                                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5 shrink-0`}>
-                                                        {style.icon}
-                                                        {t(style.labelKey)}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <span className={`text-sm font-bold whitespace-nowrap ${style.text}`}>{formatMoney(m.amount)}</span>
-                                                    {isPast ? (
-                                                        <Clock size={14} className="text-gray-400 dark:text-slate-600 shrink-0" />
-                                                    ) : (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            disabled={isExecuting}
-                                                            onClick={() => handleRequestExecute(m)}
-                                                            className={`h-7 w-7 p-0 rounded-full transition-all shrink-0 ${isToday
-                                                                ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 border border-emerald-500/30'
-                                                                : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                                                                }`}
-                                                        >
-                                                            {isExecuting ? (
-                                                                <Loader2 size={14} className="animate-spin" />
-                                                            ) : (
-                                                                <Play size={12} />
-                                                            )}
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            {/* Row 2: Title */}
-                                            <div>
-                                                <span className="text-sm text-slate-900 dark:text-white font-medium">{m.title}</span>
-                                                {m.type === 'attack' && m.daily_interest_saved > 0 ? (
-                                                    <div className="space-y-0.5 mt-0.5">
-                                                        <p className="text-[11px] text-emerald-500/80 flex items-center gap-1">
-                                                            <TrendingDown size={10} />
-                                                            {formatMoney(m.balance_before)} → {formatMoney(m.balance_after)}
-                                                            {m.debt_progress_pct > 0 && <span className="text-emerald-400 font-semibold">({m.debt_progress_pct}%)</span>}
-                                                            · {t('actionPlan.savesDay')} {formatMoney(m.total_interest_saved)} {t('actionPlan.inInterest')}
-                                                        </p>
+                                        /* MOBILE: a ledger line — date, title, route, amount */
+                                        <div key={`${m.date}-${m.title}-${i}`} className={`relative border-t border-[var(--kx-line-soft)] px-4 py-3 first:border-t-0 ${rowTone}`}>
+                                            {band}
+                                            <div className="flex items-start gap-3">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                        <span className="kx-tech text-[11.5px] text-kx-ink2">{m.display_date}</span>
+                                                        {todayMark}
+                                                        {typeMark}
                                                     </div>
-                                                ) : (
-                                                    <p className="text-[11px] text-gray-400 dark:text-gray-500">{m.description}</p>
-                                                )}
-                                            </div>
-                                            {/* Row 3: Source → Destination */}
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-xs font-medium text-slate-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-1">
-                                                    {m.source}
-                                                </span>
-                                                <span className="text-gray-300 dark:text-slate-600">→</span>
-                                                <span className={`text-xs font-medium ${style.text} ${style.bg} border ${style.border} rounded-md px-2 py-1`}>
-                                                    {m.destination}
-                                                </span>
+                                                    <p className="mt-1 text-[14.5px] font-semibold leading-snug text-kx-ink">{m.title}</p>
+                                                    <p className="mt-0.5 text-[12px] text-kx-ink2">{impact || m.description}</p>
+                                                    <p className="mt-1 truncate text-[12px] text-kx-ink3">{m.source} <span aria-hidden="true">→</span> <span className="text-kx-ink2">{m.destination}</span></p>
+                                                </div>
+                                                <div className="flex flex-none flex-col items-end gap-2">
+                                                    <span className="kx-num font-editorial whitespace-nowrap text-[18px] leading-none text-kx-ink">{formatMoney(m.amount)}</span>
+                                                    {exec}
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        /* ═══ DESKTOP: Original grid row (untouched) ═══ */
-                                        <div
-                                            key={`${m.date}-${m.title}-${i}`}
-                                            className={`
-                                            grid grid-cols-12 gap-3 px-4 py-3 rounded-lg transition-all duration-200
-                                            ${isToday
-                                                    ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-lg shadow-emerald-500/5'
-                                                    : isPast
-                                                        ? 'opacity-50 bg-gray-50 dark:bg-white/[0.01]'
-                                                        : 'bg-gray-50 dark:bg-white/[0.02] hover:bg-gray-100 dark:hover:bg-white/[0.04] border border-transparent hover:border-gray-200 dark:hover:border-white/5'
-                                                }
-                                        `}
-                                        >
-                                            {/* Date */}
+                                        /* DESKTOP: the same 12-column row, as a ledger line */
+                                        <div key={`${m.date}-${m.title}-${i}`} className={`relative grid grid-cols-12 gap-3 border-t border-[var(--kx-line-soft)] px-4 py-3 ${rowTone}`}>
+                                            {band}
                                             <div className="col-span-2 flex items-center gap-2">
-                                                {isToday && <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-                                                <span className={`text-sm font-mono ${isToday ? 'text-emerald-300 font-bold' : 'text-slate-600 dark:text-gray-300'}`}>
-                                                    {m.display_date}
-                                                </span>
-                                                {isToday && (
-                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                                                        {t('actionPlan.today')}
-                                                    </span>
-                                                )}
+                                                <span className="kx-tech text-[13px] text-kx-ink2">{m.display_date}</span>
+                                                {todayMark}
                                             </div>
-
-                                            {/* Title + impact inline */}
-                                            <div className="col-span-3 flex flex-col justify-center">
-                                                <span className="text-sm text-slate-900 dark:text-white font-medium truncate">{m.title}</span>
-                                                {m.type === 'attack' && m.daily_interest_saved > 0 ? (
-                                                    <span className="text-[11px] text-emerald-500/80 flex items-center gap-1">
-                                                        <TrendingDown size={10} />
-                                                        {formatMoney(m.balance_before)} → {formatMoney(m.balance_after)}
-                                                        {m.debt_progress_pct > 0 && <span className="text-emerald-400 font-semibold">({m.debt_progress_pct}%)</span>}
-                                                        · {t('actionPlan.savesDay')} {formatMoney(m.total_interest_saved)} {t('actionPlan.inInterest')}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{m.description}</span>
-                                                )}
+                                            <div className="col-span-3 flex min-w-0 flex-col justify-center">
+                                                <span className="truncate text-sm font-semibold text-kx-ink">{m.title}</span>
+                                                <span className="truncate text-[11.5px] text-kx-ink2">{impact || m.description}</span>
                                             </div>
-
-                                            {/* Source */}
-                                            <div className="col-span-2 flex items-center">
-                                                <span className="text-xs font-medium text-slate-600 dark:text-gray-300 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md px-2 py-1 truncate">
-                                                    {m.source}
-                                                </span>
+                                            <div className="col-span-2 flex min-w-0 items-center"><span className="truncate text-xs text-kx-ink2">{m.source}</span></div>
+                                            <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+                                                <span className="text-kx-ink3" aria-hidden="true">→</span>
+                                                <span className="truncate text-xs text-kx-ink">{m.destination}</span>
                                             </div>
-
-                                            {/* Destination */}
-                                            <div className="col-span-2 flex items-center gap-1.5">
-                                                <span className="text-gray-300 dark:text-slate-600">→</span>
-                                                <span className={`text-xs font-medium ${style.text} ${style.bg} border ${style.border} rounded-md px-2 py-1 truncate`}>
-                                                    {m.destination}
-                                                </span>
+                                            <div className="col-span-1 flex items-center justify-end">
+                                                <span className="kx-num font-editorial whitespace-nowrap text-[16px] text-kx-ink">{formatMoney(m.amount)}</span>
                                             </div>
-
-                                            {/* Amount */}
-                                            <div className={`col-span-1 flex items-center justify-end text-sm font-bold ${style.text}`}>
-                                                {formatMoney(m.amount)}
-                                            </div>
-
-                                            {/* Type Badge */}
-                                            <div className="col-span-1 flex items-center justify-center">
-                                                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider ${style.text} ${style.bg} border ${style.border} rounded-full px-2 py-0.5`}>
-                                                    {style.icon}
-                                                    {t(style.labelKey)}
-                                                </span>
-                                            </div>
-
-                                            {/* Execute Button */}
-                                            <div className="col-span-1 flex items-center justify-center">
-                                                {isPast ? (
-                                                    <Clock size={14} className="text-gray-400 dark:text-slate-600" />
-                                                ) : (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        disabled={isExecuting}
-                                                        onClick={() => handleRequestExecute(m)}
-                                                        className={`h-7 w-7 p-0 rounded-full transition-all ${isToday
-                                                            ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:text-emerald-300 border border-emerald-500/30'
-                                                            : 'text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
-                                                            }`}
-                                                    >
-                                                        {isExecuting ? (
-                                                            <Loader2 size={14} className="animate-spin" />
-                                                        ) : (
-                                                            <Play size={12} />
-                                                        )}
-                                                    </Button>
-                                                )}
-                                            </div>
+                                            <div className="col-span-1 flex items-center justify-center">{typeMark}</div>
+                                            <div className="col-span-1 flex items-center justify-center">{exec}</div>
                                         </div>
                                     );
                                 })}
 
-                                {/* ── Locked Debt Phantom Rows ── */}
+                                {/* ── Locked debts: the same ledger, dimmed ── */}
                                 {lockedDebts.length > 0 && (
                                     <>
-                                        {/* Separator */}
-                                        <div className="flex items-center gap-3 px-4 py-2 mt-2">
-                                            <div className="flex-1 h-px bg-rose-500/20" />
-                                            <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400/60 flex items-center gap-1">
-                                                <Lock size={10} /> {lockedDebts.length} {t('actionPlan.lockedAccounts')}
-                                            </span>
-                                            <div className="flex-1 h-px bg-rose-500/20" />
+                                        <div className="flex items-center gap-2 border-t border-[var(--kx-line-soft)] px-4 py-2 text-[10.5px] font-bold uppercase tracking-[.12em] text-kx-ink3">
+                                            <Lock size={11} strokeWidth={1.75} /> {lockedDebts.length} {t('actionPlan.lockedAccounts')}
                                         </div>
-
                                         {lockedDebts.map((debt) => (
-                                            isMobile ? (
-                                                /* Mobile locked card */
-                                                <div
-                                                    key={`locked-${debt.id}`}
-                                                    className="rounded-lg p-4 space-y-2 opacity-40 bg-gray-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
-                                                    onClick={() => setShowUpgrade(true)}
-                                                >
-                                                    <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(244,63,94,0.03)_10px,rgba(244,63,94,0.03)_20px)] pointer-events-none" />
-                                                    <div className="flex items-center justify-between relative">
-                                                        <div className="flex items-center gap-2">
-                                                            <Lock size={12} className="text-rose-400" />
-                                                            <span className="text-sm text-gray-400 font-medium">{debt.name}</span>
-                                                        </div>
-                                                        <span className="text-xs font-mono text-rose-400/60">{debt.interest_rate}% APR</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between relative">
-                                                        <span className="text-xs text-gray-500">Balance: {formatMoney(debt.balance)}</span>
-                                                        <Button size="sm" variant="ghost" className="h-6 text-[10px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2" onClick={() => setShowUpgrade(true)}>
-                                                            {t('actionPlan.upgradeToUnlock')}
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                /* Desktop locked row */
-                                                <div
-                                                    key={`locked-${debt.id}`}
-                                                    className="grid grid-cols-12 gap-3 px-4 py-3 rounded-lg opacity-40 bg-gray-50 dark:bg-white/[0.01] border border-rose-500/10 relative overflow-hidden select-none cursor-pointer hover:opacity-60 hover:border-rose-500/30 transition-all"
-                                                    onClick={() => setShowUpgrade(true)}
-                                                >
-                                                    <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(244,63,94,0.03)_10px,rgba(244,63,94,0.03)_20px)] pointer-events-none" />
-                                                    <div className="col-span-2 flex items-center gap-2 relative">
-                                                        <Lock size={12} className="text-rose-400" />
-                                                        <span className="text-sm text-gray-400 font-mono">—</span>
-                                                    </div>
-                                                    <div className="col-span-3 flex flex-col justify-center relative">
-                                                        <span className="text-sm text-gray-400 font-medium">{debt.name}</span>
-                                                        <span className="text-[11px] text-rose-400/60">{debt.interest_rate}% APR · {formatMoney(debt.balance)}</span>
-                                                    </div>
-                                                    <div className="col-span-2 flex items-center relative">
-                                                        <span className="text-xs text-gray-400/50">—</span>
-                                                    </div>
-                                                    <div className="col-span-2 flex items-center relative">
-                                                        <span className="text-xs text-gray-400/50">—</span>
-                                                    </div>
-                                                    <div className="col-span-1 flex items-center justify-end relative">
-                                                        <span className="text-sm text-gray-400/50">—</span>
-                                                    </div>
-                                                    <div className="col-span-1 flex items-center justify-center relative">
-                                                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-rose-400/60 bg-rose-500/10 border border-rose-500/20 rounded-full px-2 py-0.5">
-                                                            <Lock size={8} /> {t('actionPlan.locked')}
-                                                        </span>
-                                                    </div>
-                                                    <div className="col-span-1 flex items-center justify-center relative">
-                                                        <Button size="sm" variant="ghost" className="h-7 text-[9px] text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2" onClick={() => setShowUpgrade(true)}>
-                                                            {t('actionPlan.upgrade')}
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            )
+                                            <div
+                                                key={`locked-${debt.id}`}
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => setShowUpgrade(true)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowUpgrade(true); }}
+                                                className="kx-press flex cursor-pointer select-none items-center gap-3 border-t border-[var(--kx-line-soft)] px-4 py-3 opacity-50 hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
+                                            >
+                                                <Lock size={13} strokeWidth={1.75} className="flex-none text-kx-ink3" />
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-semibold text-kx-ink2">{debt.name}</span>
+                                                    <span className="block text-[11.5px] text-kx-ink3"><span className="kx-tech">{debt.interest_rate}% APR</span> · Balance: <span className="kx-num">{formatMoney(debt.balance)}</span></span>
+                                                </span>
+                                                <span className="flex-none text-[11px] font-semibold text-kx-amber">{isMobile ? t('actionPlan.upgradeToUnlock') : t('actionPlan.upgrade')}</span>
+                                            </div>
                                         ))}
                                     </>
                                 )}
-                            </div>
+                            </>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </Section>
 
-                {/* ────── EXECUTION HISTORY (Enhanced with Search, Filters, Pagination) ────── */}
-                <Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-black/60 backdrop-blur-xl">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg text-black dark:text-zinc-200 flex items-center gap-2">
-                            <History className="text-amber-400" size={20} />
-                            {t('actionPlan.executionHistory')}
-                            <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-2">
-                                {historyTotal} {t('actionPlan.executed')}
-                            </span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+                {/* ────── EXECUTION HISTORY — search above, one ledger below ────── */}
+                <Section tone="neutral" bare
+                    title={<>{t('actionPlan.executionHistory')} <span className="ml-1 font-normal normal-case tracking-normal text-kx-ink3">{historyTotal} {t('actionPlan.executed')}</span></>}>
+                    <div className="space-y-3">
                         {/* ── Search + Filter Toggle ── */}
-                        <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex gap-2">
                             <div className="relative flex-1">
-                                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Search size={16} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink3" />
                                 <Input
                                     placeholder={language === 'es' ? 'Buscar transacciones...' : 'Search transactions...'}
                                     value={historySearch}
                                     onChange={(e) => setHistorySearch(e.target.value)}
-                                    className="pl-9 h-9 bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
+                                    className="h-10 rounded-xl border-kx-line bg-kx-surface pl-9 text-sm text-kx-ink placeholder:text-kx-ink3 focus-visible:ring-kx-amber"
                                 />
                                 {historySearch && (
                                     <button
                                         onClick={() => setHistorySearch('')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-600 dark:hover:text-white"
+                                        aria-label={language === 'es' ? 'Borrar búsqueda' : 'Clear search'}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-kx-ink3 hover:text-kx-ink"
                                     >
                                         <X size={14} />
                                     </button>
                                 )}
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
+                            <button
                                 onClick={() => setShowHistoryFilters(!showHistoryFilters)}
-                                className={`h-9 gap-1.5 border-gray-200 dark:border-white/10 text-slate-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 ${activeFilterCount > 0 ? 'border-amber-400/50 text-amber-500 dark:text-amber-400' : ''
-                                    }`}
+                                aria-expanded={showHistoryFilters}
+                                className={`kx-press flex h-10 flex-none items-center gap-1.5 rounded-xl border px-3 text-[13px] font-semibold ${activeFilterCount > 0 ? 'border-kx-amber text-kx-amber-soft' : 'border-kx-line text-kx-ink2'}`}
                             >
-                                <SlidersHorizontal size={14} />
+                                <SlidersHorizontal size={14} strokeWidth={1.75} />
                                 {language === 'es' ? 'Filtros' : 'Filters'}
                                 {activeFilterCount > 0 && (
-                                    <Badge className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px]">
-                                        {activeFilterCount}
-                                    </Badge>
+                                    <span className="kx-num flex h-5 w-5 items-center justify-center rounded-full bg-kx-amber text-[10px] font-bold text-[#111418]">{activeFilterCount}</span>
                                 )}
-                            </Button>
+                            </button>
                         </div>
 
                         {/* ── Collapsible Filter Panel ── */}
                         {showHistoryFilters && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 animate-in slide-in-from-top-2 duration-200">
+                            <div className="grid grid-cols-1 gap-3 rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Cuenta' : 'Account'}</label>
+                                    <label className="text-[11px] font-bold uppercase tracking-[.12em] text-kx-ink3">{language === 'es' ? 'Cuenta' : 'Account'}</label>
                                     <Select value={historyAccountFilter} onValueChange={setHistoryAccountFilter}>
-                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm">
+                                        <SelectTrigger className="h-9 border-kx-line bg-kx-bg text-sm text-kx-ink">
                                             <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -961,9 +735,9 @@ export default function ActionPlanPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Categoría' : 'Category'}</label>
+                                    <label className="text-[11px] font-bold uppercase tracking-[.12em] text-kx-ink3">{language === 'es' ? 'Categoría' : 'Category'}</label>
                                     <Select value={historyCategoryFilter} onValueChange={setHistoryCategoryFilter}>
-                                        <SelectTrigger className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm">
+                                        <SelectTrigger className="h-9 border-kx-line bg-kx-bg text-sm text-kx-ink">
                                             <SelectValue placeholder={language === 'es' ? 'Todas' : 'All'} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -975,167 +749,111 @@ export default function ActionPlanPage() {
                                     </Select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Desde' : 'From'}</label>
-                                    <Input
-                                        type="date"
-                                        value={historyDateFrom}
-                                        onChange={(e) => setHistoryDateFrom(e.target.value)}
-                                        className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
-                                    />
+                                    <label className="text-[11px] font-bold uppercase tracking-[.12em] text-kx-ink3">{language === 'es' ? 'Desde' : 'From'}</label>
+                                    <Input type="date" value={historyDateFrom} onChange={(e) => setHistoryDateFrom(e.target.value)}
+                                        className="h-9 border-kx-line bg-kx-bg text-sm text-kx-ink" />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[11px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{language === 'es' ? 'Hasta' : 'To'}</label>
-                                    <Input
-                                        type="date"
-                                        value={historyDateTo}
-                                        onChange={(e) => setHistoryDateTo(e.target.value)}
-                                        className="h-9 bg-white dark:bg-white/5 border-gray-200 dark:border-white/10 text-sm"
-                                    />
+                                    <label className="text-[11px] font-bold uppercase tracking-[.12em] text-kx-ink3">{language === 'es' ? 'Hasta' : 'To'}</label>
+                                    <Input type="date" value={historyDateTo} onChange={(e) => setHistoryDateTo(e.target.value)}
+                                        className="h-9 border-kx-line bg-kx-bg text-sm text-kx-ink" />
                                 </div>
                                 {activeFilterCount > 0 && (
-                                    <div className="sm:col-span-2 lg:col-span-4 flex justify-end">
-                                        <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="text-xs text-gray-400 hover:text-slate-600 dark:hover:text-white gap-1">
+                                    <div className="flex justify-end sm:col-span-2 lg:col-span-4">
+                                        <button onClick={clearHistoryFilters} className="kx-press flex items-center gap-1 text-xs font-semibold text-kx-amber">
                                             <X size={12} />
                                             {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
-                                        </Button>
+                                        </button>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {/* ── History List ── */}
-                        {historyLoading ? (
-                            /* Skeleton Loader */
-                            <div className="space-y-2">
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5">
-                                        <Skeleton className="h-8 w-8 rounded-full" />
+                        {/* ── History ledger ── */}
+                        <div className="kx-rows overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface">
+                            {historyLoading ? (
+                                Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="flex items-center gap-3 border-t border-[var(--kx-line-soft)] px-4 py-3 first:border-t-0">
                                         <div className="flex-1 space-y-1.5">
-                                            <Skeleton className="h-4 w-48" />
-                                            <Skeleton className="h-3 w-32" />
+                                            <Skeleton className="h-4 w-48 bg-kx-raised" />
+                                            <Skeleton className="h-3 w-32 bg-kx-raised" />
                                         </div>
-                                        <Skeleton className="h-5 w-16 rounded-full" />
-                                        <Skeleton className="h-5 w-20" />
+                                        <Skeleton className="h-5 w-20 bg-kx-raised" />
                                     </div>
-                                ))}
-                            </div>
-                        ) : historyTxs.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-500">
-                                <CheckCircle2 size={32} className="mb-2 opacity-20" />
-                                <p className="text-sm">
-                                    {historySearch || activeFilterCount > 0
-                                        ? (language === 'es' ? 'No se encontraron transacciones con esos filtros' : 'No transactions match your filters')
-                                        : t('actionPlan.noExecuted')
-                                    }
-                                </p>
-                                {(historySearch || activeFilterCount > 0) && (
-                                    <Button variant="ghost" size="sm" onClick={clearHistoryFilters} className="mt-2 text-xs text-amber-400 hover:text-amber-300">
-                                        {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
-                                    </Button>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {historyTxs.map((tx) => {
+                                ))
+                            ) : historyTxs.length === 0 ? (
+                                <div className="px-4 py-10 text-center">
+                                    <p className="text-sm text-kx-ink2">
+                                        {historySearch || activeFilterCount > 0
+                                            ? (language === 'es' ? 'No se encontraron transacciones con esos filtros' : 'No transactions match your filters')
+                                            : t('actionPlan.noExecuted')
+                                        }
+                                    </p>
+                                    {(historySearch || activeFilterCount > 0) && (
+                                        <button onClick={clearHistoryFilters} className="kx-press mt-2 text-xs font-semibold text-kx-amber">
+                                            {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                historyTxs.map((tx) => {
                                     const impact = getImpactForTx(tx);
                                     const isIncome = tx.amount > 0;
                                     return (
-                                        <div
-                                            key={tx.id}
-                                            className="flex flex-col md:flex-row md:items-center justify-between px-4 py-3 rounded-lg bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 hover:bg-gray-100 dark:hover:bg-white/[0.04] transition-colors gap-2"
-                                        >
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <div className={`flex items-center justify-center h-8 w-8 rounded-full flex-shrink-0 ${isIncome ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-                                                    }`}>
-                                                    {isIncome ? <DollarSign size={14} /> : <ArrowRightLeft size={14} />}
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-sm text-slate-900 dark:text-white font-medium truncate">
-                                                        {tx.description}
-                                                    </p>
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">{tx.date}</span>
-                                                        {tx.account_name && (
-                                                            <span className="text-[10px] text-gray-400 dark:text-slate-600">· {tx.account_name}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 md:gap-3 pl-11 md:pl-0 flex-wrap">
-                                                {/* Impact Metrics (only for velocity executions) */}
-                                                {impact.dailySaved > 0 && (
-                                                    <div className="flex items-center gap-2 md:gap-3">
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <TrendingDown size={12} className="text-emerald-500" />
-                                                            <span className="text-emerald-400 font-medium">
-                                                                {formatMoney(impact.dailySaved)}<span className="text-emerald-600">{t('strategy.confidence.perDay')}</span>
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <DollarSign size={12} className="text-emerald-500" />
-                                                            <span className="text-emerald-400 font-medium">
-                                                                {formatMoney(impact.monthlySaved)}<span className="text-emerald-600">{t('actionPlan.perMonth')}</span>
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-xs">
-                                                            <Timer size={12} className="text-amber-400" />
-                                                            <span className="text-amber-400 font-medium">
-                                                                -{impact.daysShortened}{t('actionPlan.daysAbbr')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {/* Category Badge */}
-                                                {tx.category && (
-                                                    <Badge variant="secondary" className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${getCategoryColor(tx.category)}`}>
-                                                        {tx.category}
-                                                    </Badge>
-                                                )}
-
-                                                {/* Amount */}
-                                                <span className={`text-sm font-bold flex-shrink-0 ${isIncome ? 'text-emerald-400' : 'text-rose-400'
-                                                    }`}>
+                                        <div key={tx.id} className="relative border-t border-[var(--kx-line-soft)] px-4 py-3 first:border-t-0">
+                                            <span aria-hidden="true" className={`absolute bottom-3 left-0 top-3 w-[3px] rounded-full ${isIncome ? 'bg-kx-pay' : 'bg-kx-debt'}`} />
+                                            <div className="flex items-baseline justify-between gap-3">
+                                                <p className="min-w-0 truncate text-[14.5px] font-semibold text-kx-ink">{tx.description}</p>
+                                                <span className={`kx-num font-editorial flex-none whitespace-nowrap text-[17px] ${isIncome ? 'text-kx-paid' : 'text-kx-ink'}`}>
                                                     {isIncome ? '+' : ''}{formatMoney(tx.amount)}
                                                 </span>
                                             </div>
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-kx-ink3">
+                                                <span className="kx-tech">{tx.date}</span>
+                                                {tx.account_name && <span>· {tx.account_name}</span>}
+                                                {tx.category && (
+                                                    <span className={`rounded-full px-2 py-px text-[10px] font-medium ${getCategoryColor()}`}>{tx.category}</span>
+                                                )}
+                                                {impact.dailySaved > 0 && (
+                                                    <span className="flex items-center gap-2 text-kx-paid">
+                                                        <TrendingDown size={12} strokeWidth={1.75} />
+                                                        <span className="kx-num">{formatMoney(impact.dailySaved)}{t('strategy.confidence.perDay')}</span>
+                                                        <span className="kx-num">{formatMoney(impact.monthlySaved)}{t('actionPlan.perMonth')}</span>
+                                                        <span className="kx-num text-kx-amber-soft">-{impact.daysShortened}{t('actionPlan.daysAbbr')}</span>
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     );
-                                })}
-                            </div>
-                        )}
+                                })
+                            )}
+                        </div>
 
                         {/* ── Pagination ── */}
                         {historyTotalPages > 1 && (
-                            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-white/5">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                            <div className="flex items-center justify-between px-1">
+                                <button
                                     onClick={() => setHistoryPage(p => Math.max(0, p - 1))}
                                     disabled={historyPage === 0}
-                                    className="gap-1 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                    className="kx-press flex items-center gap-1 text-[13px] font-semibold text-kx-ink2 disabled:opacity-30"
                                 >
                                     <ChevronLeft size={16} />
                                     {language === 'es' ? 'Anterior' : 'Previous'}
-                                </Button>
-                                <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
-                                    {historyPage + 1} / {historyTotalPages}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                </button>
+                                <span className="kx-num text-xs text-kx-ink3">{historyPage + 1} / {historyTotalPages}</span>
+                                <button
                                     onClick={() => setHistoryPage(p => Math.min(historyTotalPages - 1, p + 1))}
                                     disabled={historyPage >= historyTotalPages - 1}
-                                    className="gap-1 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                                    className="kx-press flex items-center gap-1 text-[13px] font-semibold text-kx-ink2 disabled:opacity-30"
                                 >
                                     {language === 'es' ? 'Siguiente' : 'Next'}
                                     <ChevronRight size={16} />
-                                </Button>
+                                </button>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
+                    </div>
+                </Section>
+            </div>
             </div>
 
             <UpgradeModal
