@@ -17,7 +17,7 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
+import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 
 export interface KxAccount {
@@ -91,8 +91,10 @@ export function useKxSummary() {
             for (const a of debts) if (a.closing_day && a.bal > 0) map.set(Math.min(a.closing_day, n), 'C');
             return map;
         };
+        // Tap a calendar day → COBRAS / TE COBRAN, from this same summary (no extra calls)
+        const dayDetail = (date: Date) => buildDayDetail(date, months, data?.income ?? [], staged);
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0),
-            staged, debts, counts, months, freedom, paydays, cutDays };
+            staged, debts, counts, months, freedom, paydays, cutDays, dayDetail };
     }, [data]);
 
     return { ...state, ...derived, reload: load };

@@ -118,23 +118,26 @@ export default function HomePage() {
                 {!noDebt && (
                     <Section tone="neutral" title={es ? 'Tu avance · el color es tu deuda' : 'Your progress · color is your debt'}
                         action={<Link to="/dashboard/calendar" className="flex items-center text-xs font-semibold text-kx-amber">{es ? 'Ver calendario' : 'Open calendar'}<ChevronRight className="h-4 w-4" /></Link>}>
-                        <DebtCalendar compact months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} />
+                        <DebtCalendar compact months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} cutDays={s.cutDays} dayDetail={s.dayDetail} />
                     </Section>
                 )}
 
                 {/* TUS DEUDAS EN 3 COLORES — tap filters Cuentas */}
                 {s.debts.length > 0 && (
                     <Section tone="neutral" title={es ? 'Tus deudas en 3 colores' : 'Your debts in 3 colors'}>
-                        <div className="grid grid-cols-3 gap-2.5">
+                        {/* One continuous panel, ledger rows — same treatment as the calendar */}
+                        <div className="overflow-hidden rounded-[18px] border border-white/10">
                             {([
-                                ['debt', es ? 'En deuda' : 'In debt', 'text-kx-debt', 'border-[var(--kx-debt-sec-line)] bg-[var(--kx-debt-sec-bg)]'],
-                                ['almost', es ? 'Casi' : 'Almost', 'text-kx-almost', 'border-[var(--kx-almost-sec-line)] bg-[var(--kx-almost-sec-bg)]'],
-                                ['paid', es ? 'Pagadas' : 'Paid', 'text-kx-paid', 'border-[var(--kx-paid-sec-line)] bg-[var(--kx-paid-sec-bg)]'],
-                            ] as const).map(([stage, label, ink, box]) => (
+                                ['debt', es ? 'En deuda' : 'In debt', 'text-kx-debt', 'var(--kx-debt-bar)'],
+                                ['almost', es ? 'Casi' : 'Almost', 'text-kx-almost', 'var(--kx-almost-bar)'],
+                                ['paid', es ? 'Pagadas' : 'Paid', 'text-kx-paid', 'var(--kx-paid-bar)'],
+                            ] as const).map(([stage, label, ink, color]) => (
                                 <button key={stage} onClick={() => navigate(`/dashboard/accounts?stage=${stage}`)}
-                                    className={`rounded-2xl border px-2 py-3 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber ${box}`}>
-                                    <span className={`kx-num block font-editorial text-[30px] leading-none ${ink}`}>{s.counts[stage]}</span>
-                                    <span className={`mt-1 block text-[11px] font-bold uppercase tracking-[.08em] ${ink}`}>{label}</span>
+                                    className="kx-press flex w-full items-center gap-3 border-t border-white/[.06] px-4 py-3 text-left first:border-t-0 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-kx-amber"
+                                    style={{ background: `linear-gradient(90deg, color-mix(in srgb, ${color} 16%, transparent), transparent 70%)` }}>
+                                    <span className="h-7 w-[3px] flex-none rounded-full" style={{ background: color }} aria-hidden="true" />
+                                    <span className={`flex-1 text-[12px] font-bold uppercase tracking-[.12em] ${ink}`}>{label}</span>
+                                    <span className={`kx-num font-editorial text-[28px] leading-none ${ink}`}>{s.counts[stage]}</span>
                                 </button>
                             ))}
                         </div>
