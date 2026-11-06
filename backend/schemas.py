@@ -42,6 +42,7 @@ class AccountUpdate(BaseModel):
     interest_type: Optional[str] = None
     payment_frequency: Optional[str] = None
     debt_subtype: Optional[str] = None
+    logo_url: Optional[str] = None
 
 
 class CashflowUpdate(BaseModel):

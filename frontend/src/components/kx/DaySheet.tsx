@@ -10,6 +10,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import type { DayDetail } from '@/lib/calendarSeries';
+import { AccountLogo } from '@/components/AccountLogo';
+import { useAccountLogos } from '@/hooks/useAccounts';
 
 const DAYS = { es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
 const MONTHS = {
@@ -17,10 +19,11 @@ const MONTHS = {
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 };
 
-function Row({ name, amount, sub, tone }: { name: string; amount: string; sub?: string; tone: 'in' | 'out' }) {
+function Row({ name, amount, sub, tone, logo }: { name: string; amount: string; sub?: string; tone: 'in' | 'out'; logo?: string | null }) {
     return (
-        <li className="flex items-baseline justify-between gap-3 border-t border-[var(--kx-line-soft)] py-2.5 first:border-t-0">
-            <span className="min-w-0">
+        <li className="flex items-center justify-between gap-3 border-t border-[var(--kx-line-soft)] py-2.5 first:border-t-0">
+            {logo !== undefined && <AccountLogo name={name} src={logo} />}
+            <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14.5px] font-semibold text-kx-ink">{name}</span>
                 {sub && <span className="block text-xs text-kx-ink2">{sub}</span>}
             </span>
@@ -33,6 +36,7 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
     const { language } = useLanguage();
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
+    const logoOf = useAccountLogos();
     const d = detail?.date;
     const isToday = !!d && d.toDateString() === today.toDateString();
     const charges = detail ? [...detail.expenses, ...detail.minimums.map((m) => ({ ...m, sub: es ? 'pago mínimo vence hoy' : 'minimum payment due' }))] : [];
@@ -67,10 +71,10 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
                             <section>
                                 <p className="kx-label mb-1">{es ? 'Te cobran' : 'You get charged'}</p>
                                 <ul>
-                                    {charges.map((l, i) => <Row key={`c${i}`} name={l.name} amount={`−${formatMoney(l.amount)}`} sub={'sub' in l ? (l.sub as string) : undefined} tone="out" />)}
+                                    {charges.map((l, i) => <Row key={`c${i}`} name={l.name} amount={`−${formatMoney(l.amount)}`} sub={'sub' in l ? (l.sub as string) : undefined} tone="out" logo={'sub' in l ? logoOf(l.name) : undefined} />)}
                                     {detail.cuts.map((c, i) => (
                                         <Row key={`k${i}`} name={es ? `Corta la ${c.name}` : `${c.name} closes`} amount={formatMoney(c.balance)}
-                                            sub={es ? 'que reporte en $0: este es su saldo hoy' : 'make it report $0: this is its balance today'} tone="out" />
+                                            sub={es ? 'que reporte en $0: este es su saldo hoy' : 'make it report $0: this is its balance today'} tone="out" logo={logoOf(c.name)} />
                                     ))}
                                 </ul>
                             </section>

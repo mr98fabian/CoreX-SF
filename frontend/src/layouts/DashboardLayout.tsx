@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, CalendarDays, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -67,6 +67,7 @@ export default function DashboardLayout() {
         { path: '/dashboard', icon: LayoutDashboard, label: es ? 'Inicio' : 'Home' },
         { path: '/dashboard/calendar', icon: CalendarDays, label: es ? 'Calendario' : 'Calendar' },
         { path: '/dashboard/accounts', icon: Wallet, label: es ? 'Cuentas' : 'Accounts' },
+        { path: '/dashboard/subscriptions', icon: Repeat, label: es ? 'Suscripciones' : 'Subscriptions' },
         { path: '/dashboard/action-plan', icon: ListChecks, label: es ? 'Plan de ataque' : 'Attack plan' },
         { path: '/dashboard/settings', icon: Settings, label: es ? 'Ajustes' : 'Settings' },
     ];

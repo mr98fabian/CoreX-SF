@@ -22,6 +22,8 @@ import { apiFetch } from '@/lib/api';
 import { localDay } from '@/lib/stage';
 import { findFundingAccount } from '@/lib/funding';
 import { useKxSummary } from '@/hooks/useKxSummary';
+import { useAccountLogos } from '@/hooks/useAccounts';
+import { AccountLogo } from '@/components/AccountLogo';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
 import { DrawnCheck } from '@/components/kx/motion';
 
@@ -44,6 +46,7 @@ export default function AttackPage() {
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const s = useKxSummary();
+    const logoOf = useAccountLogos();
     const [cc, setCc] = useState<CommandCenter | null>(null);
     const [ccError, setCcError] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -176,7 +179,10 @@ export default function AttackPage() {
                                         <span className={`kx-num font-editorial w-6 flex-none text-right text-[26px] leading-none ${active ? 'text-kx-amber' : 'text-kx-ink3'}`}>{i + 1}</span>
                                         <span className={`min-w-0 flex-1 ${active ? '' : 'opacity-70'}`}>
                                             <span className="flex items-center justify-between gap-2">
-                                                <span className="truncate text-[15px] font-semibold text-kx-ink">{d.name}</span>
+                                                <span className="flex min-w-0 items-center gap-2.5">
+                                                    <AccountLogo name={d.name} src={logoOf(d.name)} />
+                                                    <span className="truncate text-[15px] font-semibold text-kx-ink">{d.name}</span>
+                                                </span>
                                                 <StageChip stage={stage} suffix="" />
                                             </span>
                                             <span className="mt-0.5 block text-[12.5px] text-kx-ink2">
