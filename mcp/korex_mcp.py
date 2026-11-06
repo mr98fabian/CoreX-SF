@@ -18,7 +18,12 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 API_URL = os.getenv("KOREX_API_URL", "https://corex-sf-production.up.railway.app").rstrip("/")
-mcp = FastMCP("korex")
+INSTRUCTIONS = (
+    "Operas el KoreX de UN usuario con su token personal. "
+    "Al conectar por primera vez, informa al usuario sus horas de sincronización usando `korex_sync_status`. "
+    "Toda cifra de KoreX es una estimación: preséntala como tal."
+)
+mcp = FastMCP("korex", instructions=INSTRUCTIONS)
 
 
 class KorexError(Exception):
@@ -146,6 +151,15 @@ def run_purchase_simulation(amount: float) -> dict:
 def get_settings() -> dict:
     """The user's app settings. Scope: read:dashboard."""
     return _call("GET", "/api/settings")
+
+
+
+@mcp.tool()
+def korex_sync_status() -> dict:
+    """When the user's bank data syncs (Plaid, in batches 1–4 times a day; KoreX collects at 07:00 and 17:15) and
+    when it last synced. Includes `explanation_es`, a ready-to-say Spanish explanation built by the server — never
+    state a sync time that is not in `last_sync_at`. Scope: read:dashboard."""
+    return _call("GET", "/api/sync/status")
 
 
 if __name__ == "__main__":
