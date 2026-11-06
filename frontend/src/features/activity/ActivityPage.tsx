@@ -9,17 +9,14 @@
  * confirmado), plus /api/tokens/audit: writes your AI made with a token,
  * shown with an amber edge and the "vía tu IA" mark.
  */
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { apiFetch } from '@/lib/api';
+import { useActivityData } from '@/hooks/useActivityData';
 import { AmberRule, BankHeader, Section, StatePhrase } from '@/components/kx';
 import { localDay } from '@/lib/stage';
 
-interface Tx { id: number; date: string; amount: number; description: string; category: string; account_id: number | null; account_name: string }
-interface Move { id: number; title: string; amount: number | string; date_executed: string; status: string }
-interface AiEvent { id: number; token_name: string | null; action: string; scope: string; created_at: string }
 
 type Status = 'registered' | 'applied' | 'confirmed';
 type Kind = 'payment' | 'income' | 'spend' | 'plan' | 'ai';
@@ -33,21 +30,14 @@ export default function ActivityPage() {
     const es = language === 'es';
     usePageTitle(es ? 'Actividad' : 'Activity');
     const { formatMoney, formatDateShort } = useFormatMoney();
-    const [data, setData] = useState<{ loading: boolean; error: boolean; txs: Tx[]; moves: Move[]; ai: AiEvent[] }>({ loading: true, error: false, txs: [], moves: [], ai: [] });
+    // Shared, cached entry (React Query) — re-entering Actividad paints instantly
+    const data = useActivityData();
     const [filter, setFilter] = useState<'all' | 'payment' | 'income' | 'plan' | 'ai'>('all');
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
     const [openEntry, setOpenEntry] = useState<string | null>(null);
     const [now] = useState(() => Date.now()); // render must stay pure: one clock read per mount
 
-    const fetchAll = () =>
-        Promise.all([
-            apiFetch<{ transactions: Tx[] }>('/api/transactions/all?limit=100'),
-            apiFetch<Move[]>('/api/strategy/executed-logs').catch(() => [] as Move[]),
-            apiFetch<AiEvent[]>('/api/tokens/audit').catch(() => [] as AiEvent[]),
-        ]).then(([t, m, ai]) => setData({ loading: false, error: false, txs: t.transactions, moves: m, ai }))
-            .catch(() => setData((d) => ({ ...d, loading: false, error: true })));
-    useEffect(() => { fetchAll(); }, []);
-    const load = () => { setData((d) => ({ ...d, loading: true, error: false })); fetchAll(); };
+    const load = data.reload;
 
     const entries: Entry[] = useMemo(() => {
         const out: Entry[] = [];
