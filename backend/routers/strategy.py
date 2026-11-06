@@ -14,7 +14,7 @@ from models import Account, CashflowItem, Transaction, MovementLog, UserSettings
 from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
-    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus,
+    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, funding_accounts,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -137,8 +137,7 @@ async def get_tactical_gps(
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
         cf_tactical = [CashflowTactical(name=cf.name, amount=cf.amount, day_of_month=cf.day_of_month, category=cf.category) for cf in cashflows]
 
-        asset_accounts = sorted([acc for acc in accounts if acc.type != "debt" and acc.balance > 0],
-                                key=lambda x: x.balance, reverse=True)
+        asset_accounts = funding_accounts(accounts)
         funding_name = asset_accounts[0].name if asset_accounts else "Checking"
         shield_target = get_shield_target(session, user_id)
 
@@ -386,8 +385,7 @@ async def get_strategy_command_center(
         # Risky Opportunity
         risky_opportunity = None
         if morning_briefing is None:
-            asset_accounts = sorted([acc for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0],
-                                    key=lambda x: x.balance, reverse=True)
+            asset_accounts = funding_accounts(accounts)
             risky_opportunity = calculate_risky_opportunity(liquid_cash, shield_target, debt_accounts,
                                                             asset_accounts[0].name if asset_accounts else "Checking")
 
@@ -403,6 +401,6 @@ async def get_strategy_command_center(
             "hybrid_kill_analysis": get_hybrid_kill_target(debt_accounts, attack_amount),
             "arbitrage_alerts": detect_interest_rate_arbitrage(
                 [{"name": acc.name, "balance": float(acc.balance), "apy": float(acc.apy) if acc.apy else 0.5}
-                 for acc in accounts if acc.type in ("checking", "savings") and acc.balance > 0], debt_accounts),
+                 for acc in funding_accounts(accounts)], debt_accounts),
             "risky_opportunity": risky_opportunity,
         }

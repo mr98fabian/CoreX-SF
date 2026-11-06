@@ -55,6 +55,15 @@ def get_liquid_cash(accounts) -> Decimal:
     return sum(acc.balance for acc in accounts if acc.type != "debt")
 
 
+def funding_accounts(accounts) -> list:
+    """Accounts money can come FROM: any non-debt account with a positive
+    balance (checking, savings, cash…), largest first — the same notion of
+    liquid as get_liquid_cash. A user whose money lives in a "cash" account
+    must not be treated as having nothing."""
+    return sorted([acc for acc in accounts if acc.type != "debt" and acc.balance > 0],
+                  key=lambda x: x.balance, reverse=True)
+
+
 def get_shield_target(session, user_id: str) -> Decimal:
     from sqlmodel import select
     from models import UserSettings
