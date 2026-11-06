@@ -8,6 +8,7 @@ from decimal import Decimal
 import logging, calendar
 
 from database import engine
+from database import request_session
 from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/api", tags=["cashflow"])
 
 @router.get("/cashflow")
 async def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
-    with Session(engine) as session:
+    with request_session() as session:
         result = [item.model_dump() for item in
                   session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()]
         for acc in session.exec(
@@ -51,7 +52,7 @@ def _check_own_account(session, account_id, user_id):
 
 @router.post("/cashflow", response_model=CashflowItem)
 async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_scope("write:payments"))):
-    with Session(engine) as session:
+    with request_session() as session:
         item.user_id = user_id
         item.id = None  # never let the client pick (or collide with) a primary key
         _check_own_account(session, item.account_id, user_id)
@@ -63,7 +64,7 @@ async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_sco
 
 @router.put("/cashflow/{id}", response_model=CashflowItem)
 async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(require_scope("write:payments"))):
-    with Session(engine) as session:
+    with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")
@@ -82,7 +83,7 @@ async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(
 
 @router.delete("/cashflow/{id}")
 async def delete_cashflow(id: int, user_id: str = Depends(require_scope("write:payments"))):
-    with Session(engine) as session:
+    with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")
@@ -114,7 +115,7 @@ def _item_triggers(item: CashflowItem, d: date, epoch: date = date(2024, 1, 1)) 
 @router.get("/cashflow/projection")
 async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_current_user_id)):
     months = max(1, min(months, 12))
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
 
@@ -176,7 +177,7 @@ async def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
 @router.get("/cashflow/due-today")
 async def get_due_today(user_id: str = Depends(get_current_user_id)):
     today, today_str, now = date.today(), date.today().isoformat(), dt.now()
-    with Session(engine) as session:
+    with request_session() as session:
         due_items = []
         for item in session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all():
             if item.last_executed_date == today_str:
@@ -209,7 +210,7 @@ async def confirm_recurring(item_id: int, body: dict, user_id: str = Depends(get
     override_id = body.get("account_id")
     today_str = date.today().isoformat()
 
-    with Session(engine) as session:
+    with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == item_id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")
@@ -265,7 +266,7 @@ async def snooze_recurring(item_id: int, body: dict, user_id: str = Depends(get_
     else:
         raise HTTPException(status_code=400, detail="Invalid snooze mode")
 
-    with Session(engine) as session:
+    with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == item_id, CashflowItem.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Cashflow item not found")

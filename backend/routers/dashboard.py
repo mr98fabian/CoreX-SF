@@ -7,6 +7,7 @@ from decimal import Decimal
 from datetime import date, timedelta
 
 from database import engine
+from database import request_session
 from models import Account, CashflowItem, Transaction
 from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
 from auth import get_current_user_id
@@ -29,7 +30,7 @@ async def get_dashboard_metrics(
     user_id: str = Depends(require_scope("read:dashboard")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         shield_target = get_shield_target(session, user_id)
 
@@ -332,7 +333,7 @@ async def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income"
     Timeframes: 'daily' (Today), 'weekly' (7d), 'monthly' (30d), 'annual' (365d).
     Type: 'income' (Inflows), 'expense' (Outflows).
     """
-    with Session(engine) as session:
+    with request_session() as session:
         today = date.today()
         start_date = today
 

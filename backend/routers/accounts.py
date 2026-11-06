@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import List
 
 from database import engine
+from database import request_session
 from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
 from schemas import BalanceUpdate, AccountUpdate
 from helpers import bypass_fk
@@ -23,13 +24,13 @@ router = APIRouter(prefix="/api", tags=["accounts"])
 
 @router.get("/accounts", response_model=List[Account])
 async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
-    with Session(engine) as session:
+    with request_session() as session:
         return session.exec(select(Account).where(Account.user_id == user_id)).all()
 
 
 @router.post("/accounts", response_model=Account)
 async def create_account(account: Account, user_id: str = Depends(require_scope("write:accounts"))):
-    with Session(engine) as session:
+    with request_session() as session:
         account.user_id = user_id
         account.id = None  # never let the client pick (or collide with) a primary key
         if account.type == "debt":
@@ -48,7 +49,7 @@ DECIMAL_FIELDS = {"balance", "interest_rate", "min_payment", "credit_limit"}
 
 @router.put("/accounts/{id}", response_model=Account)
 async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(require_scope("write:accounts"))):
-    with Session(engine) as session:
+    with request_session() as session:
         # Ownership checked in the query: someone else's account is a plain 404
         account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not account:
@@ -71,7 +72,7 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
 
 @router.patch("/accounts/{id}/balance", response_model=Account)
 async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not account:
             raise HTTPException(status_code=404, detail="Account not found")
@@ -96,7 +97,7 @@ async def delete_account(id: int, user_id: str = Depends(require_scope("write:ac
     - cashflow_items paying into/out of the account → kept (the income/bill is
       still real), account_id set to NULL so no FK points at a deleted row.
     Someone else's (or a missing) account → 404."""
-    with Session(engine) as session:
+    with request_session() as session:
         item = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not item:
             raise HTTPException(status_code=404, detail="Account not found")
@@ -129,7 +130,7 @@ async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
     PRESERVES: subscription (a paying customer keeps their plan).
     """
     try:
-        with Session(engine) as session:
+        with request_session() as session:
             # 1. Movement logs (references transactions via FK)
             logs = session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
             for log in logs:

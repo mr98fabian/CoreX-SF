@@ -10,6 +10,7 @@ from typing import List
 import uuid
 
 from database import engine
+from database import request_session
 from models import Account, Transaction, TransactionCreate, MovementLog
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
@@ -54,13 +55,13 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
 
 @router.post("/transactions", response_model=Transaction)
 async def create_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
-    with Session(engine) as session:
+    with request_session() as session:
         return _create_tx_record(session, tx, user_id)
 
 
 @router.post("/transactions/manual")
 async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
-    with Session(engine) as session:
+    with request_session() as session:
         return _create_tx_record(session, tx, user_id, manual=True)
 
 
@@ -68,7 +69,7 @@ async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depend
 
 @router.get("/accounts/{account_id}/transactions", response_model=List[Transaction])
 async def get_account_transactions(account_id: int, user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         if not session.exec(select(Account).where(Account.id == account_id, Account.user_id == user_id)).first():
             raise HTTPException(status_code=404, detail="Account not found")
         return session.exec(
@@ -79,7 +80,7 @@ async def get_account_transactions(account_id: int, user_id: str = Depends(get_c
 
 @router.get("/transactions/recent", response_model=List[Transaction])
 async def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_current_user_id)):
-    with Session(engine) as session:
+    with request_session() as session:
         return session.exec(
             select(Transaction).where(Transaction.user_id == user_id)
             .order_by(Transaction.date.desc()).limit(limit)
@@ -92,7 +93,7 @@ async def get_all_transactions(
     date_to: str = None, search: str = None, limit: int = 100, offset: int = 0,
     user_id: str = Depends(get_current_user_id),
 ):
-    with Session(engine) as session:
+    with request_session() as session:
         query = select(Transaction).where(Transaction.user_id == user_id)
         if account_id: query = query.where(Transaction.account_id == account_id)
         if category:   query = query.where(Transaction.category == category)
@@ -168,7 +169,7 @@ async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id))
     plaid_accounts = _plaid_call("get_accounts", token)
     imported = []
 
-    with Session(engine) as session:
+    with request_session() as session:
         for acc in plaid_accounts:
             existing = session.exec(
                 select(Account).where(Account.plaid_account_id == acc["plaid_account_id"], Account.user_id == user_id)
@@ -199,7 +200,7 @@ async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(g
     result = _plaid_call("sync_transactions", data.access_token)
     counts = {"added": 0, "skipped": 0}
 
-    with Session(engine) as session:
+    with request_session() as session:
         accounts = session.exec(
             select(Account).where(Account.plaid_account_id != None, Account.user_id == user_id)
         ).all()

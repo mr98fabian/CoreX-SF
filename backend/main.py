@@ -15,7 +15,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from database import create_db_and_tables, seed_data
+from database import begin_request_db, end_request_db, create_db_and_tables, seed_data
 from exceptions import KoreXError
 
 # ── Logging ──────────────────────────────────────────────────
@@ -75,6 +75,16 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # ── Request ID + Process Time Middleware ─────────────────────
+@app.middleware("http")
+async def one_db_session_per_request(request: Request, call_next):
+    """Installs the per-request DB session holder (see database.request_session)."""
+    token = begin_request_db()
+    try:
+        return await call_next(request)
+    finally:
+        end_request_db(token)
+
+
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())[:8]

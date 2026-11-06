@@ -93,8 +93,55 @@ def _migrate_account_columns():
             except Exception:
                 session.rollback()  # Column likely already exists
 
+# ── One DB session per request (perf 2026-11-05) ──────────────
+# Every Session against Supabase pays network latency, and a hot request used
+# to open 2–3 (router + plan_guard + require_scope). The request middleware in
+# main.py installs a holder; request_session() opens ONE session lazily on
+# first use and every caller in that request (handler and guards) shares it.
+# Outside a request (scripts, tests calling functions directly) it falls back
+# to a private session, exactly like before. Handlers keep their explicit
+# commit() calls; the middleware closes the session (rolling back anything
+# uncommitted) when the response is done.
+from contextlib import contextmanager
+from contextvars import ContextVar
+
+
+class _RequestDB:
+    __slots__ = ("session",)
+
+    def __init__(self):
+        self.session = None
+
+
+_request_db: ContextVar = ContextVar("kx_request_db", default=None)
+
+
+def begin_request_db():
+    return _request_db.set(_RequestDB())
+
+
+def end_request_db(token) -> None:
+    holder = _request_db.get()
+    _request_db.reset(token)
+    if holder is not None and holder.session is not None:
+        holder.session.close()
+
+
+@contextmanager
+def request_session():
+    import database as _db  # read the engine at call time (tests swap it)
+    holder = _request_db.get()
+    if holder is None:
+        with Session(_db.engine) as session:
+            yield session
+        return
+    if holder.session is None:
+        holder.session = Session(_db.engine)
+    yield holder.session
+
+
 def get_session():
-    with Session(engine) as session:
+    with request_session() as session:
         yield session
 
 def seed_data():

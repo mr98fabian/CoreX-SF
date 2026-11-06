@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field as PField
 from sqlmodel import Session, select
 
 import database
+from database import request_session
 from api_tokens import SCOPES, generate_token, hash_token
 from auth import get_current_user_id, DEMO_USER_ID
 from models import ApiToken, ApiTokenAudit
@@ -45,7 +46,7 @@ def token_audit(limit: int = 100, user_id: str = Depends(get_current_user_id)):
     the demo sees only its own rows). Normal session only — a token can't read
     the audit of itself. Newest first."""
     limit = max(1, min(limit, 200))
-    with Session(database.engine) as session:
+    with request_session() as session:
         rows = session.exec(select(ApiTokenAudit).where(ApiTokenAudit.user_id == user_id)
                             .order_by(ApiTokenAudit.created_at.desc()).limit(limit)).all()
         names = {t.id: t.name for t in session.exec(select(ApiToken).where(ApiToken.user_id == user_id)).all()}
@@ -59,7 +60,7 @@ def token_access(user_id: str = Depends(get_current_user_id)):
     never decides this itself."""
     if user_id == DEMO_USER_ID:
         return {"allowed": False, "reason": "demo", "plan": "demo"}
-    with Session(database.engine) as session:
+    with request_session() as session:
         allowed, plan = ai_access_for(session, user_id)
     return {"allowed": allowed, "reason": None if allowed else "free_plan", "plan": plan}
 
@@ -68,13 +69,13 @@ def token_access(user_id: str = Depends(get_current_user_id)):
 def create_token(body: TokenCreate, user_id: str = Depends(get_current_user_id)):
     if user_id == DEMO_USER_ID:
         raise HTTPException(status_code=403, detail="Demo accounts can't create API tokens")
-    with Session(database.engine) as session:
+    with request_session() as session:
         if not ai_access_for(session, user_id)[0]:
             raise HTTPException(status_code=403, detail="AI connection requires a paid plan")
     unknown = set(body.scopes) - set(SCOPES)
     if unknown:
         raise HTTPException(status_code=400, detail=f"Unknown scopes: {sorted(unknown)}")
-    with Session(database.engine) as session:
+    with request_session() as session:
         active = session.exec(select(ApiToken).where(ApiToken.user_id == user_id, ApiToken.revoked_at == None)).all()  # noqa: E711
         if len(active) >= MAX_ACTIVE_TOKENS:
             raise HTTPException(status_code=400, detail=f"Maximum {MAX_ACTIVE_TOKENS} active tokens")
@@ -90,14 +91,14 @@ def create_token(body: TokenCreate, user_id: str = Depends(get_current_user_id))
 
 @router.get("")
 def list_tokens(user_id: str = Depends(get_current_user_id)):
-    with Session(database.engine) as session:
+    with request_session() as session:
         rows = session.exec(select(ApiToken).where(ApiToken.user_id == user_id).order_by(ApiToken.created_at.desc())).all()
         return [_public(t) for t in rows]
 
 
 @router.delete("/{token_id}")
 def revoke_token(token_id: int, user_id: str = Depends(get_current_user_id)):
-    with Session(database.engine) as session:
+    with request_session() as session:
         row = session.exec(select(ApiToken).where(ApiToken.id == token_id, ApiToken.user_id == user_id)).first()
         if not row:
             raise HTTPException(status_code=404, detail="Token not found")

@@ -25,6 +25,7 @@ from fastapi import Depends, Header, HTTPException, Request
 from sqlmodel import Session, select
 
 import database
+from database import request_session
 from auth import API_TOKEN_PREFIX, get_current_user_id
 from models import ApiToken, ApiTokenAudit
 from plan_guard import ai_access_for
@@ -61,7 +62,7 @@ def _rate_limited(token_id: int) -> bool:
 
 
 def _authenticate_token(raw: str, scope: str) -> ApiToken:
-    with Session(database.engine) as session:
+    with request_session() as session:
         row = session.exec(select(ApiToken).where(ApiToken.token_hash == hash_token(raw))).first()
         if not row or row.revoked_at is not None:
             raise HTTPException(status_code=401, detail="Invalid or revoked API token")
@@ -94,7 +95,7 @@ def require_scope(scope: str):
             request.state.auth_user_id = token.user_id
             yield token.user_id
             if scope.startswith("write:"):  # reached only if the endpoint didn't raise
-                with Session(database.engine) as session:
+                with request_session() as session:
                     session.add(ApiTokenAudit(token_id=token.id, user_id=token.user_id,
                                               action=f"{request.method} {request.url.path}", detail=scope))
                     session.commit()
