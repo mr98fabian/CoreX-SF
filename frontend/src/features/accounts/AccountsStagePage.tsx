@@ -7,6 +7,7 @@
  * manager with amortization is the third layer (/dashboard/accounts/manage).
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -47,6 +48,8 @@ export default function AccountsStagePage() {
     const [amount, setAmount] = useState('');
     const [saving, setSaving] = useState(false);
     const justPaid = useJustPaid(s.staged);
+    // Corte en Cero: consecutive $0 statement cuts per card (cut history)
+    const { data: cuts } = useQuery({ queryKey: ['cuts'], queryFn: () => apiFetch<{ streaks: Record<string, number> }>('/api/cuts'), staleTime: 60_000 });
     // A debt that just reached $0 (the PAGADA stamp drops) is the big moment
     const paidCount = useRef(justPaid.size);
     useEffect(() => { if (justPaid.size > paidCount.current) moment('zero-cut'); paidCount.current = justPaid.size; }, [justPaid.size]);
@@ -155,6 +158,11 @@ export default function AccountsStagePage() {
                                                 {stage === 'paid' && <span className="ml-auto"><StampDrop drop={justPaid.has(a.id)}><PaidStamp /></StampDrop></span>}
                                             </span>
                                             <StageBar stage={stage} pct={a.paid} />
+                                            {(cuts?.streaks[String(a.id)] ?? 0) >= 1 && (
+                                                <span data-testid="cut-streak" className="mt-1.5 inline-block rounded-full border border-kx-line px-2 py-0.5 text-[11px] text-kx-ink2">
+                                                    {es ? `Cortes en $0: ${cuts!.streaks[String(a.id)]} seguidos` : `$0 cuts: ${cuts!.streaks[String(a.id)]} in a row`}
+                                                </span>
+                                            )}
                                         </>
                                     )}
                                 </LedgerRow>

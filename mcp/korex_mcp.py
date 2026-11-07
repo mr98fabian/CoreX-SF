@@ -242,9 +242,21 @@ def korex_set_coach_profile(tone: Optional[str] = None, ai_name: Optional[str] =
 def korex_logros() -> dict:
     """The user's achievements, computed by KoreX from real data (you only narrate): total_pagado, num_pagos,
     deudas_en_cero / deudas_totales, interes_evitado and interes_plan (engine: plan vs minimums), fecha_libre.
-    Each comes as {valor, etiqueta}: quote the etiqueta. racha_cortes_cero is null until a cut history exists —
-    never estimate it. Scope: read:dashboard."""
+    Each comes as {valor, etiqueta}: quote the etiqueta. racha_cortes_cero = consecutive $0 cuts (null until the first cut is
+    recorded with korex_record_cut — never estimate it). Scope: read:dashboard."""
     return _call("GET", "/api/logros")
+
+
+
+@mcp.tool()
+def korex_record_cut(account: str, cut_date: str, reported_balance: float) -> dict:
+    """Record what a debt reported at its statement cut (Corte en Cero ritual). `account` = id or name of a DEBT,
+    `cut_date` = YYYY-MM-DD of the cut, `reported_balance` = the statement balance (0 = corte en cero). Recording
+    the same card and date again updates it. Only with a screenshot or the user's written confirmation.
+    Scope: write:accounts."""
+    acc = _resolve_account(account)
+    return _call("POST", "/api/cuts", {"account_id": acc["id"], "cut_date": cut_date,
+                                       "reported_balance": reported_balance, "source": "operador-ia"})
 
 
 if __name__ == "__main__":

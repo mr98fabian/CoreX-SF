@@ -1,8 +1,8 @@
 from typing import Optional, List
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from sqlmodel import Field, SQLModel, Relationship, Column, JSON
-from sqlalchemy import Text
+from sqlalchemy import Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
@@ -212,3 +212,18 @@ class CoachProfile(SQLModel, table=True):
     ai_name: Optional[str] = Field(default=None, max_length=40)
     payday_weekday: Optional[int] = Field(default=None)         # 0=lunes … 6=domingo
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class CutHistory(SQLModel, table=True):
+    """What balance each debt reported at each statement cut. Base of the
+    Corte en Cero ritual. One row per (account, cut_date): re-recording updates it."""
+    __tablename__ = "cut_history"
+    __table_args__ = (UniqueConstraint("account_id", "cut_date", name="uq_cut_history_account_date"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    account_id: int = Field(foreign_key="accounts.id", index=True)
+    cut_date: date
+    reported_balance: Decimal = Field(default=0, max_digits=14, decimal_places=2)
+    was_zero: bool = Field(default=False)
+    source: str = Field(default="manual", max_length=12)  # operador-ia | manual
+    created_at: datetime = Field(default_factory=datetime.utcnow)
