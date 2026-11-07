@@ -37,10 +37,10 @@ export default function HomePage() {
     if (s.loading) {
         return (
             <div className="kx-scope -m-4 min-h-full space-y-4 p-5 md:-m-8 md:p-8" aria-busy="true">
-                <div className="h-[158px] animate-pulse rounded-2xl bg-kx-surface" />
-                <div className="h-6 w-2/3 animate-pulse rounded bg-kx-surface" />
-                <div className="h-14 w-1/2 animate-pulse rounded bg-kx-surface" />
-                <div className="h-40 animate-pulse rounded-[20px] bg-kx-surface" />
+                <div className="h-[158px] kx-shimmer rounded-2xl" />
+                <div className="h-6 w-2/3 kx-shimmer rounded" />
+                <div className="h-14 w-1/2 kx-shimmer rounded" />
+                <div className="h-40 kx-shimmer rounded-[20px]" />
                 <p className="sr-only">{es ? 'Cargando tu Inicio…' : 'Loading your home…'}</p>
             </div>
         );

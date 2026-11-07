@@ -153,7 +153,7 @@ export default function ActivityPage() {
                 <BankHeader title={es ? 'Actividad' : 'Activity'} greeting={es ? 'el registro vivo de tu dinero' : 'the live record of your money'} />
                 <AmberRule />
 
-                {data.loading && [0, 1].map((i) => <div key={i} className="h-28 animate-pulse rounded-[20px] bg-kx-surface" aria-busy="true" />)}
+                {data.loading && [0, 1].map((i) => <div key={i} className="h-28 kx-shimmer rounded-[20px]" aria-busy="true" />)}
                 {data.error && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tu actividad' : "We couldn't load your activity"}>
                         <button onClick={load} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>

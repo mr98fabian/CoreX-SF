@@ -6,7 +6,7 @@
  * due days, history, "Registrar pago") is one tap away in a sheet; the full
  * manager with amortization is the third layer (/dashboard/accounts/manage).
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -17,7 +17,8 @@ import { apiFetch } from '@/lib/api';
 import { useKxSummary, type StagedAccount } from '@/hooks/useKxSummary';
 import { STAGE_ORDER, localDay, type Stage } from '@/lib/stage';
 import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageBar, StageChip, StatePhrase } from '@/components/kx';
-import { StampDrop } from '@/components/kx/motion';
+import { MoneyCount, StampDrop } from '@/components/kx/motion';
+import { moment, primeAudio } from '@/lib/feedback';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { findFundingAccount } from '@/lib/funding';
 import { AccountLogo } from '@/components/AccountLogo';
@@ -46,6 +47,9 @@ export default function AccountsStagePage() {
     const [amount, setAmount] = useState('');
     const [saving, setSaving] = useState(false);
     const justPaid = useJustPaid(s.staged);
+    // A debt that just reached $0 (the PAGADA stamp drops) is the big moment
+    const paidCount = useRef(justPaid.size);
+    useEffect(() => { if (justPaid.size > paidCount.current) moment('zero-cut'); paidCount.current = justPaid.size; }, [justPaid.size]);
 
     const groups = useMemo(() => {
         const byStage: Record<Stage, StagedAccount[]> = { debt: [], almost: [], paid: [], support: [] };
@@ -64,6 +68,7 @@ export default function AccountsStagePage() {
         if (!open) return;
         const value = parseFloat(amount);
         if (!value || value <= 0) return;
+        primeAudio(); // inside the tap: lets iOS play the moment sound afterwards
         setSaving(true);
         try {
             await apiFetch('/api/transactions/manual', {
@@ -71,6 +76,7 @@ export default function AccountsStagePage() {
                 body: JSON.stringify({ account_id: open.id, amount: value, description: es ? 'Pago registrado' : 'Payment recorded',
                     category: 'payment', date: localDay() }),
             });
+            moment('payment');
             toast({ title: es ? `Pago de ${formatMoney(value)} registrado` : `Payment of ${formatMoney(value)} recorded` });
             setOpen(null);
             s.reload();
@@ -97,7 +103,7 @@ export default function AccountsStagePage() {
 
     if (s.loading) {
         return <div className="kx-scope -m-4 min-h-full space-y-4 p-5 md:-m-8 md:p-8" aria-busy="true">
-            {[0, 1, 2].map((i) => <div key={i} className="h-32 animate-pulse rounded-[20px] bg-kx-surface" />)}
+            {[0, 1, 2].map((i) => <div key={i} className="h-32 kx-shimmer rounded-[20px]" />)}
         </div>;
     }
     if (s.error) {
@@ -140,7 +146,7 @@ export default function AccountsStagePage() {
                         <Section key={`${stage}-${pi}`} tone={stage}
                             title={parts.length > 1 ? `${titles[stage]} · ${pi + 1}/${parts.length}` : titles[stage]}>
                             {part.map((a) => (
-                                <LedgerRow key={a.id} title={a.name} logo={<AccountLogo name={a.name} src={a.logo_url} />} amount={formatMoney(a.bal)} stage={stage} onClick={() => openDetail(a)}>
+                                <LedgerRow key={a.id} title={a.name} logo={<AccountLogo name={a.name} src={a.logo_url} />} amount={<MoneyCount value={a.bal} />} stage={stage} onClick={() => openDetail(a)}>
                                     {stage !== 'support' && (
                                         <>
                                             <span className="mt-1.5 flex items-center gap-2">
@@ -219,7 +225,7 @@ export default function AccountsStagePage() {
 
                             <div>
                                 <p className="kx-label mb-2">{es ? 'Últimos movimientos' : 'Recent activity'}</p>
-                                {history === null && <div className="h-12 animate-pulse rounded-xl bg-kx-raised" />}
+                                {history === null && <div className="h-12 kx-shimmer rounded-xl" />}
                                 {history?.length === 0 && <p className="text-sm text-kx-ink3">{es ? 'Sin movimientos todavía.' : 'No activity yet.'}</p>}
                                 {history?.map((t) => (
                                     <p key={t.id} className="flex justify-between border-t border-[var(--kx-line-soft)] py-2 text-sm first:border-t-0">

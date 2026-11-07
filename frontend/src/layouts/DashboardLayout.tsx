@@ -226,10 +226,10 @@ export default function DashboardLayout() {
 
                 {/* SCROLLABLE CONTENT */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain', touchAction: 'pan-y pinch-zoom' }}>
-                    <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div key={location.pathname} className="kx-page mx-auto max-w-7xl">
                         <Outlet />
-                        <AppLock />
                     </div>
+                    <AppLock />
                 </div>
             </main>
             <TabBar />

@@ -178,3 +178,42 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Pulido (2026-11): motion that comes from the user's data ─────────── */
+
+/* The green advances: a stage bar grows to its new width instead of jumping */
+.kx-stage-bar {
+  transition: width var(--kx-dur-celebration) var(--kx-ease-out), background-color 400ms var(--kx-ease-out);
+}
+
+/* Sections turn like pages of one ledger: short fade + slide, always the same way */
+@keyframes kx-page-in {
+  from { opacity: 0; transform: translate3d(12px, 0, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.kx-page { animation: kx-page-in var(--kx-dur-base) var(--kx-ease-out) both; }
+
+/* Loading with personality: a slow amber glint across the placeholder */
+@keyframes kx-shimmer {
+  from { background-position: 150% 0; }
+  to   { background-position: -50% 0; }
+}
+.kx-shimmer {
+  background-color: var(--kx-surface, #0F172A);
+  background-image: linear-gradient(100deg, transparent 30%, rgba(245, 158, 11, 0.10) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: kx-shimmer 1.4s var(--kx-ease-out) infinite;
+}
+
+/* Splash: the logo breathes once (< 900 ms) and stays */
+@keyframes kx-breathe {
+  0%   { opacity: 0; transform: scale(0.94); }
+  55%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.kx-breathe { animation: kx-breathe 850ms var(--kx-ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-page, .kx-breathe, .kx-shimmer { animation: none !important; }
+  .kx-stage-bar { transition: none !important; }
+}

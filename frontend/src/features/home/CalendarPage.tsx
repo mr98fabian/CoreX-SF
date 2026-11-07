@@ -20,7 +20,7 @@ export default function CalendarPage() {
             <div className="mx-auto max-w-xl space-y-5 px-5 pt-6">
                 <BankHeader title={es ? 'Tu calendario de deuda' : 'Your debt calendar'} />
                 <AmberRule />
-                {s.loading && <div className="h-[420px] animate-pulse rounded-[20px] bg-kx-surface" aria-busy="true" />}
+                {s.loading && <div className="h-[420px] kx-shimmer rounded-[20px]" aria-busy="true" />}
                 {s.error && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tu calendario' : "We couldn't load your calendar"}>
                         <button onClick={s.reload} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>

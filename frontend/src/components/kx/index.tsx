@@ -129,7 +129,7 @@ export function StageBar({ stage, pct }: { stage: Stage; pct: number | null }) {
     return (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar"
             aria-valuenow={pct == null ? undefined : Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}>
-            <i className={cx('kx-stage-tint block h-full origin-left rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
+            <i className={cx('kx-stage-tint kx-stage-bar block h-full origin-left rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
         </div>
     );
 }
