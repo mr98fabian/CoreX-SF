@@ -178,3 +178,25 @@ class RecurringSubscription(SQLModel, table=True):
     logo_url: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     status: str = Field(default="active", max_length=10)  # active | cancelled
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class WebAuthnCredential(SQLModel, table=True):
+    """A platform authenticator (fingerprint/face) registered for the local app
+    lock. Public key only: the private key never leaves the device."""
+    __tablename__ = "webauthn_credentials"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    credential_id: str = Field(max_length=512, unique=True, index=True)  # base64url
+    public_key: str = Field(sa_column=Column(Text, nullable=False))      # base64url COSE key
+    sign_count: int = Field(default=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class WebAuthnChallenge(SQLModel, table=True):
+    """One pending challenge per user and purpose, consumed on verify (works across workers)."""
+    __tablename__ = "webauthn_challenges"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    purpose: str = Field(max_length=10)  # "register" | "auth"
+    challenge: str = Field(max_length=128)  # base64url
+    expires_at: datetime

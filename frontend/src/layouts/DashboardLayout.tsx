@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, CalendarDays, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { AppLock } from '@/components/AppLock';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -227,6 +228,7 @@ export default function DashboardLayout() {
                 <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 scroll-smooth relative z-0" style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain', touchAction: 'pan-y pinch-zoom' }}>
                     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <Outlet />
+                        <AppLock />
                     </div>
                 </div>
             </main>
