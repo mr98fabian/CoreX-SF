@@ -19,6 +19,7 @@ import { ConnectAI } from '@/components/ConnectAI';
 import { FingerprintLockRow } from './FingerprintLockRow';
 import { SoundRow } from './SoundRow';
 import { CoachBlock } from './CoachBlock';
+import { HouseGoalRow } from './HouseGoalRow';
 
 interface Status { plan: string; status: string; current_period_end: string | null }
 interface SyncStatus { cadence: { min: number; max: number }; windows: { label: string; time: string }[]; last_sync_at: string | null }
@@ -136,6 +137,7 @@ export default function SettingsHome() {
                 </Section>
 
                 <CoachBlock es={es} />
+                <HouseGoalRow es={es} />
 
                 {/* Conecta tu IA — locked or open per the server (GET /api/tokens/access) */}
                 <div id="ia"><ConnectAI /></div>

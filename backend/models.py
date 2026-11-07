@@ -212,3 +212,18 @@ class CoachProfile(SQLModel, table=True):
     ai_name: Optional[str] = Field(default=None, max_length=40)
     payday_weekday: Optional[int] = Field(default=None)         # 0=lunes … 6=domingo
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class HouseGoal(SQLModel, table=True):
+    """Modo Compra de Casa: the user's down-payment goal (one per user)."""
+    __tablename__ = "house_goals"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
+    target_total: Decimal = Field(max_digits=14, decimal_places=2)
+    home_price: Decimal = Field(max_digits=14, decimal_places=2)
+    down_pct: Decimal = Field(default=Decimal("3.5"), max_digits=5, decimal_places=2)
+    closing_pct: Decimal = Field(default=Decimal("3.0"), max_digits=5, decimal_places=2)
+    saved_amount: Decimal = Field(default=0, max_digits=14, decimal_places=2)
+    monthly_saving: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
