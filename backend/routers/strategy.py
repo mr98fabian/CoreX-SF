@@ -179,25 +179,39 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
         all_accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
 
         source_acc = find_account_by_name(all_accounts, data.source)
+        dest_acc = find_account_by_name(all_accounts, data.destination)
+
+        # Two-sided law: no account loses more than the other receives. A payment
+        # larger than the debt only applies up to the debt's balance; the source
+        # loses exactly that applied amount, never the nominal one.
+        applied = amount
+        if dest_acc and dest_acc.type == "debt":
+            applied = min(amount, Decimal(str(dest_acc.balance)))
+            if applied <= 0:
+                raise HTTPException(status_code=400, detail={
+                    "code": "DEBT_ALREADY_PAID",
+                    "message": f"{dest_acc.name} ya está en $0: no hay nada que pagar.",
+                    "account_name": dest_acc.name,
+                })
+
         if source_acc:
-            if source_acc.balance < amount:
+            if source_acc.balance < applied:
                 raise HTTPException(status_code=400, detail={
                     "code": "INSUFFICIENT_FUNDS",
-                    "message": f"Fondos insuficientes. {source_acc.name} tiene ${source_acc.balance:.2f}, no se puede deducir ${amount:.2f}.",
+                    "message": f"Fondos insuficientes. {source_acc.name} tiene ${source_acc.balance:.2f}, no se puede deducir ${applied:.2f}.",
                     "account_name": source_acc.name,
                     "current_balance": float(source_acc.balance),
-                    "requested_amount": float(amount),
+                    "requested_amount": float(applied),
                 })
-            source_acc.balance -= amount
+            source_acc.balance -= applied
             session.add(source_acc)
 
-        dest_acc = find_account_by_name(all_accounts, data.destination)
         if dest_acc:
             if dest_acc.type == "debt":
-                dest_acc.balance -= min(amount, dest_acc.balance)
+                dest_acc.balance -= applied
                 dest_acc.min_payment = calculate_minimum_payment(dest_acc.balance, dest_acc.interest_rate)
             else:
-                dest_acc.balance += amount
+                dest_acc.balance += applied
             session.add(dest_acc)
 
         if not source_acc and not dest_acc:
@@ -206,16 +220,20 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
 
         primary_id = source_acc.id if source_acc else dest_acc.id  # type: ignore[union-attr]
         try:
-            tx = Transaction(date=date.today().isoformat(), amount=amount,
-                             description=f"Velocity Execution: {data.title}",
+            capped = applied < amount
+            tx = Transaction(date=date.today().isoformat(), amount=applied,
+                             description=f"Velocity Execution: {data.title}"
+                                         + (f" (aplicado ${applied:.2f} de ${amount:.2f}: la deuda llegó a $0)" if capped else ""),
                              category="Debt Payment" if dest_acc else "Transfer",
                              account_id=primary_id, user_id=user_id)
             session.add(tx)
             with bypass_fk(session):
                 session.commit()
-            logger.info(f"Movement executed: user={user_id} amount={amount}")
+            logger.info(f"Movement executed: user={user_id} applied={applied} requested={amount}")
             return {
                 "status": "executed",
+                "amount_requested": float(amount),
+                "amount_applied": float(applied),
                 "new_balance_source": float(source_acc.balance) if source_acc else "N/A",
                 "new_balance_dest": float(dest_acc.balance) if dest_acc else "N/A",
                 "source_found": bool(source_acc), "dest_found": bool(dest_acc),
