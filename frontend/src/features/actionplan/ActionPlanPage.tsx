@@ -409,7 +409,7 @@ export default function ActionPlanPage() {
             <div className="kx-scope -m-4 min-h-full md:-m-8">
                 <div className="mx-auto max-w-5xl space-y-4 px-5 pt-6" aria-busy="true">
                     <p className="text-sm text-kx-ink2">{t('actionPlan.loading')}</p>
-                    <div className="h-48 animate-pulse rounded-[var(--kx-radius-card)] bg-kx-surface" />
+                    <div className="h-48 kx-shimmer rounded-[var(--kx-radius-card)]" />
                 </div>
             </div>
         );

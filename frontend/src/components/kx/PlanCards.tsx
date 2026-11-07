@@ -23,7 +23,7 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel }: Props) {
     const [cycle, setCycle] = useState<'monthly' | 'annual'>('annual');
 
     if (error) return <p className="text-sm text-kx-ink2">{es ? 'No pudimos cargar los planes. Recarga la página.' : "We couldn't load the plans. Reload the page."}</p>;
-    if (!plans) return <div className="h-64 animate-pulse rounded-[20px] bg-kx-surface" aria-busy="true" />;
+    if (!plans) return <div className="h-64 kx-shimmer rounded-[20px]" aria-busy="true" />;
 
     const debts = (p: PlanView) => p.debtLimit == null
         ? (es ? 'Deudas ilimitadas' : 'Unlimited debts')

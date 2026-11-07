@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
+import { moment } from '@/lib/feedback';
 import { clearSeen, lockedOnOpen, lockedOnReturn, markSeen, readLock, unlockWithFingerprint } from '@/lib/appLock';
 
 const reducedMotion = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -78,6 +79,7 @@ export function AppLock() {
 
     const unlock = useCallback(async () => {
         await unlockWithFingerprint();
+        moment('unlock');
         markSeen(readLock());
         setLocked(false);
     }, []);

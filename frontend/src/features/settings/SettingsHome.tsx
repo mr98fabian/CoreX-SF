@@ -17,6 +17,7 @@ import { usePlans } from '@/lib/plans';
 import { AmberRule, BankHeader, Section } from '@/components/kx';
 import { ConnectAI } from '@/components/ConnectAI';
 import { FingerprintLockRow } from './FingerprintLockRow';
+import { SoundRow } from './SoundRow';
 
 interface Status { plan: string; status: string; current_period_end: string | null }
 interface SyncStatus { cadence: { min: number; max: number }; windows: { label: string; time: string }[]; last_sync_at: string | null }
@@ -125,6 +126,7 @@ export default function SettingsHome() {
                         </span>
                     </div>
                     <FingerprintLockRow es={es} />
+                    <SoundRow es={es} />
                     <SyncRow es={es} />
                     <Row to={advanced('data')} icon={CreditCard} title={es ? 'Mis datos' : 'My data'} sub={es ? 'Exportar o reiniciar' : 'Export or reset'} />
                     <button onClick={() => signOut()} className="kx-press mt-1 flex w-full items-center gap-3 border-t border-[var(--kx-line-soft)] pt-3 text-left text-[14.5px] font-semibold text-kx-debt">

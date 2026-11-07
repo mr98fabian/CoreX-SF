@@ -12,6 +12,7 @@
  * calibrated (documented tech debt) — the consequence uses the engine's
  * interest_saved_monthly instead.
  */
+import { moment, primeAudio } from '@/lib/feedback';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -83,6 +84,7 @@ export default function AttackPage() {
 
     const confirm = async () => {
         if (!rec || !funding || amount <= 0) return;
+        primeAudio();
         setBusy(true);
         try {
             await apiFetch('/api/strategy/execute', {
@@ -94,6 +96,7 @@ export default function AttackPage() {
                 }),
             });
             setDone({ destination: rec.destination, amount });
+            moment('payment');
             toast({ title: es ? `Ataque confirmado: ${formatMoney(amount)} a ${rec.destination}` : `Attack confirmed: ${formatMoney(amount)} to ${rec.destination}` });
             s.reload(); fetchCc();
         } catch {
@@ -111,7 +114,7 @@ export default function AttackPage() {
                 <BankHeader title={es ? 'Plan de ataque' : 'Attack plan'} greeting={es ? 'la pantalla de actuar' : 'where you act'} />
                 <AmberRule />
 
-                {loading && <div className="h-48 animate-pulse rounded-[20px] bg-kx-surface" aria-busy="true" />}
+                {loading && <div className="h-48 kx-shimmer rounded-[20px]" aria-busy="true" />}
                 {!loading && (s.error || ccError) && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tu plan' : "We couldn't load your plan"}>
                         <button onClick={() => { setCcError(false); s.reload(); fetchCc(); }} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>

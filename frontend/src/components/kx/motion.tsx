@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { COUNT_MS, DURATION, EASE_OUT, STAMP_SPRING, useReducedMotion } from '@/lib/motion';
+import { useFormatMoney } from '@/hooks/useFormatMoney';
 
 /**
  * Counts a number from its previous value to the new one (≤ 600 ms) — e.g.
@@ -68,4 +69,10 @@ export function StampDrop({ drop, children }: { drop: boolean; children: React.R
             {children}
         </motion.span>
     );
+}
+
+/** A money figure that never changes abruptly: counts to the new value (CountUp + the user's currency). */
+export function MoneyCount({ value, className }: { value: number; className?: string }) {
+    const { formatMoney } = useFormatMoney();
+    return <CountUp value={value} format={(n) => formatMoney(n)} label={(n) => formatMoney(n)} className={className} />;
 }

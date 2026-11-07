@@ -17,6 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { AmberRule, BankHeader, HeroNumber, LedgerRow, PrimaryPill, Section } from '@/components/kx';
 import { AccountLogo } from '@/components/AccountLogo';
+import { MoneyCount } from '@/components/kx/motion';
 import { cardHint, whenInWords, type Freq, type RecurringSub, type SubsResponse } from './subscriptionText';
 
 const FREQ_LABEL = { es: { monthly: 'al mes', annual: 'al año', weekly: 'a la semana' }, en: { monthly: 'monthly', annual: 'yearly', weekly: 'weekly' } };
@@ -37,14 +38,14 @@ export function SubscriptionsView({ data, es, onAdd, onEdit }: { data: SubsRespo
     return (
         <>
             <HeroNumber label={es ? 'Pagas al mes · estimado' : 'You pay monthly · estimate'} amount={Number(data.monthly_total)}
-                phrase={<>{es ? 'Al año: ' : 'Per year: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(Number(data.annual_total))}</b>
+                phrase={<>{es ? 'Al año: ' : 'Per year: '}<b className="kx-num font-semibold text-kx-ink"><MoneyCount value={Number(data.annual_total)} /></b>
                     <span className="text-kx-ink3">{es ? ` · ${active.length} activas` : ` · ${active.length} active`}</span></>} />
 
             <Section tone="neutral" title={es ? 'Próximos cobros' : 'Upcoming charges'} action={addBtn}>
                 {active.length === 0 && <p className="py-1 text-[13.5px] text-kx-ink2">{es ? 'Aún no registras suscripciones. Toca + para agregar la primera.' : 'No subscriptions yet. Tap + to add the first.'}</p>}
                 {active.map((s) => (
                     <LedgerRow key={s.id} onClick={() => onEdit(s)} title={s.name} logo={<AccountLogo name={s.name} src={s.logo_url} />}
-                        amount={formatMoney(Number(s.amount))}>
+                        amount={<MoneyCount value={Number(s.amount)} />}>
                         <span className="mt-0.5 flex justify-between gap-2 pl-[42px] text-[12.5px]">
                             <span className="text-kx-ink2">{whenInWords(s.next_charge_date, es)}{s.frequency !== 'monthly' && ` · ${FREQ_LABEL[es ? 'es' : 'en'][s.frequency]}`}</span>
                             {cardHint(s.account_name) && <span className="kx-tech text-kx-ink3">{cardHint(s.account_name)}</span>}
@@ -114,7 +115,7 @@ export default function SubscriptionsPage() {
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Suscripciones' : 'Subscriptions'} greeting={es ? 'lo que te cobran cada mes, en un solo lugar' : 'what you are charged every month, in one place'} />
                 <AmberRule />
-                {isLoading && <div className="h-40 animate-pulse rounded-[var(--kx-radius-card)] bg-kx-surface" aria-busy="true" />}
+                {isLoading && <div className="h-40 kx-shimmer rounded-[var(--kx-radius-card)]" aria-busy="true" />}
                 {isError && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tus suscripciones' : "We couldn't load your subscriptions"}>
                         <button onClick={() => refetch()} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
