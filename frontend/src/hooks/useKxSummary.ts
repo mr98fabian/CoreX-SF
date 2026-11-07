@@ -17,6 +17,7 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { ACTIVITY_KEY } from '@/hooks/useActivityData';
 import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 import type { SubsResponse } from '@/features/subscriptions/subscriptionText';
@@ -73,7 +74,11 @@ export function useKxSummary() {
         path: q.data?.path,
         income: q.data?.income ?? [],
     };
-    const load = useCallback(() => queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }), [queryClient]);
+    // A payment or a confirmed attack changes Actividad too: same events, same refresh
+    const load = useCallback(() => Promise.all([
+        queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: [ACTIVITY_KEY] }),
+    ]), [queryClient]);
 
     // Active subscriptions are real dated charges: same cache as the Suscripciones section
     const subsQ = useQuery({
