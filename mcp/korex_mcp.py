@@ -18,11 +18,33 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 
 API_URL = os.getenv("KOREX_API_URL", "https://corex-sf-production.up.railway.app").rstrip("/")
-INSTRUCTIONS = (
-    "Operas el KoreX de UN usuario con su token personal. "
-    "Al conectar por primera vez, informa al usuario sus horas de sincronización usando `korex_sync_status`. "
-    "Toda cifra de KoreX es una estimación: preséntala como tal."
-)
+# The house instruction pack (versioned here; tests pin its key phrases).
+INSTRUCTIONS = """Eres la mente de KoreX de UN usuario: operas su KoreX con su token personal y lo acompañas a salir de deudas.
+Preséntate con el nombre que el usuario te dio (`ai_name` en `korex_coach_profile`); si no te ha dado uno, pregúntale cómo quiere llamarte. Habla con el tono de su perfil: cálido, directo o modo pesado.
+
+REGLAS DURAS
+- Nunca muevas dinero real. KoreX registra y planea; los pagos los hace el usuario en su banco.
+- Nunca prometas puntos de score crediticio.
+- Números solo de fuentes reales: las herramientas de KoreX o lo que el usuario te muestre. Nunca inventes ni redondees a tu favor. Toda cifra de KoreX es una estimación: preséntala como tal.
+- Un pago se registra SOLO con captura o confirmación escrita del usuario. Sin eso, no llames a `register_payment`.
+
+EL MÉTODO DE LA CASA
+- Corte en cero: cada tarjeta debe reportar $0 en su fecha de corte.
+- Paga los estados completos al vencimiento: nada de saldo que genere interés.
+- Avalancha: el dinero extra va a la deuda de interés más alto.
+- Desempate: intereses antes que score. Si dos caminos empatan, gana el que ahorra más interés.
+- Las tarjetas builder (para construir historial) quedan fuera de la avalancha: uso mínimo y pago total.
+
+RITMO
+- Brief corto: una idea por mensaje y una misión por mensaje.
+- Avisa 2 días antes de cada corte: el último día útil para pagar es corte − 2.
+- Revisión semanal el día de pago del usuario (`payday_weekday` en su perfil).
+- Interrupciones: máximo 1 al día, 3 a la semana y 8 al mes. Silencio de 21:30 a 07:00.
+- Al conectar por primera vez, informa al usuario sus horas de sincronización usando `korex_sync_status`.
+
+CELEBRACIÓN CON DATOS
+- Celebra solo con cifras de `korex_logros`: el backend calcula, tú pones la voz. Cita cada cifra con su etiqueta y nunca celebres algo que no esté ahí.
+"""
 mcp = FastMCP("korex", instructions=INSTRUCTIONS)
 
 
@@ -197,6 +219,32 @@ def korex_upsert_subscription(name: str, amount: Optional[float] = None, frequen
         raise KorexError("amount is required to create a subscription")
     body.pop("status", None)
     return {"created": True, "subscription": _call("POST", "/api/subscriptions", {"name": name.strip(), **body})}
+
+
+@mcp.tool()
+def korex_coach_profile() -> dict:
+    """How the user wants to be coached: `tone` (calido | directo | pesado, with `tone_label`), `ai_name` (the name
+    the user gave you — introduce yourself with it; null = ask), `payday_weekday` (0=lunes…6=domingo, the weekly
+    review day; null = unknown). Scope: read:dashboard."""
+    return _call("GET", "/api/coach-profile")
+
+
+@mcp.tool()
+def korex_set_coach_profile(tone: Optional[str] = None, ai_name: Optional[str] = None,
+                            payday_weekday: Optional[int] = None) -> dict:
+    """Save what the user told you about their coaching: tone calido | directo | pesado, the name they gave you
+    (max 40 chars), payday weekday 0=lunes…6=domingo. Only send what the user actually said. Scope: write:accounts."""
+    body = {k: v for k, v in {"tone": tone, "ai_name": ai_name, "payday_weekday": payday_weekday}.items() if v is not None}
+    return _call("PATCH", "/api/coach-profile", body)
+
+
+@mcp.tool()
+def korex_logros() -> dict:
+    """The user's achievements, computed by KoreX from real data (you only narrate): total_pagado, num_pagos,
+    deudas_en_cero / deudas_totales, interes_evitado and interes_plan (engine: plan vs minimums), fecha_libre.
+    Each comes as {valor, etiqueta}: quote the etiqueta. racha_cortes_cero is null until a cut history exists —
+    never estimate it. Scope: read:dashboard."""
+    return _call("GET", "/api/logros")
 
 
 if __name__ == "__main__":

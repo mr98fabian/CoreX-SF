@@ -133,6 +133,6 @@ def health():
 
 # ── Register Routers ─────────────────────────────────────────
 ROUTERS = ["accounts", "cashflow", "dashboard", "strategy", "transactions",
-           "demo", "analytics", "subscriptions", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock"]
+           "demo", "analytics", "subscriptions", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock", "coach"]
 for mod in ROUTERS:
     app.include_router(__import__(f"routers.{mod}", fromlist=["router"]).router)

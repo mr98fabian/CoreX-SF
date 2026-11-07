@@ -200,3 +200,15 @@ class WebAuthnChallenge(SQLModel, table=True):
     purpose: str = Field(max_length=10)  # "register" | "auth"
     challenge: str = Field(max_length=128)  # base64url
     expires_at: datetime
+
+
+class CoachProfile(SQLModel, table=True):
+    """How the user's own AI (via MCP) coaches them: tone, the name the user gave
+    it, and payday weekday (weekly review). One row per user, created on first read."""
+    __tablename__ = "coach_profiles"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False, unique=True))
+    tone: str = Field(default="calido", max_length=10)          # calido | directo | pesado
+    ai_name: Optional[str] = Field(default=None, max_length=40)
+    payday_weekday: Optional[int] = Field(default=None)         # 0=lunes … 6=domingo
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
