@@ -32,7 +32,7 @@ interface CommandCenter {
     morning_briefing: {
         recommended_action: { amount: number; destination: string; destination_balance: number; destination_apr: number; reason: string } | null;
         impact?: { interest_saved_monthly?: number };
-    };
+    } | null;
     confidence_meter?: { debts_ranked?: { name: string; apr: number; balance: number; is_target: boolean }[]; strategy?: string };
 }
 
@@ -74,13 +74,13 @@ export default function AttackPage() {
 
     const funding = findFundingAccount(s.staged);
     // After confirming, keep showing what was just paid (the engine already recommends the next one)
-    const rec = done ? { amount: done.amount, destination: done.destination, destination_balance: done.amount, destination_apr: cc?.morning_briefing.recommended_action?.destination_apr ?? 0, reason: '' }
-        : (cc?.morning_briefing.recommended_action ?? null);
+    const rec = done ? { amount: done.amount, destination: done.destination, destination_balance: done.amount, destination_apr: cc?.morning_briefing?.recommended_action?.destination_apr ?? 0, reason: '' }
+        : (cc?.morning_briefing?.recommended_action ?? null);
     // Presentation cap only: never ask to send more than the debt owes or the account holds
     const amount = rec ? Math.min(rec.amount, rec.destination_balance, funding?.bal ?? rec.amount) : 0;
     const ranked = (cc?.confidence_meter?.debts_ranked ?? []).slice(0, STEPS);
     const stageByName = new Map(s.debts.map((d) => [d.name, d.stage]));
-    const saved = cc?.morning_briefing.impact?.interest_saved_monthly ?? 0;
+    const saved = cc?.morning_briefing?.impact?.interest_saved_monthly ?? 0;
 
     const confirm = async () => {
         if (!rec || !funding || amount <= 0) return;
