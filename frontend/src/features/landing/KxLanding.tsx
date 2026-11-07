@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarDays, ListChecks, Wallet } from 'lucide-react';
+import { MoneyAmount } from '@/components/MoneyAmount';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { buildMonths } from '@/lib/calendarSeries';
@@ -16,10 +17,20 @@ import { PlanCards } from '@/components/kx/PlanCards';
 import { AmberRule, Section } from '@/components/kx';
 import { VelocityCalculatorModal } from './VelocityCalculatorModal';
 
-// Example data only (fictional), shown labeled as such: a plan that goes from
-// ~$28K to $0 in five months, as in the approved preview.
-const EXAMPLE_START = 28451;
-const EXAMPLE_TIMELINE = [23900, 18600, 13100, 7300, 0];
+// María: a fictional person, the same one the public demo loads (backend
+// routers/demo.py). $18,400 across 4 cards; the month-end balances and the
+// figures below are the engine's own output for her data, pinned by
+// backend/tests/test_demo_persona.py. Always shown labeled "Datos de ejemplo".
+const EXAMPLE_START = 18400;
+const EXAMPLE_TIMELINE = [17361, 16296, 15205, 14089, 12948, 11781, 10588, 9369, 8123, 6726, 5422, 4092, 2734, 1348, 0];
+const EXAMPLE_MONTHS = 14;
+const EXAMPLE_INTEREST_AVOIDED = 30176; // vs paying only the minimums (engine estimate)
+
+const STATUS = {
+    live: { es: 'Disponible hoy', en: 'Available today' },
+    building: { es: 'En construcción', en: 'In progress' },
+    soon: { es: 'Próximamente', en: 'Coming later' },
+} as const;
 
 export default function KxLanding() {
     const { language, setLanguage } = useLanguage();
@@ -50,6 +61,19 @@ export default function KxLanding() {
         { icon: Wallet, t: es ? 'Anota tus deudas' : 'Add your debts', d: es ? 'Tarjetas, préstamos y tu cuenta de cheques. Sin conectar tu banco si no quieres.' : 'Cards, loans and your checking account. No bank link required.' },
         { icon: ListChecks, t: es ? 'KoreX arma tu ruta' : 'KoreX builds your route', d: es ? 'Te dice qué deuda atacar primero y con cuánto, un día a la vez.' : 'It tells you which debt to attack first and with how much, one day at a time.' },
         { icon: CalendarDays, t: es ? 'Mira el rojo volverse verde' : 'Watch red turn green', d: es ? 'Tu calendario muestra tu deuda en el tiempo hasta el día en que llega a $0.' : 'Your calendar shows your debt over time until the day it hits $0.' },
+    ];
+
+    const facts = [
+        { t: es ? 'Desde $9.99 al mes' : 'From $9.99 a month', d: es ? 'Precio publicado abajo. Empiezas gratis y cancelas cuando quieras.' : 'Price listed below. Start free, cancel anytime.' },
+        { t: es ? '$0 en cada corte' : '$0 at every statement', d: es ? 'Método avalancha: primero la deuda de interés más alto, sin dejar saldo que cobre interés al cierre.' : 'Avalanche method: highest interest first, leaving no balance to accrue interest at closing.' },
+        { t: es ? 'Hecho en español' : 'Built in Spanish', d: es ? 'Pensado en español desde el primer día, no traducido después.' : 'Designed in Spanish from day one, not translated later.' },
+        { t: es ? 'Funciona con tu IA' : 'Works with your AI', d: es ? 'Conecta tu asistente de IA para que registre pagos y te explique tu plan.' : 'Connect your AI assistant to log payments and explain your plan.' },
+    ];
+    const ladder: { status: keyof typeof STATUS; t: string; d: string }[] = [
+        { status: 'live', t: es ? 'Deuda' : 'Debt', d: es ? 'Tu ruta para llegar a $0: qué pagar hoy y cuándo quedas libre.' : 'Your route to $0: what to pay today and when you are free.' },
+        { status: 'building', t: es ? 'Ahorro' : 'Savings', d: es ? 'Lo que pagabas en deudas se convierte en tu fondo de emergencia.' : 'What you paid on debt becomes your emergency fund.' },
+        { status: 'soon', t: es ? 'Educación' : 'Education', d: es ? 'Aprender cómo funciona el dinero, a tu ritmo y en tu idioma.' : 'Learn how money works, at your pace and in your language.' },
+        { status: 'soon', t: es ? 'Patrimonio' : 'Wealth', d: es ? 'Poner tu dinero a trabajar a largo plazo.' : 'Put your money to work for the long term.' },
     ];
 
     return (
@@ -87,9 +111,49 @@ export default function KxLanding() {
                     </div>
                     <p className="mt-3 text-xs text-kx-ink3">{es ? 'Sin registro para calcular. Las cifras son estimaciones.' : 'No signup to calculate. Figures are estimates.'}</p>
                 </div>
-                <Section tone="neutral" title={es ? 'Ejemplo · el color es la deuda' : 'Example · color is debt'}>
+                <Section tone="neutral" title={es ? 'Datos de ejemplo · María, persona ficticia' : 'Example data · María, a fictional person'}>
+                    <dl className="mb-4 grid grid-cols-3 gap-3 border-b border-kx-line pb-4">
+                        <div><dt className="kx-label">{es ? 'Deuda · 4 tarjetas' : 'Debt · 4 cards'}</dt><dd className="mt-1 text-[17px] text-kx-ink"><MoneyAmount value={EXAMPLE_START} /></dd></div>
+                        <div><dt className="kx-label">{es ? 'Libre en' : 'Free in'}</dt><dd className="kx-num mt-1 text-[17px] text-kx-ink">{EXAMPLE_MONTHS} {es ? 'meses' : 'months'}</dd></div>
+                        <div><dt className="kx-label">{es ? 'Interés evitado' : 'Interest avoided'}</dt><dd className="mt-1 text-[17px] text-kx-paid"><MoneyAmount value={EXAMPLE_INTEREST_AVOIDED} /></dd></div>
+                    </dl>
                     <DebtCalendar months={months} maxDebt={EXAMPLE_START} paydays={paydays} example />
+                    <p className="mt-3 text-xs text-kx-ink3">{es ? 'Ejemplo calculado por el motor de KoreX con los datos de María. Interés evitado frente a pagar solo los mínimos. Estimaciones, no promesas.' : "Example computed by KoreX's engine from María's data. Interest avoided vs paying only the minimums. Estimates, not promises."}</p>
                 </Section>
+            </section>
+
+            {/* Verifiable facts only: no ratings, user counts or testimonials */}
+            <section className="mx-auto max-w-6xl px-5 pb-16">
+                <ul className="grid gap-px overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-line sm:grid-cols-2 lg:grid-cols-4">
+                    {facts.map(({ t, d }) => (
+                        <li key={t} className="bg-kx-bg p-5">
+                            <p className="text-[15px] font-semibold text-kx-ink">{t}</p>
+                            <p className="mt-1 text-sm leading-relaxed text-kx-ink2">{d}</p>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            {/* The ladder: only level 1 is live; the rest are labeled honestly */}
+            <section className="mx-auto max-w-6xl px-5 pb-16">
+                <p className="kx-label">{es ? 'El camino completo' : 'The full path'}</p>
+                <h2 className="mt-3 max-w-2xl font-editorial text-[34px] font-[400] leading-tight text-kx-ink">
+                    {es ? 'Salir de deudas es el primer escalón, no el último.' : 'Getting out of debt is the first step, not the last.'}
+                </h2>
+                <ol className="mt-6 grid gap-6 md:grid-cols-4">
+                    {ladder.map(({ t, d, status }, i) => (
+                        <li key={t} className={`border-t pt-5 ${status === 'live' ? 'border-kx-amber' : 'border-kx-line'}`}>
+                            <span className="flex items-center justify-between gap-2">
+                                <span className="kx-tech text-xs text-kx-amber-soft">0{i + 1}</span>
+                                <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${status === 'live' ? 'border-kx-amber text-kx-amber' : 'border-kx-line text-kx-ink3'}`}>
+                                    {STATUS[status][es ? 'es' : 'en']}
+                                </span>
+                            </span>
+                            <h3 className={`mt-3 text-lg font-semibold ${status === 'live' ? 'text-kx-ink' : 'text-kx-ink2'}`}>{t}</h3>
+                            <p className="mt-1.5 text-sm leading-relaxed text-kx-ink2">{d}</p>
+                        </li>
+                    ))}
+                </ol>
             </section>
 
             {/* How it works — 3 steps, one line each */}
