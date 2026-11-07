@@ -35,6 +35,7 @@ export interface DebtCalendarProps {
     maxDebt: number;
     paydays?: (year: number, month: number) => Set<number>;
     cutDays?: (year: number, month: number) => Map<number, string>;
+    chargesIn?: (year: number, month: number) => Map<number, number>; // day → what leaves (bills + minimums + subscriptions)
     compact?: boolean;
     example?: boolean; // landing demo: label as example data
     dayDetail?: (date: Date) => DayDetail; // tap a day → COBRAS / TE COBRAN sheet
@@ -42,7 +43,7 @@ export interface DebtCalendarProps {
 
 const DOW_LONG = { es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
 
-export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, example, dayDetail }: DebtCalendarProps) {
+export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, compact, example, dayDetail }: DebtCalendarProps) {
     const { language } = useLanguage();
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
@@ -70,13 +71,21 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
         const lead = new Date(mo.year, mo.month, 1).getDay();
         const pay = paydays?.(mo.year, mo.month) ?? new Set<number>();
         const cuts = cutDays?.(mo.year, mo.month) ?? new Map<number, string>();
-        const out: { day: number | null; debt: number; pay: boolean; cut?: string; free: boolean }[] =
+        const charges = chargesIn?.(mo.year, mo.month) ?? new Map<number, number>();
+        const out: { day: number | null; debt: number; pay: boolean; cut?: string; free: boolean; charge?: boolean }[] =
             Array.from({ length: lead }, () => ({ day: null, debt: 0, pay: false, free: false }));
         for (let d = 1; d <= daysIn(mo.year, mo.month); d++) {
-            out.push({ day: d, debt: debtOn(mo, d), pay: pay.has(d), cut: cuts.get(d), free: mo.zeroDay === d });
+            out.push({ day: d, debt: debtOn(mo, d), pay: pay.has(d), cut: cuts.get(d), free: mo.zeroDay === d, charge: charges.has(d) });
         }
         return out;
-    }, [mo, paydays, cutDays]);
+    }, [mo, paydays, cutDays, chargesIn]);
+    // Month summary: everything that leaves this month (subscriptions included)
+    const monthCharges = useMemo(() => {
+        if (!mo || !chargesIn) return null;
+        let t = 0;
+        chargesIn(mo.year, mo.month).forEach((v) => { t += v; });
+        return Math.round(t * 100) / 100;
+    }, [mo, chargesIn]);
 
     if (!mo) return null;
     const monthName = names[mo.month];
@@ -118,6 +127,12 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                         <p className="text-[10.5px] font-bold uppercase tracking-[.15em] text-kx-ink2">{es ? 'Debes' : 'You owe'}</p>
                         <p className="kx-hero-number mt-0.5 text-[36px] text-kx-ink">{mo.end <= 0 ? approx(0) : `≈ ${approx(mo.end)}`}</p>
                         <p className="text-xs text-kx-ink2">{heroNote}</p>
+                        {monthCharges != null && monthCharges > 0 && (
+                            <p className="mt-1 text-xs text-kx-ink2" data-testid="month-charges">
+                                {es ? 'Te cobran este mes ' : 'Charged this month '}<b className="kx-num text-kx-ink">{formatMoney(monthCharges)}</b>
+                                <span className="text-kx-ink3">{es ? ' · incluye suscripciones' : ' · includes subscriptions'}</span>
+                            </p>
+                        )}
                     </div>
                     <div className="relative mx-0.5 mt-3.5 h-2 rounded-full" style={{ background: 'linear-gradient(90deg,#DC2626,#F97316 42%,#FBBF24 68%,#34D399)' }}>
                         <span className="absolute top-1/2 h-[17px] w-[17px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-kx-surface bg-white shadow transition-[left] duration-300"
@@ -156,6 +171,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                                     isToday && (es ? 'hoy' : 'today'),
                                     c.pay && (es ? 'día de nómina' : 'payday'),
                                     c.cut && (es ? 'día de corte' : 'statement cut'),
+                                    c.charge && (es ? 'día de cobro' : 'charge day'),
                                     c.free && (es ? '¡libre de deudas!' : 'debt-free!'),
                                 ].filter(Boolean).join(', ');
                                 const label = `${DOW_LONG[es ? 'es' : 'en'][date.getDay()]} ${c.day}${es ? ' de' : ''} ${monthName}${marks ? `, ${marks}` : ''}, ${c.debt <= 0 ? (es ? 'sin deuda' : 'no debt') : `${es ? 'proyección' : 'projection'} ≈ ${approx(c.debt)}`}`;
@@ -166,6 +182,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
                                         {isToday && !compact && <span className="kx-tech pointer-events-none absolute left-1/2 top-[3px] -translate-x-1/2 rounded-sm bg-kx-amber px-1 text-[7.5px] font-bold leading-[11px] text-[#111418]" aria-hidden="true">{es ? 'HOY' : 'TODAY'}</span>}
                                         {c.free && <span className="absolute right-1 top-0.5 text-[10px] text-kx-amber" aria-hidden="true">★</span>}
                                         {c.cut && !compact && !isToday && <span className="kx-tech absolute left-1 top-0.5 text-[8px] font-bold opacity-70" aria-hidden="true">C</span>}
+                                        {c.charge && !compact && <span data-testid="charge-mark" className="absolute bottom-[5px] right-1.5 h-[2px] w-[6px] rounded-full bg-current opacity-70" aria-hidden="true" />}
                                         {c.pay && <span className="absolute bottom-[4px] left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-kx-pay ring-1 ring-black/20" aria-hidden="true" />}
                                     </>
                                 );
@@ -188,6 +205,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, compact, examp
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-kx-ink2">
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded" style={{ background: 'linear-gradient(90deg,#DC2626,#FBBF24,#34D399)' }} />{es ? 'fondo = tu deuda' : 'background = your debt'}</span>
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-kx-pay" />{es ? 'día de pago' : 'payday'}</span>
+                {chargesIn && <span className="flex items-center gap-1.5"><span className="h-[2px] w-[8px] rounded-full bg-kx-ink2" />{es ? 'te cobran' : 'charge'}</span>}
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded ring-2 ring-kx-amber" />{es ? 'hoy' : 'today'}</span>
                 <span className="flex items-center gap-1.5"><span className="text-kx-amber">★</span>{es ? 'libre' : 'free'}</span>
             </div>

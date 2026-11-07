@@ -12,6 +12,8 @@ import { useFormatMoney } from '@/hooks/useFormatMoney';
 import type { DayDetail } from '@/lib/calendarSeries';
 import { AccountLogo } from '@/components/AccountLogo';
 import { useAccountLogos } from '@/hooks/useAccounts';
+import { Link } from 'react-router-dom';
+import { cardHint } from '@/features/subscriptions/subscriptionText';
 
 const DAYS = { es: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
 const MONTHS = {
@@ -19,15 +21,21 @@ const MONTHS = {
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
 };
 
-function Row({ name, amount, sub, tone, logo }: { name: string; amount: string; sub?: string; tone: 'in' | 'out'; logo?: string | null }) {
-    return (
-        <li className="flex items-center justify-between gap-3 border-t border-[var(--kx-line-soft)] py-2.5 first:border-t-0">
+function Row({ name, amount, sub, tone, logo, to }: { name: string; amount: string; sub?: string; tone: 'in' | 'out'; logo?: string | null; to?: string }) {
+    const body = (
+        <>
             {logo !== undefined && <AccountLogo name={name} src={logo} />}
             <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14.5px] font-semibold text-kx-ink">{name}</span>
                 {sub && <span className="block text-xs text-kx-ink2">{sub}</span>}
             </span>
             <span className={`kx-num whitespace-nowrap text-[15px] font-semibold ${tone === 'in' ? 'text-kx-pay' : 'text-kx-ink'}`}>{amount}</span>
+        </>
+    );
+    const cls = 'flex items-center justify-between gap-3 py-2.5';
+    return (
+        <li className="border-t border-[var(--kx-line-soft)] first:border-t-0">
+            {to ? <Link to={to} className={`kx-press ${cls}`}>{body}</Link> : <div className={cls}>{body}</div>}
         </li>
     );
 }
@@ -40,7 +48,8 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
     const d = detail?.date;
     const isToday = !!d && d.toDateString() === today.toDateString();
     const charges = detail ? [...detail.expenses, ...detail.minimums.map((m) => ({ ...m, sub: es ? 'pago mínimo vence hoy' : 'minimum payment due' }))] : [];
-    const quiet = detail && !detail.incoming.length && !charges.length && !detail.cuts.length;
+    const subs = detail?.subscriptions ?? [];
+    const quiet = detail && !detail.incoming.length && !charges.length && !subs.length && !detail.cuts.length;
 
     return (
         <Sheet open={!!detail} onOpenChange={(v) => !v && onClose()}>
@@ -67,11 +76,15 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
                             </section>
                         )}
 
-                        {(charges.length > 0 || detail.cuts.length > 0) && (
+                        {(charges.length > 0 || subs.length > 0 || detail.cuts.length > 0) && (
                             <section>
                                 <p className="kx-label mb-1">{es ? 'Te cobran' : 'You get charged'}</p>
                                 <ul>
                                     {charges.map((l, i) => <Row key={`c${i}`} name={l.name} amount={`−${formatMoney(l.amount)}`} sub={'sub' in l ? (l.sub as string) : undefined} tone="out" logo={'sub' in l ? logoOf(l.name) : undefined} />)}
+                                    {subs.map((x, i) => (
+                                        <Row key={`s${x.id}-${i}`} name={x.name} amount={`−${formatMoney(x.amount)}`} tone="out" logo={x.logo_url} to="/dashboard/subscriptions"
+                                            sub={[es ? 'suscripción' : 'subscription', cardHint(x.account_name)].filter(Boolean).join(' · ')} />
+                                    ))}
                                     {detail.cuts.map((c, i) => (
                                         <Row key={`k${i}`} name={es ? `Corta la ${c.name}` : `${c.name} closes`} amount={formatMoney(c.balance)}
                                             sub={es ? 'que reporte en $0: este es su saldo hoy' : 'make it report $0: this is its balance today'} tone="out" logo={logoOf(c.name)} />

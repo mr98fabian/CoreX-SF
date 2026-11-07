@@ -8,6 +8,9 @@
  * freedom month is estimated from the previous month's pace. Calibrating the
  * engine (daily series, real payday effects) is a separate mission.
  */
+import type { RecurringSub } from '@/features/subscriptions/subscriptionText';
+import { subsOn } from '@/lib/subscriptionOccurrences';
+
 export interface TimelinePoint { date: string; total_balance: number }
 
 export interface CalendarMonth {
@@ -129,15 +132,19 @@ export interface DayLine { name: string; amount: number }
 export interface DayCut { name: string; balance: number }
 export interface DayDebt { name: string; type: string; balance: number | string; min_payment: number | string; due_day?: number | null; closing_day?: number | null }
 
+export interface DaySub { id: number; name: string; amount: number; logo_url: string | null; account_name: string | null }
+type SubLike = Pick<RecurringSub, 'id' | 'name' | 'amount' | 'logo_url' | 'account_name' | 'status' | 'frequency' | 'next_charge_date'>;
+
 export interface DayDetail {
     date: Date;
     projected: number;      // interpolated projection (label it "Proyección")
     incoming: DayLine[];    // COBRAS: income that lands that day
     expenses: DayLine[];    // TE COBRAN: bills that day
     minimums: DayLine[];    // TE COBRAN: minimum payments due that day
+    subscriptions: DaySub[]; // TE COBRAN: active subscriptions charged that day (real charges)
     cuts: DayCut[];         // TE COBRAN: cards that close that day (target: report $0)
     totalIn: number;        // = Σ incoming
-    totalOut: number;       // = Σ expenses + Σ minimums (a cut is a target, not a charge)
+    totalOut: number;       // = Σ expenses + Σ minimums + Σ subscriptions (a cut is a target, not a charge)
 }
 
 const num = (v: unknown) => Number(v) || 0;
@@ -145,7 +152,7 @@ const dayMatches = (day: number | null | undefined, date: Date) =>
     !!day && date.getDate() === Math.min(day, daysIn(date.getFullYear(), date.getMonth()));
 
 /** Everything that happens on one day, from the same summary the screens use. */
-export function buildDayDetail(date: Date, months: CalendarMonth[], cashflow: IncomeItem[], debts: DayDebt[]): DayDetail {
+export function buildDayDetail(date: Date, months: CalendarMonth[], cashflow: IncomeItem[], debts: DayDebt[], subs: SubLike[] = []): DayDetail {
     const mo = months.find((m) => m.year === date.getFullYear() && m.month === date.getMonth());
     const real = cashflow.filter((it) => !it.is_debt_virtual); // virtual debt rows are the minimums below
     const incoming = real.filter((it) => isIncome(it) && occursOn(it, date)).map((it) => ({ name: it.name ?? '', amount: num(it.amount) }));
@@ -154,10 +161,11 @@ export function buildDayDetail(date: Date, months: CalendarMonth[], cashflow: In
     const minimums = open.filter((a) => dayMatches(a.due_day, date) && num(a.min_payment) > 0)
         .map((a) => ({ name: a.name, amount: num(a.min_payment) }));
     const cuts = open.filter((a) => dayMatches(a.closing_day, date)).map((a) => ({ name: a.name, balance: num(a.balance) }));
+    const subscriptions = subsOn(subs, date).map((x) => ({ id: x.id, name: x.name, amount: num(x.amount), logo_url: x.logo_url, account_name: x.account_name }));
     const sum = (xs: DayLine[]) => Math.round(xs.reduce((s, x) => s + x.amount, 0) * 100) / 100;
     return {
         date, projected: mo ? debtOn(mo, date.getDate()) : 0,
-        incoming, expenses, minimums, cuts,
-        totalIn: sum(incoming), totalOut: sum([...expenses, ...minimums]),
+        incoming, expenses, minimums, subscriptions, cuts,
+        totalIn: sum(incoming), totalOut: sum([...expenses, ...minimums, ...subscriptions]),
     };
 }

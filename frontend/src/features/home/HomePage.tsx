@@ -118,7 +118,7 @@ export default function HomePage() {
                 {!noDebt && (
                     <Section tone="neutral" bare title={es ? 'Tu avance · el color es tu deuda' : 'Your progress · color is your debt'}
                         action={<Link to="/dashboard/calendar" className="flex items-center text-xs font-semibold text-kx-amber">{es ? 'Ver calendario' : 'Open calendar'}<ChevronRight className="h-4 w-4" /></Link>}>
-                        <DebtCalendar compact months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} cutDays={s.cutDays} dayDetail={s.dayDetail} />
+                        <DebtCalendar compact months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} cutDays={s.cutDays} chargesIn={s.chargesIn} dayDetail={s.dayDetail} />
                     </Section>
                 )}
 

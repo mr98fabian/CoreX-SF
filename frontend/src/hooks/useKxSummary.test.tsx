@@ -6,8 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const apiFetch = vi.fn(async (path: string) => {
     if (path === '/api/dashboard') return { total_debt: 1000, liquid_cash: 200 };
     if (path === '/api/velocity/freedom-path') return { timeline: [], freedom_date: '2027-01-01', total_months: 2 };
+    if (path === '/api/subscriptions') return { items: [], monthly_total: '0', annual_total: '0' };
     return [];
 });
+// The 4 summary calls; subscriptions ride their own cached query (shared with the Suscripciones section)
+const summaryCalls = () => apiFetch.mock.calls.filter(([p]) => p !== '/api/subscriptions').length;
+const subsCalls = () => apiFetch.mock.calls.filter(([p]) => p === '/api/subscriptions').length;
 vi.mock('@/lib/api', () => ({ apiFetch: (p: string) => apiFetch(p) }));
 vi.mock('@/features/auth/AuthContext', () => ({ useAuth: () => ({ user: { id: 'user-a' } }) }));
 
@@ -47,18 +51,20 @@ async function mount() {
 describe('useKxSummary shares one cached query', () => {
     it('a second mount within staleTime paints from cache without repeating the 4 calls', async () => {
         await mount();
-        expect(apiFetch).toHaveBeenCalledTimes(4);
+        expect(summaryCalls()).toBe(4);
+        expect(subsCalls()).toBe(1);
         expect(host.textContent).toBe('1000');
 
         await act(async () => root.render(<QueryClientProvider client={client}><span>otra pantalla</span></QueryClientProvider>));
         await mount();
         expect(host.textContent).toBe('1000'); // instantly, from cache
-        expect(apiFetch).toHaveBeenCalledTimes(4); // no new calls
+        expect(summaryCalls()).toBe(4); // no new calls
+        expect(subsCalls()).toBe(1);
     });
 
     it('reload() invalidates the entry and refetches the 4 calls', async () => {
         await mount();
         await act(async () => { await latest.current!.reload(); });
-        expect(apiFetch).toHaveBeenCalledTimes(8);
+        expect(summaryCalls()).toBe(8);
     });
 });
