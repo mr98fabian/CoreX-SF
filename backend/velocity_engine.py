@@ -2089,3 +2089,51 @@ def detect_interest_rate_arbitrage(
     
     return alerts
 
+
+
+# ── Modo Compra de Casa ──────────────────────────────────────
+# Estimation assumptions for the PITI (stated in every response as "estimado")
+HOUSE_RATE = Decimal("7")          # % APR, 30-year fixed
+HOUSE_TERM_MONTHS = 360
+HOUSE_TAX_PCT = Decimal("1.7")     # % of price per year (Texas average)
+HOUSE_INSURANCE_PCT = Decimal("0.35")  # % of price per year
+
+
+def estimated_piti(home_price: Decimal, down_pct: Decimal) -> Decimal:
+    """Monthly principal + interest (7%, 30 years) on price × (1 − down) plus
+    property tax and homeowner insurance. Mortgage insurance (MIP/PMI) is NOT
+    included."""
+    loan = home_price * (Decimal("1") - down_pct / Decimal("100"))
+    r = HOUSE_RATE / Decimal("1200")
+    growth = (Decimal("1") + r) ** HOUSE_TERM_MONTHS
+    pi = loan * r * growth / (growth - Decimal("1")) if loan > 0 else Decimal("0")
+    tax_ins = home_price * (HOUSE_TAX_PCT + HOUSE_INSURANCE_PCT) / Decimal("100") / Decimal("12")
+    return pi + tax_ins
+
+
+def house_goal_estimate(target: Decimal, home_price: Decimal, down_pct: Decimal, closing_pct: Decimal,
+                        saved: Decimal, monthly_saving: Optional[Decimal],
+                        debt_minimums: Decimal, monthly_income: Optional[Decimal]) -> dict:
+    """Down-payment thermometer + DTI guard. Decimal in, Decimal out (callers
+    quantize to present). eta_months None without a saving pace; dti None
+    without income on record."""
+    down = home_price * down_pct / Decimal("100")
+    closing = home_price * closing_pct / Decimal("100")
+    missing = max(Decimal("0"), target - saved)
+    pct = min(Decimal("100"), saved / target * Decimal("100")) if target > 0 else Decimal("0")
+    if missing == 0:
+        eta = 0
+    elif monthly_saving and monthly_saving > 0:
+        eta = int((missing / monthly_saving).to_integral_value(rounding="ROUND_CEILING"))
+    else:
+        eta = None
+    piti = estimated_piti(home_price, down_pct)
+    dti = (debt_minimums + piti) / monthly_income * Decimal("100") if monthly_income and monthly_income > 0 else None
+    return {"down": down, "closing": closing, "reserve": target - down - closing, "missing": missing, "pct": pct,
+            "eta_months": eta, "piti": piti, "debt_minimums": debt_minimums, "monthly_income": monthly_income, "dti": dti}
+
+
+def monthly_income(cashflow_items) -> Optional[Decimal]:
+    """Monthly income from (amount, frequency, is_income) tuples; None without income."""
+    income = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in cashflow_items if inc), Decimal("0"))
+    return income if income > 0 else None

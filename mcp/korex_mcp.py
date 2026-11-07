@@ -247,5 +247,26 @@ def korex_logros() -> dict:
     return _call("GET", "/api/logros")
 
 
+
+@mcp.tool()
+def korex_house_goal() -> dict:
+    """Modo Compra de Casa: {active:false} without a goal. With one: saved, target, pct, missing, desglose
+    {inicial, cierre, reserva}, eta_months/eta_date (null without a monthly saving pace) and dti {valor, piti,
+    minimos_deudas, ingreso_mensual, supuestos} (valor null without income). All figures are ESTIMATES: say so,
+    and never present the DTI as a pre-qualification. Scope: read:dashboard."""
+    return _call("GET", "/api/house-goal")
+
+
+@mcp.tool()
+def korex_set_house_goal(target_total: float, home_price: float, saved_amount: float = 0,
+                         monthly_saving: Optional[float] = None, down_pct: float = 3.5, closing_pct: float = 3.0) -> dict:
+    """Create or replace the user's house goal: total to save, home price, what is already saved, monthly saving
+    pace (optional), down payment % (default 3.5, FHA) and closing costs % (default 3.0). Send the full goal each
+    time, with the numbers the user gave. Scope: write:accounts."""
+    body = {"target_total": target_total, "home_price": home_price, "saved_amount": saved_amount,
+            "down_pct": down_pct, "closing_pct": closing_pct, "monthly_saving": monthly_saving}
+    return _call("PUT", "/api/house-goal", body)
+
+
 if __name__ == "__main__":
     mcp.run()
