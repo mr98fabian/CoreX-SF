@@ -18,6 +18,7 @@ import { AmberRule, BankHeader, Section } from '@/components/kx';
 import { ConnectAI } from '@/components/ConnectAI';
 import { FingerprintLockRow } from './FingerprintLockRow';
 import { SoundRow } from './SoundRow';
+import { CoachBlock } from './CoachBlock';
 
 interface Status { plan: string; status: string; current_period_end: string | null }
 interface SyncStatus { cadence: { min: number; max: number }; windows: { label: string; time: string }[]; last_sync_at: string | null }
@@ -133,6 +134,8 @@ export default function SettingsHome() {
                         <LogOut className="h-[18px] w-[18px]" strokeWidth={1.75} />{es ? 'Cerrar sesión' : 'Sign out'}
                     </button>
                 </Section>
+
+                <CoachBlock es={es} />
 
                 {/* Conecta tu IA — locked or open per the server (GET /api/tokens/access) */}
                 <div id="ia"><ConnectAI /></div>

@@ -223,7 +223,8 @@ def calculate_debt_free_date(
             "standard_date": date.today().isoformat(),
             "velocity_date": date.today().isoformat(),
             "months_saved": 0,
-            "interest_saved": Decimal('0')
+            "interest_saved": Decimal('0'),
+            "velocity_interest": Decimal('0'),
         }
     
     # 1. Standard Strategy (Min Payments Only)
@@ -242,7 +243,9 @@ def calculate_debt_free_date(
         "standard_date": standard_sim["freedom_date"],
         "velocity_date": velocity_sim["freedom_date"],
         "months_saved": max(0, months_saved),
-        "interest_saved": max(Decimal('0'), interest_saved).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        "interest_saved": max(Decimal('0'), interest_saved).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        # Interest still paid following the plan (same simulation; read by /api/logros)
+        "velocity_interest": Decimal(str(velocity_sim["total_interest_paid"])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
     }
 
 
@@ -971,6 +974,7 @@ def get_projections(
         "velocity_debt_free_date": projections["velocity_date"],
         "months_saved": projections["months_saved"],
         "interest_saved": float(projections["interest_saved"]),
+        "velocity_interest": float(projections["velocity_interest"]),
         "years_saved": round(projections["months_saved"] / 12, 1),
         "assumptions": {
             "attack_percentage": float(attack_percentage),
