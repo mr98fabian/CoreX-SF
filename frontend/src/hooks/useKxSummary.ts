@@ -19,6 +19,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
+import type { SubsResponse } from '@/features/subscriptions/subscriptionText';
 
 export interface KxAccount {
     logo_url?: string | null;
@@ -74,6 +75,15 @@ export function useKxSummary() {
     };
     const load = useCallback(() => queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }), [queryClient]);
 
+    // Active subscriptions are real dated charges: same cache as the Suscripciones section
+    const subsQ = useQuery({
+        queryKey: ['recurring-subscriptions'],
+        queryFn: () => apiFetch<SubsResponse>('/api/subscriptions'),
+        staleTime: KX_SUMMARY_STALE_MS,
+        enabled: !!q.data,
+    });
+    const subs = subsQ.data?.items;
+
     const data = q.data;
     const derived = useMemo(() => {
         const totalDebt = Number(data?.dashboard?.total_debt ?? 0);
@@ -93,10 +103,20 @@ export function useKxSummary() {
             return map;
         };
         // Tap a calendar day → COBRAS / TE COBRAN, from this same summary (no extra calls)
-        const dayDetail = (date: Date) => buildDayDetail(date, months, data?.income ?? [], staged);
+        const dayDetail = (date: Date) => buildDayDetail(date, months, data?.income ?? [], staged, subs ?? []);
+        // What leaves on each day of a month (bills + minimums + subscriptions): calendar mark + month total
+        const chargesIn = (y: number, m: number) => {
+            const map = new Map<number, number>();
+            const n = new Date(y, m + 1, 0).getDate();
+            for (let d = 1; d <= n; d++) {
+                const out = dayDetail(new Date(y, m, d, 12)).totalOut;
+                if (out > 0) map.set(d, out);
+            }
+            return map;
+        };
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0),
-            staged, debts, counts, months, freedom, paydays, cutDays, dayDetail };
-    }, [data]);
+            staged, debts, counts, months, freedom, paydays, cutDays, dayDetail, chargesIn };
+    }, [data, subs]);
 
     return { ...state, ...derived, reload: load };
 }
