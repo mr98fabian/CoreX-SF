@@ -3,9 +3,12 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-let profile = { tone: 'calido', tone_label: 'Cálido', ai_name: null as string | null, payday_weekday: null };
+let profile = { tone: 'calido', tone_label: 'Cálido', ai_name: null as string | null, payday_weekday: null, ranking_opt_in: false, ranking_alias: null as string | null };
 const apiFetch = vi.fn(async (_url: string, init?: RequestInit) => {
-    if (init?.method === 'PATCH') profile = { ...profile, ...JSON.parse(String(init.body)) };
+    if (init?.method === 'PATCH') {
+        profile = { ...profile, ...JSON.parse(String(init.body)) };
+        if (profile.ranking_opt_in && !profile.ranking_alias) profile.ranking_alias = 'Zorro Ámbar 12';
+    }
     return profile;
 });
 vi.mock('@/lib/api', () => ({ apiFetch: (u: string, i?: RequestInit) => apiFetch(u, i) }));
@@ -38,6 +41,17 @@ describe('Tu coach IA', () => {
         expect([...el.querySelectorAll('[role="radio"]')].map((b) => b.textContent)).toEqual(['Cálido', 'Directo', 'Modo pesado']);
         expect(el.querySelector('[role="radio"][aria-checked="true"]')?.textContent).toBe('Cálido');
         expect(el.querySelector('input')?.getAttribute('aria-label')).toBe('Nombre de tu IA');
+    });
+
+    it('ranking is opt-in: the switch saves it and reveals the generated alias', async () => {
+        const el = await render();
+        const sw = el.querySelector('[role="switch"]') as HTMLButtonElement;
+        expect(sw.getAttribute('aria-checked')).toBe('false');
+        expect(el.querySelector('input[aria-label="Tu alias"]')).toBeNull();
+        await act(async () => sw.click());
+        await flush();
+        expect(apiFetch).toHaveBeenCalledWith('/api/coach-profile', expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ ranking_opt_in: true }) }));
+        expect((el.querySelector('input[aria-label="Tu alias"]') as HTMLInputElement).value).toBe('Zorro Ámbar 12');
     });
 
     it('saves the tone and the name with PATCH /api/coach-profile', async () => {

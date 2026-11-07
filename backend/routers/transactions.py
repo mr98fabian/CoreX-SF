@@ -22,6 +22,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
 from transaction_classifier import classify_transaction
 
+from routers.engagement import award_once
+
 router = APIRouter(prefix="/api", tags=["transactions"])
 
 
@@ -80,6 +82,9 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
     with bypass_fk(session):
         session.commit()
     session.refresh(db_tx)
+    if (tx.category or "").lower() in ("payment", "debt payment") and Decimal(str(tx.amount)) > 0:
+        award_once(session, user_id, "payment", f"tx:{db_tx.id}")  # habit points, never by amount
+        session.commit()
     if funding is not None:
         audit_summary(audit_text.transaction_recorded(applied, tx.category, account.name, funding.name))
     else:

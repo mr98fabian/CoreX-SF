@@ -5,13 +5,16 @@
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MessageCircle, Sparkles } from 'lucide-react';
+import { MessageCircle, Sparkles, Trophy } from 'lucide-react';
 import { Section } from '@/components/kx';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 
 export type Tone = 'calido' | 'directo' | 'pesado';
-export interface CoachProfile { tone: Tone; tone_label: string; ai_name: string | null; payday_weekday: number | null }
+export interface CoachProfile {
+    tone: Tone; tone_label: string; ai_name: string | null; payday_weekday: number | null;
+    ranking_opt_in?: boolean; ranking_alias?: string | null;
+}
 
 const TONES: { v: Tone; es: string; en: string }[] = [
     { v: 'calido', es: 'Cálido', en: 'Warm' },
@@ -27,11 +30,13 @@ export function CoachBlock({ es }: { es: boolean }) {
     // Draft only while typing; otherwise the field shows the saved name
     const [draft, setDraft] = useState<string | null>(null);
     const name = draft ?? data?.ai_name ?? '';
+    const [aliasDraft, setAliasDraft] = useState<string | null>(null);
+    const alias = aliasDraft ?? data?.ranking_alias ?? '';
 
     const save = useMutation({
-        mutationFn: (body: Partial<Pick<CoachProfile, 'tone' | 'ai_name'>>) =>
+        mutationFn: (body: Partial<Pick<CoachProfile, 'tone' | 'ai_name' | 'ranking_opt_in' | 'ranking_alias'>>) =>
             apiFetch<CoachProfile>('/api/coach-profile', { method: 'PATCH', body: JSON.stringify(body) }),
-        onSuccess: (p) => qc.setQueryData(KEY, p),
+        onSuccess: (p) => { qc.setQueryData(KEY, p); qc.invalidateQueries({ queryKey: ['ranking'] }); },
         onError: () => toast({ title: es ? 'No se pudo guardar' : 'Could not save', variant: 'destructive' }),
     });
     const saveName = () => {
@@ -39,6 +44,12 @@ export function CoachBlock({ es }: { es: boolean }) {
         setDraft(null);
         if (v !== (data?.ai_name ?? '')) save.mutate({ ai_name: v || null });
     };
+    const saveAlias = () => {
+        const v = alias.trim();
+        setAliasDraft(null);
+        if (v.length >= 2 && v !== (data?.ranking_alias ?? '')) save.mutate({ ranking_alias: v });
+    };
+    const optIn = !!data?.ranking_opt_in;
 
     return (
         <Section tone="neutral" title={es ? 'Tu coach IA' : 'Your AI coach'}>
@@ -71,6 +82,28 @@ export function CoachBlock({ es }: { es: boolean }) {
                         aria-label={es ? 'Nombre de tu IA' : "Your AI's name"}
                         className="w-32 rounded-lg border border-kx-line bg-kx-bg px-3 py-1.5 text-right text-[14px] text-kx-ink outline-none focus:border-kx-amber" />
                 </label>
+                <div className="flex items-center gap-3 border-t border-[var(--kx-line-soft)] pt-3 mt-3">
+                    <span className="flex w-6 flex-none items-center justify-center"><Trophy className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} /></span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-[14.5px] font-semibold text-kx-ink">{es ? 'Ranking y ligas' : 'Ranking & leagues'}</span>
+                        <span className="block text-xs text-kx-ink2">{es ? 'Puntos por hábitos, nunca por montos. Apareces con un alias anónimo.' : 'Points for habits, never amounts. You appear under an anonymous alias.'}</span>
+                    </span>
+                    <button role="switch" aria-checked={optIn} aria-label={es ? 'Ranking y ligas' : 'Ranking & leagues'} disabled={!data || save.isPending}
+                        onClick={() => save.mutate({ ranking_opt_in: !optIn })}
+                        className={`relative h-6 w-11 flex-none rounded-full border ${optIn ? 'border-kx-amber bg-kx-amber' : 'border-kx-line bg-kx-bg'}`}>
+                        <span className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-kx-ink transition-transform ${optIn ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                    </button>
+                </div>
+                {optIn && (
+                    <label className="flex items-center gap-3 pt-3">
+                        <span className="w-6 flex-none" />
+                        <span className="min-w-0 flex-1 text-xs text-kx-ink2">{es ? 'Tu alias' : 'Your alias'}</span>
+                        <input value={alias} maxLength={40} onChange={(e) => setAliasDraft(e.target.value)} onBlur={saveAlias}
+                            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                            aria-label={es ? 'Tu alias' : 'Your alias'}
+                            className="w-40 rounded-lg border border-kx-line bg-kx-bg px-3 py-1.5 text-right text-[14px] text-kx-ink outline-none focus:border-kx-amber" />
+                    </label>
+                )}
             </div>
         </Section>
     );
