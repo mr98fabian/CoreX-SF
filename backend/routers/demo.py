@@ -30,18 +30,19 @@ router = APIRouter(prefix="/api", tags=["demo"])
 # Transaction tuple: account name, amount, description, category, days_ago
 
 # ── Relatable persona: María González (EXAMPLE DATA) ─────────
-# Total debt $35,050 across 5 debts; biweekly paycheck, small emergency fund.
+# Fictional, and the same María the public landing shows: $18,400 across 4
+# cards, biweekly paycheck. The engine computes her plan (14 months to $0);
+# tests/test_demo_persona.py pins that so landing and demo can't drift apart.
 MARIA = {
     "label": "María González (Demo)",
     "checking": "Cuenta de cheques (nómina)",
     "accounts": [
         ("Cuenta de cheques (nómina)", "checking", 2150.00, 0.01, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
         ("Ahorro de emergencia",       "savings",  1200.00, 4.00, 0, None, None, False, "revolving", "credit_card", None, None, None, None),
-        ("Tarjeta Visa",               "debt",     6800.00, 26.99, 204.00, 15,  8, False, "revolving", "credit_card", None, None, None, 8000.00),
-        ("Tarjeta Mastercard",         "debt",     3400.00, 24.99, 102.00, 22, 15, False, "revolving", "credit_card", None, None, None, 5000.00),
-        ("Tarjeta de tienda",          "debt",     1150.00, 29.99,  40.00,  5, 28, False, "revolving", "credit_card", None, None, None, 1500.00),
-        ("Préstamo del auto",          "debt",    16500.00, 11.90, 385.00, 10, None, False, "fixed", "auto_loan",     17400.00, 60, 56, None),
-        ("Préstamo personal",          "debt",     7200.00, 17.50, 210.00, 20, None, False, "fixed", "personal_loan",  8400.00, 60, 48, None),
+        ("Tarjeta Visa",               "debt",     7200.00, 26.99, 216.00, 15,  8, False, "revolving", "credit_card", None, None, None, 9000.00),
+        ("Tarjeta Mastercard",         "debt",     5400.00, 24.99, 162.00, 22, 15, False, "revolving", "credit_card", None, None, None, 7000.00),
+        ("Tarjeta Discover",           "debt",     3500.00, 22.99, 105.00, 12,  5, False, "revolving", "credit_card", None, None, None, 5000.00),
+        ("Tarjeta de tienda",          "debt",     2300.00, 29.99,  69.00,  5, 28, False, "revolving", "credit_card", None, None, None, 3000.00),
     ],
     "cashflows": [
         ("Nómina quincenal",     1850.00, "income",  "biweekly", False, 1,  4,    None),
@@ -56,9 +57,9 @@ MARIA = {
         ("Cuenta de cheques (nómina)", 1850.00, "Nómina quincenal",            "salary",    3),
         ("Cuenta de cheques (nómina)", 1850.00, "Nómina quincenal",            "salary",   17),
         ("Cuenta de cheques (nómina)", -1350.00, "Renta del mes",              "housing",  16),
-        ("Tarjeta Visa",                204.00, "Pago mínimo Tarjeta Visa",    "payment",  12),
-        ("Préstamo del auto",           385.00, "Pago mensual del auto",       "payment",   9),
-        ("Préstamo personal",           210.00, "Pago préstamo personal",      "payment",   6),
+        ("Tarjeta Visa",                216.00, "Pago mínimo Tarjeta Visa",    "payment",  12),
+        ("Tarjeta Mastercard",          162.00, "Pago mínimo Tarjeta Mastercard", "payment", 9),
+        ("Tarjeta Discover",            105.00, "Pago mínimo Tarjeta Discover", "payment",  6),
         ("Cuenta de cheques (nómina)", -118.40, "Supermercado",                "food",      2),
         ("Cuenta de cheques (nómina)",  -54.75, "Gasolina",                    "transport", 4),
     ],
