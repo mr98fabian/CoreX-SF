@@ -17,6 +17,7 @@ from sqlmodel import select
 from api_tokens import audit_summary, require_scope
 from database import request_session
 from models import Account, CutHistory
+from routers.engagement import award_once, revoke
 
 router = APIRouter(prefix="/api", tags=["cuts"])
 
@@ -82,6 +83,11 @@ async def record_cut(body: CutIn, user_id: str = Depends(require_scope("write:ac
         session.add(cut)
         session.commit()
         session.refresh(cut)
+        if cut.was_zero:
+            award_once(session, user_id, "cut_zero", f"cut:{cut.id}")
+        else:
+            revoke(session, user_id, "cut_zero", f"cut:{cut.id}")  # corrected to non-zero: no points
+        session.commit()
         audit_summary(f"Corte de {acc.name} el {body.cut_date.isoformat()}: "
                       + ("$0" if cut.was_zero else "saldo reportado") + ("" if created else " (actualizado)"))
         return {**_out(cut), "created": created}

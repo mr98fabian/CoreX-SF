@@ -41,7 +41,8 @@ def test_first_get_creates_the_default_profile(client):
     as_user(A)
     r = client.get("/api/coach-profile", headers={"Authorization": "Bearer x"})
     assert r.status_code == 200
-    assert r.json() == {"tone": "calido", "tone_label": "Cálido", "ai_name": None, "payday_weekday": None, "payday_label": None}
+    assert r.json() == {"tone": "calido", "tone_label": "Cálido", "ai_name": None, "payday_weekday": None, "payday_label": None,
+                        "ranking_opt_in": False, "ranking_alias": None}
 
 
 def test_patch_valid_and_partial(client):
@@ -49,7 +50,8 @@ def test_patch_valid_and_partial(client):
     h = {"Authorization": "Bearer x"}
     r = client.patch("/api/coach-profile", headers=h, json={"tone": "pesado", "ai_name": "  Muse ", "payday_weekday": 4})
     assert r.status_code == 200
-    assert r.json() == {"tone": "pesado", "tone_label": "Modo pesado", "ai_name": "Muse", "payday_weekday": 4, "payday_label": "viernes"}
+    assert r.json() == {"tone": "pesado", "tone_label": "Modo pesado", "ai_name": "Muse", "payday_weekday": 4, "payday_label": "viernes",
+                        "ranking_opt_in": False, "ranking_alias": None}
     r = client.patch("/api/coach-profile", headers=h, json={"tone": "directo"})  # partial: name and payday kept
     assert r.json()["ai_name"] == "Muse" and r.json()["payday_weekday"] == 4 and r.json()["tone"] == "directo"
     r = client.patch("/api/coach-profile", headers=h, json={"ai_name": None})

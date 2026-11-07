@@ -34,6 +34,8 @@ from velocity_engine import (
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 
+from routers.engagement import award_once
+
 router = APIRouter(prefix="/api", tags=["strategy"])
 
 
@@ -228,6 +230,9 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
                              account_id=primary_id, user_id=user_id)
             session.add(tx)
             with bypass_fk(session):
+                session.commit()
+            if dest_acc and dest_acc.type == "debt":
+                award_once(session, user_id, "payment", f"tx:{tx.id}")
                 session.commit()
             logger.info(f"Movement executed: user={user_id} applied={applied} requested={amount}")
             return {
