@@ -18,6 +18,7 @@ import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { DebtCalendar } from '@/components/kx/DebtCalendar';
 import { HouseModule } from './HouseModule';
+import { DailyInterestLine } from './DailyInterestLine';
 import { LeagueBlock } from './LeagueBlock';
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -96,6 +97,7 @@ export default function HomePage() {
 
                 <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
                     phrase={<>{es ? 'Disponible para tu plan: ' : 'Available for your plan: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b></>} />
+                <DailyInterestLine es={es} periods={s.dailyPeriods} debtBalances={s.debts.map((a) => a.bal)} />
 
                 {/* HOY — the single active signal */}
                 {cut && (
@@ -149,7 +151,6 @@ export default function HomePage() {
                         </button>
                         {showDetail && (
                             <div className="mt-3 space-y-1.5 text-[13px] text-kx-ink2">
-                                <p>{es ? 'Hoy tus deudas generan ≈ ' : 'Your debts accrue ≈ '}<b className="kx-num text-kx-ink">{formatMoney(s.daily)}</b>{es ? ' de interés al día (estimado).' : ' in interest per day (estimate).'}</p>
                                 <Link to="/dashboard/accounts" className="block font-semibold text-kx-amber">{es ? 'Tasas, mínimos y fechas por cuenta ›' : 'Rates, minimums and dates per account ›'}</Link>
                             </div>
                         )}

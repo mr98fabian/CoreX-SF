@@ -14,7 +14,9 @@ from pydantic import BaseModel
 from database import get_session
 from auth import get_current_user_id
 from models import Subscription
-from plan_guard import PLAN_LIMITS, effective_plan, _parse_ts
+from plan_guard import PLAN_LIMITS, effective_plan, effective_plan_limit, _parse_ts
+from helpers import filter_active_debt_accounts
+from velocity_engine import daily_interest
 
 logger = logging.getLogger("korex.subscriptions")
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
@@ -227,8 +229,14 @@ async def get_customer_portal(user_id: str = Depends(get_current_user_id), sessi
 VELOCITY_ACCELERATION = 0.40
 
 
+def _cents(x) -> float:
+    from decimal import Decimal, ROUND_HALF_UP
+    return float(Decimal(x).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 @router.get("/savings-estimate")
-async def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
+async def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session),
+                               plan_limit: Optional[int] = Depends(effective_plan_limit)):
     from models import Account
     accounts = session.exec(select(Account).where(Account.user_id == user_id, Account.type == "debt")).all()
 
@@ -244,7 +252,8 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
 
     sorted_accounts = sorted(accounts, key=lambda a: float(a.interest_rate or 0), reverse=True)
     total_debt = sum(float(a.balance or 0) for a in sorted_accounts)
-    total_daily_interest = sum(float(a.balance or 0) * float(a.interest_rate or 0) / 100 / 365 for a in sorted_accounts)
+    # Engine, on the user's plan-limited set (same as dashboard / plan / logros)
+    total_daily_interest = daily_interest(filter_active_debt_accounts(accounts, plan_limit))["total"]
 
     plans_result = {}
     for plan_name in PLAN_COSTS:
@@ -261,10 +270,10 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
         years_without = min(30, max(5, round(avg_balance / max(avg_rate * 100, 1))))
         years_with = max(2, round(years_without * (1 - VELOCITY_ACCELERATION)))
 
-        daily_interest = sum(float(a.balance or 0) * float(a.interest_rate or 0) / 100 / 365 for a in plan_accounts)
+        plan_daily = daily_interest(filter_active_debt_accounts(accounts, PLAN_LIMITS[plan_name]))["total"]
         plans_result[plan_name] = {
             "accounts_used": n_used, "annual_savings": round(annual_savings, 2),
-            "monthly_savings": round(annual_savings / 12, 2), "daily_interest_burning": round(daily_interest, 2),
+            "monthly_savings": round(annual_savings / 12, 2), "daily_interest_burning": _cents(plan_daily),
             "roi_days": roi_days, "plan_cost_annual": plan_cost,
             "years_without": years_without, "years_with": years_with,
             "total_interest_without": round(annual_interest_without * years_without),
@@ -272,7 +281,7 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
         }
 
     return {
-        "has_data": True, "total_debt": round(total_debt, 2), "daily_interest_all": round(total_daily_interest, 2),
+        "has_data": True, "total_debt": round(total_debt, 2), "daily_interest_all": _cents(total_daily_interest),
         "plans": plans_result,
         "social_proof": {"total_accounts_monitored": len(accounts), "total_debt_tracked": round(total_debt, 2)},
     }

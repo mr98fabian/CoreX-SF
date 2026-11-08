@@ -33,7 +33,7 @@ interface CommandCenter {
         recommended_action: { amount: number; destination: string; destination_balance: number; destination_apr: number; reason: string } | null;
         impact?: { interest_saved_monthly?: number };
     } | null;
-    confidence_meter?: { debts_ranked?: { name: string; apr: number; balance: number; is_target: boolean }[]; strategy?: string };
+    confidence_meter?: { debts_ranked?: { name: string; apr: number; balance: number; is_target: boolean; daily_cost?: number }[]; strategy?: string };
 }
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -191,6 +191,9 @@ export default function AttackPage() {
                                             <span className="mt-0.5 block text-[12.5px] text-kx-ink2">
                                                 {when ? (es ? `muere en ${when} (estimado)` : `paid off in ${when} (estimate)`) : (es ? 'fecha por calcular' : 'date pending')}
                                                 {' · '}<span className="kx-tech">{d.apr.toFixed(2)}%</span>
+                                                {d.daily_cost != null && d.daily_cost > 0 && (
+                                                    <span data-testid="daily-cost">{es ? ' · te cobra ' : ' · charges you '}<span className="kx-num">{formatMoney(d.daily_cost)}</span>{es ? '/día' : '/day'}</span>
+                                                )}
                                             </span>
                                         </span>
                                     </li>

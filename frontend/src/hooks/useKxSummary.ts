@@ -38,7 +38,8 @@ export interface KxAccount {
     interest_type?: string;
 }
 
-interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number }
+interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number;
+    interes_diario?: { periodos: Record<'dia' | 'semana' | 'mes' | 'anio', number> } }
 interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number }
 
 export interface StagedAccount extends KxAccount { stage: Stage; paid: number | null; bal: number }
@@ -120,7 +121,7 @@ export function useKxSummary() {
             }
             return map;
         };
-        return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0),
+        return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
             staged, debts, counts, months, freedom, paydays, cutDays, dayDetail, chargesIn };
     }, [data, subs]);
 

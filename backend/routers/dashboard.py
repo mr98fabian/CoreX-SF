@@ -3,7 +3,7 @@ Dashboard Router — Main dashboard metrics and cashflow monitor.
 """
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from datetime import date, timedelta
 
 from database import engine
@@ -13,6 +13,7 @@ from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accou
 from auth import get_current_user_id
 from api_tokens import require_scope
 from plan_guard import effective_plan_limit, scoped_plan_limit
+from velocity_engine import daily_interest, debt_daily_interest, interest_periods
 from velocity_engine import (
     DebtAccount, get_velocity_target,
     calculate_safe_attack_equity, detect_debt_alerts,
@@ -23,6 +24,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
+
+
+
+def _cents(x: Decimal) -> float:
+    return float(Decimal(x).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 @router.get("/dashboard")
@@ -130,7 +136,7 @@ async def get_dashboard_metrics(
             # 3. Calculate Financials
             b = target_account.balance
             r = target_account.interest_rate
-            daily_interest = b * (r / Decimal("100")) / Decimal("365")
+            target_daily = debt_daily_interest(b, r)
 
             monthly_interest_cost = b * (r / Decimal("100")) / Decimal("12")
             principal_part = max(Decimal("0"), target_account.min_payment - monthly_interest_cost)
@@ -276,7 +282,7 @@ async def get_dashboard_metrics(
                 "priority_reason": f"Atacamos {target_account.name} (APR {float(r)}%) tras asegurar tus facturas.",
                 "justification": why_text,
                 "shield_note": f"🛡️ Shield: ${float(shield_target):,.0f} | 📅 Bills: ${float(reserved_for_bills):,.0f}",
-                "daily_interest_saved": float(daily_interest),
+                "daily_interest_saved": float(target_daily),
                 "next_payday": next_payday.strftime("%Y-%m-%d"),
                 "recommended_source": recommended_source,
                 "checking_account_name": checking_name,
@@ -286,11 +292,7 @@ async def get_dashboard_metrics(
         debt_alerts = detect_debt_alerts(debt_objects) if debt_objects else []
 
         # --- TOTAL DAILY INTEREST (for DailyInterestTicker) ---
-        total_daily_interest = sum(
-            float(acc.balance * (acc.interest_rate / Decimal("100")) / Decimal("365"))
-            for acc in active_debts
-            if acc.interest_rate and acc.interest_rate > 0
-        )
+        total_daily_interest = daily_interest(active_debts)["total"]  # engine; same set as the plan
 
         # --- VELOCITY WEAPONS (HELOCs/UILs with available credit) ---
         velocity_weapons = [
@@ -322,7 +324,12 @@ async def get_dashboard_metrics(
             "unmonitored_debt": float(unmonitored_debt),
             "locked_account_count": len(all_debts) - len(active_debts),
             "debt_alerts": debt_alerts,
-            "total_daily_interest": round(total_daily_interest, 2),
+            "total_daily_interest": _cents(total_daily_interest),
+            "interes_diario": {
+                # Derived from the daily the user SEES, so day × 7 = week on screen
+                "periodos": {k: _cents(v) for k, v in interest_periods(Decimal(str(_cents(total_daily_interest)))).items()},
+                "etiqueta": "estimado, al ritmo de hoy",
+            },
         }
 
 

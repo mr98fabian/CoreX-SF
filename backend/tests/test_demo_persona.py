@@ -36,3 +36,26 @@ def test_maria_plan_matches_the_landing(client, auth_headers):
     free = date.fromisoformat(path["freedom_date"])
     today = date.today()
     assert (free.year - today.year) * 12 + free.month - today.month == 14
+
+
+# María's daily-interest line on the landing (KxLanding.tsx EXAMPLE_DAILY_*):
+# "antes" = today's balances, "hoy" = month 12 of her plan (timeline[11]).
+MARIA_DAILY_BEFORE = 13.12
+MARIA_DAILY_MONTH12 = 2.64
+
+
+def test_maria_daily_interest_matches_the_landing(client, auth_headers):
+    from decimal import Decimal
+    from sqlmodel import SQLModel
+    import database
+    from velocity_engine import daily_interest
+    SQLModel.metadata.drop_all(database.engine)
+    SQLModel.metadata.create_all(database.engine)
+    _load(client, auth_headers)
+    debts = [type("D", (), {"balance": Decimal(str(a[2])), "interest_rate": Decimal(str(a[3]))})
+             for a in demo.MARIA["accounts"] if a[1] == "debt"]
+    before = float(daily_interest(debts)["total"].quantize(Decimal("0.01")))
+    path = client.get("/api/velocity/freedom-path", headers=auth_headers).json()
+    month12 = path["timeline"][11]["daily_interest"]
+    assert before == MARIA_DAILY_BEFORE and month12 == MARIA_DAILY_MONTH12
+    assert client.get("/api/dashboard", headers=auth_headers).json()["total_daily_interest"] == MARIA_DAILY_BEFORE
