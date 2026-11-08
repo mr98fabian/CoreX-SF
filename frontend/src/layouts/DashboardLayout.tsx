@@ -19,6 +19,8 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { useCelebration } from '@/hooks/useCelebration';
 import { CommanderBadge } from '@/components/CommanderBadge';
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchSections, whenIdle } from '@/lib/prefetchRoutes';
 
 export default function DashboardLayout() {
     const isMobile = useIsMobile();
@@ -35,6 +37,14 @@ export default function DashboardLayout() {
     useEffect(() => {
         syncPlanFromBackend();
     }, []);
+
+    // Warm the bottom-bar sections (chunks + cached data) once the app is idle
+    const queryClient = useQueryClient();
+    const userId = user?.id;
+    useEffect(() => {
+        if (!userId) return;
+        return whenIdle(() => prefetchSections(queryClient, userId));
+    }, [queryClient, userId]);
 
     // Listen for onboarding restart requests from the inline resume card
     // (rendered inside DashboardPage) so the wizard state stays in this hook instance

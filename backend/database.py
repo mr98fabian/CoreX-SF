@@ -45,9 +45,40 @@ def _make_sqlite_engine():
     return eng
 
 
+# pool_pre_ping costs one round trip to Supabase on EVERY checkout (≈ one per
+# request). Pinging only a connection that sat idle longer than IDLE_PING_S
+# keeps the safety where it matters (pooler/idle drops, restarts) and skips the
+# round trip during active use. A failed ping raises DisconnectionError, which
+# makes SQLAlchemy discard that connection and check out a fresh one (the
+# documented pessimistic-disconnect pattern), so callers never see the error.
+IDLE_PING_S = 30.0
+
+
+def install_idle_ping(eng) -> None:
+    import time as _t
+    from sqlalchemy import event, exc
+
+    @event.listens_for(eng, "checkin")
+    def _mark(dbapi_conn, record):
+        record.info["kx_last_used"] = _t.monotonic()
+
+    @event.listens_for(eng, "checkout")
+    def _ping_if_idle(dbapi_conn, record, proxy):
+        last = record.info.get("kx_last_used")
+        if last is None or _t.monotonic() - last < IDLE_PING_S:
+            return  # brand-new connection, or used moments ago
+        try:
+            cur = dbapi_conn.cursor()
+            cur.execute("SELECT 1")
+            cur.close()
+        except Exception as err:
+            raise exc.DisconnectionError() from err
+
+
 if DATABASE_URL:
     try:
-        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=False, pool_recycle=1800)
+        install_idle_ping(engine)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         print(f"[OK] Connected to {_mask_db_url(DATABASE_URL)}")  # says which DB, so a dev server on prod is obvious
