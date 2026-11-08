@@ -211,6 +211,8 @@ class CoachProfile(SQLModel, table=True):
     tone: str = Field(default="calido", max_length=10)          # calido | directo | pesado
     ai_name: Optional[str] = Field(default=None, max_length=40)
     payday_weekday: Optional[int] = Field(default=None)         # 0=lunes … 6=domingo
+    ranking_opt_in: bool = Field(default=False)
+    ranking_alias: Optional[str] = Field(default=None, max_length=40)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -242,3 +244,28 @@ class CutHistory(SQLModel, table=True):
     was_zero: bool = Field(default=False)
     source: str = Field(default="manual", max_length=12)  # operador-ia | manual
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class EngagementPoint(SQLModel, table=True):
+    """Points ONLY for habits that help (check-in, payment recorded, $0 cut) —
+    never for spending or amounts. Unique per (user, date, action, ref)."""
+    __tablename__ = "engagement_points"
+    __table_args__ = (UniqueConstraint("user_id", "date", "action", "ref", name="uq_engagement_points"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    date: date
+    action: str = Field(max_length=10)  # checkin | payment | cut_zero
+    points: int
+    ref: str = Field(default="", max_length=40)
+
+
+class LeagueWeek(SQLModel, table=True):
+    """A user's league for one ISO week (week_start = Monday). Assigned lazily."""
+    __tablename__ = "league_weeks"
+    __table_args__ = (UniqueConstraint("week_start", "user_id", name="uq_league_weeks_user"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    week_start: date = Field(index=True)
+    tier: str = Field(default="bronce", max_length=10)  # bronce | plata | oro | diamante
+    cohort: int = Field(default=1)
+    points: int = Field(default=0)

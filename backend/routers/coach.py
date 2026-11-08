@@ -8,7 +8,7 @@ The backend computes, the AI speaks — never the other way round. A figure that
 can't be computed from today's data is null with a note, never estimated.
 Open to the app session and to kx_ tokens (read:dashboard / write:accounts).
 """
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal, Optional
 
@@ -21,6 +21,7 @@ from database import request_session
 from helpers import accounts_to_active_debt_objects, get_attack_percentage, get_cashflow_surplus, get_liquid_cash
 from models import Account, CoachProfile, Transaction
 from routers.cuts import streak
+from routers.engagement import generate_alias, leave_leagues
 from plan_guard import scoped_plan_limit
 from velocity_engine import get_projections
 
@@ -44,13 +45,16 @@ def _profile(session, user_id: str) -> CoachProfile:
 def _out(p: CoachProfile) -> dict:
     return {"tone": p.tone, "tone_label": TONE_LABEL[p.tone], "ai_name": p.ai_name,
             "payday_weekday": p.payday_weekday,
-            "payday_label": WEEKDAYS[p.payday_weekday] if p.payday_weekday is not None else None}
+            "payday_label": WEEKDAYS[p.payday_weekday] if p.payday_weekday is not None else None,
+            "ranking_opt_in": p.ranking_opt_in, "ranking_alias": p.ranking_alias}
 
 
 class CoachPatch(BaseModel):
     tone: Optional[Literal["calido", "directo", "pesado"]] = None
     ai_name: Optional[str] = PField(default=None, max_length=40)
     payday_weekday: Optional[int] = PField(default=None, ge=0, le=6)
+    ranking_opt_in: Optional[bool] = None
+    ranking_alias: Optional[str] = PField(default=None, min_length=2, max_length=40)
 
 
 @router.get("/coach-profile")
@@ -70,6 +74,14 @@ async def patch_coach_profile(body: CoachPatch, user_id: str = Depends(require_s
             p.ai_name = (sent["ai_name"] or "").strip() or None
         if "payday_weekday" in sent:
             p.payday_weekday = sent["payday_weekday"]
+        if sent.get("ranking_alias"):
+            p.ranking_alias = sent["ranking_alias"].strip()
+        if sent.get("ranking_opt_in") is not None:
+            p.ranking_opt_in = sent["ranking_opt_in"]
+            if p.ranking_opt_in and not p.ranking_alias:
+                p.ranking_alias = generate_alias()
+            if not p.ranking_opt_in:
+                leave_leagues(session, user_id, date.today())
         p.updated_at = datetime.utcnow()
         session.add(p)
         session.commit()

@@ -18,6 +18,7 @@ import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { DebtCalendar } from '@/components/kx/DebtCalendar';
 import { HouseModule } from './HouseModule';
+import { LeagueBlock } from './LeagueBlock';
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -156,6 +157,7 @@ export default function HomePage() {
                 )}
 
                 <HouseModule es={es} />
+                <LeagueBlock es={es} />
 
                 {s.debts.length === 0 && (
                     <Link to="/dashboard/accounts" className="block rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-[#111418]">

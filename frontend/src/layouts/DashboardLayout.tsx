@@ -10,6 +10,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import { syncPlanFromBackend } from '@/lib/planLimits';
+import { apiFetch } from '@/lib/api';
 import { TabBar } from '@/components/kx';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import InstallPrompt from '@/components/InstallPrompt';
@@ -36,6 +37,15 @@ export default function DashboardLayout() {
     // Ensures all pages (Dashboard, Settings, etc.) always have fresh plan data
     useEffect(() => {
         syncPlanFromBackend();
+        // Daily check-in (habit points). Idempotent server-side; the local key only saves a request.
+        const today = new Date().toLocaleDateString('en-CA');
+        let seen: string | null = null;
+        try { seen = localStorage.getItem('kx-checkin'); } catch { /* storage blocked */ }
+        if (seen !== today) {
+            apiFetch('/api/engagement/checkin', { method: 'POST' })
+                .then(() => { try { localStorage.setItem('kx-checkin', today); } catch { /* ignore */ } })
+                .catch(() => { /* offline: retried on next open */ });
+        }
     }, []);
 
     // Warm the bottom-bar sections (chunks + cached data) once the app is idle
