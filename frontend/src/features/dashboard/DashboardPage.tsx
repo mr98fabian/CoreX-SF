@@ -24,7 +24,6 @@ import PeaceShield from './components/PeaceShield';
 import PurchaseSimulator from './components/PurchaseSimulator';
 import { TransactionDialog } from './components/TransactionDialog';
 import CashflowHeatCalendar from './components/CashflowHeatCalendar';
-import { DailyInterestTicker } from './components/DailyInterestTicker';
 import { AnimatedCurrency } from '@/components/AnimatedCurrency';
 import { TimeMachineCard } from './components/TimeMachineCard';
 import { InsufficientFundsDialog } from '@/components/InsufficientFundsDialog';
@@ -52,7 +51,6 @@ import { recordStartingDebt } from '@/lib/startingDebt';
 import RecurringConfirmModal from './components/RecurringConfirmModal';
 import { useRecurringDueToday } from '@/hooks/useRecurringDueToday';
 import { useAccounts } from '@/hooks/useAccounts';
-import { InterestBleedBanner } from '@/components/InterestBleedBanner';
 import { OnboardingResumePopup } from '@/components/OnboardingResumePopup';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 
@@ -411,7 +409,6 @@ export default function DashboardPage() {
                         window.dispatchEvent(new Event('korex:restart-onboarding'));
                     }}
                 />
-                <InterestBleedBanner />
 
                 {/* ═══════════════════════════════════════════════════════════
                  1. HEADER — Greeting + Action Buttons
@@ -482,11 +479,6 @@ export default function DashboardPage() {
                         <span className="text-gray-300">{weeklyDigest.message}</span>
                         <button onClick={weeklyDigest.dismiss} className="text-gray-500 hover:text-white text-[10px] shrink-0">✕</button>
                     </div>
-                )}
-
-                {/* Daily Interest Ticker — Skill: neuromarketing-conversion */}
-                {data?.total_daily_interest && data.total_daily_interest > 0 && (
-                    <DailyInterestTicker dailyInterest={data.total_daily_interest} />
                 )}
 
                 {/* ═══════════════════════════════════════════════════════════

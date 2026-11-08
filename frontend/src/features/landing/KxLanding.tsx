@@ -25,6 +25,9 @@ const EXAMPLE_START = 18400;
 const EXAMPLE_TIMELINE = [17361, 16296, 15205, 14089, 12948, 11781, 10588, 9369, 8123, 6726, 5422, 4092, 2734, 1348, 0];
 const EXAMPLE_MONTHS = 14;
 const EXAMPLE_INTEREST_AVOIDED = 30176; // vs paying only the minimums (engine estimate)
+// Daily interest at the start of her plan vs month 12 (engine; pinned in test_demo_persona.py)
+const EXAMPLE_DAILY_BEFORE = 13.12;
+const EXAMPLE_DAILY_MONTH12 = 2.64;
 
 const STATUS = {
     live: { es: 'Disponible hoy', en: 'Available today' },
@@ -118,6 +121,9 @@ export default function KxLanding() {
                         <div><dt className="kx-label">{es ? 'Interés evitado' : 'Interest avoided'}</dt><dd className="mt-1 text-[17px] text-kx-paid"><MoneyAmount value={EXAMPLE_INTEREST_AVOIDED} /></dd></div>
                     </dl>
                     <DebtCalendar months={months} maxDebt={EXAMPLE_START} paydays={paydays} example />
+                    <p data-testid="maria-daily" className="mt-3 text-[13px] text-kx-ink2">
+                        {es ? 'Su deuda le cobraba ' : 'Her debt charged her '}<MoneyAmount value={EXAMPLE_DAILY_BEFORE} />{es ? ' cada día. A los 12 meses de su plan: ' : ' every day. After 12 months on her plan: '}<MoneyAmount value={EXAMPLE_DAILY_MONTH12} />.
+                    </p>
                     <p className="mt-3 text-xs text-kx-ink3">{es ? 'Ejemplo calculado por el motor de KoreX con los datos de María. Interés evitado frente a pagar solo los mínimos. Estimaciones, no promesas.' : "Example computed by KoreX's engine from María's data. Interest avoided vs paying only the minimums. Estimates, not promises."}</p>
                 </Section>
             </section>

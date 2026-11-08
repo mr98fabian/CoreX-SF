@@ -1605,6 +1605,8 @@ def _simulate_freedom_path(
             "total_balance": float(total_balance),
             "debts_active": len([d for d in sim_debts if d.balance > 0]),
             "interest_paid": float(monthly_interest_sum),
+            # Estimated interest per day at this month-end's balances (same helper as the dashboard)
+            "daily_interest": float(daily_interest(sim_debts)["total"].quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
             "is_freedom_month": (total_balance <= 0)
         }
         timeline.append(snapshot)
@@ -2190,3 +2192,32 @@ def credit_panel(cards) -> dict:
         "utilizacion_global": (used / total * Decimal("100")) if total > 0 else None,
         "por_tarjeta": per_card, "sin_limite": no_limit,
     }
+
+
+# ── Interés diario (one calculation for the whole app) ─────────────────────────
+# Estimated interest a debt charges per day at today's balance and APR:
+# balance × APR / 36500 (APR in %). Unrounded Decimal; round only to present.
+# Callers pass the plan-limited set (filter_active_debt_accounts), the same one
+# the dashboard, the command center, logros and the credit panel use.
+DAYS_PER_YEAR = Decimal("365")
+
+
+def debt_daily_interest(balance, apr) -> Decimal:
+    b, r = Decimal(str(balance or 0)), Decimal(str(apr or 0))
+    if b <= 0 or r <= 0:
+        return Decimal("0")
+    return b * r / (Decimal("100") * DAYS_PER_YEAR)
+
+
+def daily_interest(debts) -> dict:
+    """debts: objects with .balance and .interest_rate (Account or DebtAccount).
+    Returns {"total": Decimal, "por_deuda": [Decimal, ...]} in input order;
+    the total is the sum of the UNROUNDED per-debt values (the total rules)."""
+    per = [debt_daily_interest(d.balance, d.interest_rate) for d in debts]
+    return {"total": sum(per, Decimal("0")), "por_deuda": per}
+
+
+def interest_periods(daily: Decimal) -> dict:
+    """The daily figure carried at today's pace: day ×1, week ×7, month ×365/12, year ×365."""
+    d = Decimal(daily)
+    return {"dia": d, "semana": d * 7, "mes": d * DAYS_PER_YEAR / 12, "anio": d * DAYS_PER_YEAR}

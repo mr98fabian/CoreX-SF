@@ -34,7 +34,7 @@ async function render() {
 }
 afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChild(host); host = null; } });
 
-const METER = { confidence_meter: { debts_ranked: [{ name: 'Visa', apr: 24, balance: 3000, is_target: true }], strategy: 'avalanche' } };
+const METER = { confidence_meter: { debts_ranked: [{ name: 'Visa', apr: 24, balance: 3000, is_target: true, daily_cost: 1.97 }], strategy: 'avalanche' } };
 
 describe('Plan de ataque', () => {
     it('falls back to "Hoy no hay ataque" when morning_briefing is null', async () => {
@@ -55,5 +55,11 @@ describe('Plan de ataque', () => {
         const el = await render();
         expect(el.textContent).not.toContain('Hoy no hay ataque');
         expect(el.textContent).toContain('Visa');
+    });
+
+    it('shows each debt daily cost from the command center next to its APR', async () => {
+        vi.mocked(apiFetch).mockResolvedValue({ morning_briefing: null, ...METER });
+        const el = await render();
+        expect(el.querySelector('[data-testid="daily-cost"]')?.textContent).toBe(' · te cobra $1.97/día');
     });
 });

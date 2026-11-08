@@ -24,6 +24,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
 
+from velocity_engine import debt_daily_interest
 from velocity_engine import (
     CashflowTactical, VelocityWeapon, get_projections, get_velocity_target,
     get_peace_shield_status, calculate_safe_attack_equity, simulate_freedom_path, monthly_attack, attack_impact,
@@ -311,7 +312,7 @@ async def get_strategy_command_center(
         # Morning Briefing
         morning_briefing = None
         if target and attack_amount > 0:
-            daily_interest = ((target.balance * (target.interest_rate / Decimal('100'))) / Decimal('365')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            daily_interest = debt_daily_interest(target.balance, target.interest_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             total_gap_cost = Decimal('0')
             gap_debts = []
             for d in debt_accounts:
@@ -353,7 +354,7 @@ async def get_strategy_command_center(
             ranked = sorted(debt_accounts, key=lambda d: d.interest_rate, reverse=True)
             confidence_meter["debts_ranked"] = [
                 {"name": d.name, "apr": float(d.interest_rate), "balance": float(d.balance),
-                 "daily_cost": float((d.balance * (d.interest_rate / Decimal('100'))) / Decimal('365')),
+                 "daily_cost": float(debt_daily_interest(d.balance, d.interest_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)),
                  "is_target": target and d.name == target.name} for d in ranked
             ]
             if len(ranked) >= 2:

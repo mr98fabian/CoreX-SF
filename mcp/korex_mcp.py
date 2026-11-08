@@ -241,7 +241,7 @@ def korex_set_coach_profile(tone: Optional[str] = None, ai_name: Optional[str] =
 @mcp.tool()
 def korex_logros() -> dict:
     """The user's achievements, computed by KoreX from real data (you only narrate): total_pagado, num_pagos,
-    deudas_en_cero / deudas_totales, interes_evitado and interes_plan (engine: plan vs minimums), fecha_libre.
+    deudas_en_cero / deudas_totales, interes_evitado and interes_plan (engine: plan vs minimums), fecha_libre, interes_diario (estimated interest the debt charges per day at today's pace — the same figure as the dashboard).
     Each comes as {valor, etiqueta}: quote the etiqueta. racha_cortes_cero = consecutive $0 cuts (null until the first cut is
     recorded with korex_record_cut — never estimate it). Scope: read:dashboard."""
     return _call("GET", "/api/logros")
