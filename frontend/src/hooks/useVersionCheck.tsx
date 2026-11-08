@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { toast } from '@/components/ui/use-toast';
+import { fetchFreshJson } from '@/lib/fetchFresh';
 
 // ─── Build‑time version injected by Vite (vite.config.ts → define) ──
 declare const __APP_VERSION__: string;
@@ -29,30 +30,18 @@ export function useVersionCheck() {
         // Only notify once per session
         if (hasNotified.current) return;
 
-        try {
-            // Cache‑bust the fetch so proxies/CDNs don't serve stale JSON
-            const res = await fetch(`/version.json?_t=${Date.now()}`, {
-                cache: 'no-store',
+        const data = await fetchFreshJson<{ version?: string }>('/version.json');
+        const serverVersion = data?.version;
+        if (!serverVersion) return; // not deployed yet or network error — skip silently
+
+        // Compare embedded version vs. deployed version
+        if (serverVersion !== __APP_VERSION__) {
+            hasNotified.current = true;
+            toast({
+                title: '🚀 Nueva Versión Disponible',
+                description: `v${serverVersion} está lista. Recarga la página para obtener las últimas mejoras.`,
+                duration: Infinity, // persist until user dismisses
             });
-
-            if (!res.ok) return; // version.json not deployed yet — skip silently
-
-            const data = await res.json();
-            const serverVersion = data.version;
-
-            if (!serverVersion) return;
-
-            // Compare embedded version vs. deployed version
-            if (serverVersion !== __APP_VERSION__) {
-                hasNotified.current = true;
-                toast({
-                    title: '🚀 Nueva Versión Disponible',
-                    description: `v${serverVersion} está lista. Recarga la página para obtener las últimas mejoras.`,
-                    duration: Infinity, // persist until user dismisses
-                });
-            }
-        } catch {
-            // Network error — not critical, skip silently
         }
     }, []);
 
