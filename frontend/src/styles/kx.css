@@ -13,9 +13,9 @@
   --kx-raised: #131E33;
   --kx-line: #1E293B;
   --kx-line-soft: rgba(255, 255, 255, 0.06);
-  --kx-ink: #F8FAFC;
+  --kx-ink: #F5F2EC;   /* blanco hueso: warm ink (2.5D, 2026-11); --kx-warm stays the stamp orange */
   --kx-ink-2: #94A3B8;
-  --kx-ink-3: #64748B;
+  --kx-ink-3: #77869D;  /* AA ≥ 4.5 on bg/surface/raised (was #64748B, 3.5–4.2) */
 
   --kx-amber: #F59E0B;
   --kx-amber-soft: #FBBF24;
@@ -67,7 +67,7 @@
   --kx-line-soft: rgba(15, 23, 42, 0.07);
   --kx-ink: #0F172A;
   --kx-ink-2: #475569;
-  --kx-ink-3: #64748B;
+  --kx-ink-3: #617188;  /* AA ≥ 4.5 (was 4.34 on raised) */
   --kx-debt: #B91C1C;
   --kx-debt-chip-ink: #991B1B;
   --kx-almost: #A16207;
@@ -90,6 +90,7 @@
 
 .kx-hero-number {
   font-family: "Fraunces", Georgia, serif;
+  font-variant-numeric: tabular-nums;
   font-weight: 340;
   font-variation-settings: "opsz" 144;
   letter-spacing: -0.03em;
@@ -216,4 +217,77 @@
 @media (prefers-reduced-motion: reduce) {
   .kx-page, .kx-breathe, .kx-shimmer { animation: none !important; }
   .kx-stage-bar { transition: none !important; }
+}
+
+/* ── Profundidad 2.5D (2026-11): depth by LIGHT and LAYERS, no WebGL ──────
+   One light, from above. Three elevation levels mapped on the existing
+   surfaces (bg / surface / raised); shadows are black or neutral only.
+   Elevation lives on CONTAINERS (Section panel, hero, sheet), never on list
+   rows: per-row shadows repaint on scroll. Nothing here animates except
+   transform/opacity — the one documented exception is .kx-stage-bar `width`
+   (one bar, once per data change: the green advances). */
+:root, .dark {
+  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.045) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.55);
+  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.65);
+  --kx-elev-3: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 -2px 6px rgba(0, 0, 0, 0.25), 0 -18px 48px -16px rgba(0, 0, 0, 0.7);
+  --kx-light: radial-gradient(120% 70% at 50% -10%, rgba(255, 247, 230, 0.07) 0%, rgba(255, 247, 230, 0.025) 40%, transparent 70%);
+  --kx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+:root:not(.dark) .kx-scope {
+  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 16px -8px rgba(15, 23, 42, 0.12);
+  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 2px 4px rgba(15, 23, 42, 0.06), 0 14px 30px -12px rgba(15, 23, 42, 0.16);
+  --kx-elev-3: 0 -2px 6px rgba(15, 23, 42, 0.05), 0 -16px 40px -16px rgba(15, 23, 42, 0.18);
+  --kx-light: radial-gradient(120% 70% at 50% -10%, rgba(255, 255, 255, 0.8) 0%, transparent 65%);
+  --kx-grain: none;
+}
+
+/* The canvas carries the paper grain as a static background image (no fixed
+   overlay, no blend mode: zero compositing cost on scroll). */
+.kx-scope { background: var(--kx-grain) repeat, var(--kx-bg); }
+
+/* Levels: 0 = canvas (--kx-bg) · 1 = panels (--kx-surface) · 2 = heroes (--kx-surface)
+   · 3 = sheets (--kx-raised). The class carries only the shadow so tinted stage
+   panels keep their own background; the surface comes from the container. */
+.kx-elev-1 { box-shadow: var(--kx-elev-1); }
+.kx-elev-2 { box-shadow: var(--kx-elev-2); }
+.kx-elev-3 { box-shadow: var(--kx-elev-3); }
+
+/* Light from above over the hero and the calendar field. Parallax hangs off
+   the ONE scroll listener (--kx-scroll on .kx-scope): ≤ 10 px, transform only. */
+.kx-lit { position: relative; isolation: isolate; }
+.kx-lit::before {
+  content: "";
+  position: absolute;
+  inset: -12px -16px auto;
+  height: 220px;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--kx-light);
+  transform: translate3d(0, calc(var(--kx-scroll, 0) * 10px), 0);
+}
+
+/* Relief: stage bars and the thermometer get a brushed top highlight (static) */
+.kx-stage-bar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(0, 0, 0, 0.18); }
+
+/* One step more visible (amplifies Pulido, no parallel system) */
+.kx-press:active:not(:disabled) { transform: scale(0.955); }
+.kx-row.kx-press:active { transform: translate3d(0, 1px, 0) scale(0.985); }
+@keyframes kx-page-in-25d {
+  from { opacity: 0; transform: translate3d(18px, 4px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.kx-page { animation: kx-page-in-25d var(--kx-dur-slow) var(--kx-ease-out) both; }
+/* The field settles a beat after the content: layers, not one flat slide */
+.kx-page .kx-lit::before { animation: kx-field-settle var(--kx-dur-slow) var(--kx-ease-out) 60ms backwards; }
+@keyframes kx-field-settle {
+  from { opacity: 0; transform: translate3d(0, 4px, 0); }
+}
+
+/* Sheets: depth = real layer shadow + rise (no blur) */
+.kx-sheet { box-shadow: var(--kx-elev-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-lit::before { transform: none; animation: none; }
+  .kx-page { animation: none; }
+  .kx-sheet, .kx-sheet[data-state] { animation: none !important; }
 }

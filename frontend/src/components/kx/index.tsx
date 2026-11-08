@@ -14,6 +14,7 @@ import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { CountUp } from './motion';
 import { motion } from 'framer-motion';
 import { tx } from '@/lib/motion';
+import { editorialDate } from '@/lib/editorialDate';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -61,6 +62,7 @@ export function BankHeader({ greeting, title }: { greeting?: string; title?: str
     return (
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div className="min-w-0">
+                <p data-testid="kx-dateline" className="font-editorial text-[13px] first-letter:uppercase text-kx-ink3">{editorialDate(new Date(), es ? 'es' : 'en')}</p>
                 {greeting && <p className="text-sm text-kx-ink2">{greeting}</p>}
                 {title && <h1 className="text-[22px] font-semibold tracking-tight text-kx-ink">{title}</h1>}
             </div>
@@ -92,7 +94,7 @@ export function HeroNumber({ label, amount, phrase }: { label: string; amount: n
         return <>{d}{c && <sup className="ml-0.5 align-super text-[23px] text-kx-ink3">.{c}</sup>}</>;
     };
     return (
-        <div>
+        <div className="kx-lit" data-kx-elev="2">
             <p className="kx-label">{label}</p>
             <p className="kx-hero-number mt-1.5 text-[52px] text-kx-ink">
                 <CountUp value={amount} format={render} label={formatMoney} />
@@ -169,7 +171,7 @@ export function Section({ tone = 'neutral', title, children, className, action, 
                 {action}
             </div>
             {bare ? children : (
-                <div className={cx('kx-rows rounded-[var(--kx-radius-card)] border px-4 py-3.5', SEC[tone].box)}>
+                <div className={cx('kx-rows kx-elev-1 rounded-[var(--kx-radius-card)] border px-4 py-3.5', SEC[tone].box)}>
                     {children}
                 </div>
             )}
