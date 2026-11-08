@@ -9,7 +9,7 @@ from typing import List
 
 from database import engine
 from database import request_session
-from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
+from models import Account, Transaction, MovementLog, CashflowItem, UserSettings, CutHistory
 from schemas import BalanceUpdate, AccountUpdate
 from helpers import bypass_fk
 from auth import get_current_user_id
@@ -125,6 +125,8 @@ async def delete_account(id: int, user_id: str = Depends(require_scope("write:ac
 
         for tx in transactions:
             session.delete(tx)
+        for cut in session.exec(select(CutHistory).where(CutHistory.account_id == id, CutHistory.user_id == user_id)).all():
+            session.delete(cut)
         item_name = item.name
         session.delete(item)
         session.commit()

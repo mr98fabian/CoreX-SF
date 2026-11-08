@@ -108,7 +108,7 @@ def test_logros_with_the_demo_persona_match_the_engine(client, auth_headers):
     assert lg["interes_evitado"]["valor"] == pytest.approx(cc["interest_saved"], abs=0.01)
     assert lg["fecha_libre"]["valor"] == cc["current_freedom_date"]
     assert lg["interes_plan"]["valor"] > 0
-    assert lg["racha_cortes_cero"]["valor"] is None and "historial de cortes" in lg["racha_cortes_cero"]["nota"]
+    assert lg["racha_cortes_cero"]["valor"] is None and "cortes registrados" in lg["racha_cortes_cero"]["nota"]
     for k in ("total_pagado", "num_pagos", "deudas_en_cero", "deudas_totales", "interes_evitado", "interes_plan", "fecha_libre"):
         assert lg[k]["etiqueta"]  # ready to quote
 
