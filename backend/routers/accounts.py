@@ -13,7 +13,7 @@ from models import Account, Transaction, MovementLog, CashflowItem, UserSettings
 from schemas import BalanceUpdate, AccountUpdate
 from helpers import bypass_fk, filter_active_debt_accounts
 from plan_guard import scoped_plan_limit
-from velocity_engine import credit_panel, utilization_band
+from velocity_engine import credit_panel, round_utilization, utilization_band
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
 import audit_text
@@ -33,7 +33,7 @@ async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
 
 
 def _pct(x):
-    return None if x is None else float(x.quantize(Decimal("0.1")))
+    return None if x is None else float(round_utilization(x))
 
 
 def _money(x):

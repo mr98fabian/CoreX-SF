@@ -1834,7 +1834,7 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
             } if optimal_buy_start else None,
             "tips": tips,
             "credit_utilization": (
-                float(card_utilization(debt.balance, debt.credit_limit).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP))
+                float(round_utilization(card_utilization(debt.balance, debt.credit_limit)))
                 if has_credit_limit(debt.credit_limit) else None
             ),
             "credit_utilization_band": utilization_band(card_utilization(debt.balance, debt.credit_limit)),
@@ -2158,9 +2158,16 @@ def card_utilization(balance, credit_limit) -> Optional[Decimal]:
     return max(Decimal(balance), Decimal("0")) / Decimal(credit_limit) * Decimal("100")
 
 
+def round_utilization(pct: Decimal) -> Decimal:
+    """The 1-decimal % the user sees. Bands are taken from THIS value, so the
+    number and its colour always agree (10.04 → "10.0%" low)."""
+    return Decimal(pct).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
 def utilization_band(pct: Optional[Decimal]) -> Optional[str]:
     if pct is None:
         return None
+    pct = round_utilization(pct)
     return "low" if pct <= UTIL_LOW_MAX else "mid" if pct <= UTIL_MID_MAX else "high"
 
 

@@ -68,10 +68,18 @@ def test_totals_exclude_cards_without_a_limit(client):
     assert p["etiqueta"] == "estimado" and p["nota"].startswith("Utilización actual estimada")
 
 
-@pytest.mark.parametrize("pct,band", [("0", "low"), ("10", "low"), ("10.01", "mid"), ("30", "mid"), ("30.01", "high")])
+@pytest.mark.parametrize("pct,band", [("0", "low"), ("10", "low"), ("10.04", "low"), ("10.05", "mid"), ("30", "mid"),
+                                      ("30.04", "mid"), ("30.05", "high")])
 def test_scale_edges(pct, band):
     assert utilization_band(Decimal(pct)) == band
     assert utilization_band(card_utilization(Decimal(pct) * 100, Decimal("10000"))) == band
+
+
+def test_shown_number_and_band_agree(client):
+    as_user(A)
+    c = card(A, "Edge", "1004", 10000)  # 10.04% → shown "10.0%", band low (not mid)
+    p = client.get("/api/accounts/credit-panel", headers=H).json()
+    assert p["por_tarjeta"][str(c)] == {"pct": 10.0, "banda": "low"}
 
 
 def test_over_limit_goes_past_100_and_negative_balance_floors_at_zero():
