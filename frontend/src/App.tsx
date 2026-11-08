@@ -34,6 +34,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { Toaster } from "@/components/ui/toaster";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
+import { ApkUpdateBanner } from "@/components/ApkUpdateBanner";
 
 /** Inner shell — lives inside BrowserRouter so hooks like useNavigate work */
 function AppShell() {
@@ -88,6 +89,7 @@ function AppShell() {
               </Routes>
             </Suspense>
             <Toaster />
+            <ApkUpdateBanner />
           </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>
