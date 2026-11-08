@@ -1834,11 +1834,10 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
             } if optimal_buy_start else None,
             "tips": tips,
             "credit_utilization": (
-                float((debt.balance / debt.credit_limit * Decimal('100')).quantize(
-                    Decimal('0.1'), rounding=ROUND_HALF_UP
-                ))
-                if debt.credit_limit > 0 else None
+                float(round_utilization(card_utilization(debt.balance, debt.credit_limit)))
+                if has_credit_limit(debt.credit_limit) else None
             ),
+            "credit_utilization_band": utilization_band(card_utilization(debt.balance, debt.credit_limit)),
         })
     
     return intelligence
@@ -2137,3 +2136,57 @@ def monthly_income(cashflow_items) -> Optional[Decimal]:
     """Monthly income from (amount, frequency, is_income) tuples; None without income."""
     income = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in cashflow_items if inc), Decimal("0"))
     return income if income > 0 else None
+
+
+# ── Panel de crédito (utilización de tarjetas) ────────────────────────────────
+# One rule for the whole app: a card has a limit only when credit_limit > 0
+# (null or ≤ 0 = "sin límite preestablecido", never an invented limit).
+# Utilization = balance / limit, floored at 0 (negative balance = credit in
+# favour), no ceiling (over-limit shows > 100%). Scale: ≤10 low · ≤30 mid · >30 high.
+UTIL_LOW_MAX = Decimal("10")
+UTIL_MID_MAX = Decimal("30")
+
+
+def has_credit_limit(credit_limit) -> bool:
+    return credit_limit is not None and Decimal(credit_limit) > 0
+
+
+def card_utilization(balance, credit_limit) -> Optional[Decimal]:
+    """Utilization % (unrounded) or None when the card has no limit."""
+    if not has_credit_limit(credit_limit):
+        return None
+    return max(Decimal(balance), Decimal("0")) / Decimal(credit_limit) * Decimal("100")
+
+
+def round_utilization(pct: Decimal) -> Decimal:
+    """The 1-decimal % the user sees. Bands are taken from THIS value, so the
+    number and its colour always agree (10.04 → "10.0%" low)."""
+    return Decimal(pct).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)
+
+
+def utilization_band(pct: Optional[Decimal]) -> Optional[str]:
+    if pct is None:
+        return None
+    pct = round_utilization(pct)
+    return "low" if pct <= UTIL_LOW_MAX else "mid" if pct <= UTIL_MID_MAX else "high"
+
+
+def credit_panel(cards) -> dict:
+    """cards: iterable of (account_id, balance, credit_limit) for the INCLUDED
+    credit cards (the caller already dropped non-cards and plan-locked ones).
+    Cards without a limit stay out of the totals and are listed apart."""
+    total = used = Decimal("0")
+    per_card, no_limit = {}, []
+    for acc_id, balance, limit in cards:
+        pct = card_utilization(balance, limit)
+        if pct is None:
+            no_limit.append(acc_id)
+            continue
+        total += Decimal(limit)
+        used += max(Decimal(balance), Decimal("0"))
+        per_card[acc_id] = pct
+    return {
+        "limite_total": total, "usado": used, "disponible": total - used,
+        "utilizacion_global": (used / total * Decimal("100")) if total > 0 else None,
+        "por_tarjeta": per_card, "sin_limite": no_limit,
+    }

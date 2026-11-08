@@ -11,7 +11,9 @@ from database import engine
 from database import request_session
 from models import Account, Transaction, MovementLog, CashflowItem, UserSettings, CutHistory
 from schemas import BalanceUpdate, AccountUpdate
-from helpers import bypass_fk
+from helpers import bypass_fk, filter_active_debt_accounts
+from plan_guard import scoped_plan_limit
+from velocity_engine import credit_panel, round_utilization, utilization_band
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
 import audit_text
@@ -28,6 +30,38 @@ router = APIRouter(prefix="/api", tags=["accounts"])
 async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
     with request_session() as session:
         return session.exec(select(Account).where(Account.user_id == user_id)).all()
+
+
+def _pct(x):
+    return None if x is None else float(round_utilization(x))
+
+
+def _money(x):
+    return float(x.quantize(Decimal("0.01")))
+
+
+@router.get("/accounts/credit-panel")
+async def get_credit_panel(user_id: str = Depends(require_scope("read:accounts")),
+                           plan_limit: int | None = Depends(scoped_plan_limit)):
+    """Panel de crédito: totals and utilization of the user's credit cards.
+    Only debt_subtype='credit_card'; plan-locked cards (same set the engine
+    drops) are out. The math lives in velocity_engine.credit_panel."""
+    with request_session() as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+    active = {a.id for a in filter_active_debt_accounts(accounts, plan_limit)}
+    cards = [a for a in accounts if a.type == "debt" and (a.debt_subtype or "") == "credit_card"
+             and not (a.balance > 0 and a.id not in active)]
+    p = credit_panel((a.id, a.balance, a.credit_limit) for a in cards)
+    g = p["utilizacion_global"]
+    return {
+        "active": bool(p["por_tarjeta"]),
+        "limite_total": _money(p["limite_total"]), "usado": _money(p["usado"]), "disponible": _money(p["disponible"]),
+        "utilizacion_global": _pct(g), "banda_global": utilization_band(g),
+        "por_tarjeta": {str(k): {"pct": _pct(v), "banda": utilization_band(v)} for k, v in p["por_tarjeta"].items()},
+        "sin_limite": p["sin_limite"],
+        "etiqueta": "estimado",
+        "nota": "Utilización actual estimada; el buró ve el saldo que tu tarjeta reporta, normalmente el del corte.",
+    }
 
 
 @router.post("/accounts", response_model=Account)

@@ -76,8 +76,7 @@ export default function ClosingDayIntelPanel({ intelligence }: Props) {
                                         <span className="font-semibold">{card.float_days_if_buy_today}d float</span>
                                     </div>
                                     {card.credit_utilization !== null && (
-                                        <span className={`text-[10px] ${card.credit_utilization > 30 ? 'text-amber-400' : 'text-emerald-400'
-                                            }`}>
+                                        <span className={`text-[10px] ${card.credit_utilization_band === 'high' ? 'text-red-400' : card.credit_utilization_band === 'mid' ? 'text-amber-400' : 'text-emerald-400'}`}>
                                             {card.credit_utilization}% util.
                                         </span>
                                     )}
