@@ -25,7 +25,7 @@ POINTS = {"checkin": 5, "payment": 20, "cut_zero": 50}
 TIERS = ("bronce", "plata", "oro", "diamante")
 TIER_LABEL = {"bronce": "Bronce", "plata": "Plata", "oro": "Oro", "diamante": "Diamante"}
 COHORT_MAX = 30
-ANIMALS = ("Zorro", "Lince", "Halcón", "Búho", "Puma", "Colibrí", "Lobo", "Delfín", "Jaguar", "Cóndor", "Ocelote", "Quetzal")
+ANIMALS = ("Zorro", "Lince", "Halcón", "Búho", "Puma", "Colibrí", "Lobo", "Delfín", "Jaguar", "Cóndor", "Ocelote", "Quetzal", "Mapache")
 COLORS = ("Ámbar", "Índigo", "Jade", "Coral", "Cobalto", "Marfil", "Ónix", "Cobre", "Turquesa", "Grafito")
 
 
