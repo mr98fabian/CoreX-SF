@@ -1,7 +1,7 @@
 """cut_history (reported balance per debt per statement cut)
 
 Revision ID: d6f3b1a8e492
-Revises: c5e2a9d4f871
+Revises: f1c7d3a9b524
 Create Date: 2026-11-07
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = 'd6f3b1a8e492'
-down_revision: Union[str, None] = 'c5e2a9d4f871'
+down_revision: Union[str, None] = 'f1c7d3a9b524'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
