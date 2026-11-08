@@ -25,6 +25,8 @@ export function useStripeScroll<T extends HTMLElement>() {
             // Listen where the scroll really happens: the nearest scrolling ancestor
             // if it scrolls, and the document as a fallback (on mobile Chrome the
             // page often scrolls the window even when a div is overflow:auto).
+            // Written ONCE on the page scope so every layer (hero light, calendar field) inherits it
+            const target = (el.closest('.kx-scope') as HTMLElement | null) ?? el;
             const box = scrollParent(el);
             const doc = () => document.scrollingElement ?? document.documentElement;
             let source: HTMLElement | null = box;
@@ -33,7 +35,7 @@ export function useStripeScroll<T extends HTMLElement>() {
                 frame = 0;
                 const s = source ?? doc();
                 const max = s.scrollHeight - s.clientHeight;
-                el.style.setProperty('--kx-scroll', (max > 0 ? Math.min(1, Math.max(0, s.scrollTop / max)) : 0).toFixed(3));
+                target.style.setProperty('--kx-scroll', (max > 0 ? Math.min(1, Math.max(0, s.scrollTop / max)) : 0).toFixed(3));
             };
             const fromBox = () => { source = box; if (!frame) frame = requestAnimationFrame(update); };
             const fromWindow = () => { source = null; if (!frame) frame = requestAnimationFrame(update); };

@@ -106,7 +106,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, com
     const progress = maxDebt > 0 ? (1 - mo.end / maxDebt) * 100 : 100;
 
     return (
-        <div>
+        <div className="kx-lit">
             {!compact && (
                 <>
                     <p className="text-[15px] font-semibold text-kx-ink">{phrase}</p>

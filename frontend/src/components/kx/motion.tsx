@@ -62,12 +62,18 @@ export function StampDrop({ drop, children }: { drop: boolean; children: React.R
     const reduced = useReducedMotion();
     if (!drop || reduced) return <>{children}</>;
     return (
-        <motion.span className="inline-block" data-kx-motion="stamp"
-            initial={{ y: -26, rotate: -10, scale: 1.18, opacity: 0 }}
-            animate={{ y: 0, rotate: 0, scale: 1, opacity: 1 }}
-            transition={STAMP_SPRING}>
-            {children}
-        </motion.span>
+        <span className="relative inline-block">
+            {/* Its shadow: far and faint while the stamp is high, tight and dark as it lands — same spring, one physics */}
+            <motion.span aria-hidden="true" data-kx-motion="stamp-shadow"
+                className="pointer-events-none absolute inset-x-1 -bottom-1 h-2 rounded-full bg-black/45 blur-[3px]"
+                initial={{ scale: 1.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={STAMP_SPRING} />
+            <motion.span className="relative inline-block" data-kx-motion="stamp"
+                initial={{ y: -26, rotate: -10, scale: 1.18, opacity: 0 }}
+                animate={{ y: 0, rotate: 0, scale: 1, opacity: 1 }}
+                transition={STAMP_SPRING}>
+                {children}
+            </motion.span>
+        </span>
     );
 }
 

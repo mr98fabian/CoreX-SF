@@ -204,8 +204,8 @@ export default function DashboardLayout() {
             {!isMobile && (
                 <aside
                     className={cn(
-                        "flex flex-col border-r transition-all duration-300 ease-in-out relative overflow-hidden z-20 backdrop-blur-xl",
-                        "bg-white/80 border-gray-200 dark:bg-black/50 dark:border-white/5",
+                        "flex flex-col border-r transition-all duration-300 ease-in-out relative overflow-hidden z-20",
+                        "bg-white border-gray-200 dark:bg-[#020617] dark:border-white/5",
                         isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0 border-none"
                     )}
                 >
@@ -216,7 +216,7 @@ export default function DashboardLayout() {
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
                 {/* TOP BAR / HEADER */}
-                <header className="flex h-14 items-center gap-4 border-b px-4 backdrop-blur-md sticky top-0 z-10 bg-white/60 border-gray-200 dark:bg-black/30 dark:border-white/5">
+                <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10 bg-white border-gray-200 dark:bg-[#020617] dark:border-white/5">
                     <Button
                         variant="ghost"
                         size="icon"
