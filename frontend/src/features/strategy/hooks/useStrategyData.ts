@@ -110,6 +110,7 @@ export interface ClosingDayIntel {
     optimal_purchase_window: { start_day: number; end_day: number } | null;
     tips: Array<string | { type: string; message: string }>;
     credit_utilization: number | null;
+    credit_utilization_band?: 'low' | 'mid' | 'high' | null;
 }
 
 export interface HybridKillAnalysis {

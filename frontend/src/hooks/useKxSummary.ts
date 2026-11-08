@@ -78,6 +78,7 @@ export function useKxSummary() {
     const load = useCallback(() => Promise.all([
         queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }),
         queryClient.invalidateQueries({ queryKey: [ACTIVITY_KEY] }),
+        queryClient.invalidateQueries({ queryKey: ['credit-panel'] }),
     ]), [queryClient]);
 
     // Active subscriptions are real dated charges: same cache as the Suscripciones section

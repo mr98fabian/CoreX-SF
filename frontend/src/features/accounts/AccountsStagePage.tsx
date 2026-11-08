@@ -23,6 +23,8 @@ import { moment, primeAudio } from '@/lib/feedback';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { findFundingAccount } from '@/lib/funding';
 import { AccountLogo } from '@/components/AccountLogo';
+import { CreditPanel, UsageBar } from './CreditPanel';
+import { useCreditPanel } from '@/hooks/useCreditPanel';
 
 const MAX_PER_SECTION = 4; // rule 4: sections of 3–4 items; longer groups split into named parts
 
@@ -49,6 +51,7 @@ export default function AccountsStagePage() {
     const [saving, setSaving] = useState(false);
     const justPaid = useJustPaid(s.staged);
     // Corte en Cero: consecutive $0 statement cuts per card (cut history)
+    const { data: credit } = useCreditPanel();
     const { data: cuts } = useQuery({ queryKey: ['cuts'], queryFn: () => apiFetch<{ streaks: Record<string, number> }>('/api/cuts'), staleTime: 60_000 });
     // A debt that just reached $0 (the PAGADA stamp drops) is the big moment
     const paidCount = useRef(justPaid.size);
@@ -135,6 +138,8 @@ export default function AccountsStagePage() {
                     phrase={<>{es ? 'Disponible ' : 'Available '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b>
                         {mainChecking && <span className="text-kx-ink3"> · {mainChecking.name}</span>}</>} />
 
+                {!filter && <CreditPanel es={es} data={credit} />}
+
                 {filter && (
                     <button onClick={() => setParams({})} className="text-[13px] font-semibold text-kx-amber">
                         {es ? '← Ver todas las etapas' : '← Show all stages'}
@@ -158,6 +163,12 @@ export default function AccountsStagePage() {
                                                 {stage === 'paid' && <span className="ml-auto"><StampDrop drop={justPaid.has(a.id)}><PaidStamp /></StampDrop></span>}
                                             </span>
                                             <StageBar stage={stage} pct={a.paid} />
+                                            {credit?.por_tarjeta[String(a.id)] && (
+                                                <UsageBar pct={credit.por_tarjeta[String(a.id)].pct} band={credit.por_tarjeta[String(a.id)].banda} es={es} />
+                                            )}
+                                            {credit?.sin_limite.includes(a.id) && (
+                                                <span className="mt-1.5 block text-[11px] text-kx-ink3">{es ? 'Sin límite preestablecido' : 'No preset spending limit'}</span>
+                                            )}
                                             {(cuts?.streaks[String(a.id)] ?? 0) >= 1 && (
                                                 <span data-testid="cut-streak" className="mt-1.5 inline-block rounded-full border border-kx-line px-2 py-0.5 text-[11px] text-kx-ink2">
                                                     {es ? `Cortes en $0: ${cuts!.streaks[String(a.id)]} seguidos` : `$0 cuts: ${cuts!.streaks[String(a.id)]} in a row`}
@@ -208,7 +219,9 @@ export default function AccountsStagePage() {
                                 {([
                                     [es ? 'Tasa (APR)' : 'Rate (APR)', `${Number(open.interest_rate).toFixed(2)}%`],
                                     open.type === 'debt' && [es ? 'Pago mínimo' : 'Minimum', formatMoney(Number(open.min_payment) || 0)],
-                                    open.credit_limit && [es ? 'Límite' : 'Limit', formatMoney(Number(open.credit_limit))],
+                                    Number(open.credit_limit) > 0
+                                        ? [es ? 'Límite' : 'Limit', formatMoney(Number(open.credit_limit))]
+                                        : open.debt_subtype === 'credit_card' && open.type === 'debt' && [es ? 'Límite' : 'Limit', es ? 'Sin límite preestablecido' : 'No preset limit'],
                                     open.closing_day && [es ? 'Día de corte' : 'Cut day', String(open.closing_day)],
                                     open.due_day && [es ? 'Día de pago' : 'Due day', String(open.due_day)],
                                 ].filter(Boolean) as [string, string][]).map(([k, v]) => (
