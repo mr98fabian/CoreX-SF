@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import LandingGate from "@/features/landing/LandingGate";
 import ErrorBoundary from "@/features/error/ErrorBoundary";
@@ -6,7 +6,6 @@ import ErrorBoundary from "@/features/error/ErrorBoundary";
 // Route-level code splitting: visitors on the landing page don't download
 // the dashboard bundle (recharts, forms, etc.) and vice versa.
 const DashboardLayout = lazy(() => import("@/layouts/DashboardLayout"));
-const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage"));
 const AccountsPage = lazy(() => import("@/features/accounts/AccountsPage"));
 const ActionPlanPage = lazy(() => import("@/features/actionplan/ActionPlanPage"));
 const AnalyticsPage = lazy(() => import("@/features/analytics/AnalyticsPage"));
@@ -70,7 +69,7 @@ function AppShell() {
                 >
                   <Route index element={<HomePage />} />
                   <Route path="calendar" element={<CalendarPage />} />
-                  <Route path="panel" element={<DashboardPage />} />
+                  <Route path="panel" element={<Navigate to="/dashboard" replace />} />
                   <Route path="action-plan" element={<AttackPage />} />
                   <Route path="action-plan/full" element={<ActionPlanPage />} />
                   <Route path="accounts" element={<AccountsStagePage />} />

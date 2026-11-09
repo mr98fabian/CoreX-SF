@@ -56,8 +56,8 @@ export default function DashboardLayout() {
         return whenIdle(() => prefetchSections(queryClient, userId));
     }, [queryClient, userId]);
 
-    // Listen for onboarding restart requests from the inline resume card
-    // (rendered inside DashboardPage) so the wizard state stays in this hook instance
+    // Listen for onboarding restart requests (Ajustes → "Ver el tutorial")
+    // so the wizard state stays in this hook instance
     useEffect(() => {
         const handler = () => { void onboarding.restart(); };
         window.addEventListener('korex:restart-onboarding', handler);
@@ -267,9 +267,8 @@ export default function DashboardLayout() {
                         celebrate('epic'); // Dopamine reward — Skill: neuroventa §7
                     }}
                     onSkip={async () => {
-                        // Mark complete so wizard closes, but flag as skipped
+                        // Skipping closes it; Ajustes → "Ver el tutorial" reopens it
                         await onboarding.complete();
-                        localStorage.setItem('korex_onboarding_skipped', 'true');
                     }}
                 />
             )}

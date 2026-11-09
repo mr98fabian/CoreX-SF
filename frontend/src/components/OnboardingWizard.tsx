@@ -120,7 +120,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
         return Number.isInteger(saved) && saved >= 0 && saved <= 6 ? saved : 0;
     });
 
-    // Persist so OnboardingResumePopup ('Reanudar') continues where the user
+    // Persist so reopening the tutorial (Ajustes → "Ver el tutorial") continues where the user
     // left off instead of restarting the whole flow from step 0.
     useEffect(() => {
         localStorage.setItem('korex_onboarding_step', String(currentStep));
