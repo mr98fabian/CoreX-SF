@@ -5,10 +5,10 @@ export default function NotFoundPage() {
     usePageTitle('404');
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+        <div className="kx-scope min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
             {/* Ambient glow */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[120px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] rounded-full blur-[120px]" />
             </div>
 
             {/* Raccoon mascot */}
@@ -21,15 +21,15 @@ export default function NotFoundPage() {
             </div>
 
             {/* 404 number */}
-            <h1 className="relative z-10 text-[120px] sm:text-[160px] font-black text-transparent bg-clip-text bg-gradient-to-b from-slate-300 to-slate-700 leading-none tracking-tighter">
+            <h1 className="relative z-10 text-[120px] sm:text-[160px] font-black text-kx-amber leading-none tracking-tighter">
                 404
             </h1>
 
             {/* Message */}
-            <p className="relative z-10 text-gray-400 text-lg mt-4 max-w-md">
+            <p className="relative z-10 text-kx-ink2 text-lg mt-4 max-w-md">
                 The raccoon searched everywhere, but this page doesn't exist.
             </p>
-            <p className="relative z-10 text-gray-500 text-sm mt-2">
+            <p className="relative z-10 text-kx-ink3 text-sm mt-2">
                 Maybe it was moved, deleted, or never existed in the first place.
             </p>
 
@@ -37,13 +37,13 @@ export default function NotFoundPage() {
             <div className="relative z-10 flex gap-4 mt-10">
                 <Link
                     to="/"
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-semibold rounded-lg hover:from-amber-400 hover:to-orange-400 transition-all duration-300 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+                    className="px-6 py-3 bg-kx-amber text-[#111418] font-semibold rounded-lg transition-all duration-300 shadow-lg "
                 >
                     Go to Dashboard
                 </Link>
                 <button
                     onClick={() => window.history.back()}
-                    className="px-6 py-3 bg-gray-200 dark:bg-neutral-800/60 text-slate-600 dark:text-gray-300 font-medium rounded-lg border border-slate-300 dark:border-neutral-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                    className="px-6 py-3 bg-kx-raised text-kx-ink2 font-medium rounded-lg border border-kx-line hover:bg-kx-raised hover:text-kx-ink transition-all duration-300"
                 >
                     Go Back
                 </button>
@@ -60,14 +60,14 @@ export default function NotFoundPage() {
 
             {/* CSS for custom animation */}
             <style>{`
-                @keyframes bounce-slow {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-12px); }
-                }
-                .animate-bounce-slow {
-                    animation: bounce-slow 3s ease-in-out infinite;
-                }
-            `}</style>
+ @keyframes bounce-slow {
+ 0%, 100% { transform: translateY(0); }
+ 50% { transform: translateY(-12px); }
+ }
+ .animate-bounce-slow {
+ animation: bounce-slow 3s ease-in-out infinite;
+ }
+ `}</style>
         </div>
     );
 }

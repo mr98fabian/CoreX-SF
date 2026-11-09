@@ -31,20 +31,20 @@ interface AnalyticsSummary {
 
 // ─── Category Colors ─────────────────────────────────────────
 const CATEGORY_COLORS: Record<string, string> = {
-    Food: 'bg-orange-500',
-    Transport: 'bg-blue-500',
-    Entertainment: 'bg-purple-500',
-    Shopping: 'bg-pink-500',
-    Utilities: 'bg-teal-500',
-    Health: 'bg-red-500',
-    Housing: 'bg-indigo-500',
-    Insurance: 'bg-cyan-500',
-    Education: 'bg-emerald-500',
-    Uncategorized: 'bg-gray-500',
+    Food: 'bg-kx-amber',
+    Transport: 'bg-kx-raised',
+    Entertainment: 'bg-kx-raised',
+    Shopping: 'bg-kx-raised',
+    Utilities: 'bg-kx-paid',
+    Health: 'bg-kx-debt',
+    Housing: 'bg-kx-raised',
+    Insurance: 'bg-kx-raised',
+    Education: 'bg-kx-paid',
+    Uncategorized: 'bg-kx-line',
 };
 
 function getCategoryColor(name: string): string {
-    return CATEGORY_COLORS[name] || 'bg-amber-500';
+    return CATEGORY_COLORS[name] || 'bg-kx-amber';
 }
 
 // ─── Component ─────────────────────────────────────────────
@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
             {/* Header */}
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                    <BarChart3 className="text-amber-500" size={28} />
+                    <BarChart3 className="text-kx-amber" size={28} />
                     Analytics
                 </h1>
                 <p className="text-muted-foreground">
@@ -115,10 +115,10 @@ export default function AnalyticsPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
+                <Card className="bg-kx-surface border-kx-line ">
                     <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                            <DollarSign className="text-amber-500" size={24} />
+                        <div className="h-12 w-12 rounded-xl bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] flex items-center justify-center">
+                            <DollarSign className="text-kx-amber" size={24} />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Avg Monthly Spending</p>
@@ -127,10 +127,10 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
+                <Card className="bg-kx-surface border-kx-line ">
                     <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-                            <TrendingDown className="text-red-500" size={24} />
+                        <div className="h-12 w-12 rounded-xl bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] flex items-center justify-center">
+                            <TrendingDown className="text-kx-debt" size={24} />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Total 3-Month Spend</p>
@@ -139,10 +139,10 @@ export default function AnalyticsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-gray-200 dark:border-white/5">
+                <Card className="bg-kx-surface border-kx-line ">
                     <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                            <Tag className="text-purple-500" size={24} />
+                        <div className="h-12 w-12 rounded-xl bg-kx-raised flex items-center justify-center">
+                            <Tag className="text-kx-ink2" size={24} />
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Top Category</p>
@@ -154,10 +154,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Spending by Category — Horizontal bars */}
-            <Card className="border-gray-200 dark:border-white/5">
+            <Card className="border-kx-line ">
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                        <BarChart3 size={18} className="text-amber-500" />
+                        <BarChart3 size={18} className="text-kx-amber" />
                         Spending by Category
                     </CardTitle>
                 </CardHeader>
@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
                                         </span>
                                         <span className="text-muted-foreground font-mono">{formatMoney(cat.amount)}</span>
                                     </div>
-                                    <div className="h-3 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-3 w-full bg-kx-raised rounded-full overflow-hidden">
                                         <div
                                             className={`h-full rounded-full ${getCategoryColor(cat.name)} transition-all duration-700 ease-out`}
                                             style={{ width: `${pct}%` }}
@@ -190,10 +190,10 @@ export default function AnalyticsPage() {
             </Card>
 
             {/* Monthly Trend — Visual "bar chart" */}
-            <Card className="border-gray-200 dark:border-white/5">
+            <Card className="border-kx-line ">
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                        <TrendingUp size={18} className="text-emerald-500" />
+                        <TrendingUp size={18} className="text-kx-paid" />
                         Monthly Income vs Expense
                     </CardTitle>
                 </CardHeader>
@@ -203,20 +203,20 @@ export default function AnalyticsPage() {
                     ) : (
                         <div className="space-y-4">
                             {trend.map((month) => (
-                                <div key={month.month} className="space-y-2 p-3 rounded-lg bg-gray-50 dark:bg-white/[0.02]">
+                                <div key={month.month} className="space-y-2 p-3 rounded-lg bg-kx-surface /[0.02]">
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="font-semibold">{month.month}</span>
-                                        <span className={`font-mono font-bold flex items-center gap-1 ${month.net >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        <span className={`font-mono font-bold flex items-center gap-1 ${month.net >= 0 ? 'text-kx-paid' : 'text-kx-debt'}`}>
                                             {month.net >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                                             {formatMoney(Math.abs(month.net))} net
                                         </span>
                                     </div>
                                     {/* Income bar */}
                                     <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-emerald-500 font-medium">Income</span>
-                                        <div className="flex-1 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <span className="w-16 text-kx-paid font-medium">Income</span>
+                                        <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                                                className="h-full bg-kx-paid rounded-full transition-all duration-700"
                                                 style={{ width: `${(month.income / maxTrendVal) * 100}%` }}
                                             />
                                         </div>
@@ -224,10 +224,10 @@ export default function AnalyticsPage() {
                                     </div>
                                     {/* Expense bar */}
                                     <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-red-500 font-medium">Expense</span>
-                                        <div className="flex-1 h-2.5 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                        <span className="w-16 text-kx-debt font-medium">Expense</span>
+                                        <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
                                             <div
-                                                className="h-full bg-red-500 rounded-full transition-all duration-700"
+                                                className="h-full bg-kx-debt rounded-full transition-all duration-700"
                                                 style={{ width: `${(month.expense / maxTrendVal) * 100}%` }}
                                             />
                                         </div>

@@ -99,11 +99,11 @@ const sections = [
 export default function TermsOfServicePage() {
     usePageTitle('Terms of Service');
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-black text-slate-600 dark:text-gray-300">
+        <div className="kx-scope min-h-screen text-kx-ink2">
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-gray-50/90 dark:bg-black/90 backdrop-blur-xl border-b border-gray-200 dark:border-white/5">
+            <div className="sticky top-0 z-20 bg-kx-surface border-b border-kx-line ">
                 <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link to="/login" className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                    <Link to="/login" className="flex items-center gap-2 text-sm text-kx-ink3 hover:text-kx-ink transition-colors">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
@@ -111,7 +111,7 @@ export default function TermsOfServicePage() {
                     </Link>
                     <div className="flex items-center gap-2">
                         <img src="/korex-isotipo.svg" alt="KoreX" className="w-6 h-6" />
-                        <span className="text-sm font-semibold text-slate-900 dark:text-white">KoreX</span>
+                        <span className="text-sm font-semibold text-kx-ink ">KoreX</span>
                     </div>
                 </div>
             </div>
@@ -119,19 +119,19 @@ export default function TermsOfServicePage() {
             {/* Content */}
             <div className="max-w-4xl mx-auto px-6 py-12">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Terms of Service</h1>
-                    <p className="text-sm text-gray-500">Effective Date: {EFFECTIVE_DATE}</p>
+                    <h1 className="text-3xl font-bold text-kx-ink mb-2">Terms of Service</h1>
+                    <p className="text-sm text-kx-ink3">Effective Date: {EFFECTIVE_DATE}</p>
                 </div>
 
                 {/* Quick Nav */}
-                <div className="mb-10 p-4 rounded-xl bg-gray-100 dark:bg-[#0f0f0f]/50 border border-gray-200 dark:border-white/5">
-                    <p className="text-xs uppercase tracking-wider text-gray-500 mb-3 font-medium">Table of Contents</p>
+                <div className="mb-10 p-4 rounded-xl bg-kx-raised dark:bg-[#0f0f0f]/50 border border-kx-line ">
+                    <p className="text-xs uppercase tracking-wider text-kx-ink3 mb-3 font-medium">Table of Contents</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
                         {sections.map((s) => (
                             <a
                                 key={s.id}
                                 href={`#${s.id}`}
-                                className="text-sm text-amber-400/70 hover:text-amber-400 transition-colors py-1"
+                                className="text-sm text-kx-amber hover:text-kx-amber transition-colors py-1"
                             >
                                 {s.title}
                             </a>
@@ -143,11 +143,11 @@ export default function TermsOfServicePage() {
                 <div className="space-y-10">
                     {sections.map((s) => (
                         <section key={s.id} id={s.id} className="scroll-mt-20">
-                            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">{s.title}</h2>
-                            <div className="text-sm leading-relaxed whitespace-pre-line text-gray-400">
+                            <h2 className="text-lg font-semibold text-kx-ink mb-3">{s.title}</h2>
+                            <div className="text-sm leading-relaxed whitespace-pre-line text-kx-ink2">
                                 {s.content.split('**').map((part, i) =>
                                     i % 2 === 1 ? (
-                                        <strong key={i} className="text-black dark:text-gray-200">{part}</strong>
+                                        <strong key={i} className="text-[#111418] ">{part}</strong>
                                     ) : (
                                         <span key={i}>{part}</span>
                                     )
@@ -158,14 +158,14 @@ export default function TermsOfServicePage() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/5 text-center">
-                    <p className="text-xs text-slate-600">
+                <div className="mt-16 pt-8 border-t border-kx-line text-center">
+                    <p className="text-xs text-kx-ink2">
                         KoreX Financial System — &copy; {new Date().getFullYear()} Kontrolly Consulting LLC. All rights reserved.
                     </p>
                     <div className="flex items-center justify-center gap-4 mt-3">
-                        <Link to="/privacy" className="text-xs text-amber-400/60 hover:text-amber-400 transition-colors">Privacy Policy</Link>
-                        <span className="text-slate-700">•</span>
-                        <Link to="/login" className="text-xs text-amber-400/60 hover:text-amber-400 transition-colors">Back to Login</Link>
+                        <Link to="/privacy" className="text-xs text-kx-amber hover:text-kx-amber transition-colors">Privacy Policy</Link>
+                        <span className="text-kx-ink">•</span>
+                        <Link to="/login" className="text-xs text-kx-amber hover:text-kx-amber transition-colors">Back to Login</Link>
                     </div>
                 </div>
             </div>

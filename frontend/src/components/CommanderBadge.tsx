@@ -89,7 +89,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
                     {/* Progress bar to next rank */}
                     {!rank.isMaxRank && (
                         <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 rounded-full bg-neutral-800/50 overflow-hidden">
+                            <div className="flex-1 h-1.5 rounded-full bg-kx-raised overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all duration-1000 ease-out"
                                     style={{
@@ -98,7 +98,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
                                     }}
                                 />
                             </div>
-                            <span className="text-[9px] font-mono text-gray-500 tabular-nums whitespace-nowrap">
+                            <span className="text-[9px] font-mono text-kx-ink3 tabular-nums whitespace-nowrap">
                                 {rank.progressPercent}%
                             </span>
                         </div>
@@ -106,7 +106,7 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
 
                     {/* Next rank hint */}
                     {!rank.isMaxRank && nextName && (
-                        <p className="text-[9px] text-gray-500 mt-0.5 truncate">
+                        <p className="text-[9px] text-kx-ink3 mt-0.5 truncate">
                             {isEs ? 'Siguiente' : 'Next'}: {nextName}
                         </p>
                     )}
@@ -121,20 +121,20 @@ export function CommanderBadge({ isPaid = false, compact = false }: CommanderBad
             </div>
 
             {/* Level indicator */}
-            <div className="absolute top-1.5 right-2 text-[9px] font-mono text-slate-600">
+            <div className="absolute top-1.5 right-2 text-[9px] font-mono text-kx-ink2">
                 Lv.{rank.level}/90
             </div>
 
             {/* Paid boost indicator */}
             {isPaid && (
-                <div className="absolute bottom-1.5 right-2 text-[8px] font-bold text-gold-400 flex items-center gap-0.5">
+                <div className="absolute bottom-1.5 right-2 text-[8px] font-bold text-kx-amber flex items-center gap-0.5">
                     <Zap size={9} /> 2x
                 </div>
             )}
 
             {/* Streak info */}
-            <div className="mt-2 flex items-center gap-3 text-[10px] text-gray-500">
-                <span className="flex items-center gap-1"><Flame size={11} className="text-ignition" /> {streak.rawStreak} {isEs ? 'días racha' : 'day streak'}</span>
+            <div className="mt-2 flex items-center gap-3 text-[10px] text-kx-ink3">
+                <span className="flex items-center gap-1"><Flame size={11} className="text-kx-amber" /> {streak.rawStreak} {isEs ? 'días racha' : 'day streak'}</span>
                 <span className="flex items-center gap-1"><BarChart3 size={11} /> {streak.score} {isEs ? 'pts' : 'pts'}</span>
             </div>
         </div>

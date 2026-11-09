@@ -56,8 +56,8 @@ export default function DashboardLayout() {
         return whenIdle(() => prefetchSections(queryClient, userId));
     }, [queryClient, userId]);
 
-    // Listen for onboarding restart requests from the inline resume card
-    // (rendered inside DashboardPage) so the wizard state stays in this hook instance
+    // Listen for onboarding restart requests (Ajustes → "Ver el tutorial")
+    // so the wizard state stays in this hook instance
     useEffect(() => {
         const handler = () => { void onboarding.restart(); };
         window.addEventListener('korex:restart-onboarding', handler);
@@ -95,7 +95,7 @@ export default function DashboardLayout() {
 
     const sidebarContent = (
         <>
-            <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-white/5">
+            <div className="flex h-16 items-center justify-between px-6 border-b border-kx-line ">
                 <div className="flex items-center gap-2 group cursor-default">
                     <img
                         src="/korex-logotipo.svg"
@@ -108,7 +108,7 @@ export default function DashboardLayout() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="text-gray-400 hover:text-white"
+                        className="text-kx-ink2 hover:text-kx-ink"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <X size={20} />
@@ -124,8 +124,8 @@ export default function DashboardLayout() {
                             className={cn(
                                 "w-full justify-start gap-2 h-10 transition-colors",
                                 isActive(path)
-                                    ? "bg-ignition-soft text-ignition hover:bg-ignition-soft hover:text-ignition"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+                                    ? "bg-kx-amber-soft text-kx-amber hover:bg-kx-amber-soft hover:text-kx-amber"
+                                    : "text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
                             )}
                         >
                             <Icon size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{label}</span>
@@ -134,25 +134,25 @@ export default function DashboardLayout() {
                 ))}
             </nav>
 
-            <div className="border-t border-gray-200 dark:border-white/5 p-4 space-y-3">
+            <div className="border-t border-kx-line p-4 space-y-3">
                 {user && (
                     <div className="flex items-center gap-3 px-2">
                         {user.user_metadata?.avatar_url ? (
                             <img
                                 src={user.user_metadata.avatar_url}
                                 alt="Avatar"
-                                className="h-8 w-8 rounded-full ring-2 ring-white/30 dark:ring-white/20"
+                                className="h-8 w-8 rounded-full ring-2 ring-kx-line "
                             />
                         ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 dark:bg-neutral-800 text-xs font-bold text-black dark:text-white ring-2 ring-black/10 dark:ring-white/20">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-kx-raised text-xs font-bold text-[#111418] ring-2 ring-kx-line ">
                                 {(user.email?.[0] || 'U').toUpperCase()}
                             </div>
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-black dark:text-white">
+                            <p className="truncate text-xs font-medium text-[#111418] ">
                                 {user.user_metadata?.full_name || 'User'}
                             </p>
-                            <p className="truncate text-[10px] text-gray-400 dark:text-gray-500">
+                            <p className="truncate text-[10px] text-kx-ink2 ">
                                 {user.email}
                             </p>
                         </div>
@@ -164,7 +164,7 @@ export default function DashboardLayout() {
                 </div>
                 <Button
                     variant="ghost"
-                    className="w-full justify-start gap-2 text-rose-500 hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20"
+                    className="w-full justify-start gap-2 text-kx-debt hover:text-kx-debt hover:bg-kx-debt "
                     onClick={() => signOut()}
                 >
                     <LogOut size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{t("nav.signOut")}</span>
@@ -174,7 +174,7 @@ export default function DashboardLayout() {
     );
 
     return (
-        <div className="flex h-[100dvh] w-full overflow-x-clip bg-transparent">
+        <div className="kx-scope flex h-[100dvh] w-full overflow-x-clip">
 
             {/* ═══ MOBILE: Backdrop overlay (covers entire screen) ═══ */}
             {isMobile && isSidebarOpen && (
@@ -188,7 +188,7 @@ export default function DashboardLayout() {
             {/* ═══ MOBILE: Drawer sidebar (fixed, full-height, slides in/out) ═══ */}
             {isMobile && (
                 <aside
-                    className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-gray-200 dark:border-white/5 transition-transform duration-300 ease-in-out"
+                    className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-kx-line transition-transform duration-300 ease-in-out"
                     style={{
                         width: '85vw',
                         maxWidth: '320px',
@@ -205,7 +205,7 @@ export default function DashboardLayout() {
                 <aside
                     className={cn(
                         "flex flex-col border-r transition-all duration-300 ease-in-out relative overflow-hidden z-20",
-                        "bg-white border-gray-200 dark:bg-[#020617] dark:border-white/5",
+                        "bg-kx-surface border-kx-line dark:bg-[#020617] ",
                         isSidebarOpen ? "w-64 translate-x-0" : "w-0 -translate-x-full opacity-0 border-none"
                     )}
                 >
@@ -216,12 +216,12 @@ export default function DashboardLayout() {
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
                 {/* TOP BAR / HEADER */}
-                <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10 bg-white border-gray-200 dark:bg-[#020617] dark:border-white/5">
+                <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10 bg-kx-surface border-kx-line dark:bg-[#020617] ">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+                        className="text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
                     >
                         {isMobile ? (
                             <Menu size={20} strokeWidth={1.5} />
@@ -235,7 +235,7 @@ export default function DashboardLayout() {
                         variant="ghost"
                         size="icon"
                         onClick={toggleTheme}
-                        className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5"
+                        className="text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
                         title={isDark
                             ? (language === 'es' ? 'Cambiar a Modo Claro' : 'Switch to Light Mode')
                             : (language === 'es' ? 'Cambiar a Modo Oscuro' : 'Switch to Dark Mode')}
@@ -267,9 +267,8 @@ export default function DashboardLayout() {
                         celebrate('epic'); // Dopamine reward — Skill: neuroventa §7
                     }}
                     onSkip={async () => {
-                        // Mark complete so wizard closes, but flag as skipped
+                        // Skipping closes it; Ajustes → "Ver el tutorial" reopens it
                         await onboarding.complete();
-                        localStorage.setItem('korex_onboarding_skipped', 'true');
                     }}
                 />
             )}

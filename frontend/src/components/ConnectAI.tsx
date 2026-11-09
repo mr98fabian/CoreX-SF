@@ -116,10 +116,10 @@ export function ConnectAI() {
 
     return (
         <div className="space-y-6">
-            <Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface dark:bg-black/50">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
-                        <Bot className="h-5 w-5 text-amber-500" />
+                        <Bot className="h-5 w-5 text-kx-amber" />
                         {es ? 'Conecta tu IA' : 'Connect your AI'}
                     </CardTitle>
                     <CardDescription>
@@ -130,11 +130,11 @@ export function ConnectAI() {
                 </CardHeader>
                 <CardContent className="space-y-5">
                     {access === null ? (
-                        <div className="h-16 animate-pulse rounded-xl bg-white/5" aria-busy="true" />
+                        <div className="h-16 animate-pulse rounded-xl bg-kx-surface" aria-busy="true" />
                     ) : locked ? (
                         <div className="space-y-3 border-t border-[var(--kx-line-soft)] pt-4">
                             <p className="flex items-center gap-2 text-sm font-semibold">
-                                <Lock className="h-4 w-4 text-amber-500" />
+                                <Lock className="h-4 w-4 text-kx-amber" />
                                 {access.reason === 'demo'
                                     ? (es ? 'El demo es compartido: crea tu cuenta para conectar tu IA.' : 'The demo is shared: create your account to connect your AI.')
                                     : access.reason === 'error'
@@ -142,19 +142,19 @@ export function ConnectAI() {
                                         : (es ? 'Conectar tu IA viene con los planes de pago.' : 'Connecting your AI comes with paid plans.')}
                             </p>
                             {access.reason === 'free_plan' && (
-                                <Link to="/dashboard/settings/plans" className="inline-block rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-[#111418]">
+                                <Link to="/dashboard/settings/plans" className="inline-block rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-[#111418]">
                                     {es ? 'Ver planes' : 'See plans'}
                                 </Link>
                             )}
                         </div>
                     ) : newToken ? (
                         <div className="space-y-4">
-                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
-                                <p className="text-sm font-semibold text-amber-500">
+                            <div className="rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] p-4 space-y-3">
+                                <p className="text-sm font-semibold text-kx-amber">
                                     {es ? 'Guárdalo ahora: no se vuelve a mostrar.' : "Save it now: it won't be shown again."}
                                 </p>
                                 <div className="flex gap-2">
-                                    <code className="flex-1 break-all rounded-lg bg-black/40 px-3 py-2 font-mono text-xs text-slate-100 select-all">{newToken}</code>
+                                    <code className="flex-1 break-all rounded-lg bg-black/40 px-3 py-2 font-mono text-xs text-kx-ink select-all">{newToken}</code>
                                     <Button size="sm" variant="outline" onClick={() => copy(newToken, 'token')}>
                                         {copied === 'token' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                     </Button>
@@ -169,7 +169,7 @@ export function ConnectAI() {
                                         {copied === 'config' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                                     </Button>
                                 </div>
-                                <pre className="overflow-x-auto rounded-lg bg-black/40 p-3 font-mono text-xs text-slate-100">{mcpConfig(newToken)}</pre>
+                                <pre className="overflow-x-auto rounded-lg bg-black/40 p-3 font-mono text-xs text-kx-ink">{mcpConfig(newToken)}</pre>
                             </div>
                             <Button variant="outline" onClick={() => setNewToken(null)}>
                                 {es ? 'Listo, ya lo guardé' : "Done, I've saved it"}
@@ -186,8 +186,8 @@ export function ConnectAI() {
                                 <Label>{es ? 'Qué puede hacer' : 'What it can do'}</Label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {SCOPES.map((s) => (
-                                        <label key={s.scope} className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-2 text-sm cursor-pointer">
-                                            <input type="checkbox" className="accent-amber-500" checked={scopes.includes(s.scope)} onChange={() => toggle(s.scope)} />
+                                        <label key={s.scope} className="flex items-center gap-2 rounded-lg border border-kx-line px-3 py-2 text-sm cursor-pointer">
+                                            <input type="checkbox" className="accent-kx-amber" checked={scopes.includes(s.scope)} onChange={() => toggle(s.scope)} />
                                             {es ? s.es : s.en}
                                             {s.scope.startsWith('write:') && (
                                                 <Badge variant="outline" className="ml-auto text-[10px]">{es ? 'cambia datos' : 'changes data'}</Badge>
@@ -206,10 +206,10 @@ export function ConnectAI() {
             </Card>
 
             {!locked && (
-                <Card className="border-gray-200 dark:border-white/5 bg-white dark:bg-black/50">
+                <Card className="border-kx-line bg-kx-surface dark:bg-black/50">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
-                            <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                            <ShieldCheck className="h-5 w-5 text-kx-paid" />
                             {es ? 'Tokens activos' : 'Active tokens'}
                         </CardTitle>
                     </CardHeader>
@@ -218,7 +218,7 @@ export function ConnectAI() {
                             <p className="text-sm text-muted-foreground">{es ? 'Ninguna IA tiene acceso ahora mismo.' : 'No AI has access right now.'}</p>
                         )}
                         {active.map((t) => (
-                            <div key={t.id} className="flex items-start justify-between gap-3 rounded-lg border border-gray-200 dark:border-white/10 p-3">
+                            <div key={t.id} className="flex items-start justify-between gap-3 rounded-lg border border-kx-line p-3">
                                 <div className="space-y-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{t.name}</p>
                                     <p className="text-xs text-muted-foreground">{t.scopes.map(label).join(' · ')}</p>
@@ -227,7 +227,7 @@ export function ConnectAI() {
                                         {t.last_used_at ? new Date(`${t.last_used_at}Z`).toLocaleString(es ? 'es-ES' : 'en-US') : (es ? 'nunca' : 'never')}
                                     </p>
                                 </div>
-                                <Button size="sm" variant="outline" className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 shrink-0" onClick={() => revoke(t.id)}>
+                                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] shrink-0" onClick={() => revoke(t.id)}>
                                     <Trash2 className="h-4 w-4 mr-1" />
                                     {es ? 'Revocar' : 'Revoke'}
                                 </Button>

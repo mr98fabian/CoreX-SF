@@ -423,29 +423,29 @@ export default function ActionPlanPage() {
             <div className="mx-auto max-w-5xl space-y-6 px-5 pt-6">
                 {/* ────── CONFIRMATION DIALOG ────── */}
                 <AlertDialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
-                    <AlertDialogContent className="bg-white dark:bg-black border-gray-200 dark:border-white/10 max-w-md">
+                    <AlertDialogContent className="bg-kx-surface border-kx-line max-w-md">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-slate-900 dark:text-white flex items-center gap-2">
-                                <Zap className="text-emerald-400" size={20} />
+                            <AlertDialogTitle className="text-kx-ink flex items-center gap-2">
+                                <Zap className="text-kx-paid" size={20} />
                                 {t('actionPlan.confirmExecution')}
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-500 dark:text-gray-400 space-y-4">
+                            <AlertDialogDescription className="text-kx-ink3 space-y-4">
                                 <p>{t('actionPlan.confirmQuestion')}</p>
                                 {confirmTarget && (
-                                    <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg p-4 space-y-2">
+                                    <div className="bg-kx-raised border border-kx-line rounded-lg p-4 space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm text-slate-700 dark:text-gray-300 font-medium">{confirmTarget.title}</span>
-                                            <span className="text-lg font-bold text-emerald-400">{formatMoney(confirmTarget.amount)}</span>
+                                            <span className="text-sm text-kx-ink font-medium">{confirmTarget.title}</span>
+                                            <span className="text-lg font-bold text-kx-paid">{formatMoney(confirmTarget.amount)}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                                            <span className="bg-gray-200 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-md px-2 py-0.5">{confirmTarget.source}</span>
+                                        <div className="flex items-center gap-2 text-xs text-kx-ink2 ">
+                                            <span className="bg-kx-raised border border-kx-line rounded-md px-2 py-0.5">{confirmTarget.source}</span>
                                             <span>→</span>
-                                            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md px-2 py-0.5">{confirmTarget.destination}</span>
+                                            <span className="bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] text-kx-paid rounded-md px-2 py-0.5">{confirmTarget.destination}</span>
                                         </div>
                                         {confirmTarget.type === 'attack' && confirmTarget.daily_interest_saved > 0 && (
-                                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-white/5">
-                                                <TrendingDown size={14} className="text-emerald-400" />
-                                                <span className="text-xs text-emerald-400">
+                                            <div className="flex items-center gap-2 mt-2 pt-2 border-t border-kx-line ">
+                                                <TrendingDown size={14} className="text-kx-paid" />
+                                                <span className="text-xs text-kx-paid">
                                                     {t('actionPlan.savesDay')} {formatMoney(confirmTarget.daily_interest_saved)}/{t('strategy.confidence.perDay').replace('/', '')} · ~{confirmTarget.days_shortened} {t('actionPlan.daysSooner')}
                                                 </span>
                                             </div>
@@ -455,12 +455,12 @@ export default function ActionPlanPage() {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-100 dark:bg-white/5 border-gray-200 dark:border-white/10 text-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white">
+                            <AlertDialogCancel className="bg-kx-raised border-kx-line text-kx-ink hover:bg-kx-raised hover:text-kx-ink ">
                                 {t('actionPlan.cancel')}
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleConfirmExecute}
-                                className="bg-emerald-600 hover:bg-emerald-500 text-white border-0"
+                                className="bg-kx-paid hover:bg-kx-paid text-[#111418] border-0"
                             >
                                 <CheckCircle2 size={16} className="mr-1.5" />
                                 {t('actionPlan.yesExecuted')}

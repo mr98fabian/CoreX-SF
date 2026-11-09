@@ -476,8 +476,8 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
             <button
                 onClick={(e) => { e.stopPropagation(); setOpen(true); }}
                 className="absolute top-2.5 left-2.5 z-[1] p-1 rounded-full
-                    text-slate-700/0 group-hover:text-gray-500 hover:!text-amber-400
-                    hover:!bg-amber-400/10 transition-all duration-300 opacity-0
+                    text-kx-ink group-hover:text-kx-ink3 hover:!text-kx-amber
+                    hover:!bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] transition-all duration-300 opacity-0
                     group-hover:opacity-100"
                 aria-label="Widget help"
                 title={isEs ? 'Ayuda del widget' : 'Widget help'}
@@ -508,36 +508,36 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                 transition={{ duration: 0.25, ease: 'easeOut' }}
                                 className="relative z-10 w-full max-w-lg"
                             >
-                                <div className="bg-[#0f0f0f]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+                                <div className="bg-[#0f0f0f]/95 backdrop-blur-xl border border-kx-line rounded-2xl shadow-2xl overflow-hidden">
                                     {/* Accent bar */}
-                                    <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
+                                    <div className="h-1 bg-kx-amber " />
 
                                     <div className="p-6">
                                         {/* Close button */}
                                         <button
                                             onClick={() => setOpen(false)}
-                                            className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+                                            className="absolute top-4 right-4 text-kx-ink3 hover:text-kx-ink transition-colors p-1 rounded-full hover:bg-kx-raised"
                                         >
                                             <X size={18} />
                                         </button>
 
                                         {/* Icon + Title */}
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-xl">
+                                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] text-xl">
                                                 {content.icon}
                                             </div>
-                                            <h2 className="text-lg font-bold text-white pr-8">{title}</h2>
+                                            <h2 className="text-lg font-bold text-kx-ink pr-8">{title}</h2>
                                         </div>
 
                                         {/* Description */}
-                                        <p className="text-sm text-gray-300 leading-relaxed mb-5">
+                                        <p className="text-sm text-kx-ink2 leading-relaxed mb-5">
                                             {desc}
                                         </p>
 
                                         {/* Bullet points */}
                                         <div className="space-y-2.5 mb-5">
                                             {content.bullets.map((bullet, i) => (
-                                                <div key={i} className="flex items-start gap-2.5 text-sm text-gray-400">
+                                                <div key={i} className="flex items-start gap-2.5 text-sm text-kx-ink2">
                                                     <span className="text-base mt-0.5 shrink-0">{bullet.icon}</span>
                                                     <span className="leading-relaxed">{isEs ? bullet.textEs : bullet.text}</span>
                                                 </div>
@@ -545,8 +545,8 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                         </div>
 
                                         {/* Location hint */}
-                                        <div className="rounded-lg bg-neutral-800/60 border border-amber-500/10 px-3 py-2.5 mb-5">
-                                            <p className="text-xs text-amber-400/80 leading-relaxed">
+                                        <div className="rounded-lg bg-kx-raised border border-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] px-3 py-2.5 mb-5">
+                                            <p className="text-xs text-kx-amber leading-relaxed">
                                                 {location}
                                             </p>
                                         </div>
@@ -555,8 +555,8 @@ export function WidgetHelp({ helpKey }: WidgetHelpProps) {
                                         <button
                                             onClick={() => setOpen(false)}
                                             className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300
-                                                bg-gradient-to-r from-amber-500 to-amber-600 text-white
-                                                hover:from-amber-400 hover:to-amber-500 hover:shadow-lg hover:shadow-amber-500/25
+                                                bg-gradient-to-r   text-kx-ink
+                                                  hover:shadow-lg 
                                                 active:scale-[0.98]"
                                         >
                                             {isEs ? '¡Entendido!' : 'Got it!'}

@@ -78,11 +78,11 @@ export default function HomePage() {
             <AmberStripe>
                 <BankHeader greeting={firstName ? (es ? `Hola, ${firstName}` : `Hi, ${firstName}`) : undefined} />
                 <div className="mt-auto pb-[18px]">
-                    <p className="text-[12.5px] text-white/90">{es ? 'Libre de deudas' : 'Debt-free'}</p>
-                    <p className="font-editorial text-[27px] font-[500] capitalize tracking-tight text-white">
+                    <p className="text-[12.5px] text-kx-ink">{es ? 'Libre de deudas' : 'Debt-free'}</p>
+                    <p className="font-editorial text-[27px] font-[500] capitalize tracking-tight text-kx-ink">
                         {noDebt ? (es ? 'Hoy' : 'Today') : freedomLabel ?? (es ? 'Calculando…' : 'Calculating…')}
                     </p>
-                    <p className="text-[12.5px] text-white/90">{es ? 'al ritmo actual de tu plan (estimado)' : 'at your plan’s current pace (estimate)'}</p>
+                    <p className="text-[12.5px] text-kx-ink">{es ? 'al ritmo actual de tu plan (estimado)' : 'at your plan’s current pace (estimate)'}</p>
                 </div>
             </AmberStripe>
 
@@ -130,7 +130,7 @@ export default function HomePage() {
                 {s.debts.length > 0 && (
                     <Section tone="neutral" bare title={es ? 'Tus deudas en 3 colores' : 'Your debts in 3 colors'}>
                         {/* One continuous panel, ledger rows — same treatment as the calendar */}
-                        <div className="kx-rows overflow-hidden rounded-[18px] border border-white/10">
+                        <div className="kx-rows overflow-hidden rounded-[18px] border border-kx-line">
                             {([
                                 ['debt', es ? 'En deuda' : 'In debt', 'text-kx-debt', 'var(--kx-debt-bar)'],
                                 ['almost', es ? 'Casi' : 'Almost', 'text-kx-almost', 'var(--kx-almost-bar)'],
