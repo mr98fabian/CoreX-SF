@@ -30,7 +30,7 @@ from models import AccessCode, AccessGrant
 ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"  # no 0/O/1/I/L
 KIND_PREFIX = {"founder": "FND", "months": "REG"}
 FOUNDER_PLAN = "founder"
-GIFT_PLAN = "accelerator"
+GIFT_PLAN = "freedom"  # the plan on sale; accelerator grants already issued keep working via PLAN_RANK
 CODE_RE = re.compile(r"^KX-(FND|REG)-([%s]{6})-([%s]{6})$" % (ALPHABET, ALPHABET))
 CUSTOM_RE = re.compile(r"^[A-Z0-9]{8,40}$")
 

@@ -16,10 +16,10 @@ def test_plans_come_from_plan_guard_without_auth():
 
 
 def test_plans_follow_a_change_in_plan_guard(monkeypatch):
-    monkeypatch.setitem(plan_guard.PLAN_LIMITS, "velocity", 15)
+    monkeypatch.setitem(plan_guard.PLAN_LIMITS, "starter", 3)
     with TestClient(app) as c:
         got = {p["plan"]: p["debt_limit"] for p in c.get("/api/public/plans").json()}
-    assert got["velocity"] == 15
+    assert got["starter"] == 3
 
 
 def test_plans_is_read_only():
@@ -27,8 +27,14 @@ def test_plans_is_read_only():
         assert c.post("/api/public/plans", json={}).status_code == 405
 
 
-def test_commercial_table_2026_11_04():
-    """Owner decision: Gratis 2 · Velocity 15 · Accelerator and Freedom unlimited."""
+def test_commercial_table_two_plans():
+    """Owner decision (Precios reales): only Gratis (2 debts) and the paid annual plan (freedom, unlimited)."""
     with TestClient(app) as c:
         got = {p["plan"]: p["debt_limit"] for p in c.get("/api/public/plans").json()}
-    assert got == {"starter": 2, "velocity": 15, "accelerator": None, "freedom": None}
+    assert got == {"starter": 2, "freedom": None}
+
+
+def test_retired_and_internal_plans_are_hidden_but_keep_their_keys():
+    assert {"velocity", "accelerator", "founder", "freedom-dev"} <= plan_guard.HIDDEN_PLANS
+    for key in ("velocity", "accelerator"):  # the locks still consume them by key
+        assert key in plan_guard.PLAN_LIMITS and key in plan_guard.PLAN_RANK

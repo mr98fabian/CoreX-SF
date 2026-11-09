@@ -48,7 +48,11 @@ def _parse_legacy_variants(raw: str) -> dict:
 
 
 LEGACY_VARIANTS = _parse_legacy_variants(os.getenv("LS_LEGACY_VARIANTS", ""))
-PLAN_COSTS = {"starter": 0, "velocity": 99.99, "accelerator": 199.99, "freedom": 299.99}  # annual; keep in sync with frontend lib/pricing.ts
+# What is sold, annual USD — keep in sync with frontend lib/pricing.ts (the commercial source).
+# Retired tiers (velocity/accelerator) aren't sold, so they have no cost here.
+PLAN_COSTS = {"starter": 0, "freedom": 100}
+# The only thing checkout sells: the paid plan, annual, through this one LS variant.
+SELLABLE = {("freedom", "annual"): "LS_VARIANT_FREEDOM_ANNUAL"}
 LS_API_BASE = "https://api.lemonsqueezy.com/v1"
 
 
@@ -76,12 +80,14 @@ async def create_checkout(body: CheckoutRequest, user_id: str = Depends(get_curr
     if not LS_API_KEY or not LS_STORE_ID:
         raise HTTPException(status_code=503, detail="Payment system not configured. Contact support.")
 
-    plan_variants = PLAN_VARIANTS.get(body.plan)
-    if not plan_variants:
-        raise HTTPException(status_code=400, detail=f"Unknown plan: {body.plan}")
-    variant_id = plan_variants.get(body.billing_cycle)
+    env_name = SELLABLE.get((body.plan, body.billing_cycle))
+    if not env_name:
+        raise HTTPException(status_code=400, detail="That plan isn't sold. KoreX Annual is the only paid plan.")
+    # Read at request time and never fall back to PLAN_VARIANTS/legacy variants: an old variant
+    # would charge a different price than the one shown.
+    variant_id = os.getenv(env_name, "").strip()
     if not variant_id:
-        raise HTTPException(status_code=400, detail=f"No variant configured for {body.plan}/{body.billing_cycle}")
+        raise HTTPException(status_code=503, detail="The annual plan isn't available yet. Try again later.")
 
     checkout_data = {"custom": {"user_id": user_id}}
     if body.email: checkout_data["email"] = body.email

@@ -17,19 +17,25 @@ export const PLAN_LIMITS: Record<string, number> = {
     founder: Infinity, // access code: permanent, AI included, never sold
 };
 
+// Internal keys stay (limits, existing subscribers); only two plans are sold (lib/pricing.ts).
+// Retired tiers read as a generic paid plan, never by their old names.
 export const PLAN_NAMES: Record<string, string> = {
-    starter: 'Starter',
-    velocity: 'Velocity',
-    accelerator: 'Accelerator',
-    freedom: 'Freedom',
-    'freedom-dev': 'Freedom (Developer)',
-    founder: 'Founder',
+    starter: 'Gratis',
+    velocity: 'Plan pago',
+    accelerator: 'Plan pago',
+    freedom: 'KoreX Anual',
+    'freedom-dev': 'Demo',
+    founder: 'Fundador',
 };
 
-/** Plan label in the user's language (only Founder has a Spanish name). */
+const PLAN_NAMES_EN: Record<string, string> = {
+    starter: 'Free', velocity: 'Paid plan', accelerator: 'Paid plan', freedom: 'KoreX Annual', 'freedom-dev': 'Demo', founder: 'Founder',
+};
+
+/** Plan label in the user's language. */
 export function planLabel(plan: string | null | undefined, es: boolean): string {
-    if (plan === 'founder') return es ? 'Fundador' : 'Founder';
-    return PLAN_NAMES[plan ?? 'starter'] ?? 'Starter';
+    const key = plan ?? 'starter';
+    return (es ? PLAN_NAMES[key] : PLAN_NAMES_EN[key]) ?? (es ? 'Plan pago' : 'Paid plan');
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -48,7 +54,7 @@ export function getPlanLimit(plan?: string | null): number {
 /** Get the display name for the current (or given) plan. */
 export function getPlanName(plan?: string | null): string {
     const currentPlan = plan || getUserPlan();
-    return PLAN_NAMES[currentPlan] ?? 'Starter';
+    return PLAN_NAMES[currentPlan] ?? 'Gratis'; // unknown id: treated as free (limit 2)
 }
 
 /**

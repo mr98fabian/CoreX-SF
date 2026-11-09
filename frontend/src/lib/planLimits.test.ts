@@ -20,20 +20,20 @@ describe('planLimits', () => {
     it('defaults to starter when nothing is stored', () => {
         expect(getUserPlan()).toBe('starter');
         expect(getPlanLimit()).toBe(PLAN_LIMITS.starter);
-        expect(getPlanName()).toBe('Starter');
+        expect(getPlanName()).toBe('Gratis');
     });
 
     it('reads the stored plan from localStorage', () => {
         localStorage.setItem('korex-plan', 'velocity');
         expect(getUserPlan()).toBe('velocity');
         expect(getPlanLimit()).toBe(PLAN_LIMITS.velocity);
-        expect(getPlanName()).toBe('Velocity');
+        expect(getPlanName()).toBe('Plan pago');
     });
 
     it('falls back safely for unknown plan ids', () => {
         localStorage.setItem('korex-plan', 'hacked-plan');
         expect(getPlanLimit()).toBe(2);
-        expect(getPlanName()).toBe('Starter');
+        expect(getPlanName()).toBe('Gratis');
     });
 
     it('freedom plans are unlimited and emit no plan_limit param', () => {

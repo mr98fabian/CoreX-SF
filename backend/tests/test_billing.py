@@ -183,3 +183,60 @@ def test_dev_promo_code_no_longer_exists_anywhere(client):
     app.dependency_overrides[get_current_user_id] = lambda: USER
     r = client.post("/api/subscriptions/apply-promo", json={"code": "KOREX-DEV-UNLIMITED"})
     assert r.status_code in (404, 405) and row() is None
+
+
+# ── Precios reales: one paid plan, annual only ────────────────
+
+@pytest.fixture
+def ls_configured(monkeypatch):
+    monkeypatch.setattr(subscriptions, "LS_API_KEY", "test")
+    monkeypatch.setattr(subscriptions, "LS_STORE_ID", "1")
+    app.dependency_overrides[get_current_user_id] = lambda: USER
+
+
+def test_annual_checkout_without_the_variant_env_is_a_clean_error(client, ls_configured, monkeypatch):
+    monkeypatch.delenv("LS_VARIANT_FREEDOM_ANNUAL", raising=False)
+    calls = []
+    monkeypatch.setattr(subscriptions.httpx, "AsyncClient", lambda *a, **k: calls.append(1))
+    r = client.post("/api/subscriptions/checkout", json={"plan": "freedom", "billing_cycle": "annual"},
+                    headers={"Authorization": "Bearer x"})
+    assert r.status_code == 503 and "annual plan" in r.json()["detail"]
+    assert calls == []  # never reached Lemon, never fell back to PLAN_VARIANTS (302 in this fixture)
+
+
+@pytest.mark.parametrize("plan,cycle", [("freedom", "monthly"), ("velocity", "annual"), ("accelerator", "monthly"), ("starter", "annual")])
+def test_retired_or_unsold_combinations_are_rejected(client, ls_configured, monkeypatch, plan, cycle):
+    monkeypatch.setenv("LS_VARIANT_FREEDOM_ANNUAL", "777")
+    r = client.post("/api/subscriptions/checkout", json={"plan": plan, "billing_cycle": cycle},
+                    headers={"Authorization": "Bearer x"})
+    assert r.status_code == 400
+
+
+def test_annual_checkout_uses_exactly_the_env_variant(client, ls_configured, monkeypatch):
+    monkeypatch.setenv("LS_VARIANT_FREEDOM_ANNUAL", "777")
+    sent = {}
+
+    class FakeResp:
+        status_code = 201
+        def json(self):
+            return {"data": {"attributes": {"url": "https://test.lemonsqueezy.com/checkout/x"}}}
+
+    class FakeClient:
+        async def __aenter__(self): return self
+        async def __aexit__(self, *a): return False
+        async def post(self, url, json=None, **kw):
+            sent.update(json)
+            return FakeResp()
+
+    monkeypatch.setattr(subscriptions.httpx, "AsyncClient", lambda *a, **k: FakeClient())
+    r = client.post("/api/subscriptions/checkout", json={"plan": "freedom", "billing_cycle": "annual"},
+                    headers={"Authorization": "Bearer x"})
+    assert r.status_code == 200
+    assert sent["data"]["relationships"]["variant"]["data"]["id"] == "777"
+
+
+def test_annual_price_is_100_in_backend_and_frontend():
+    assert subscriptions.PLAN_COSTS == {"starter": 0, "freedom": 100}
+    import pathlib, re
+    src = (pathlib.Path(__file__).resolve().parents[2] / "frontend/src/lib/pricing.ts").read_text(encoding="utf-8")
+    assert re.search(r"export const ANNUAL_PRICE = 100;", src)

@@ -14,11 +14,11 @@ import {
     Download, Upload, Trash2, RefreshCw, FileSpreadsheet,
     FileJson, FileText, CheckCircle, AlertTriangle, Globe, DollarSign,
     Calendar, Shield, Sparkles, ExternalLink, Github, BookOpen,
-    CreditCard, Crown, Zap, Rocket, Check, Tag, XCircle,
-    TrendingDown, Infinity as InfinityIcon,
+    CreditCard, Crown, Tag, XCircle,
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { PLAN_PRICES } from '@/lib/pricing';
+import { PAID_PLAN_ID } from '@/lib/pricing';
+import { PlanCards } from '@/components/kx/PlanCards';
 import { fetchSubStatus, longDate, planLabel as planDisplayName, type SubStatus } from '@/lib/planLimits';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
@@ -85,70 +85,7 @@ interface SavingsData {
     };
 }
 
-const SUBSCRIPTION_PLANS = [
-    {
-        id: 'starter',
-        name: 'Starter',
-        iconKey: 'zap' as const,
-        accounts: 2,
-        monthly: 0,
-        annual: 0,
-        color: 'from-slate-500 to-slate-600',
-        borderColor: 'border-slate-300 dark:border-neutral-700',
-        iconBg: 'bg-gray-500/10',
-        iconColor: 'text-gray-500',
-        badge: null as string | null,
-        popular: false,
-    },
-    {
-        id: 'velocity',
-        name: 'Velocity',
-        iconKey: 'zap' as const,
-        accounts: 6,
-        monthly: PLAN_PRICES.velocity.monthly,
-        annual: PLAN_PRICES.velocity.annual,
-        color: 'from-amber-500 to-orange-500',
-        borderColor: 'border-amber-300 dark:border-amber-700',
-        iconBg: 'bg-amber-500/10',
-        iconColor: 'text-amber-500',
-        badge: null as string | null,
-        popular: false,
-    },
-    {
-        id: 'accelerator',
-        name: 'Accelerator',
-        iconKey: 'rocket' as const,
-        accounts: 12,
-        monthly: PLAN_PRICES.accelerator.monthly,
-        annual: PLAN_PRICES.accelerator.annual,
-        color: 'from-purple-500 to-indigo-500',
-        borderColor: 'border-purple-400 dark:border-purple-600',
-        iconBg: 'bg-purple-500/10',
-        iconColor: 'text-purple-500',
-        badge: 'RECOMMENDED' as string | null,
-        popular: true,
-    },
-    {
-        id: 'freedom',
-        name: 'Freedom',
-        iconKey: 'crown' as const,
-        accounts: Infinity,
-        monthly: PLAN_PRICES.freedom.monthly,
-        annual: PLAN_PRICES.freedom.annual,
-        color: 'from-amber-400 to-yellow-500',
-        borderColor: 'border-yellow-400 dark:border-yellow-600',
-        iconBg: 'bg-yellow-500/10',
-        iconColor: 'text-yellow-500',
-        badge: null as string | null,
-        popular: false,
-    },
-];
 
-const PLAN_ICON_MAP: Record<string, React.ReactNode> = {
-    zap: <Zap className="h-5 w-5" />,
-    rocket: <Rocket className="h-5 w-5" />,
-    crown: <Crown className="h-5 w-5" />,
-};
 
 // Used when real user data is unavailable (demo, auth issues, no accounts)
 // ═══════════════════════════════════════════════════════════════════
@@ -216,7 +153,6 @@ export default function SettingsPage() {
         setter(val);
         localStorage.setItem(`korex-notif-${key}`, String(val));
     };
-    const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual");
     const [promoCode, setPromoCode] = useState('');
     const [promoStatus, setPromoStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
     const [promoMessage, setPromoMessage] = useState('');
@@ -1030,244 +966,31 @@ export default function SettingsPage() {
                     </Card>
                 )}
 
-                {/* Billing Toggle */}
-                <div className="flex items-center justify-center gap-4 py-2">
-                    <button
-                        onClick={() => setBillingCycle('monthly')}
-                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${billingCycle === 'monthly'
-                            ? 'bg-gray-200 dark:bg-white/10 text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                    >
-                        {t('sub.monthly')}
-                    </button>
-                    <button
-                        onClick={() => setBillingCycle('annual')}
-                        className={`text-sm font-medium px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${billingCycle === 'annual'
-                            ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                            : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                    >
-                        {t('sub.annual')}
-                        <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded-full">
-                            {t('upgrade.twoMonthsFree')}
-                        </span>
-                    </button>
-                </div>
-
-                {/* Pricing Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    {SUBSCRIPTION_PLANS.map((plan, idx) => {
-                        const price = billingCycle === 'annual' ? plan.annual : plan.monthly;
-                        const isCurrent = plan.id === currentPlan;
-                        const currentIdx = SUBSCRIPTION_PLANS.findIndex(p => p.id === currentPlan);
-                        const isDowngrade = idx < currentIdx;
-                        const isUnlimitedPlan = plan.accounts === Infinity;
-
-                        // Real checkout handler — calls /api/subscriptions/checkout
-                        const handleCheckout = async () => {
-                            if (price === 0 || isCurrent || isDowngrade) return;
-                            setUpgrading(plan.id);
+                {/* Plans: the two commercial plans (lib/pricing.ts); paid = KoreX Anual, annual only */}
+                {checkoutHidden ? (
+                    <p data-testid="checkout-hidden" className="rounded-md border border-gray-200 dark:border-white/10 p-4 text-center text-sm text-zinc-500">
+                        {language === 'es' ? 'Incluido en tu acceso: no hay nada que comprar.' : 'Included in your access: nothing to buy.'}
+                    </p>
+                ) : (
+                    <div className="kx-scope mx-auto max-w-xl">
+                        <PlanCards currentPlan={currentPlan} busy={upgrading} onChoose={async (planId) => {
+                            setUpgrading(planId);
                             try {
                                 const data = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {
                                     method: 'POST',
-                                    body: JSON.stringify({
-                                        plan: plan.id,
-                                        billing_cycle: billingCycle,
-                                    }),
+                                    body: JSON.stringify({ plan: PAID_PLAN_ID, billing_cycle: 'annual' }),
                                 });
                                 if (!data.checkout_url) throw new Error('No checkout URL returned');
                                 window.open(data.checkout_url, '_blank');
-                                toast({
-                                    title: t('sub.checkoutOpened'),
-                                    description: t('sub.checkoutDesc'),
-                                });
+                                toast({ title: t('sub.checkoutOpened'), description: t('sub.checkoutDesc') });
                             } catch {
-                                toast({
-                                    title: t('sub.checkoutFailed'),
-                                    description: t('sub.checkoutFailedDesc'),
-                                    variant: 'destructive',
-                                });
+                                toast({ title: t('sub.checkoutFailed'), description: t('sub.checkoutFailedDesc'), variant: 'destructive' });
                             } finally {
                                 setUpgrading(null);
                             }
-                        };
-
-                        return (
-                            <Card
-                                key={plan.id}
-                                className={`relative overflow-hidden transition-all duration-300 ${plan.popular
-                                    ? 'border-purple-500/40 bg-purple-950/10 hover:border-purple-400/60 hover:shadow-lg hover:shadow-purple-900/20 scale-[1.02]'
-                                    : isCurrent
-                                        ? 'border-emerald-500/40 bg-emerald-950/20 ring-1 ring-emerald-500/20'
-                                        : 'border-zinc-800/60 dark:border-white/5 bg-zinc-900/40 dark:bg-black/50 hover:border-zinc-700/60 hover:bg-zinc-900/60 dark:hover:bg-[#0f0f0f]/60'
-                                    }`}
-                            >
-                                {/* Popular Badge */}
-                                {plan.popular && !isCurrent && (
-                                    <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-bold text-center py-1 tracking-wider">
-                                        {t('sub.mostPopular')}
-                                    </div>
-                                )}
-
-                                {/* Current Plan Badge */}
-                                {isCurrent && (
-                                    <div className="absolute -top-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] font-bold text-center py-1 tracking-wider">
-                                        {t('sub.yourPlan')}
-                                    </div>
-                                )}
-
-                                <CardContent className={`p-6 space-y-5 ${plan.popular || isCurrent ? 'pt-10' : ''}`}>
-                                    {/* Plan Header */}
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${plan.color} bg-opacity-20 flex items-center justify-center`}>
-                                            <span className="text-white">{PLAN_ICON_MAP[plan.iconKey]}</span>
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-lg text-white">{plan.name}</h3>
-                                            <p className="text-xs text-zinc-500">
-                                                {isUnlimitedPlan ? t('sub.unlimited') : plan.accounts} {t('sub.accounts')}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Pricing */}
-                                    <div className="space-y-1">
-                                        {price === 0 ? (
-                                            <div className="text-3xl font-black text-white">{t('sub.free')}</div>
-                                        ) : (
-                                            <>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-3xl font-black text-white">
-                                                        ${billingCycle === 'annual' ? plan.annual : plan.monthly}
-                                                    </span>
-                                                    <span className="text-sm text-zinc-500">{billingCycle === 'annual' ? t('sub.year') : t('sub.mo')}</span>
-                                                </div>
-                                                {billingCycle === 'annual' && (
-                                                    <p className="text-xs text-emerald-500 font-semibold">
-                                                        {t('upgrade.twoMonthsFree')}
-                                                    </p>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* 🔥 NEUROMARKETING: Dynamic Savings Badge — Freedom gets gold variant */}
-                                    {sd?.has_data && sd.plans?.[plan.id] && sd.plans[plan.id].annual_savings > 0 && (() => {
-                                        const s = sd.plans[plan.id];
-                                        const displaySavings = billingCycle === 'monthly'
-                                            ? `~${formatMoneyShort(s.monthly_savings)}/mo`
-                                            : `~${formatMoneyShort(s.annual_savings)}/yr`;
-                                        const netGain = s.annual_savings - s.plan_cost_annual;
-
-                                        return (
-                                            <div className="space-y-2">
-                                                {isUnlimitedPlan ? (
-                                                    <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-br from-amber-500/15 to-yellow-500/10 border border-amber-500/30">
-                                                        <div className="flex-shrink-0 p-1 rounded-full bg-amber-500/20">
-                                                            <InfinityIcon size={16} className="text-amber-400" />
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-sm font-bold text-amber-300 block leading-snug">
-                                                                {displaySavings} {t('sub.noLimits')}
-                                                            </span>
-                                                            <span className="text-xs text-amber-400/70 leading-snug">
-                                                                {t('sub.futureDebt')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                                        <TrendingDown size={16} className="text-emerald-400 flex-shrink-0" />
-                                                        <div>
-                                                            <span className="text-sm font-bold text-emerald-400 block leading-snug">
-                                                                {displaySavings} {t('sub.inInterest')}
-                                                            </span>
-                                                            <span className="text-xs text-emerald-500/70 leading-snug">
-                                                                {t('sub.savedEach')} {billingCycle === 'monthly' ? t('sub.monthWord') : t('sub.yearWord')} {t('sub.usingKorex')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {/* Net ROI for paid plans */}
-                                                {s.plan_cost_annual > 0 && netGain > 0 && (
-                                                    <p className="text-xs text-zinc-500 pl-1 leading-snug">
-                                                        💰 {t('sub.netGain')} <span className={`${isUnlimitedPlan ? 'text-amber-400' : 'text-emerald-400'} font-semibold`}>${Math.round(netGain).toLocaleString()}/yr</span> {t('sub.afterPlanCost')}
-                                                        {s.roi_days > 0 && s.roi_days < 365 && (
-                                                            <> · {t('sub.paysItself')} <span className="text-white font-semibold">{s.roi_days} {t('sub.days')}</span></>
-                                                        )}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        );
-                                    })()}
-
-                                    {/* Features */}
-                                    <ul className="space-y-2">
-                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
-                                            <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{isUnlimitedPlan ? t('sub.unlimited') : `${t('sub.upTo')} ${plan.accounts}`} {t('sub.debtAccounts')}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
-                                            <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{t('sub.allFeatures')}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
-                                            <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{t('sub.freedomClock')}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
-                                            <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{t('sub.pdfReports')}</span>
-                                        </li>
-                                        <li className="flex items-center gap-2 text-sm text-zinc-400">
-                                            <Check size={14} className="text-emerald-500 shrink-0" />
-                                            <span>{t('sub.velocitySim')}</span>
-                                        </li>
-                                    </ul>
-
-                                    {/* ☕ NEUROMARKETING: Price Reframe */}
-                                    {plan.id !== 'starter' && (
-                                        <p className="text-[11px] text-center text-zinc-500 italic">
-                                            {t(`sub.anchor.${plan.id}`)}
-                                        </p>
-                                    )}
-
-                                    {/* CTA Button */}
-                                    {checkoutHidden ? (
-                                        <p data-testid="checkout-hidden" className="w-full rounded-md border border-gray-200 dark:border-white/10 py-2 text-center text-xs text-zinc-500">
-                                            {isCurrent ? t('sub.active') : (language === 'es' ? 'Incluido en tu acceso' : 'Included in your access')}
-                                        </p>
-                                    ) : isCurrent ? (
-                                        <Button disabled className="w-full bg-emerald-900/30 text-emerald-400 cursor-default border border-emerald-500/20" variant="outline">
-                                            <CheckCircle size={14} className="mr-2" />
-                                            {t('sub.active')}
-                                        </Button>
-                                    ) : isDowngrade ? (
-                                        <Button disabled className="w-full bg-zinc-800/50 text-zinc-600 cursor-not-allowed" variant="outline">
-                                            {t('sub.downgrade')}
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            disabled={upgrading !== null}
-                                            className={`w-full font-semibold ${plan.popular
-                                                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-900/30'
-                                                : price === 0
-                                                    ? 'bg-zinc-800 hover:bg-zinc-700 text-white'
-                                                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white shadow-lg shadow-amber-900/20'
-                                                }`}
-                                            onClick={handleCheckout}
-                                        >
-                                            {upgrading === plan.id
-                                                ? <><RefreshCw size={14} className="mr-2 animate-spin" /> {t('sub.processing')}</>
-                                                : price === 0 ? t('sub.getStarted') : t('sub.upgradeNow')}
-                                        </Button>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
-                </div>
+                        }} />
+                    </div>
+                )}
 
                 {/* 📊 NEUROMARKETING: Social Proof Stats */}
                 {sd?.has_data && (
