@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket, GraduationCap } from 'lucide-react';
+import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket, GraduationCap, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -147,6 +147,7 @@ export default function SettingsHome() {
                         </span>
                         <ChevronRight className="h-[18px] w-[18px] flex-none text-kx-ink3" />
                     </button>
+                    <Row to="/dashboard/settings/ia" icon={Sparkles} title={es ? 'KoreX con tu IA' : 'KoreX with your AI'} sub={es ? 'El tutorial del Pack IA' : 'The AI Pack tutorial'} />
                 </Section>
 
                 <Section tone="neutral" title={es ? 'Notificaciones' : 'Notifications'}>

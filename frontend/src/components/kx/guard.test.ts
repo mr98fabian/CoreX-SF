@@ -7,7 +7,7 @@ import kxCss from '@/styles/kx.css?raw';
  * 1. backdrop-blur lives only in the allowed overlays (modals over content).
  * 2. features/ and layouts/ use kx tokens, not hard palette colors.
  */
-const code = {
+const code: Record<string, string> = {
     ...(import.meta.glob(['/src/**/*.{ts,tsx}', '!/src/**/*.test.{ts,tsx}'], { query: '?raw', import: 'default', eager: true }) as Record<string, string>),
     // CSS via explicit ?raw imports (vitest blanks CSS loaded through a glob)
     '/src/index.css': indexCss,
