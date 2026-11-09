@@ -14,6 +14,7 @@ export const PLAN_LIMITS: Record<string, number> = {
     accelerator: Infinity,
     freedom: Infinity,
     'freedom-dev': Infinity,
+    founder: Infinity, // access code: permanent, AI included, never sold
 };
 
 export const PLAN_NAMES: Record<string, string> = {
@@ -22,7 +23,14 @@ export const PLAN_NAMES: Record<string, string> = {
     accelerator: 'Accelerator',
     freedom: 'Freedom',
     'freedom-dev': 'Freedom (Developer)',
+    founder: 'Founder',
 };
+
+/** Plan label in the user's language (only Founder has a Spanish name). */
+export function planLabel(plan: string | null | undefined, es: boolean): string {
+    if (plan === 'founder') return es ? 'Fundador' : 'Founder';
+    return PLAN_NAMES[plan ?? 'starter'] ?? 'Starter';
+}
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -65,10 +73,26 @@ export function withPlanLimit(url: string): string {
 
 // ─── Backend Sync ───────────────────────────────────────────────
 
-interface SubStatus {
+export interface SubStatus {
     plan: string;
     status: string;
     accounts_limit: number;
+    source?: 'demo' | 'grant' | 'subscription' | 'none';
+    grant_plan?: string | null;
+    grant_ends_at?: string | null;
+    checkout_hidden?: boolean;
+    current_period_end?: string | null;
+}
+
+/** GET /api/subscriptions/status — the server's resolver (code grants, Lemon, demo). */
+export async function fetchSubStatus(): Promise<SubStatus | null> {
+    try {
+        const data = await apiFetch<SubStatus>('/api/subscriptions/status');
+        localStorage.setItem('korex-plan', data.plan || 'starter');
+        return data;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -78,13 +102,11 @@ interface SubStatus {
  * Silently no-ops if the fetch fails (user stays on cached plan).
  */
 export async function syncPlanFromBackend(): Promise<string> {
-    try {
-        const data = await apiFetch<SubStatus>('/api/subscriptions/status');
-        const plan = data.plan || 'starter';
-        localStorage.setItem('korex-plan', plan);
-        return plan;
-    } catch {
-        // Network error / not authenticated — keep cached value
-        return getUserPlan();
-    }
+    const data = await fetchSubStatus();
+    return data ? data.plan || 'starter' : getUserPlan();
+}
+
+/** "8 de mayo de 2027" from an ISO datetime. */
+export function longDate(iso: string, es: boolean): string {
+    return new Date(iso).toLocaleDateString(es ? 'es-ES' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 }

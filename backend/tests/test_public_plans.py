@@ -10,7 +10,7 @@ def test_plans_come_from_plan_guard_without_auth():
         r = c.get("/api/public/plans")
     assert r.status_code == 200
     got = {p["plan"]: p["debt_limit"] for p in r.json()}
-    expected = {k: v for k, v in plan_guard.PLAN_LIMITS.items() if k != "freedom-dev"}
+    expected = {k: v for k, v in plan_guard.PLAN_LIMITS.items() if k not in plan_guard.HIDDEN_PLANS}
     assert got == expected
     assert got["starter"] == 2  # the free plan the site advertises
 

@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { AmberRule, BankHeader, StatePhrase } from '@/components/kx';
 import { PlanCards } from '@/components/kx/PlanCards';
+import { longDate, planLabel, type SubStatus } from '@/lib/planLimits';
 
 export default function PlansPage() {
     const { language } = useLanguage();
@@ -19,9 +20,10 @@ export default function PlansPage() {
     const { toast } = useToast();
     const { isDemo } = useAuth();
     const [plan, setPlan] = useState<string | undefined>();
+    const [st, setSt] = useState<SubStatus | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
 
-    useEffect(() => { apiFetch<{ plan: string }>('/api/subscriptions/status').then((s) => setPlan(s.plan)).catch(() => undefined); }, []);
+    useEffect(() => { apiFetch<SubStatus>('/api/subscriptions/status').then((s) => { setPlan(s.plan); setSt(s); }).catch(() => undefined); }, []);
 
     const choose = async (id: string, cycle: 'monthly' | 'annual') => {
         if (isDemo) {
@@ -46,7 +48,18 @@ export default function PlansPage() {
                 <BankHeader title={es ? 'Planes' : 'Plans'} greeting={es ? 'claros, sin letra chica' : 'clear, no fine print'} />
                 <AmberRule />
                 <StatePhrase>{es ? 'Empieza gratis. Conecta tu IA cuando pagues.' : 'Start free. Connect your AI when you pay.'}</StatePhrase>
-                <PlanCards currentPlan={plan === 'freedom-dev' ? 'freedom' : plan} onChoose={choose} busy={busy} />
+                {st?.checkout_hidden ? (
+                    // Founder or a current gift: nothing to buy — show the state, not checkout buttons
+                    <p data-testid="plans-state" className="rounded-xl border border-[var(--kx-line-soft)] p-4 text-[14.5px] text-kx-ink">
+                        {st.plan === 'founder'
+                            ? (es ? 'Tu cuenta es Fundadora: deudas ilimitadas, IA y todo lo demás, para siempre.' : 'Your account is a Founder account: unlimited debts, AI and everything else, forever.')
+                            : st.grant_ends_at
+                                ? (es ? `Tienes ${planLabel(st.grant_plan, true)} regalado, activo hasta el ${longDate(st.grant_ends_at, true)}.` : `You have ${planLabel(st.grant_plan, false)} as a gift, active until ${longDate(st.grant_ends_at, false)}.`)
+                                : (es ? 'Tu acceso ya está activo.' : 'Your access is already active.')}
+                    </p>
+                ) : (
+                    <PlanCards currentPlan={plan === 'freedom-dev' ? 'freedom' : plan} onChoose={choose} busy={busy} />
+                )}
             </div>
         </div>
     );

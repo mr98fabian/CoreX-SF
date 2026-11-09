@@ -178,8 +178,8 @@ def test_client_plan_limit_param_is_ignored(client, monkeypatch):
     assert seen and all(lim == 2 for lim in seen)
 
 
-def test_dev_promo_code_is_dead_outside_development(client, monkeypatch):
-    monkeypatch.setattr(subscriptions, "IS_DEV", False)
+def test_dev_promo_code_no_longer_exists_anywhere(client):
+    """apply-promo and its hard-coded KOREX-DEV-UNLIMITED were replaced by /api/codes/redeem."""
     app.dependency_overrides[get_current_user_id] = lambda: USER
     r = client.post("/api/subscriptions/apply-promo", json={"code": "KOREX-DEV-UNLIMITED"})
-    assert r.json()["valid"] is False and row() is None
+    assert r.status_code in (404, 405) and row() is None

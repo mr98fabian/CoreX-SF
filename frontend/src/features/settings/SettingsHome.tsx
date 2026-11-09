@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw } from 'lucide-react';
+import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -20,8 +20,10 @@ import { FingerprintLockRow } from './FingerprintLockRow';
 import { SoundRow } from './SoundRow';
 import { CoachBlock } from './CoachBlock';
 import { HouseGoalRow } from './HouseGoalRow';
+import { OwnerCodesPanel } from './OwnerCodesPanel';
+import { longDate, planLabel, type SubStatus } from '@/lib/planLimits';
 
-interface Status { plan: string; status: string; current_period_end: string | null }
+type Status = SubStatus;
 interface SyncStatus { cadence: { min: number; max: number }; windows: { label: string; time: string }[]; last_sync_at: string | null }
 
 /** Sincronización: cadence + last sync, straight from GET /api/sync/status (never guessed here). */
@@ -80,6 +82,14 @@ export default function SettingsHome() {
     const returning = new URLSearchParams(location.search).get('checkout') === 'success';
 
     const plan = plans?.find((p) => p.id === (status?.plan === 'freedom-dev' ? 'freedom' : status?.plan));
+    const founder = status?.plan === 'founder';
+    const grantText = status?.source === 'demo'
+        ? (es ? 'demo: todo abierto para probar · sin IA' : 'demo: everything open to try · no AI')
+        : founder
+        ? (es ? 'acceso total y permanente · con IA conectada' : 'full, permanent access · AI connected')
+        : status?.source === 'grant' && status.grant_ends_at
+            ? (es ? `regalado · activo hasta el ${longDate(status.grant_ends_at, true)}` : `gift · active until ${longDate(status.grant_ends_at, false)}`)
+            : null;
     const limitText = plan ? (plan.debtLimit == null ? (es ? 'deudas ilimitadas' : 'unlimited debts') : (es ? `hasta ${plan.debtLimit} deudas` : `up to ${plan.debtLimit} debts`)) : '';
     const advanced = (section: string) => `/dashboard/settings/advanced?section=${section}`;
 
@@ -99,16 +109,21 @@ export default function SettingsHome() {
                 <Section tone="amber" title={es ? 'Mi plan' : 'My plan'}>
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <p className="text-base font-semibold text-kx-ink">{plan?.name ?? (status ? status.plan : '…')}</p>
+                            <p className="text-base font-semibold text-kx-ink">{founder ? planLabel('founder', es) : plan?.name ?? (status ? planLabel(status.plan, es) : '…')}</p>
                             <p className="text-[12.5px] text-kx-ink2">
-                                {plan ? `${limitText} · ${plan.ai ? (es ? 'con IA conectada' : 'AI connected') : (es ? 'sin IA' : 'no AI')}` : (es ? 'Cargando tu plan…' : 'Loading your plan…')}
+                                {grantText ?? (plan ? `${limitText} · ${plan.ai ? (es ? 'con IA conectada' : 'AI connected') : (es ? 'sin IA' : 'no AI')}` : (es ? 'Cargando tu plan…' : 'Loading your plan…'))}
                             </p>
                         </div>
-                        <Link to="/dashboard/settings/plans" className="flex-none rounded-xl bg-kx-amber px-3.5 py-2 text-xs font-bold text-[#111418]">
+                        {!status?.checkout_hidden && <Link to="/dashboard/settings/plans" className="flex-none rounded-xl bg-kx-amber px-3.5 py-2 text-xs font-bold text-[#111418]">
                             {plan?.id === 'starter' ? (es ? 'Ver planes' : 'See plans') : (es ? 'Cambiar' : 'Change')}
-                        </Link>
+                        </Link>}
                     </div>
-                    {plan && plan.id !== 'starter' && (
+                    {!isDemo && (
+                        <Link to={advanced('subscription')} data-testid="redeem-link" className="kx-press mt-3 flex items-center gap-2 text-[13px] font-semibold text-kx-ink2">
+                            <Ticket className="h-4 w-4" strokeWidth={1.75} />{es ? '¿Tienes un código? Canjéalo' : 'Have a code? Redeem it'}
+                        </Link>
+                    )}
+                    {plan && plan.id !== 'starter' && status?.source === 'subscription' && (
                         <Link to={advanced('subscription')} className="mt-3 block text-[13px] font-semibold text-kx-amber">
                             {es ? 'Facturación y cancelación ›' : 'Billing and cancellation ›'}
                         </Link>
@@ -141,6 +156,7 @@ export default function SettingsHome() {
 
                 {/* Conecta tu IA — locked or open per the server (GET /api/tokens/access) */}
                 <div id="ia"><ConnectAI /></div>
+                <OwnerCodesPanel es={es} />
                 {isDemo && <p className="text-center text-xs text-kx-ink3">{es ? 'Estás en el demo: los cambios se reinician al salir.' : "You're in the demo: changes reset when you leave."}</p>}
             </div>
         </div>
