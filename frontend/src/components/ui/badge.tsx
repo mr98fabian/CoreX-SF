@@ -4,19 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-kx-amber focus:ring-offset-2",
     {
         variants: {
             variant: {
-                default:
-                    "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-                secondary:
-                    "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-                destructive:
-                    "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-                outline: "text-foreground",
-                success: "border-transparent bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20",
-                alert: "border-transparent bg-rose-500/10 text-rose-500 hover:bg-rose-500/20",
+                default: "border-transparent bg-kx-amber-soft text-kx-amber",
+                secondary: "border-kx-line bg-kx-raised text-kx-ink2",
+                // Red only for danger/error
+                destructive: "border-transparent bg-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] text-kx-debt",
+                outline: "border-kx-line text-kx-ink",
+                // Green only for payment progress / paid
+                success: "border-transparent bg-[color-mix(in_srgb,var(--kx-paid)_15%,transparent)] text-kx-paid",
+                alert: "border-transparent bg-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] text-kx-debt",
             },
         },
         defaultVariants: {

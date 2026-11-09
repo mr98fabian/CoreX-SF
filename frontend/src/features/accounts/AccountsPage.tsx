@@ -388,7 +388,7 @@ export default function AccountsPage() {
                                     <ArrowUpRight className="ml-1 h-3 w-3" />
                                 </Button>
                             ) : (
-                                <Button variant="glow" className="font-bold tracking-wide">
+                                <Button variant="default" className="font-bold tracking-wide">
                                     <Plus className="mr-2 h-4 w-4" strokeWidth={2} /> {t("accounts.addAccount")}
                                 </Button>
                             )}

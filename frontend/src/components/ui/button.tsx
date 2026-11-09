@@ -4,18 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-kx-amber focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
     {
         variants: {
             variant: {
-                default: "bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold",
-                destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors",
-                outline: "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground transition-colors",
-                secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors",
-                ghost: "hover:bg-accent hover:text-accent-foreground transition-colors",
-                link: "text-primary underline-offset-4 hover:underline",
-                premium: "bg-ignition text-ignition-ink border-0 hover:bg-ignition-hover transition-colors font-semibold",
-                glow: "bg-emerald-500 text-white hover:bg-emerald-400 transition-colors font-semibold"
+                // KoreX system (kx tokens). Amber = the primary action; slate for the rest.
+                default: "bg-kx-amber text-[#111418] hover:brightness-105 font-semibold",
+                // Red only means danger/error (destructive actions)
+                destructive: "bg-kx-debt text-[#111418] hover:brightness-105 font-semibold",
+                outline: "border border-kx-line bg-transparent text-kx-ink hover:bg-kx-raised",
+                secondary: "border border-kx-line bg-kx-raised text-kx-ink hover:bg-kx-surface",
+                ghost: "text-kx-ink hover:bg-kx-raised",
+                link: "text-kx-ink underline-offset-4 hover:underline",
+                // Legacy alias of the primary
+                premium: "bg-kx-amber text-[#111418] hover:brightness-105 font-semibold",
+                // Green only for payment progress / paid
+                glow: "bg-kx-paid text-[#111418] hover:brightness-105 font-semibold",
             },
             size: {
                 default: "h-10 px-4 py-2",
