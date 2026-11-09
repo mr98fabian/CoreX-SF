@@ -354,7 +354,7 @@ export default function AccountsPage() {
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive" className="shadow-lg ">{t("accounts.resetSystem")}</Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface backdrop-blur-xl">
+                        <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="text-kx-debt flex items-center gap-2">
                                     <AlertCircle size={20} /> {t("accounts.nuclearReset")}
@@ -393,7 +393,7 @@ export default function AccountsPage() {
                                 </Button>
                             )}
                         </DialogTrigger>
-                        <DialogContent className="glass-panel sm:max-w-[450px] bg-kx-surface backdrop-blur-2xl border-kx-line ">
+                        <DialogContent className="glass-panel sm:max-w-[450px] bg-kx-surface border-kx-line ">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-bold text-kx-ink ">{t("accounts.addManual")}</DialogTitle>
                                 <DialogDescription className="text-kx-ink3 ">
@@ -822,7 +822,7 @@ export default function AccountsPage() {
 
                                         {/* 🔒 Lock Overlay */}
                                         {isLocked && (
-                                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/30 backdrop-blur-[2px] rounded-lg pointer-events-none">
+                                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/30 rounded-lg pointer-events-none">
                                                 <div className="h-12 w-12 rounded-full bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] flex items-center justify-center mb-2">
                                                     <Lock size={20} className="text-kx-debt" />
                                                 </div>
@@ -1090,7 +1090,7 @@ export default function AccountsPage() {
 
             {/* 🗑️ Delete Account Confirmation Dialog */}
             <AlertDialog open={!!deleteAccountTarget} onOpenChange={(open) => { if (!open) setDeleteAccountTarget(null); }}>
-                <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface backdrop-blur-xl">
+                <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-kx-debt flex items-center gap-2">
                             <Trash2 size={18} /> {t("accounts.deleteConfirm")}
@@ -1274,7 +1274,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="glass-panel sm:max-w-[420px] bg-kx-surface backdrop-blur-2xl border-kx-line text-kx-ink ">
+            <DialogContent className="glass-panel sm:max-w-[420px] bg-kx-surface border-kx-line text-kx-ink ">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-kx-ink text-xl font-bold">
                         <RefreshCw size={20} className="text-kx-ink2" strokeWidth={2} />

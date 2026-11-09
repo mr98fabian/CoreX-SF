@@ -10,8 +10,8 @@ export default defineConfig({
       VITE_SUPABASE_ANON_KEY: 'test-anon-key',
     },
     include: ['src/**/*.test.{ts,tsx}'],
-    // kx.css is read with ?raw by the motion-token test (CSS must mirror lib/motion)
-    css: { include: [/kx.css/] },
+    // kx.css / index.css are read with ?raw by the motion-token and design-guard tests
+    css: { include: [/kx.css/, /index.css/] },
   },
   resolve: {
     alias: {

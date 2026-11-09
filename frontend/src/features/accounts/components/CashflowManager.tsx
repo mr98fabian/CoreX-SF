@@ -184,7 +184,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         </Button>
                     </DialogTrigger>
                     {/* ... (Dialog Content remains mostly same, can be modularized later) ... */}
-                    <DialogContent className="glass-panel sm:max-w-[450px] bg-kx-raised backdrop-blur-2xl border-kx-line text-kx-ink">
+                    <DialogContent className="glass-panel sm:max-w-[450px] bg-kx-raised border-kx-line text-kx-ink">
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold">{t('cashflow.addRecurringItem')}</DialogTitle>
                         </DialogHeader>
@@ -465,7 +465,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                     >
                                         {/* Lock overlay for locked accounts */}
                                         {isLocked && (
-                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px] rounded-xl">
+                                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 rounded-xl">
                                                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]">
                                                     <Lock size={12} className="text-kx-debt" />
                                                     <span className="text-[10px] font-bold text-kx-debt uppercase tracking-wider">{t('cashflow.locked')}</span>
@@ -516,7 +516,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-                <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface backdrop-blur-xl">
+                <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface">
                     <AlertDialogHeader>
                         <AlertDialogTitle className="text-kx-debt flex items-center gap-2">
                             <AlertCircle size={20} /> {t('cashflow.deleteConfirmTitle') || 'Eliminar Transacción'}

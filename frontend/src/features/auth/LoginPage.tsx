@@ -306,7 +306,7 @@ export default function LoginPage() {
                 <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
-                    <div className="bg-kx-raised dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-kx-line rounded-2xl shadow-2xl p-10">
+                    <div className="bg-kx-raised border border-kx-line rounded-2xl shadow-2xl p-10">
                         {/* Animated Checkmark */}
                         <div className="mx-auto w-20 h-20 rounded-full bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border-2 border-kx-paid flex items-center justify-center mb-6 animate-success-pop">
                             <svg className="w-10 h-10 text-kx-paid" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -389,7 +389,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Card */}
-                <div className="bg-kx-raised backdrop-blur-2xl border border-kx-line rounded-2xl shadow-2xl p-5 sm:p-6">
+                <div className="bg-kx-raised border border-kx-line rounded-2xl shadow-2xl p-5 sm:p-6">
                     {/* Tabs */}
                     {view !== 'forgot' && (
                         <div className="flex bg-kx-raised rounded-xl p-1 mb-6">
