@@ -131,7 +131,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                 </div>
                                 <div className="flex items-center gap-2 text-xs mt-1">
                                     <span className={`font-semibold ${stats.debtDrainPct > 50 ? 'text-kx-debt' :
- stats.debtDrainPct > 30 ? 'text-kx-amber' : 'text-kx-paid'
+ stats.debtDrainPct > 30 ? 'text-kx-amber' : 'text-kx-ink'
  }`}>
                                         {stats.debtDrainPct.toFixed(0)}% {t('cashflow.debtDrain')}
                                     </span>
