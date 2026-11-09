@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket } from 'lucide-react';
+import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket, GraduationCap } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -134,6 +134,19 @@ export default function SettingsHome() {
                             {es ? 'Facturación y cancelación ›' : 'Billing and cancellation ›'}
                         </Link>
                     )}
+                </Section>
+
+                <Section tone="neutral" title={es ? 'Aprende' : 'Learn'}>
+                    {/* Reopens the onboarding wizard (DashboardLayout listens: useOnboarding.restart) */}
+                    <button type="button" data-testid="replay-tutorial" onClick={() => window.dispatchEvent(new Event('korex:restart-onboarding'))}
+                        className="kx-press flex w-full items-center gap-3 pb-3 text-left">
+                        <span className="flex w-6 flex-none items-center justify-center"><GraduationCap className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} /></span>
+                        <span className="min-w-0 flex-1">
+                            <span className="block text-[14.5px] font-semibold text-kx-ink">{es ? 'Ver el tutorial' : 'Watch the tutorial'}</span>
+                            <span className="block truncate text-xs text-kx-ink2">{es ? 'El corte, el $0 y dónde está cada cosa' : 'The cut, the $0 and where everything lives'}</span>
+                        </span>
+                        <ChevronRight className="h-[18px] w-[18px] flex-none text-kx-ink3" />
+                    </button>
                 </Section>
 
                 <Section tone="neutral" title={es ? 'Notificaciones' : 'Notifications'}>
