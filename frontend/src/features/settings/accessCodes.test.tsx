@@ -79,6 +79,23 @@ describe('Código personalizado', () => {
     });
 });
 
+describe('Errores al crear', () => {
+    it.each([
+        [503, 'Códigos desactivados: falta ACCESS_CODE_HMAC_KEY en el servidor.'],
+        [500, 'No se pudo crear el código. Inténtalo de nuevo.'],
+    ])('status %i shows a message instead of failing silently', async (status, msg) => {
+        apiFetch.mockImplementation(async (_url: string, opts?: { method?: string }) => {
+            if (opts?.method === 'POST') throw Object.assign(new Error('x'), { status });
+            return [CODE];
+        });
+        const el = await render(<OwnerCodesPanel es />);
+        const create = [...el.querySelectorAll('button')].find((b) => b.textContent === 'Crear código')!;
+        await act(async () => create.click());
+        expect(el.querySelector('[data-testid="code-error"]')!.textContent).toBe(msg);
+        expect(el.querySelector('[data-testid="fresh-code"]')).toBeNull();
+    });
+});
+
 describe('Planes con acceso por código', () => {
     it('founder: no checkout buttons, the state instead', async () => {
         apiFetch.mockResolvedValue({ plan: 'founder', status: 'active', accounts_limit: 999, source: 'grant', grant_plan: 'founder', grant_ends_at: null, checkout_hidden: true });
