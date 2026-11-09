@@ -49,6 +49,8 @@ export function OwnerCodesPanel({ es }: { es: boolean }) {
             const status = (e as { status?: number }).status;
             if (status === 409) setError(es ? 'Ese código ya existe.' : 'That code already exists.');
             else if (status === 422) setError(es ? 'Personalizado: 8 a 40 letras o números.' : 'Custom: 8 to 40 letters or digits.');
+            else if (status === 503) setError(es ? 'Códigos desactivados: falta ACCESS_CODE_HMAC_KEY en el servidor.' : 'Codes disabled: ACCESS_CODE_HMAC_KEY is missing on the server.');
+            else setError(es ? 'No se pudo crear el código. Inténtalo de nuevo.' : "Couldn't create the code. Try again.");
         }
         setBusy(false);
     };
