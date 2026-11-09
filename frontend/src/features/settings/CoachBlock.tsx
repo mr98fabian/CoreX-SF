@@ -90,8 +90,12 @@ export function CoachBlock({ es }: { es: boolean }) {
                     </span>
                     <button role="switch" aria-checked={optIn} aria-label={es ? 'Ranking y ligas' : 'Ranking & leagues'} disabled={!data || save.isPending}
                         onClick={() => save.mutate({ ranking_opt_in: !optIn })}
-                        className={`relative h-6 w-11 flex-none rounded-full border ${optIn ? 'border-kx-amber bg-kx-amber' : 'border-kx-line bg-kx-bg'}`}>
-                        <span className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-kx-ink transition-transform ${optIn ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                        className="grid h-11 w-11 flex-none place-items-center bg-transparent disabled:opacity-60">
+                        {/* The button is the 44×44 touch target; the track below is the designed 44×24 pill.
+                            (index.css forces min 44×44 on coarse pointers, which used to inflate the track.) */}
+                        <span data-kx="switch-track" aria-hidden="true" className={`relative block h-6 w-11 rounded-full border ${optIn ? 'border-kx-amber bg-kx-amber' : 'border-kx-line bg-kx-bg'}`}>
+                            <span className={`absolute left-0 top-0.5 h-[18px] w-[18px] rounded-full bg-kx-ink transition-transform ${optIn ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                        </span>
                     </button>
                 </div>
                 {optIn && (
