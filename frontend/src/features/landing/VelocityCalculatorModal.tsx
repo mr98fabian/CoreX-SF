@@ -109,7 +109,7 @@ export function VelocityCalculatorModal({ open, onOpenChange, isEs }: Props) {
                                 placeholder="300" value={monthlySurplus}
                                 onChange={(e) => setMonthlySurplus(e.target.value)} />
                         </div>
-                        {error && <p className="text-xs text-rose-500">{error}</p>}
+                        {error && <p className="text-xs text-kx-debt">{error}</p>}
                         <Button type="submit" variant="premium" className="w-full" disabled={loading}>
                             {loading
                                 ? <Loader2 size={16} className="animate-spin" />
@@ -136,7 +136,7 @@ export function VelocityCalculatorModal({ open, onOpenChange, isEs }: Props) {
 
                         <div className="rounded-xl bg-secondary/40 border border-border p-4 text-center">
                             <p className="text-xs text-muted-foreground mb-1">{isEs ? 'Interés total ahorrado (estimado)' : 'Total interest saved (estimate)'}</p>
-                            <MoneyAmount value={result.interest_saved} className="text-2xl text-emerald-500" />
+                            <MoneyAmount value={result.interest_saved} className="text-2xl text-kx-paid" />
                         </div>
 
                         <AssumptionsBreakdown assumptions={result.assumptions} className="flex flex-col items-center" />

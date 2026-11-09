@@ -65,7 +65,7 @@ export default function RankingsPage() {
     return (
         <div className="space-y-6 pb-16 animate-in fade-in duration-700">
             {/* ═══ HERO SECTION ═══ */}
-            <div className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border border-white/5 p-6 md:p-8">
+            <div className="relative group overflow-hidden rounded-2xl bg-kx-surface border border-kx-line p-6 md:p-8">
                 <WidgetHelp helpKey="rankHero" />
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-[100px] opacity-30"
@@ -80,26 +80,26 @@ export default function RankingsPage() {
                         <div className="text-7xl mb-2" style={{ filter: `drop-shadow(0 0 20px ${currentRank.material.glowColor})` }}>
                             {currentRank.material.emoji}
                         </div>
-                        <div className="text-3xl tracking-wider text-amber-300">{currentRank.military.stars}</div>
+                        <div className="text-3xl tracking-wider text-kx-amber">{currentRank.military.stars}</div>
                     </div>
 
                     <div className="text-center md:text-left flex-1">
-                        <p className="text-xs text-slate-300 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
+                        <p className="text-xs text-kx-ink2 uppercase tracking-widest mb-1 flex items-center gap-1.5 justify-center md:justify-start">
                             {es ? 'Tu Rango Actual' : 'Your Current Rank'}
                         </p>
                         {/* Solid light text: low-tier material colors (Wood, Stone) vanished on the dark card */}
-                        <h1 className="text-2xl md:text-4xl font-black tracking-tight text-slate-50"
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tight text-kx-ink"
                             style={{ textShadow: `0 0 24px ${currentRank.material.glowColor}` }}>
                             {es ? currentRank.fullDisplayEs : currentRank.fullDisplayEn}
                         </h1>
-                        <p className="text-slate-300 mt-2 text-sm">
+                        <p className="text-kx-ink2 mt-2 text-sm">
                             {es ? `Nivel ${currentRank.level} de 90` : `Level ${currentRank.level} of 90`}
                         </p>
                         {!currentRank.isMaxRank && (
-                            <p className="text-slate-400 text-xs mt-1 flex items-center gap-1">
-                                <span className="text-amber-500">▸</span>
+                            <p className="text-kx-ink2 text-xs mt-1 flex items-center gap-1">
+                                <span className="text-kx-amber">▸</span>
                                 {es ? 'Siguiente:' : 'Next:'}{' '}
-                                <span className="text-slate-100 font-semibold">
+                                <span className="text-kx-ink font-semibold">
                                     {es ? currentRank.nextRankEs : currentRank.nextRankEn}
                                 </span>
                             </p>
@@ -107,11 +107,11 @@ export default function RankingsPage() {
 
                         {/* Progress to next rank */}
                         <div className="mt-4 max-w-md">
-                            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                            <div className="flex justify-between text-[10px] text-kx-ink2 mb-1">
                                 <span>{es ? 'Progreso al siguiente rango' : 'Progress to next rank'}</span>
                                 <span>{Math.round(currentRank.progressPercent)}%</span>
                             </div>
-                            <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                            <div className="h-2 bg-kx-raised rounded-full overflow-hidden">
                                 <div
                                     className="h-full rounded-full transition-all duration-1000"
                                     style={{
@@ -125,20 +125,20 @@ export default function RankingsPage() {
 
                         {/* Stats Row */}
                         <div className="flex flex-wrap gap-4 mt-5">
-                            <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
-                                <Flame size={14} className="text-orange-400" />
-                                <span className="text-xs font-bold text-white">{streak.score}</span>
-                                <span className="text-[10px] text-slate-300">{es ? 'pts racha' : 'streak pts'}</span>
+                            <div className="flex items-center gap-1.5 bg-kx-surface rounded-lg px-3 py-1.5 border border-kx-line">
+                                <Flame size={14} className="text-kx-amber" />
+                                <span className="text-xs font-bold text-kx-ink">{streak.score}</span>
+                                <span className="text-[10px] text-kx-ink2">{es ? 'pts racha' : 'streak pts'}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
-                                <Zap size={14} className="text-amber-400" />
-                                <span className="text-xs font-bold text-white">{effectiveScore}</span>
-                                <span className="text-[10px] text-slate-300">{es ? 'XP efectivo' : 'effective XP'}</span>
+                            <div className="flex items-center gap-1.5 bg-kx-surface rounded-lg px-3 py-1.5 border border-kx-line">
+                                <Zap size={14} className="text-kx-amber" />
+                                <span className="text-xs font-bold text-kx-ink">{effectiveScore}</span>
+                                <span className="text-[10px] text-kx-ink2">{es ? 'XP efectivo' : 'effective XP'}</span>
                             </div>
                             {isPaid && (
-                                <div className="flex items-center gap-1.5 bg-amber-500/10 rounded-lg px-3 py-1.5 border border-amber-500/20">
-                                    <Crown size={14} className="text-amber-400" />
-                                    <span className="text-[10px] font-bold text-amber-400">2x XP BOOST</span>
+                                <div className="flex items-center gap-1.5 bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] rounded-lg px-3 py-1.5 border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)]">
+                                    <Crown size={14} className="text-kx-amber" />
+                                    <span className="text-[10px] font-bold text-kx-amber">2x XP BOOST</span>
                                 </div>
                             )}
                         </div>
@@ -151,22 +151,22 @@ export default function RankingsPage() {
                 <WidgetHelp helpKey="howItWorks" />
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Shield size={18} className="text-blue-400" />
+                        <Shield size={18} className="text-kx-ink2" />
                         {es ? '¿Cómo Funciona?' : 'How Does It Work?'}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-xs text-slate-300">
+                <CardContent className="space-y-3 text-xs text-kx-ink2">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3">
-                            <p className="font-bold text-emerald-400 mb-1">✅ {es ? 'Sube de Rango' : 'Rank Up'}</p>
+                        <div className="bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] rounded-xl p-3">
+                            <p className="font-bold text-kx-paid mb-1">✅ {es ? 'Sube de Rango' : 'Rank Up'}</p>
                             <p>{es ? 'Registra al menos 1 transacción (ingreso o gasto) cada día para sumar puntos a tu racha.' : 'Register at least 1 transaction (income or expense) daily to add points to your streak.'}</p>
                         </div>
-                        <div className="bg-rose-500/5 border border-rose-500/10 rounded-xl p-3">
-                            <p className="font-bold text-rose-400 mb-1">⚠️ {es ? 'Penalización' : 'Penalty'}</p>
+                        <div className="bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] rounded-xl p-3">
+                            <p className="font-bold text-kx-debt mb-1">⚠️ {es ? 'Penalización' : 'Penalty'}</p>
                             <p>{es ? 'Cada día que no registres transacción se restan 2 puntos de tu racha. ¡Mantén la constancia!' : 'Each day without a transaction deducts 2 points from your streak. Stay consistent!'}</p>
                         </div>
-                        <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3">
-                            <p className="font-bold text-amber-400 mb-1">👑 {es ? 'Boost VIP' : 'VIP Boost'}</p>
+                        <div className="bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] rounded-xl p-3">
+                            <p className="font-bold text-kx-amber mb-1">👑 {es ? 'Boost VIP' : 'VIP Boost'}</p>
                             <p>{es ? 'Los miembros VIP ganan 2x XP por transacción registrada. ¡Tu progreso se acelera enormemente!' : 'VIP members earn 2x XP per transaction. Your progress accelerates enormously!'}</p>
                         </div>
                     </div>
@@ -175,23 +175,23 @@ export default function RankingsPage() {
 
             {/* ═══ VIP UPSELL ═══ */}
             {!isPaid && (
-                <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-orange-500/5 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-amber-500/5 rounded-full blur-[60px]" />
+                <Card className="border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] rounded-full blur-[60px]" />
                     <CardContent className="p-5 relative">
                         <div className="flex items-start gap-4">
-                            <div className="bg-amber-500/10 rounded-xl p-3 border border-amber-500/20">
-                                <Rocket size={24} className="text-amber-400" />
+                            <div className="bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] rounded-xl p-3 border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)]">
+                                <Rocket size={24} className="text-kx-amber" />
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-bold text-amber-300 mb-1">
+                                <p className="text-sm font-bold text-kx-amber mb-1">
                                     {es ? '¿Quieres avanzar más rápido?' : 'Want to progress faster?'}
                                 </p>
-                                <p className="text-xs text-gray-400 mb-3">
+                                <p className="text-xs text-kx-ink2 mb-3">
                                     {es
                                         ? 'Conviértete en VIP para ganar 2x XP por cada transacción registrada, acortar tu camino dramáticamente y agregar más cuentas simultáneas para un control financiero total.'
                                         : 'Go VIP to earn 2x XP per transaction, dramatically shorten your journey and add more simultaneous accounts for total financial control.'}
                                 </p>
-                                <button onClick={() => setShowUpgradeModal(true)} className="inline-flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-lg shadow-amber-900/30">
+                                <button onClick={() => setShowUpgradeModal(true)} className="inline-flex items-center gap-1.5 bg-kx-amber text-[#111418] font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-lg ">
                                     <Crown size={12} />
                                     {es ? 'Ver planes VIP' : 'View VIP plans'}
                                 </button>
@@ -206,7 +206,7 @@ export default function RankingsPage() {
                 <WidgetHelp helpKey="commanderBadge" />
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Trophy size={18} className="text-amber-400" />
+                        <Trophy size={18} className="text-kx-amber" />
                         {es ? 'Tabla Completa de Rangos (90 Niveles)' : 'Full Rank Table (90 Levels)'}
                     </CardTitle>
                 </CardHeader>
@@ -224,8 +224,8 @@ export default function RankingsPage() {
                                 {/* Material Tier Header */}
                                 <button
                                     onClick={() => !isTierLocked && setExpandedTier(isExpanded ? null : tier.materialIndex)}
-                                    className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${isTierLocked ? 'cursor-default opacity-50' : 'hover:bg-white/5'
-                                        }`}
+                                    className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${isTierLocked ? 'cursor-default opacity-50' : 'hover:bg-kx-surface'
+ }`}
                                     style={{ backgroundColor: hasCurrent ? tier.materialColor + '08' : undefined }}
                                 >
                                     <div className="flex items-center gap-3">
@@ -235,7 +235,7 @@ export default function RankingsPage() {
                                                 {isTierLocked ? '???' : tier.materialName}
                                             </span>
                                             {!isTierLocked && (
-                                                <span className="text-[10px] text-gray-500 ml-2">
+                                                <span className="text-[10px] text-kx-ink3 ml-2">
                                                     {unlockedCount}/9 {es ? 'desbloqueados' : 'unlocked'}
                                                 </span>
                                             )}
@@ -249,50 +249,50 @@ export default function RankingsPage() {
                                             </span>
                                         )}
                                         {!isTierLocked && (
-                                            isExpanded ? <ChevronUp size={14} className="text-gray-500" /> : <ChevronDown size={14} className="text-gray-500" />
+                                            isExpanded ? <ChevronUp size={14} className="text-kx-ink3" /> : <ChevronDown size={14} className="text-kx-ink3" />
                                         )}
-                                        {isTierLocked && <Lock size={14} className="text-slate-600" />}
+                                        {isTierLocked && <Lock size={14} className="text-kx-ink2" />}
                                     </div>
                                 </button>
 
                                 {/* Expanded: Individual Ranks — only for unlocked/current tiers */}
                                 {isExpanded && !isTierLocked && (
-                                    <div className="border-t border-white/5 divide-y divide-white/5">
+                                    <div className="border-t border-kx-line divide-y divide-kx-line">
                                         {tier.ranks.map(rank => {
                                             const isLocked = !rank.isUnlocked && !rank.isCurrent;
                                             return (
                                                 <div
                                                     key={rank.militaryIndex}
                                                     className={`flex items-center justify-between px-4 py-2.5 transition-colors ${rank.isCurrent
-                                                        ? 'bg-gradient-to-r from-amber-500/10 to-transparent'
-                                                        : rank.isUnlocked
-                                                            ? 'bg-white/[0.02]'
-                                                            : 'opacity-35'
-                                                        }`}
+ ? 'bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] to-transparent'
+ : rank.isUnlocked
+ ? 'bg-white/[0.02]'
+ : 'opacity-35'
+ }`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-xs w-6 text-center">
-                                                            {isLocked ? <Lock size={10} className="text-slate-600 mx-auto" /> : (rank.stars || '—')}
+                                                            {isLocked ? <Lock size={10} className="text-kx-ink2 mx-auto" /> : (rank.stars || '—')}
                                                         </span>
-                                                        <span className={`text-xs font-medium ${rank.isCurrent ? 'text-amber-300'
-                                                            : isLocked ? 'text-slate-600 italic'
-                                                                : 'text-gray-300'
-                                                            }`}>
+                                                        <span className={`text-xs font-medium ${rank.isCurrent ? 'text-kx-amber'
+ : isLocked ? 'text-kx-ink2 italic'
+ : 'text-kx-ink2'
+ }`}>
                                                             {isLocked ? '???' : rank.militaryName}
                                                         </span>
                                                         {rank.isCurrent && (
-                                                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
+                                                            <span className="text-[9px] bg-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] text-kx-amber px-1.5 py-0.5 rounded-full font-bold">
                                                                 ← {es ? 'TÚ' : 'YOU'}
                                                             </span>
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         {rank.isUnlocked ? (
-                                                            <Star size={12} className="text-amber-400 fill-amber-400" />
+                                                            <Star size={12} className="text-kx-amber fill-kx-amber" />
                                                         ) : rank.isCurrent ? (
-                                                            <Star size={12} className="text-amber-400 animate-pulse" />
+                                                            <Star size={12} className="text-kx-amber animate-pulse" />
                                                         ) : (
-                                                            <Lock size={12} className="text-slate-500" />
+                                                            <Lock size={12} className="text-kx-ink3" />
                                                         )}
                                                     </div>
                                                 </div>
@@ -311,38 +311,38 @@ export default function RankingsPage() {
                 <WidgetHelp helpKey="rankBenefits" />
                 <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
-                        <Star size={18} className="text-purple-400" />
+                        <Star size={18} className="text-kx-ink2" />
                         {es ? 'Beneficios por Rango' : 'Rank Benefits'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-kx-line">
                             <span className="text-lg">🏅</span>
                             <div>
-                                <p className="font-bold text-gray-200">{es ? 'Insignias de Logro' : 'Achievement Badges'}</p>
-                                <p className="text-gray-500 mt-0.5">{es ? 'Desbloquea insignias exclusivas en tu Muro de Logros conforme subes de rango' : 'Unlock exclusive badges on your Achievement Wall as you rank up'}</p>
+                                <p className="font-bold text-kx-ink">{es ? 'Insignias de Logro' : 'Achievement Badges'}</p>
+                                <p className="text-kx-ink3 mt-0.5">{es ? 'Desbloquea insignias exclusivas en tu Muro de Logros conforme subes de rango' : 'Unlock exclusive badges on your Achievement Wall as you rank up'}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-kx-line">
                             <span className="text-lg">💚</span>
                             <div>
-                                <p className="font-bold text-gray-200">{es ? 'Salud Financiera' : 'Financial Health'}</p>
-                                <p className="text-gray-500 mt-0.5">{es ? 'Tu rango de Comandante contribuye directamente a tu Puntaje de Salud Financiera' : 'Your Commander rank directly contributes to your Financial Health Score'}</p>
+                                <p className="font-bold text-kx-ink">{es ? 'Salud Financiera' : 'Financial Health'}</p>
+                                <p className="text-kx-ink3 mt-0.5">{es ? 'Tu rango de Comandante contribuye directamente a tu Puntaje de Salud Financiera' : 'Your Commander rank directly contributes to your Financial Health Score'}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-kx-line">
                             <span className="text-lg">🎯</span>
                             <div>
-                                <p className="font-bold text-gray-200">{es ? 'Disciplina Financiera' : 'Financial Discipline'}</p>
-                                <p className="text-gray-500 mt-0.5">{es ? 'Mantener tu racha te obliga a revisar tus finanzas diariamente — el hábito más poderoso' : 'Keeping your streak forces daily financial check-ins — the most powerful habit'}</p>
+                                <p className="font-bold text-kx-ink">{es ? 'Disciplina Financiera' : 'Financial Discipline'}</p>
+                                <p className="text-kx-ink3 mt-0.5">{es ? 'Mantener tu racha te obliga a revisar tus finanzas diariamente — el hábito más poderoso' : 'Keeping your streak forces daily financial check-ins — the most powerful habit'}</p>
                             </div>
                         </div>
-                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                        <div className="flex items-start gap-2 p-3 rounded-lg bg-white/[0.02] border border-kx-line">
                             <span className="text-lg">✨</span>
                             <div>
-                                <p className="font-bold text-gray-200">{es ? 'Prestigio Visual' : 'Visual Prestige'}</p>
-                                <p className="text-gray-500 mt-0.5">{es ? 'Tu rango y material brillan en el Dashboard y la barra lateral — muestra tu progreso' : 'Your rank and material glow on the Dashboard and sidebar — show off your progress'}</p>
+                                <p className="font-bold text-kx-ink">{es ? 'Prestigio Visual' : 'Visual Prestige'}</p>
+                                <p className="text-kx-ink3 mt-0.5">{es ? 'Tu rango y material brillan en el Dashboard y la barra lateral — muestra tu progreso' : 'Your rank and material glow on the Dashboard and sidebar — show off your progress'}</p>
                             </div>
                         </div>
                     </div>

@@ -122,10 +122,6 @@
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
-    background-image:
-        radial-gradient(circle at 50% 0%, var(--cx-gradient-start) 0%, transparent 40%),
-        radial-gradient(circle at 80% 10%, var(--cx-gradient-mid) 0%, transparent 30%);
-    background-attachment: fixed;
     transition: background-color 0.3s ease, color 0.3s ease;
     -webkit-overflow-scrolling: touch;
     /* Eliminate 300ms tap delay on all mobile browsers */
@@ -142,19 +138,16 @@
 }
 
 @layer utilities {
-  /* ─── Glassmorphism (theme-aware) ───────────────────────────── */
+  /* ─── Legacy card names, now solid kx surfaces (no global blur) ─ */
   .glass-card {
-    @apply backdrop-blur-xl;
-    background: hsl(var(--cx-glass));
-    border: 1px solid hsl(var(--cx-glass-border));
-    /* Fase 2 · MD-2: sombra sutil y jerárquica en lugar de shadow-xl plano */
-    box-shadow: var(--cx-shadow-card);
+    background: var(--kx-surface);
+    border: 1px solid var(--kx-line);
+    box-shadow: var(--kx-elev-1);
   }
 
   .glass-panel {
-    @apply backdrop-blur-md;
-    background: hsl(var(--cx-glass));
-    border: 1px solid hsl(var(--cx-glass-border));
+    background: var(--kx-surface);
+    border: 1px solid var(--kx-line);
   }
 
   /* ─── Fase 2 · MD-2: Elevation utilities (theme-aware) ──────── */
@@ -195,24 +188,16 @@
   }
 
   /* ─── Gradient text ─────────────────────────────────────────── */
-  .text-gradient-gold {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500;
-  }
-  .text-gradient-emerald {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 via-emerald-500 to-teal-500;
-  }
-  .text-gradient-brand {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-white;
-  }
+  /* Legacy names: solid kx colors (no gradient text in the system) */
+  .text-gradient-gold { color: var(--kx-amber); }
+  .text-gradient-emerald { color: var(--kx-paid); }
+  .text-gradient-brand { color: var(--kx-ink); }
 
   /* ─── Light mode specific card style ────────────────────────── */
-  :root .card-elevated {
-    @apply bg-white border border-gray-200;
-    box-shadow: var(--cx-shadow-elevated);
-  }
-  .dark .card-elevated {
-    @apply bg-[#0f0f0f] border border-white/5;
-    box-shadow: var(--cx-shadow-elevated);
+  .card-elevated {
+    background: var(--kx-surface);
+    border: 1px solid var(--kx-line);
+    box-shadow: var(--kx-elev-2);
   }
 
   /* ─── Smooth theme transition ───────────────────────────────── */

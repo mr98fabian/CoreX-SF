@@ -52,12 +52,12 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const TECH_STACK = [
-    { name: "React 18", color: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" },
-    { name: "FastAPI", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-    { name: "PostgreSQL", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
-    { name: "TailwindCSS", color: "text-sky-400 bg-sky-500/10 border-sky-500/20" },
-    { name: "TypeScript", color: "text-blue-300 bg-blue-400/10 border-blue-400/20" },
-    { name: "SheetJS", color: "text-green-400 bg-green-500/10 border-green-500/20" },
+    { name: "React 18", color: "text-kx-ink2 bg-kx-raised border-kx-line" },
+    { name: "FastAPI", color: "text-kx-paid bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)]" },
+    { name: "PostgreSQL", color: "text-kx-ink2 bg-kx-raised border-kx-line" },
+    { name: "TailwindCSS", color: "text-kx-ink2 bg-kx-raised border-kx-line" },
+    { name: "TypeScript", color: "text-kx-ink2 bg-kx-raised border-kx-line" },
+    { name: "SheetJS", color: "text-kx-paid bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)]" },
 ];
 
 // ─── Subscription Constants ───
@@ -363,36 +363,36 @@ export default function SettingsPage() {
     // ─── Render Sections ────────────────────────────────────────
     const renderProfile = () => (
         <div className="space-y-6">
-            <SectionHeader title={t("settings.profile.title")} subtitle={t("settings.profile.subtitle")} icon={<User className="h-5 w-5 text-blue-400" />} />
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <SectionHeader title={t("settings.profile.title")} subtitle={t("settings.profile.subtitle")} icon={<User className="h-5 w-5 text-kx-ink2" />} />
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardContent className="pt-6 space-y-6">
                     {/* Avatar + Name */}
                     <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white dark:text-white shrink-0">
+                        <div className="h-16 w-16 rounded-2xl bg-kx-surface flex items-center justify-center text-2xl font-bold text-kx-ink shrink-0">
                             {userInitials}
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{userName}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{userEmail}</p>
+                            <h3 className="text-lg font-semibold text-kx-ink ">{userName}</h3>
+                            <p className="text-sm text-kx-ink3 ">{userEmail}</p>
                             {isDemo && (
-                                <Badge className="mt-1 bg-amber-500/10 text-amber-400 border-amber-500/20 text-[10px]">
+                                <Badge className="mt-1 bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] text-kx-amber border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] text-[10px]">
                                     {t("settings.profile.demoAccount")}
                                 </Badge>
                             )}
                         </div>
                     </div>
 
-                    <Separator className="bg-gray-200 dark:bg-neutral-800" />
+                    <Separator className="bg-kx-raised " />
 
                     {/* Form fields */}
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="name" className="text-slate-700 dark:text-gray-300">{t("settings.profile.displayName")}</Label>
-                            <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isDemo} className="bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-700 text-slate-900 dark:text-white focus:border-blue-500/50" />
+                            <Label htmlFor="name" className="text-kx-ink ">{t("settings.profile.displayName")}</Label>
+                            <Input id="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} disabled={isDemo} className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink focus:border-kx-line" />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="email" className="text-slate-700 dark:text-gray-300">{t("settings.profile.email")}</Label>
-                            <Input id="email" value={userEmail} disabled className="bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-700 text-slate-900 dark:text-white focus:border-blue-500/50 opacity-60" />
+                            <Label htmlFor="email" className="text-kx-ink ">{t("settings.profile.email")}</Label>
+                            <Input id="email" value={userEmail} disabled className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink focus:border-kx-line opacity-60" />
                         </div>
                         {!isDemo && (
                             <Button onClick={handleSaveProfile} disabled={profileSaving || displayName === userName} variant="premium" className="w-full mt-2">
@@ -403,18 +403,18 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Security */}
-                    <Separator className="bg-gray-200 dark:bg-neutral-800" />
+                    <Separator className="bg-kx-raised " />
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                            <Shield className="h-4 w-4 text-emerald-500" />
+                        <h4 className="text-sm font-semibold text-kx-ink flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-kx-paid" />
                             {t("settings.profile.security")}
                         </h4>
                         <div className="flex items-center justify-between">
                             <div className="space-y-0.5">
-                                <Label className="text-sm text-slate-700 dark:text-gray-300">
+                                <Label className="text-sm text-kx-ink ">
                                     {t("settings.profile.twoFactor")}
                                 </Label>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">
+                                <p className="text-xs text-kx-ink3 ">
                                     {t("settings.profile.twoFactorDesc")}
                                 </p>
                             </div>
@@ -428,82 +428,82 @@ export default function SettingsPage() {
 
     const renderAppearance = () => (
         <div className="space-y-6">
-            <SectionHeader title={t("settings.appearance.title")} subtitle={t("settings.appearance.subtitle")} icon={<Palette className="h-5 w-5 text-purple-400" />} />
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <SectionHeader title={t("settings.appearance.title")} subtitle={t("settings.appearance.subtitle")} icon={<Palette className="h-5 w-5 text-kx-ink2" />} />
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardContent className="pt-6 space-y-6">
                     {/* Language */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                                <Globe className="h-4 w-4 text-blue-400" />
+                            <div className="p-2 rounded-lg bg-kx-raised border border-kx-line">
+                                <Globe className="h-4 w-4 text-kx-ink2" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-700 dark:text-gray-200">{t("settings.appearance.language")}</Label>
-                                <p className="text-xs text-gray-500">{t("settings.appearance.languageDesc")}</p>
+                                <Label className="text-sm text-kx-ink ">{t("settings.appearance.language")}</Label>
+                                <p className="text-xs text-kx-ink3">{t("settings.appearance.languageDesc")}</p>
                             </div>
                         </div>
                         <Select value={language} onValueChange={(v) => setLanguage(v as "en" | "es")}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-700 text-slate-900 dark:text-white">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink ">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-700">
-                                <SelectItem value="en" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">🇺🇸 English</SelectItem>
-                                <SelectItem value="es" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">🇪🇸 Español</SelectItem>
+                            <SelectContent className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line ">
+                                <SelectItem value="en" className="text-kx-ink focus:bg-kx-raised ">🇺🇸 English</SelectItem>
+                                <SelectItem value="es" className="text-kx-ink focus:bg-kx-raised ">🇪🇸 Español</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-gray-200 dark:bg-neutral-800" />
+                    <Separator className="bg-kx-raised " />
 
                     {/* Currency */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                <DollarSign className="h-4 w-4 text-emerald-400" />
+                            <div className="p-2 rounded-lg bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)]">
+                                <DollarSign className="h-4 w-4 text-kx-paid" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-700 dark:text-gray-200">{t("settings.appearance.currency")}</Label>
-                                <p className="text-xs text-gray-500">{t("settings.appearance.currencyDesc")}</p>
+                                <Label className="text-sm text-kx-ink ">{t("settings.appearance.currency")}</Label>
+                                <p className="text-xs text-kx-ink3">{t("settings.appearance.currencyDesc")}</p>
                             </div>
                         </div>
                         <Select value={currency} onValueChange={handleCurrencyChange}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-700 text-slate-900 dark:text-white">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink ">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-700">
-                                <SelectItem value="USD" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">$ USD (US Dollar)</SelectItem>
-                                <SelectItem value="MXN" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">$ MXN (Peso Mexicano)</SelectItem>
-                                <SelectItem value="EUR" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">€ EUR (Euro)</SelectItem>
-                                <SelectItem value="GBP" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">£ GBP (British Pound)</SelectItem>
-                                <SelectItem value="CAD" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">$ CAD (Canadian Dollar)</SelectItem>
-                                <SelectItem value="COP" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">$ COP (Peso Colombiano)</SelectItem>
-                                <SelectItem value="ARS" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">$ ARS (Peso Argentino)</SelectItem>
-                                <SelectItem value="BRL" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">R$ BRL (Real Brasileiro)</SelectItem>
+                            <SelectContent className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line ">
+                                <SelectItem value="USD" className="text-kx-ink focus:bg-kx-raised ">$ USD (US Dollar)</SelectItem>
+                                <SelectItem value="MXN" className="text-kx-ink focus:bg-kx-raised ">$ MXN (Peso Mexicano)</SelectItem>
+                                <SelectItem value="EUR" className="text-kx-ink focus:bg-kx-raised ">€ EUR (Euro)</SelectItem>
+                                <SelectItem value="GBP" className="text-kx-ink focus:bg-kx-raised ">£ GBP (British Pound)</SelectItem>
+                                <SelectItem value="CAD" className="text-kx-ink focus:bg-kx-raised ">$ CAD (Canadian Dollar)</SelectItem>
+                                <SelectItem value="COP" className="text-kx-ink focus:bg-kx-raised ">$ COP (Peso Colombiano)</SelectItem>
+                                <SelectItem value="ARS" className="text-kx-ink focus:bg-kx-raised ">$ ARS (Peso Argentino)</SelectItem>
+                                <SelectItem value="BRL" className="text-kx-ink focus:bg-kx-raised ">R$ BRL (Real Brasileiro)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
-                    <Separator className="bg-gray-200 dark:bg-neutral-800" />
+                    <Separator className="bg-kx-raised " />
 
                     {/* Date Format */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                <Calendar className="h-4 w-4 text-amber-400" />
+                            <div className="p-2 rounded-lg bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)]">
+                                <Calendar className="h-4 w-4 text-kx-amber" />
                             </div>
                             <div>
-                                <Label className="text-sm text-slate-700 dark:text-gray-200">{t("settings.appearance.dateFormat")}</Label>
-                                <p className="text-xs text-gray-500">{t("settings.appearance.dateDesc")}</p>
+                                <Label className="text-sm text-kx-ink ">{t("settings.appearance.dateFormat")}</Label>
+                                <p className="text-xs text-kx-ink3">{t("settings.appearance.dateDesc")}</p>
                             </div>
                         </div>
                         <Select value={dateFormat} onValueChange={handleDateFormatChange}>
-                            <SelectTrigger className="w-full sm:w-[180px] bg-gray-50 dark:bg-[#0f0f0f] border-slate-300 dark:border-neutral-700 text-slate-900 dark:text-white">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink ">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-700">
-                                <SelectItem value="MM/DD/YYYY" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">MM/DD/YYYY</SelectItem>
-                                <SelectItem value="DD/MM/YYYY" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">DD/MM/YYYY</SelectItem>
-                                <SelectItem value="YYYY-MM-DD" className="text-slate-900 dark:text-white focus:bg-gray-100 dark:focus:bg-neutral-800">YYYY-MM-DD</SelectItem>
+                            <SelectContent className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line ">
+                                <SelectItem value="MM/DD/YYYY" className="text-kx-ink focus:bg-kx-raised ">MM/DD/YYYY</SelectItem>
+                                <SelectItem value="DD/MM/YYYY" className="text-kx-ink focus:bg-kx-raised ">DD/MM/YYYY</SelectItem>
+                                <SelectItem value="YYYY-MM-DD" className="text-kx-ink focus:bg-kx-raised ">YYYY-MM-DD</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -523,23 +523,23 @@ export default function SettingsPage() {
 
         return (
             <div className="space-y-6">
-                <SectionHeader title={t("settings.notifications.title")} subtitle={t("settings.notifications.subtitle")} icon={<Bell className="h-5 w-5 text-amber-400" />} />
-                <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+                <SectionHeader title={t("settings.notifications.title")} subtitle={t("settings.notifications.subtitle")} icon={<Bell className="h-5 w-5 text-kx-amber" />} />
+                <Card className="border-kx-line bg-kx-surface ">
                     <CardContent className="pt-6 space-y-1">
                         {items.map((item, i) => (
                             <div key={item.key}>
                                 <div className="flex items-center justify-between py-3">
                                     <div className="space-y-0.5">
-                                        <Label className={`text-sm ${item.critical ? "text-rose-500 dark:text-rose-300" : "text-slate-700 dark:text-gray-200"}`}>
+                                        <Label className={`text-sm ${item.critical ? "text-kx-debt " : "text-kx-ink "}`}>
                                             {t(`settings.notifications.${item.uiKey}`)}
                                         </Label>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-kx-ink3">
                                             {t(`settings.notifications.${item.uiKey}Desc`)}
                                         </p>
                                     </div>
                                     <Switch checked={item.state} onCheckedChange={item.setter} />
                                 </div>
-                                {i < items.length - 1 && <Separator className="bg-gray-200/50 dark:bg-neutral-800/50" />}
+                                {i < items.length - 1 && <Separator className="bg-kx-raised " />}
                             </div>
                         ))}
                     </CardContent>
@@ -550,13 +550,13 @@ export default function SettingsPage() {
 
     const renderDataManagement = () => (
         <div className="space-y-6">
-            <SectionHeader title={t("settings.data.title")} subtitle={t("settings.data.subtitle")} icon={<Database className="h-5 w-5 text-purple-400" />} />
+            <SectionHeader title={t("settings.data.title")} subtitle={t("settings.data.subtitle")} icon={<Database className="h-5 w-5 text-kx-ink2" />} />
 
             {/* Export Section */}
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        <Download className="h-4 w-4 text-emerald-400" />
+                    <CardTitle className="text-sm text-kx-ink flex items-center gap-2">
+                        <Download className="h-4 w-4 text-kx-paid" />
                         {t("settings.data.exportData")}
                     </CardTitle>
                 </CardHeader>
@@ -565,20 +565,20 @@ export default function SettingsPage() {
                         <button
                             onClick={handleExportExcel}
                             disabled={exportLoading}
-                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all text-center"
+                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] transition-all text-center"
                         >
-                            <FileSpreadsheet className="h-8 w-8 text-emerald-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-emerald-300">{t("settings.data.exportExcel")}</span>
-                            <span className="text-[10px] text-gray-500">{t("settings.data.exportExcelDesc")}</span>
+                            <FileSpreadsheet className="h-8 w-8 text-kx-paid group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-kx-paid">{t("settings.data.exportExcel")}</span>
+                            <span className="text-[10px] text-kx-ink3">{t("settings.data.exportExcelDesc")}</span>
                         </button>
 
                         <button
                             onClick={handleExportJson}
-                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-all text-center"
+                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-kx-line bg-kx-raised hover:bg-kx-raised transition-all text-center"
                         >
-                            <FileJson className="h-8 w-8 text-blue-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-blue-300">{t("settings.data.exportJson")}</span>
-                            <span className="text-[10px] text-gray-500">{t("settings.data.exportJsonDesc")}</span>
+                            <FileJson className="h-8 w-8 text-kx-ink2 group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-kx-ink2">{t("settings.data.exportJson")}</span>
+                            <span className="text-[10px] text-kx-ink3">{t("settings.data.exportJsonDesc")}</span>
                         </button>
 
                         <button
@@ -596,36 +596,36 @@ export default function SettingsPage() {
                                 }
                             }}
                             disabled={pdfLoading}
-                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 transition-all text-center"
+                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] transition-all text-center"
                         >
-                            <FileText className={`h-8 w-8 text-rose-400 group-hover:scale-110 transition-transform ${pdfLoading ? 'animate-pulse' : ''}`} />
-                            <span className="text-sm font-medium text-rose-300">{t("settings.data.exportPdf")}</span>
-                            <span className="text-[10px] text-gray-500">{t("settings.data.exportPdfDesc")}</span>
+                            <FileText className={`h-8 w-8 text-kx-debt group-hover:scale-110 transition-transform ${pdfLoading ? 'animate-pulse' : ''}`} />
+                            <span className="text-sm font-medium text-kx-debt">{t("settings.data.exportPdf")}</span>
+                            <span className="text-[10px] text-kx-ink3">{t("settings.data.exportPdfDesc")}</span>
                         </button>
 
                         <button
                             onClick={handleDownloadTemplate}
-                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all text-center"
+                            className="group flex flex-col items-center gap-2 p-4 rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] transition-all text-center"
                         >
-                            <Download className="h-8 w-8 text-amber-400 group-hover:scale-110 transition-transform" />
-                            <span className="text-sm font-medium text-amber-300">{t("settings.data.downloadTemplate")}</span>
-                            <span className="text-[10px] text-gray-500">{t("settings.data.downloadTemplateDesc")}</span>
+                            <Download className="h-8 w-8 text-kx-amber group-hover:scale-110 transition-transform" />
+                            <span className="text-sm font-medium text-kx-amber">{t("settings.data.downloadTemplate")}</span>
+                            <span className="text-[10px] text-kx-ink3">{t("settings.data.downloadTemplateDesc")}</span>
                         </button>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Import Section */}
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                        <Upload className="h-4 w-4 text-blue-400" />
+                    <CardTitle className="text-sm text-kx-ink flex items-center gap-2">
+                        <Upload className="h-4 w-4 text-kx-ink2" />
                         {t("settings.data.importExcel")}
                     </CardTitle>
                     <CardDescription className="text-xs">{t("settings.data.importExcelDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="border-2 border-dashed border-slate-300 dark:border-neutral-700 rounded-xl p-6 text-center hover:border-blue-500/50 transition-colors">
+                    <div className="border-2 border-dashed border-kx-line rounded-xl p-6 text-center hover:border-kx-line transition-colors">
                         <input
                             ref={fileInputRef}
                             type="file"
@@ -634,20 +634,20 @@ export default function SettingsPage() {
                             className="hidden"
                             id="import-file"
                         />
-                        <FileSpreadsheet className="h-10 w-10 text-slate-600 mx-auto mb-3" />
+                        <FileSpreadsheet className="h-10 w-10 text-kx-ink2 mx-auto mb-3" />
                         {importFile ? (
                             <div className="space-y-3">
                                 <div className="flex items-center justify-center gap-2">
-                                    <CheckCircle className="h-4 w-4 text-emerald-400" />
-                                    <span className="text-sm text-emerald-300">{importFile.name}</span>
+                                    <CheckCircle className="h-4 w-4 text-kx-paid" />
+                                    <span className="text-sm text-kx-paid">{importFile.name}</span>
                                 </div>
                                 <div className="flex gap-2 justify-center">
-                                    <Button size="sm" onClick={handleImportExcel} className="bg-blue-600 hover:bg-blue-700">
+                                    <Button size="sm" onClick={handleImportExcel} className="bg-kx-raised hover:bg-kx-raised">
                                         <Upload className="h-3 w-3 mr-1" />
                                         {t("settings.data.process")}
                                     </Button>
                                     <Button size="sm" variant="outline" onClick={() => { setImportFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                                        className="border-slate-300 dark:border-neutral-700 text-slate-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800"
+                                        className="border-kx-line text-kx-ink2 hover:bg-kx-raised "
                                     >
                                         {t("settings.data.cancelImport")}
                                     </Button>
@@ -656,14 +656,14 @@ export default function SettingsPage() {
                         ) : (
                             <div>
                                 <label htmlFor="import-file" className="cursor-pointer">
-                                    <p className="text-sm text-gray-400 mb-1">
+                                    <p className="text-sm text-kx-ink2 mb-1">
                                         {t("settings.data.dragFile")}
                                     </p>
-                                    <span className="text-sm text-blue-400 hover:text-blue-300 underline underline-offset-2">
+                                    <span className="text-sm text-kx-ink2 hover:text-kx-ink2 underline underline-offset-2">
                                         {t("settings.data.clickBrowse")}
                                     </span>
                                 </label>
-                                <p className="text-[10px] text-slate-600 mt-2">.xlsx, .xls, .csv</p>
+                                <p className="text-[10px] text-kx-ink2 mt-2">.xlsx, .xls, .csv</p>
                             </div>
                         )}
                     </div>
@@ -671,16 +671,16 @@ export default function SettingsPage() {
             </Card>
 
             {/* Restart Tutorial */}
-            <Card className="border-blue-500/20 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardContent className="pt-5 pb-5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                                <Sparkles className="h-4 w-4 text-blue-400" />
+                            <div className="p-2 rounded-lg bg-kx-raised border border-kx-line">
+                                <Sparkles className="h-4 w-4 text-kx-ink2" />
                             </div>
                             <div>
-                                <p className="text-sm text-slate-700 dark:text-gray-200">{t('settings.restartTutorial')}</p>
-                                <p className="text-xs text-gray-500">{t('settings.restartTutorialDesc')}</p>
+                                <p className="text-sm text-kx-ink ">{t('settings.restartTutorial')}</p>
+                                <p className="text-xs text-kx-ink3">{t('settings.restartTutorialDesc')}</p>
                             </div>
                         </div>
                         <Button
@@ -690,7 +690,7 @@ export default function SettingsPage() {
                                 await onboarding.restart();
                                 window.location.href = '/';
                             }}
-                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                            className="border-kx-line text-kx-ink2 hover:bg-kx-raised hover:text-kx-ink2"
                         >
                             <RefreshCw className="h-3 w-3 mr-1" />
                             {t('settings.restartBtn')}
@@ -700,9 +700,9 @@ export default function SettingsPage() {
             </Card>
 
             {/* Danger Zone */}
-            <Card className="border-rose-500/20 bg-white dark:bg-black/50">
+            <Card className="border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] bg-kx-surface ">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-rose-400 flex items-center gap-2">
+                    <CardTitle className="text-sm text-kx-debt flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4" />
                         {t("settings.data.dangerZone")}
                     </CardTitle>
@@ -710,31 +710,31 @@ export default function SettingsPage() {
                 <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-700 dark:text-gray-200">{t("settings.data.resetDemo")}</p>
-                            <p className="text-xs text-gray-500">{t("settings.data.resetDemoDesc")}</p>
+                            <p className="text-sm text-kx-ink ">{t("settings.data.resetDemo")}</p>
+                            <p className="text-xs text-kx-ink3">{t("settings.data.resetDemoDesc")}</p>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleResetDemo}
                             disabled={resetLoading}
-                            className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                            className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] hover:text-kx-debt"
                         >
                             <RefreshCw className={`h-3 w-3 mr-1 ${resetLoading ? "animate-spin" : ""}`} />
                             {t("settings.data.reset")}
                         </Button>
                     </div>
-                    <Separator className="bg-gray-200 dark:bg-neutral-800" />
+                    <Separator className="bg-kx-raised " />
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-slate-700 dark:text-gray-200">{t("settings.data.clearCache")}</p>
-                            <p className="text-xs text-gray-500">{t("settings.data.clearCacheDesc")}</p>
+                            <p className="text-sm text-kx-ink ">{t("settings.data.clearCache")}</p>
+                            <p className="text-xs text-kx-ink3">{t("settings.data.clearCacheDesc")}</p>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={handleClearCache}
-                            className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
+                            className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] hover:text-kx-debt"
                         >
                             <Trash2 className="h-3 w-3 mr-1" />
                             {t("settings.data.clear")}
@@ -747,23 +747,23 @@ export default function SettingsPage() {
 
     const renderAbout = () => (
         <div className="space-y-6">
-            <SectionHeader title={t("settings.about.title")} subtitle={t("settings.about.subtitle")} icon={<Info className="h-5 w-5 text-gray-400" />} />
+            <SectionHeader title={t("settings.about.title")} subtitle={t("settings.about.subtitle")} icon={<Info className="h-5 w-5 text-kx-ink2" />} />
 
             {/* Version Hero */}
-            <Card className="border-gray-200 dark:border-neutral-800 bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-50 dark:from-black dark:via-blue-950/20 dark:to-black overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+            <Card className="border-kx-line bg-kx-surface overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-kx-raised rounded-full blur-3xl pointer-events-none" />
                 <CardContent className="pt-6 pb-8">
                     <div className="text-center space-y-4">
                         <div className="inline-flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-amber-400" />
-                            <span className="text-xs font-medium text-amber-400 uppercase tracking-wider">
+                            <Sparkles className="h-5 w-5 text-kx-amber" />
+                            <span className="text-xs font-medium text-kx-amber uppercase tracking-wider">
                                 {t("settings.about.financialSystem")}
                             </span>
                         </div>
-                        <h2 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
-                            KoreX <span className="text-blue-400">v{__APP_VERSION__}</span>
+                        <h2 className="text-4xl font-bold text-kx-ink tracking-tight">
+                            KoreX <span className="text-kx-ink2">v{__APP_VERSION__}</span>
                         </h2>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 max-w-md mx-auto">
+                        <p className="text-sm text-kx-ink2 max-w-md mx-auto">
                             {t("settings.about.tagline")}
                         </p>
                     </div>
@@ -772,30 +772,30 @@ export default function SettingsPage() {
 
             {/* Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+                <Card className="border-kx-line bg-kx-surface ">
                     <CardContent className="pt-4 pb-4 text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t("settings.about.version")}</p>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">{__APP_VERSION__}</p>
+                        <p className="text-[10px] text-kx-ink3 uppercase tracking-wider mb-1">{t("settings.about.version")}</p>
+                        <p className="text-lg font-bold text-kx-ink font-mono">{__APP_VERSION__}</p>
                     </CardContent>
                 </Card>
-                <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+                <Card className="border-kx-line bg-kx-surface ">
                     <CardContent className="pt-4 pb-4 text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t("settings.about.build")}</p>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">{__BUILD_DATE__}</p>
+                        <p className="text-[10px] text-kx-ink3 uppercase tracking-wider mb-1">{t("settings.about.build")}</p>
+                        <p className="text-lg font-bold text-kx-ink font-mono">{__BUILD_DATE__}</p>
                     </CardContent>
                 </Card>
-                <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+                <Card className="border-kx-line bg-kx-surface ">
                     <CardContent className="pt-4 pb-4 text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t("settings.about.engine")}</p>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white font-mono">Velocity v1</p>
+                        <p className="text-[10px] text-kx-ink3 uppercase tracking-wider mb-1">{t("settings.about.engine")}</p>
+                        <p className="text-lg font-bold text-kx-ink font-mono">Velocity v1</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Tech Stack */}
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-sm text-slate-900 dark:text-white">{t("settings.about.techStack")}</CardTitle>
+                    <CardTitle className="text-sm text-kx-ink ">{t("settings.about.techStack")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -809,18 +809,18 @@ export default function SettingsPage() {
             </Card>
 
             {/* Links */}
-            <Card className="border-gray-200 dark:border-neutral-800 bg-white dark:bg-black/50">
+            <Card className="border-kx-line bg-kx-surface ">
                 <CardContent className="pt-4 pb-4">
                     <div className="grid grid-cols-3 gap-3">
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-gray-100 dark:bg-[#0f0f0f] hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-kx-raised dark:bg-[#0f0f0f] hover:bg-kx-raised transition-colors text-sm text-kx-ink2 hover:text-kx-ink ">
                             <BookOpen className="h-4 w-4" />
                             Docs
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-gray-100 dark:bg-[#0f0f0f] hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-kx-raised dark:bg-[#0f0f0f] hover:bg-kx-raised transition-colors text-sm text-kx-ink2 hover:text-kx-ink ">
                             <Github className="h-4 w-4" />
                             GitHub
                         </a>
-                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-gray-100 dark:bg-[#0f0f0f] hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors text-sm text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white">
+                        <a href="#" className="flex items-center justify-center gap-2 p-3 rounded-lg bg-kx-raised dark:bg-[#0f0f0f] hover:bg-kx-raised transition-colors text-sm text-kx-ink2 hover:text-kx-ink ">
                             <ExternalLink className="h-4 w-4" />
                             Support
                         </a>
@@ -829,7 +829,7 @@ export default function SettingsPage() {
             </Card>
 
             {/* Footer */}
-            <p className="text-center text-xs text-slate-600 pb-4">
+            <p className="text-center text-xs text-kx-ink2 pb-4">
                 {t("settings.about.madeWith")}
             </p>
         </div>
@@ -893,43 +893,43 @@ export default function SettingsPage() {
                 <SectionHeader
                     title={t('sub.title')}
                     subtitle={t('sub.subtitle')}
-                    icon={<CreditCard className="h-5 w-5 text-amber-400" />}
+                    icon={<CreditCard className="h-5 w-5 text-kx-amber" />}
                 />
 
                 {/* 🔥 NEUROMARKETING: Interest Burning Banner */}
                 {sd?.has_data && sd.daily_interest_all > 0 && (
-                    <Card className="border-red-500/30 bg-gradient-to-r from-red-50/40 via-orange-50/30 to-red-50/40 dark:from-red-950/40 dark:via-orange-950/30 dark:to-red-950/40 overflow-hidden relative">
+                    <Card className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-debt)_40%,transparent)] overflow-hidden relative">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(239,68,68,0.08),transparent_70%)]" />
                         <CardContent className="p-5 relative">
                             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-xl bg-red-500/15 flex items-center justify-center animate-pulse">
-                                        <Flame className="h-6 w-6 text-red-400" />
+                                    <div className="h-12 w-12 rounded-xl bg-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] flex items-center justify-center animate-pulse">
+                                        <Flame className="h-6 w-6 text-kx-debt" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-medium text-red-300/80 uppercase tracking-wider">{t('sub.interestBurning')}</p>
+                                        <p className="text-xs font-medium text-kx-debt uppercase tracking-wider">{t('sub.interestBurning')}</p>
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-2xl font-black text-red-400 font-mono tabular-nums">
+                                            <span className="text-2xl font-black text-kx-debt font-mono tabular-nums">
                                                 ${(interestTick).toFixed(4)}
                                             </span>
-                                            <span className="text-xs text-red-400/60">{t('sub.sinceOpened')}</span>
+                                            <span className="text-xs text-kx-debt">{t('sub.sinceOpened')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6 text-center">
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoney(sd.daily_interest_all)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perDay')}</p>
+                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoney(sd.daily_interest_all)}</p>
+                                        <p className="text-[10px] text-kx-debt uppercase">{t('sub.perDay')}</p>
                                     </div>
-                                    <div className="h-8 w-px bg-red-500/20" />
+                                    <div className="h-8 w-px bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]" />
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoneyShort(sd.daily_interest_all * 30)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perMonth')}</p>
+                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.daily_interest_all * 30)}</p>
+                                        <p className="text-[10px] text-kx-debt uppercase">{t('sub.perMonth')}</p>
                                     </div>
-                                    <div className="h-8 w-px bg-red-500/20" />
+                                    <div className="h-8 w-px bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]" />
                                     <div>
-                                        <p className="text-lg font-bold text-red-400 font-mono">{formatMoneyShort(sd.daily_interest_all * 365)}</p>
-                                        <p className="text-[10px] text-red-300/60 uppercase">{t('sub.perYear')}</p>
+                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.daily_interest_all * 365)}</p>
+                                        <p className="text-[10px] text-kx-debt uppercase">{t('sub.perYear')}</p>
                                     </div>
                                 </div>
                             </div>
@@ -939,26 +939,26 @@ export default function SettingsPage() {
 
                 {/* Without vs With KoreX Comparison */}
                 {sd?.has_data && sd.plans?.freedom && (
-                    <Card className="border-gray-200 dark:border-white/5 overflow-hidden">
+                    <Card className="border-kx-line overflow-hidden">
                         <CardContent className="p-0">
-                            <div className="grid grid-cols-2 divide-x divide-slate-200 dark:divide-white/5">
-                                <div className="p-5 text-center bg-red-500/5">
-                                    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-2">{t('sub.withoutKorex')}</p>
-                                    <p className="text-2xl font-black text-red-400">{sd.plans.freedom.years_without} {t('sub.years')}</p>
+                            <div className="grid grid-cols-2 divide-x divide-kx-line ">
+                                <div className="p-5 text-center bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)]">
+                                    <p className="text-[10px] font-bold text-kx-debt uppercase tracking-wider mb-2">{t('sub.withoutKorex')}</p>
+                                    <p className="text-2xl font-black text-kx-debt">{sd.plans.freedom.years_without} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toPayOff')}</p>
-                                    <p className="text-sm font-bold text-red-400 mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_without)}</p>
-                                    <p className="text-[10px] text-red-400/60">{t('sub.totalInterest')}</p>
+                                    <p className="text-sm font-bold text-kx-debt mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_without)}</p>
+                                    <p className="text-[10px] text-kx-debt">{t('sub.totalInterest')}</p>
                                 </div>
-                                <div className="p-5 text-center bg-emerald-500/5">
-                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-2">{t('sub.withKorex')}</p>
-                                    <p className="text-2xl font-black text-emerald-400">{sd.plans.freedom.years_with} {t('sub.years')}</p>
+                                <div className="p-5 text-center bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)]">
+                                    <p className="text-[10px] font-bold text-kx-paid uppercase tracking-wider mb-2">{t('sub.withKorex')}</p>
+                                    <p className="text-2xl font-black text-kx-paid">{sd.plans.freedom.years_with} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toFreedom')}</p>
-                                    <p className="text-sm font-bold text-emerald-400 mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_with)}</p>
-                                    <p className="text-[10px] text-emerald-400/60">{t('sub.totalInterest')}</p>
+                                    <p className="text-sm font-bold text-kx-paid mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_with)}</p>
+                                    <p className="text-[10px] text-kx-paid">{t('sub.totalInterest')}</p>
                                 </div>
                             </div>
-                            <div className="bg-emerald-500/10 px-5 py-2.5 text-center border-t border-emerald-500/10">
-                                <span className="text-sm font-bold text-emerald-400">
+                            <div className="bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] px-5 py-2.5 text-center border-t border-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)]">
+                                <span className="text-sm font-bold text-kx-paid">
                                     💰 {t('sub.youKeep')} ${(sd.plans.freedom.total_interest_without - sd.plans.freedom.total_interest_with).toLocaleString()} {t('sub.goneToBank')}
                                 </span>
                             </div>
@@ -968,7 +968,7 @@ export default function SettingsPage() {
 
                 {/* Plans: the two commercial plans (lib/pricing.ts); paid = KoreX Anual, annual only */}
                 {checkoutHidden ? (
-                    <p data-testid="checkout-hidden" className="rounded-md border border-gray-200 dark:border-white/10 p-4 text-center text-sm text-zinc-500">
+                    <p data-testid="checkout-hidden" className="rounded-md border border-kx-line p-4 text-center text-sm text-kx-ink3">
                         {language === 'es' ? 'Incluido en tu acceso: no hay nada que comprar.' : 'Included in your access: nothing to buy.'}
                     </p>
                 ) : (
@@ -994,15 +994,15 @@ export default function SettingsPage() {
 
                 {/* 📊 NEUROMARKETING: Social Proof Stats */}
                 {sd?.has_data && (
-                    <Card className="border-gray-200 dark:border-white/5 bg-gradient-to-r from-blue-950/20 via-purple-950/10 to-blue-950/20">
+                    <Card className="border-kx-line bg-kx-surface ">
                         <CardContent className="p-5">
                             <div className="grid grid-cols-2 gap-4 text-center">
                                 <div>
-                                    <p className="text-2xl font-black text-blue-400">{sd.social_proof.total_accounts_monitored}</p>
+                                    <p className="text-2xl font-black text-kx-ink2">{sd.social_proof.total_accounts_monitored}</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.accountsMonitored')}</p>
                                 </div>
                                 <div>
-                                    <p className="text-2xl font-black text-purple-400">${(sd.total_debt / 1000).toFixed(0)}K</p>
+                                    <p className="text-2xl font-black text-kx-ink2">${(sd.total_debt / 1000).toFixed(0)}K</p>
                                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t('sub.debtOptimized')}</p>
                                 </div>
                             </div>
@@ -1011,21 +1011,21 @@ export default function SettingsPage() {
                 )}
 
                 {/* FAQ / Trust Section */}
-                <Card className="border-gray-200 dark:border-white/5">
+                <Card className="border-kx-line ">
                     <CardContent className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                             <div className="space-y-2">
-                                <Shield className="h-6 w-6 text-emerald-500 mx-auto" />
+                                <Shield className="h-6 w-6 text-kx-paid mx-auto" />
                                 <h4 className="text-sm font-semibold">{t('sub.securePlatform')}</h4>
                                 <p className="text-xs text-muted-foreground">{t('sub.securePlatformDesc')}</p>
                             </div>
                             <div className="space-y-2">
-                                <RefreshCw className="h-6 w-6 text-blue-500 mx-auto" />
+                                <RefreshCw className="h-6 w-6 text-kx-ink2 mx-auto" />
                                 <h4 className="text-sm font-semibold">{t('sub.cancelAnytime')}</h4>
                                 <p className="text-xs text-muted-foreground">{t('sub.cancelAnytimeDesc')}</p>
                             </div>
                             <div className="space-y-2">
-                                <Sparkles className="h-6 w-6 text-amber-500 mx-auto" />
+                                <Sparkles className="h-6 w-6 text-kx-amber mx-auto" />
                                 <h4 className="text-sm font-semibold">{t('sub.allFeaturesIncluded')}</h4>
                                 <p className="text-xs text-muted-foreground">{t('sub.allFeaturesDesc')}</p>
                             </div>
@@ -1034,11 +1034,11 @@ export default function SettingsPage() {
                 </Card>
 
                 {/* Promo Code Section */}
-                <Card className="border-gray-200 dark:border-white/5">
+                <Card className="border-kx-line ">
                     <CardContent className="p-6 space-y-4">
                         <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                                <Tag className="h-4 w-4 text-amber-500" />
+                            <div className="h-9 w-9 rounded-lg bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] flex items-center justify-center">
+                                <Tag className="h-4 w-4 text-kx-amber" />
                             </div>
                             <div>
                                 <h4 className="text-sm font-semibold">{t('sub.promoCode')}</h4>
@@ -1048,18 +1048,18 @@ export default function SettingsPage() {
 
                         {/* Active Plan Badge */}
                         {grantLine && (
-                            <div data-testid="grant-state" className="flex items-center gap-2 p-3 rounded-xl border bg-emerald-500/5 border-emerald-500/20">
-                                <CheckCircle size={14} className="text-emerald-500" />
+                            <div data-testid="grant-state" className="flex items-center gap-2 p-3 rounded-xl border bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)]">
+                                <CheckCircle size={14} className="text-kx-paid" />
                                 <span className="text-sm font-medium">{grantLine}</span>
                             </div>
                         )}
                         {!grantLine && (isDevLicense || (activePlan !== 'starter')) && (
                             <div className={`flex items-center justify-between p-3 rounded-xl border ${isDevLicense
-                                ? 'bg-gradient-to-r from-amber-500/5 to-yellow-500/5 border-amber-500/20'
-                                : 'bg-emerald-500/5 border-emerald-500/20'
-                                }`}>
+ ? 'bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)]'
+ : 'bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)]'
+ }`}>
                                 <div className="flex items-center gap-2">
-                                    {isDevLicense ? <Crown size={14} className="text-amber-500" /> : <CheckCircle size={14} className="text-emerald-500" />}
+                                    {isDevLicense ? <Crown size={14} className="text-kx-amber" /> : <CheckCircle size={14} className="text-kx-paid" />}
                                     <span className="text-sm font-medium">
                                         {isDevLicense ? t('sub.devLicense') : `${t('sub.activePlan')} ${planLabel || activePlan}`}
                                     </span>
@@ -1067,7 +1067,7 @@ export default function SettingsPage() {
                                 {!isDevLicense && (
                                     <button
                                         onClick={handleCancelSubscription}
-                                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                                        className="text-xs text-kx-debt hover:text-kx-debt transition-colors"
                                     >
                                         {t('sub.remove')}
                                     </button>
@@ -1090,7 +1090,7 @@ export default function SettingsPage() {
                             <Button
                                 onClick={handleApplyPromo}
                                 disabled={!promoCode.trim() || promoStatus === 'loading'}
-                                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-6"
+                                className="bg-kx-amber text-[#111418] font-semibold px-6"
                             >
                                 {promoStatus === 'loading' ? (
                                     <RefreshCw size={14} className="animate-spin" />
@@ -1103,11 +1103,11 @@ export default function SettingsPage() {
                         {/* Status Message */}
                         {promoMessage && (
                             <p className={`text-xs font-medium px-3 py-2 rounded-lg ${promoStatus === 'success'
-                                ? 'bg-emerald-500/10 text-emerald-500'
-                                : promoStatus === 'error'
-                                    ? 'bg-red-500/10 text-red-400'
-                                    : ''
-                                }`}>
+ ? 'bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] text-kx-paid'
+ : promoStatus === 'error'
+ ? 'bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] text-kx-debt'
+ : ''
+ }`}>
                                 {promoMessage}
                             </p>
                         )}
@@ -1116,11 +1116,11 @@ export default function SettingsPage() {
 
                 {/* Manage / Cancel Subscription */}
                 {activePlan !== 'starter' && (
-                    <Card className="border-red-500/10">
+                    <Card className="border-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)]">
                         <CardContent className="p-6 space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-lg bg-red-500/10 flex items-center justify-center">
-                                    <XCircle className="h-4 w-4 text-red-400" />
+                                <div className="h-9 w-9 rounded-lg bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] flex items-center justify-center">
+                                    <XCircle className="h-4 w-4 text-kx-debt" />
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-semibold">{t('sub.manageSub')}</h4>
@@ -1133,7 +1133,7 @@ export default function SettingsPage() {
                             </div>
 
                             {!isDevLicense && (
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)]">
                                     <div>
                                         <p className="text-sm font-medium">{t('sub.cancelSub')}</p>
                                         <p className="text-xs text-muted-foreground">{t('sub.cancelDesc')}</p>
@@ -1141,7 +1141,7 @@ export default function SettingsPage() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                        className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] hover:text-kx-debt"
                                         onClick={() => {
                                             if (window.confirm(t('sub.cancelConfirm'))) {
                                                 handleCancelSubscription();
@@ -1154,9 +1154,9 @@ export default function SettingsPage() {
                             )}
 
                             {isDevLicense && (
-                                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                                    <Crown size={14} className="text-amber-500" />
-                                    <span className="text-xs text-amber-500 font-medium">
+                                <div className="flex items-center gap-2 p-3 rounded-xl bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)]">
+                                    <Crown size={14} className="text-kx-amber" />
+                                    <span className="text-xs text-kx-amber font-medium">
                                         {t('sub.devLifetime')}
                                     </span>
                                 </div>
@@ -1190,8 +1190,8 @@ export default function SettingsPage() {
         <div className="space-y-6 pb-16">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold tracking-tight text-white">{t("settings.title")}</h1>
-                <p className="text-sm text-gray-400 mt-1">{t("settings.subtitle")}</p>
+                <h1 className="text-3xl font-bold tracking-tight text-kx-ink">{t("settings.title")}</h1>
+                <p className="text-sm text-kx-ink2 mt-1">{t("settings.subtitle")}</p>
             </div>
 
             {/* Layout: Sidebar + Content */}
@@ -1204,9 +1204,9 @@ export default function SettingsPage() {
                                 key={item.id}
                                 onClick={() => setActiveSection(item.id)}
                                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${activeSection === item.id
-                                    ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                    : "text-gray-400 hover:text-white hover:bg-neutral-800/50"
-                                    }`}
+ ? "bg-kx-raised text-kx-ink2 border border-kx-line"
+ : "text-kx-ink2 hover:text-kx-ink hover:bg-kx-raised"
+ }`}
                             >
                                 {item.icon}
                                 {t(item.labelKey)}
@@ -1214,10 +1214,10 @@ export default function SettingsPage() {
                         ))}
 
                         {/* Version badge at bottom */}
-                        <div className="pt-6 mt-4 border-t border-neutral-800 dark:border-neutral-700">
+                        <div className="pt-6 mt-4 border-t border-kx-line ">
                             <div className="flex items-center justify-center gap-2 py-2">
-                                <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[10px] text-slate-600 font-mono">KoreX v{__APP_VERSION__}</span>
+                                <div className="h-2 w-2 rounded-full bg-kx-paid animate-pulse" />
+                                <span className="text-[10px] text-kx-ink2 font-mono">KoreX v{__APP_VERSION__}</span>
                             </div>
                         </div>
                     </div>
@@ -1226,12 +1226,12 @@ export default function SettingsPage() {
                 {/* Mobile Dropdown (visible < lg) */}
                 <div className="lg:hidden w-full">
                     <Select value={activeSection} onValueChange={(v) => setActiveSection(v as Section)}>
-                        <SelectTrigger className="w-full bg-slate-900 border-neutral-700 text-white dark:bg-neutral-800 dark:border-slate-600 dark:text-gray-100 mb-4">
+                        <SelectTrigger className="w-full bg-kx-surface border-kx-line text-kx-ink mb-4">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-neutral-700 dark:bg-neutral-800 dark:border-slate-600">
+                        <SelectContent className="bg-kx-surface border-kx-line ">
                             {NAV_ITEMS.map((item) => (
-                                <SelectItem key={item.id} value={item.id} className="text-white focus:bg-neutral-800">
+                                <SelectItem key={item.id} value={item.id} className="text-kx-ink focus:bg-kx-raised">
                                     {t(item.labelKey)}
                                 </SelectItem>
                             ))}
@@ -1257,12 +1257,12 @@ export default function SettingsPage() {
 function SectionHeader({ title, subtitle, icon }: { title: string; subtitle: string; icon: React.ReactNode }) {
     return (
         <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-neutral-800/50 border border-neutral-700/50 dark:bg-neutral-800/60 dark:border-slate-600/50 mt-0.5">
+            <div className="p-2.5 rounded-xl bg-kx-raised border border-kx-line mt-0.5">
                 {icon}
             </div>
             <div>
-                <h2 className="text-lg font-bold text-white dark:text-gray-100">{title}</h2>
-                <p className="text-sm text-gray-400 dark:text-gray-500">{subtitle}</p>
+                <h2 className="text-lg font-bold text-kx-ink ">{title}</h2>
+                <p className="text-sm text-kx-ink2 ">{subtitle}</p>
             </div>
         </div>
     );

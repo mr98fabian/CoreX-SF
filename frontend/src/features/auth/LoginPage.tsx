@@ -125,7 +125,7 @@ function FormInput({
 }) {
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-1.5">
+            <label htmlFor={id} className="block text-sm font-medium text-kx-ink2 mb-1.5">
                 {label}
             </label>
             <div className="relative">
@@ -136,15 +136,15 @@ function FormInput({
                     onChange={(e) => onChange(e.target.value)}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className={`w-full px-4 py-3 bg-white/8 border rounded-xl text-white placeholder:text-gray-500 outline-none transition-all
-                        ${error
-                            ? 'border-red-500/50 focus:ring-2 focus:ring-red-500/25'
-                            : 'border-white/15 focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/15'
-                        } ${children ? 'pr-12' : ''}`}
+                    className={`w-full px-4 py-3 bg-kx-raised border rounded-xl text-kx-ink placeholder:text-kx-ink3 outline-none transition-all
+ ${error
+ ? 'border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] focus:ring-2 focus:ring-kx-debt'
+ : 'border-kx-line focus:border-[color-mix(in_srgb,var(--kx-amber)_60%,transparent)] focus:ring-2 focus:ring-kx-amber'
+ } ${children ? 'pr-12' : ''}`}
                 />
                 {children}
             </div>
-            {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+            {error && <p className="mt-1 text-xs text-kx-debt">{error}</p>}
         </div>
     );
 }
@@ -293,8 +293,8 @@ export default function LoginPage() {
 
     if (loading) {
         return (
-            <div className="h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-black">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+            <div className="kx-scope h-[100dvh] flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-kx-amber border-t-transparent" />
             </div>
         );
     }
@@ -302,30 +302,30 @@ export default function LoginPage() {
     // ── Animated Success State ──
     if (view === 'success') {
         return (
-            <div className="h-[100dvh] flex items-center justify-center bg-gray-100 dark:bg-black relative overflow-hidden px-4">
+            <div className="h-[100dvh] flex items-center justify-center bg-kx-raised relative overflow-hidden px-4">
                 <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
-                    <div className="bg-white/80 dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl p-10">
+                    <div className="bg-kx-raised dark:bg-[#0f0f0f]/70 backdrop-blur-xl border border-kx-line rounded-2xl shadow-2xl p-10">
                         {/* Animated Checkmark */}
-                        <div className="mx-auto w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center mb-6 animate-success-pop">
-                            <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <div className="mx-auto w-20 h-20 rounded-full bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border-2 border-kx-paid flex items-center justify-center mb-6 animate-success-pop">
+                            <svg className="w-10 h-10 text-kx-paid" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-check-draw" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Account Created!</h2>
-                        <p className="text-gray-400 mb-2">
+                        <h2 className="text-2xl font-bold text-kx-ink mb-2">Account Created!</h2>
+                        <p className="text-kx-ink2 mb-2">
                             We've sent a verification email to:
                         </p>
-                        <p className="text-amber-400 font-mono text-sm mb-6 break-all">{email}</p>
-                        <p className="text-gray-500 text-sm mb-8">
+                        <p className="text-kx-amber font-mono text-sm mb-6 break-all">{email}</p>
+                        <p className="text-kx-ink3 text-sm mb-8">
                             Click the link in your email to activate your account, then come back to sign in.
                         </p>
                         <button
                             onClick={() => switchView('signin')}
                             className="w-full py-3 rounded-xl font-semibold text-sm
-                                bg-gradient-to-r from-amber-500 to-amber-600 text-white
-                                hover:from-amber-400 hover:to-amber-500 hover:shadow-lg hover:shadow-amber-500/25
+                                bg-kx-amber text-[#111418]
+                                  hover:shadow-lg 
                                 active:scale-[0.98] transition-all duration-300"
                         >
                             Go to Sign In
@@ -341,7 +341,7 @@ export default function LoginPage() {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-kx-ink2 hover:text-kx-ink transition-colors"
             tabIndex={-1}
         >
             {show ? (
@@ -385,23 +385,23 @@ export default function LoginPage() {
                         alt="KoreX"
                         className="h-16 sm:h-20 mx-auto mb-2 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
-                    <p className="text-gray-400 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
+                    <p className="text-kx-ink2 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
                 </div>
 
                 {/* Card */}
-                <div className="bg-white/10 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl shadow-black/40 p-5 sm:p-6">
+                <div className="bg-kx-raised backdrop-blur-2xl border border-kx-line rounded-2xl shadow-2xl p-5 sm:p-6">
                     {/* Tabs */}
                     {view !== 'forgot' && (
-                        <div className="flex bg-white/8 rounded-xl p-1 mb-6">
+                        <div className="flex bg-kx-raised rounded-xl p-1 mb-6">
                             {(['signin', 'signup'] as const).map((tab) => (
                                 <button
                                     key={tab}
                                     type="button"
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
-                                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25'
-                                        : 'text-gray-400 hover:text-white'
-                                        }`}
+ ? 'bg-kx-amber text-[#111418] shadow-md '
+ : 'text-kx-ink2 hover:text-kx-ink'
+ }`}
                                 >
                                     {tab === 'signin' ? 'Sign In' : 'Create Account'}
                                 </button>
@@ -412,24 +412,24 @@ export default function LoginPage() {
                     {/* Forgot Header */}
                     {view === 'forgot' && (
                         <div className="text-center mb-6 animate-slide-in">
-                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-500/10 mb-3">
-                                <svg className="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] mb-3">
+                                <svg className="w-6 h-6 text-kx-amber" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Reset Password</h2>
-                            <p className="text-gray-400 text-sm mt-1">Enter your email and we'll send a reset link</p>
+                            <h2 className="text-xl font-bold text-kx-ink ">Reset Password</h2>
+                            <p className="text-kx-ink2 text-sm mt-1">Enter your email and we'll send a reset link</p>
                         </div>
                     )}
 
                     {/* Messages */}
                     {successMessage && (
-                        <div className="mb-4 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm animate-slide-in">
+                        <div className="mb-4 px-4 py-3 rounded-lg bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] text-kx-paid text-sm animate-slide-in">
                             {successMessage}
                         </div>
                     )}
                     {error && (
-                        <div className="mb-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-slide-in">
+                        <div className="mb-4 px-4 py-3 rounded-lg bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] text-kx-debt text-sm animate-slide-in">
                             {error}
                         </div>
                     )}
@@ -503,15 +503,15 @@ export default function LoginPage() {
                                             {requirements.map((req) => (
                                                 <div key={req.label} className="flex items-center gap-2 text-xs">
                                                     {req.met ? (
-                                                        <svg className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                        <svg className="w-3.5 h-3.5 text-kx-paid flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                         </svg>
                                                     ) : (
-                                                        <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                        <svg className="w-3.5 h-3.5 text-kx-ink3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                             <circle cx="12" cy="12" r="9" />
                                                         </svg>
                                                     )}
-                                                    <span className={req.met ? 'text-emerald-400' : 'text-gray-500'}>
+                                                    <span className={req.met ? 'text-kx-paid' : 'text-kx-ink3'}>
                                                         {req.label}
                                                     </span>
                                                 </div>
@@ -540,7 +540,7 @@ export default function LoginPage() {
                         {view === 'signin' && (
                             <div className="text-right">
                                 <button type="button" onClick={() => switchView('forgot')}
-                                    className="text-sm text-amber-400/80 hover:text-amber-400 transition-colors">
+                                    className="text-sm text-kx-amber hover:text-kx-amber transition-colors">
                                     Forgot password?
                                 </button>
                             </div>
@@ -558,33 +558,33 @@ export default function LoginPage() {
                                             className="sr-only peer"
                                         />
                                         <div className={`w-5 h-5 rounded-md border-2 transition-all duration-200
-                                            flex items-center justify-center
-                                            ${acceptedTerms
-                                                ? 'bg-amber-500 border-amber-500'
-                                                : fieldErrors.terms
-                                                    ? 'border-red-500/50 bg-transparent'
-                                                    : 'border-white/20 bg-transparent group-hover:border-white/40'
-                                            }`}>
+ flex items-center justify-center
+ ${acceptedTerms
+ ? 'bg-kx-amber border-kx-amber'
+ : fieldErrors.terms
+ ? 'border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-transparent'
+ : 'border-kx-line bg-transparent group-hover:border-kx-line'
+ }`}>
                                             {acceptedTerms && (
-                                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                                <svg className="w-3 h-3 text-kx-ink" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             )}
                                         </div>
                                     </div>
-                                    <span className="text-sm text-gray-400 leading-tight">
+                                    <span className="text-sm text-kx-ink2 leading-tight">
                                         I agree to the{' '}
-                                        <Link to="/terms" target="_blank" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
+                                        <Link to="/terms" target="_blank" className="text-kx-amber hover:text-kx-amber underline underline-offset-2">
                                             Terms of Service
                                         </Link>
                                         {' '}and{' '}
-                                        <Link to="/privacy" target="_blank" className="text-amber-400 hover:text-amber-300 underline underline-offset-2">
+                                        <Link to="/privacy" target="_blank" className="text-kx-amber hover:text-kx-amber underline underline-offset-2">
                                             Privacy Policy
                                         </Link>
                                     </span>
                                 </label>
                                 {fieldErrors.terms && (
-                                    <p className="mt-1.5 text-xs text-red-400 ml-8">{fieldErrors.terms}</p>
+                                    <p className="mt-1.5 text-xs text-kx-debt ml-8">{fieldErrors.terms}</p>
                                 )}
                             </div>
                         )}
@@ -594,14 +594,14 @@ export default function LoginPage() {
                             type="submit"
                             disabled={isSubmitting}
                             className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300
-                                bg-gradient-to-r from-amber-500 to-amber-600 text-white
-                                hover:from-amber-400 hover:to-amber-500 hover:shadow-lg hover:shadow-amber-500/25
+                                bg-kx-amber text-[#111418]
+                                  hover:shadow-lg 
                                 active:scale-[0.98]
                                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                         >
                             {isSubmitting ? (
                                 <span className="inline-flex items-center gap-2">
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-kx-line border-t-transparent" />
                                     {view === 'forgot' ? 'Sending...' : view === 'signup' ? 'Creating...' : 'Signing in...'}
                                 </span>
                             ) : (
@@ -612,7 +612,7 @@ export default function LoginPage() {
                         {/* Back — forgot */}
                         {view === 'forgot' && (
                             <button type="button" onClick={() => switchView('signin')}
-                                className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors py-2">
+                                className="w-full text-sm text-kx-ink3 hover:text-kx-ink transition-colors py-2">
                                 ← Back to Sign In
                             </button>
                         )}
@@ -622,22 +622,22 @@ export default function LoginPage() {
                     {view !== 'forgot' && (
                         <>
                             <div className="flex items-center gap-4 my-6">
-                                <div className="flex-1 h-px bg-white/15" />
-                                <span className="text-xs text-gray-500 uppercase tracking-wider">or</span>
-                                <div className="flex-1 h-px bg-white/15" />
+                                <div className="flex-1 h-px bg-kx-raised" />
+                                <span className="text-xs text-kx-ink3 uppercase tracking-wider">or</span>
+                                <div className="flex-1 h-px bg-kx-raised" />
                             </div>
                             <button
                                 type="button"
                                 onClick={handleGoogleLogin}
                                 disabled={isGoogleLoading || isSubmitting}
                                 className="w-full flex items-center justify-center gap-3 py-3 rounded-xl
-                                    bg-white/8 border border-white/15 text-white text-sm font-medium
-                                    hover:bg-white/15 hover:border-white/25 transition-all duration-300
+                                    bg-kx-raised border border-kx-line text-kx-ink text-sm font-medium
+                                    hover:bg-kx-raised hover:border-kx-line transition-all duration-300
                                     active:scale-[0.98]
                                     disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isGoogleLoading ? (
-                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-kx-line border-t-transparent" />
                                 ) : (
                                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -655,27 +655,27 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <div className="text-center mt-6">
-                    <p className="text-xs text-gray-500 flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-kx-ink3 flex items-center justify-center gap-1.5">
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
                         </svg>
                         Secured by Supabase Auth • Google OAuth 2.0
                     </p>
-                    <p className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-kx-ink3 mt-2 flex items-center justify-center gap-1.5">
                         KoreX Financial System v1.0
-                        <span className="text-slate-700">·</span>
+                        <span className="text-kx-ink">·</span>
                         <button
                             type="button"
                             onClick={handleDemoLogin}
                             disabled={isDemoLoading || isSubmitting}
-                            className="text-gray-500 hover:text-amber-400 transition-colors duration-300
+                            className="text-kx-ink3 hover:text-kx-amber transition-colors duration-300
                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                underline underline-offset-2 decoration-slate-700 hover:decoration-amber-400/50"
+                                underline underline-offset-2 decoration-kx-ink hover:decoration-kx-amber"
                         >
                             {isDemoLoading ? (
                                 <span className="inline-flex items-center gap-1">
-                                    <span className="h-3 w-3 animate-spin rounded-full border border-amber-400 border-t-transparent" />
+                                    <span className="h-3 w-3 animate-spin rounded-full border border-kx-amber border-t-transparent" />
                                     Loading...
                                 </span>
                             ) : (
@@ -710,38 +710,38 @@ function BackgroundOrbs() {
 function Styles() {
     return (
         <style>{`
-            @keyframes float {
-                0%, 100% { transform: translateY(0) scale(1); }
-                50% { transform: translateY(-20px) scale(1.05); }
-            }
-            @keyframes slideIn {
-                from { opacity: 0; transform: translateY(12px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            @keyframes successPop {
-                0% { transform: scale(0); opacity: 0; }
-                50% { transform: scale(1.2); }
-                100% { transform: scale(1); opacity: 1; }
-            }
-            @keyframes checkDraw {
-                from { stroke-dashoffset: 24; }
-                to { stroke-dashoffset: 0; }
-            }
-            .animate-slide-in { animation: slideIn 0.3s ease-out; }
-            .animate-splash-in {
-                opacity: 0;
-                animation: splashIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            @keyframes splashIn {
-                from { opacity: 0; transform: translateY(-20px) scale(0.85); filter: blur(8px); }
-                to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-            }
-            .animate-success-pop { animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-            .animate-check-draw {
-                stroke-dasharray: 24;
-                stroke-dashoffset: 24;
-                animation: checkDraw 0.4s ease-out 0.3s forwards;
-            }
-        `}</style>
+ @keyframes float {
+ 0%, 100% { transform: translateY(0) scale(1); }
+ 50% { transform: translateY(-20px) scale(1.05); }
+ }
+ @keyframes slideIn {
+ from { opacity: 0; transform: translateY(12px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+ @keyframes successPop {
+ 0% { transform: scale(0); opacity: 0; }
+ 50% { transform: scale(1.2); }
+ 100% { transform: scale(1); opacity: 1; }
+ }
+ @keyframes checkDraw {
+ from { stroke-dashoffset: 24; }
+ to { stroke-dashoffset: 0; }
+ }
+ .animate-slide-in { animation: slideIn 0.3s ease-out; }
+ .animate-splash-in {
+ opacity: 0;
+ animation: splashIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+ }
+ @keyframes splashIn {
+ from { opacity: 0; transform: translateY(-20px) scale(0.85); filter: blur(8px); }
+ to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+ }
+ .animate-success-pop { animation: successPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+ .animate-check-draw {
+ stroke-dasharray: 24;
+ stroke-dashoffset: 24;
+ animation: checkDraw 0.4s ease-out 0.3s forwards;
+ }
+ `}</style>
     );
 }

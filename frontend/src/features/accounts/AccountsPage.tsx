@@ -263,7 +263,7 @@ export default function AccountsPage() {
 
     if (isLoading) {
         return (
-            <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-500 max-w-7xl pb-20">
+            <div className="container mx-auto px-4 py-6 sm:p-6 space-y-10 animate-in fade-in duration-500 max-w-7xl pb-20">
                 {/* Header skeleton */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-2">
@@ -280,7 +280,7 @@ export default function AccountsPage() {
                 <div className="space-y-12">
                     {/* Liabilities skeleton */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 pb-2 border-b border-kx-line ">
                             <Skeleton className="h-10 w-10 rounded-lg" />
                             <div className="space-y-1">
                                 <Skeleton className="h-6 w-28" />
@@ -309,7 +309,7 @@ export default function AccountsPage() {
 
                     {/* Assets skeleton */}
                     <div className="space-y-6">
-                        <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
+                        <div className="flex items-center gap-3 pb-2 border-b border-kx-line ">
                             <Skeleton className="h-10 w-10 rounded-lg" />
                             <div className="space-y-1">
                                 <Skeleton className="h-6 w-20" />
@@ -336,36 +336,36 @@ export default function AccountsPage() {
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-10 animate-in fade-in duration-700 max-w-7xl pb-20">
+        <div className="container mx-auto px-4 py-6 sm:p-6 space-y-10 animate-in fade-in duration-700 max-w-7xl pb-20">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white drop-shadow-lg mb-2">
+                    <h1 className="text-4xl font-bold tracking-tight text-kx-ink drop-shadow-lg mb-2">
                         {t("accounts.financialNetwork")}
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400 font-light text-lg">{t("accounts.manageConnected")}</p>
+                    <p className="text-kx-ink3 font-light text-lg">{t("accounts.manageConnected")}</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" size="icon" onClick={fetchAccounts} title={t("accounts.refreshData")} className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5">
-                        <RefreshCw size={18} className={isLoading ? "animate-spin text-gold-400" : "text-gray-500 dark:text-gray-400"} strokeWidth={1.5} />
+                    <Button variant="outline" size="icon" onClick={fetchAccounts} title={t("accounts.refreshData")} className="border-kx-line hover:bg-kx-raised ">
+                        <RefreshCw size={18} className={isLoading ? "animate-spin text-kx-amber" : "text-kx-ink3 "} strokeWidth={1.5} />
                     </Button>
 
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" className="shadow-lg shadow-rose-900/20 hover:shadow-rose-900/40">{t("accounts.resetSystem")}</Button>
+                            <Button variant="destructive" className="shadow-lg ">{t("accounts.resetSystem")}</Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-black/90 backdrop-blur-xl">
+                        <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface backdrop-blur-xl">
                             <AlertDialogHeader>
-                                <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
+                                <AlertDialogTitle className="text-kx-debt flex items-center gap-2">
                                     <AlertCircle size={20} /> {t("accounts.nuclearReset")}
                                 </AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-600 dark:text-gray-300">
+                                <AlertDialogDescription className="text-kx-ink2 ">
                                     {t("accounts.resetWarning")} {t("accounts.resetCannotUndo")}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300">{t("accounts.cancel")}</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetSystem} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
+                                <AlertDialogCancel className="border-kx-line hover:bg-kx-raised text-kx-ink ">{t("accounts.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleResetSystem} className="bg-kx-debt hover:bg-kx-debt text-[#111418] shadow-lg ">
                                     {t("accounts.yesWipe")}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
@@ -377,7 +377,7 @@ export default function AccountsPage() {
                             {isAtLimit ? (
                                 <Button
                                     variant="outline"
-                                    className="font-bold tracking-wide border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                                    className="font-bold tracking-wide border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] text-kx-amber hover:bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)]"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         setShowUpgradeModal(true);
@@ -393,10 +393,10 @@ export default function AccountsPage() {
                                 </Button>
                             )}
                         </DialogTrigger>
-                        <DialogContent className="glass-panel sm:max-w-[450px] bg-white dark:bg-black/90 backdrop-blur-2xl border-gray-200 dark:border-white/10">
+                        <DialogContent className="glass-panel sm:max-w-[450px] bg-kx-surface backdrop-blur-2xl border-kx-line ">
                             <DialogHeader>
-                                <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white">{t("accounts.addManual")}</DialogTitle>
-                                <DialogDescription className="text-gray-500 dark:text-gray-400">
+                                <DialogTitle className="text-2xl font-bold text-kx-ink ">{t("accounts.addManual")}</DialogTitle>
+                                <DialogDescription className="text-kx-ink3 ">
                                     {t("accounts.addManualDesc")}
                                 </DialogDescription>
                             </DialogHeader>
@@ -407,9 +407,9 @@ export default function AccountsPage() {
                                         name="name"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.accountName")}</FormLabel>
+                                                <FormLabel className="text-kx-paid font-semibold">{t("accounts.accountName")}</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder={t("accounts.accountNamePlaceholder")} {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white h-11" />
+                                                    <Input placeholder={t("accounts.accountNamePlaceholder")} {...field} className="bg-kx-surface border-kx-line focus:border-[color-mix(in_srgb,var(--kx-paid)_50%,transparent)] text-kx-ink h-11" />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -421,14 +421,14 @@ export default function AccountsPage() {
                                             name="type"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.type")}</FormLabel>
+                                                    <FormLabel className="text-kx-paid font-semibold">{t("accounts.type")}</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                         <FormControl>
-                                                            <SelectTrigger className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
+                                                            <SelectTrigger className="bg-kx-surface border-kx-line text-kx-ink h-11">
                                                                 <SelectValue placeholder={t("accounts.selectType")} />
                                                             </SelectTrigger>
                                                         </FormControl>
-                                                        <SelectContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
+                                                        <SelectContent className="bg-kx-surface border-kx-line text-kx-ink ">
                                                             <SelectItem value="debt">{t("accounts.debt")}</SelectItem>
                                                             <SelectItem value="checking">{t("accounts.checking")}</SelectItem>
                                                             <SelectItem value="savings">{t("accounts.savings")}</SelectItem>
@@ -443,11 +443,11 @@ export default function AccountsPage() {
                                             name="balance"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel className="text-emerald-600 dark:text-emerald-400 font-semibold">{t("accounts.currentBalance")}</FormLabel>
+                                                    <FormLabel className="text-kx-paid font-semibold">{t("accounts.currentBalance")}</FormLabel>
                                                     <FormControl>
                                                         <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">$</span>
-                                                            <Input type="number" placeholder="0.00" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-emerald-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono" />
+                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink2 ">$</span>
+                                                            <Input type="number" placeholder="0.00" {...field} className="bg-kx-surface border-kx-line focus:border-[color-mix(in_srgb,var(--kx-paid)_50%,transparent)] text-kx-ink pl-7 h-11 font-mono" />
                                                         </div>
                                                     </FormControl>
                                                     <FormMessage />
@@ -463,14 +463,14 @@ export default function AccountsPage() {
                                                 name="debt_subtype"
                                                 render={({ field }) => (
                                                     <FormItem className="animate-in fade-in slide-in-from-top-2">
-                                                        <FormLabel className="text-amber-500 dark:text-amber-400 font-semibold">{t("accounts.debtType")}</FormLabel>
+                                                        <FormLabel className="text-kx-amber font-semibold">{t("accounts.debtType")}</FormLabel>
                                                         <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
-                                                                <SelectTrigger className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11">
+                                                                <SelectTrigger className="bg-kx-surface border-kx-line text-kx-ink h-11">
                                                                     <SelectValue placeholder={t("accounts.whatKindDebt")} />
                                                                 </SelectTrigger>
                                                             </FormControl>
-                                                            <SelectContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
+                                                            <SelectContent className="bg-kx-surface border-kx-line text-kx-ink ">
                                                                 <SelectItem value="credit_card">{t("accounts.creditCard")}</SelectItem>
                                                                 <SelectItem value="auto_loan">{t("accounts.autoLoan")}</SelectItem>
                                                                 <SelectItem value="mortgage">{t("accounts.mortgage")}</SelectItem>
@@ -489,11 +489,11 @@ export default function AccountsPage() {
                                                     name="interest_rate"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-rose-500 dark:text-rose-400 font-semibold">{t("accounts.apr")}</FormLabel>
+                                                            <FormLabel className="text-kx-debt font-semibold">{t("accounts.apr")}</FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white h-11 font-mono pr-8" />
-                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">%</span>
+                                                                    <Input type="number" step="0.01" placeholder="24.99" {...field} className="bg-kx-surface border-kx-line focus:border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] text-kx-ink h-11 font-mono pr-8" />
+                                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-kx-ink2 ">%</span>
                                                                 </div>
                                                             </FormControl>
                                                             <FormMessage />
@@ -505,17 +505,17 @@ export default function AccountsPage() {
                                                     name="min_payment"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="flex items-center justify-between text-rose-500 dark:text-rose-400 font-semibold">
+                                                            <FormLabel className="flex items-center justify-between text-kx-debt font-semibold">
                                                                 {t("accounts.minPayment")}
-                                                                <span className="text-[10px] bg-gray-100 dark:bg-neutral-800/50 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/5 uppercase tracking-wider" title="Leave 0 to auto-calculate">{t("accounts.optional")}</span>
+                                                                <span className="text-[10px] bg-kx-raised text-kx-ink3 px-1.5 py-0.5 rounded border border-kx-line uppercase tracking-wider" title="Leave 0 to auto-calculate">{t("accounts.optional")}</span>
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-600">$</span>
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink3 ">$</span>
                                                                     <Input
                                                                         type="number"
                                                                         {...field}
-                                                                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-rose-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
+                                                                        className="bg-kx-surface border-kx-line focus:border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] text-kx-ink pl-7 h-11 font-mono"
                                                                         placeholder="0.00 (Auto)"
                                                                     />
                                                                 </div>
@@ -533,16 +533,16 @@ export default function AccountsPage() {
                                                     name="credit_limit"
                                                     render={({ field }) => (
                                                         <FormItem className="animate-in fade-in slide-in-from-top-2">
-                                                            <FormLabel className="text-blue-500 dark:text-blue-400 font-semibold">{t("accounts.creditLimit")}</FormLabel>
+                                                            <FormLabel className="text-kx-ink2 font-semibold">{t("accounts.creditLimit")}</FormLabel>
                                                             <FormControl>
                                                                 <div className="relative">
-                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-slate-600">$</span>
+                                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink3 ">$</span>
                                                                     <Input
                                                                         type="number"
                                                                         step="100"
                                                                         placeholder="5,000"
                                                                         {...field}
-                                                                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 focus:border-blue-500/50 text-slate-900 dark:text-white pl-7 h-11 font-mono"
+                                                                        className="bg-kx-surface border-kx-line focus:border-kx-line text-kx-ink pl-7 h-11 font-mono"
                                                                     />
                                                                 </div>
                                                             </FormControl>
@@ -558,15 +558,15 @@ export default function AccountsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowAPRSuggestions(!showAPRSuggestions)}
-                                                        className="flex items-center gap-2 text-xs text-amber-500 hover:text-amber-400 transition-colors mb-2"
+                                                        className="flex items-center gap-2 text-xs text-kx-amber hover:text-kx-amber transition-colors mb-2"
                                                     >
                                                         <Lightbulb size={14} />
                                                         {showAPRSuggestions ? t('accounts.hideAPRSuggestions') : t('accounts.showAPRSuggestions')}
                                                     </button>
                                                     {showAPRSuggestions && (
-                                                        <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-2">
-                                                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-2">
-                                                                {t('accounts.aprSuggestionHint')} — Avg: <span className="font-mono text-amber-400">{getNationalAverageAPR()}%</span>
+                                                        <div className="bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] rounded-xl p-3 space-y-2">
+                                                            <p className="text-[11px] text-kx-ink2 mb-2">
+                                                                {t('accounts.aprSuggestionHint')} — Avg: <span className="font-mono text-kx-amber">{getNationalAverageAPR()}%</span>
                                                             </p>
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {BANK_NAMES.map(bank => (
@@ -575,9 +575,9 @@ export default function AccountsPage() {
                                                                         type="button"
                                                                         onClick={() => setSelectedBank(selectedBank === bank ? null : bank)}
                                                                         className={`px-2 py-1 rounded-md text-[11px] font-medium transition-all ${selectedBank === bank
-                                                                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                                                            : 'bg-gray-100 dark:bg-[#0f0f0f]/60 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-neutral-800/80'
-                                                                            }`}
+ ? 'bg-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] text-kx-amber border border-[color-mix(in_srgb,var(--kx-amber)_40%,transparent)]'
+ : 'bg-kx-raised dark:bg-[#0f0f0f]/60 text-kx-ink3 border border-kx-line hover:bg-kx-raised '
+ }`}
                                                                     >
                                                                         {bank}
                                                                     </button>
@@ -594,18 +594,18 @@ export default function AccountsPage() {
                                                                                 setShowAPRSuggestions(false);
                                                                                 setSelectedBank(null);
                                                                             }}
-                                                                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-gray-100 dark:bg-black/60 border border-gray-200 dark:border-white/5 hover:border-amber-500/30 transition-all text-left group"
+                                                                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-kx-raised border border-kx-line hover:border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] transition-all text-left group"
                                                                         >
                                                                             <div>
-                                                                                <span className="text-xs font-medium text-slate-700 dark:text-white">{card.card}</span>
-                                                                                <span className="ml-2 text-[10px] text-gray-400 uppercase">{card.category.replace('_', ' ')}</span>
+                                                                                <span className="text-xs font-medium text-kx-ink ">{card.card}</span>
+                                                                                <span className="ml-2 text-[10px] text-kx-ink2 uppercase">{card.category.replace('_', ' ')}</span>
                                                                             </div>
                                                                             <div className="flex items-center gap-1">
-                                                                                <span className="font-mono text-xs text-amber-500 group-hover:text-amber-400">
+                                                                                <span className="font-mono text-xs text-kx-amber group-hover:text-kx-amber">
                                                                                     {card.aprLow}%–{card.aprHigh}%
                                                                                 </span>
-                                                                                <span className="text-[10px] text-gray-500">→</span>
-                                                                                <span className="font-mono text-xs font-bold text-amber-400">{card.aprTypical}%</span>
+                                                                                <span className="text-[10px] text-kx-ink3">→</span>
+                                                                                <span className="font-mono text-xs font-bold text-kx-amber">{card.aprTypical}%</span>
                                                                             </div>
                                                                         </button>
                                                                     ))}
@@ -622,9 +622,9 @@ export default function AccountsPage() {
                                                     name="closing_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-slate-600 dark:text-gray-300">{t("accounts.closingDay")}</FormLabel>
+                                                            <FormLabel className="text-kx-ink2 ">{t("accounts.closingDay")}</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-kx-surface border-kx-line text-kx-ink h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -635,9 +635,9 @@ export default function AccountsPage() {
                                                     name="due_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-slate-600 dark:text-gray-300">{t("accounts.dueDay")}</FormLabel>
+                                                            <FormLabel className="text-kx-ink2 ">{t("accounts.dueDay")}</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-kx-surface border-kx-line text-kx-ink h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -659,29 +659,29 @@ export default function AccountsPage() {
             </div>
 
             {errorMsg && (
-                <div className="glass-panel bg-rose-50 dark:bg-rose-950/10 border-rose-300 dark:border-rose-900/50 p-4 rounded-lg flex items-center gap-3 text-rose-600 dark:text-rose-400">
-                    <AlertCircle size={20} className="text-rose-500" />
+                <div className="glass-panel bg-kx-debt border-kx-debt p-4 rounded-lg flex items-center gap-3 text-kx-debt ">
+                    <AlertCircle size={20} className="text-kx-debt" />
                     <span className="font-medium">{errorMsg}</span>
                 </div>
             )}
 
             {/* Plan Status Banner */}
             <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border ${isAtLimit
-                ? 'bg-rose-500/5 border-rose-500/20'
-                : isNearLimit
-                    ? 'bg-amber-500/5 border-amber-500/20'
-                    : 'bg-gray-50 dark:bg-white/[0.02] border-gray-200 dark:border-white/5'
-                }`}>
+ ? 'bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]'
+ : isNearLimit
+ ? 'bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)]'
+ : 'bg-kx-surface /[0.02] border-kx-line '
+ }`}>
                 <div className="flex items-center gap-3">
-                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${isDevLicense ? 'bg-amber-500/10' : 'bg-blue-500/10'
-                        }`}>
-                        {isDevLicense ? <Crown size={16} className="text-amber-500" /> : <CreditCard size={16} className="text-blue-500" />}
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${isDevLicense ? 'bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)]' : 'bg-kx-raised'
+ }`}>
+                        {isDevLicense ? <Crown size={16} className="text-kx-amber" /> : <CreditCard size={16} className="text-kx-ink2" />}
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold">{planName}</span>
                             {isDevLicense && (
-                                <span className="text-[10px] font-bold bg-amber-500/10 text-amber-500 px-1.5 py-0.5 rounded-full">
+                                <span className="text-[10px] font-bold bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] text-kx-amber px-1.5 py-0.5 rounded-full">
                                     {t('accounts.lifetime')}
                                 </span>
                             )}
@@ -697,21 +697,21 @@ export default function AccountsPage() {
                 {/* Progress bar (only for limited plans) */}
                 {planLimit !== Infinity && (
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <div className="w-32 h-2 bg-gray-200 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div className="w-32 h-2 bg-kx-raised rounded-full overflow-hidden">
                             <div
                                 className={`h-full rounded-full transition-all duration-500 ${isAtLimit
-                                    ? 'bg-rose-500'
-                                    : isNearLimit
-                                        ? 'bg-amber-500'
-                                        : 'bg-emerald-500'
-                                    }`}
+ ? 'bg-kx-debt'
+ : isNearLimit
+ ? 'bg-kx-amber'
+ : 'bg-kx-paid'
+ }`}
                                 style={{ width: `${usagePercent}%` }}
                             />
                         </div>
                         {isAtLimit && (
                             <button
                                 onClick={() => setShowUpgradeModal(true)}
-                                className="text-xs font-semibold text-amber-500 hover:text-amber-400 transition-colors whitespace-nowrap flex items-center gap-1"
+                                className="text-xs font-semibold text-kx-amber hover:text-kx-amber transition-colors whitespace-nowrap flex items-center gap-1"
                             >
                                 {t('upgrade.button')} <ArrowUpRight size={12} />
                             </button>
@@ -722,14 +722,14 @@ export default function AccountsPage() {
 
             {/* Upgrade CTA when near limit */}
             {isNearLimit && !isAtLimit && planLimit !== Infinity && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] border border-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)]">
                     <div className="flex items-center gap-2">
-                        <Crown size={14} className="text-amber-500" />
-                        <span className="text-xs text-amber-500 font-medium">
+                        <Crown size={14} className="text-kx-amber" />
+                        <span className="text-xs text-kx-amber font-medium">
                             {t('upgrade.runningOutSlots')}
                         </span>
                     </div>
-                    <button onClick={() => setShowUpgradeModal(true)} className="text-xs font-bold text-amber-500 hover:text-amber-400 underline">
+                    <button onClick={() => setShowUpgradeModal(true)} className="text-xs font-bold text-kx-amber hover:text-kx-amber underline">
                         {t('upgrade.viewPlans')}
                     </button>
                 </div>
@@ -737,24 +737,24 @@ export default function AccountsPage() {
 
             {/* ─── LOCKED ACCOUNTS BANNER ─── */}
             {lockedDebts.length > 0 && (
-                <div className="relative overflow-hidden rounded-xl border border-rose-500/20 bg-gradient-to-r from-rose-950/40 via-rose-950/20 to-transparent p-3 sm:p-4 animate-in fade-in slide-in-from-top-3 duration-500">
+                <div className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] bg-[color-mix(in_srgb,var(--kx-debt)_40%,transparent)] to-transparent p-3 sm:p-4 animate-in fade-in slide-in-from-top-3 duration-500">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(244,63,94,0.08),transparent_70%)] pointer-events-none" />
                     <div className="relative flex flex-col gap-3">
                         <div className="flex items-start sm:items-center gap-3">
-                            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-rose-500/10 flex items-center justify-center animate-pulse shrink-0">
-                                <ShieldAlert size={18} className="text-rose-500 sm:hidden" />
-                                <ShieldAlert size={20} className="text-rose-500 hidden sm:block" />
+                            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] flex items-center justify-center animate-pulse shrink-0">
+                                <ShieldAlert size={18} className="text-kx-debt sm:hidden" />
+                                <ShieldAlert size={20} className="text-kx-debt hidden sm:block" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                                    <span className="text-sm font-bold text-rose-400">
+                                    <span className="text-sm font-bold text-kx-debt">
                                         {lockedDebts.length} {t('accounts.accountsLocked')}
                                     </span>
-                                    <span className="text-[10px] font-bold bg-rose-500/10 text-rose-400 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                                    <span className="text-[10px] font-bold bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] text-kx-debt px-1.5 py-0.5 rounded-full uppercase tracking-wider">
                                         {t('accounts.unmonitored')}
                                     </span>
                                 </div>
-                                <p className="text-[11px] sm:text-xs text-rose-300/70 mt-0.5 leading-snug">
+                                <p className="text-[11px] sm:text-xs text-kx-debt mt-0.5 leading-snug">
                                     {formatMoney(lockedTotalDebt)} {t('accounts.inUnmonitoredDebt')}
                                     <span className="hidden sm:inline"> • </span>
                                     <br className="sm:hidden" />
@@ -764,7 +764,7 @@ export default function AccountsPage() {
                         </div>
                         <button
                             onClick={() => setShowUpgradeModal(true)}
-                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all shadow-lg shadow-rose-900/30 hover:shadow-rose-900/50"
+                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-kx-debt hover:bg-kx-debt text-[#111418] text-xs font-bold transition-all shadow-lg "
                         >
                             <Lock size={12} />
                             {t('upgrade.unlockAll')}
@@ -778,24 +778,24 @@ export default function AccountsPage() {
             <div className="space-y-12">
                 {/* Liabilities */}
                 <div className="space-y-6 relative group">
-                    <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
+                    <div className="flex items-center gap-3 pb-2 border-b border-kx-line ">
                         <WidgetHelp helpKey="liabilitiesSection" />
-                        <div className="p-2 bg-rose-500/10 rounded-lg">
-                            <CreditCard size={24} className="text-rose-500" strokeWidth={1.5} />
+                        <div className="p-2 bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] rounded-lg">
+                            <CreditCard size={24} className="text-kx-debt" strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                            <h2 className="text-xl font-bold text-kx-ink ">
                                 {t("accounts.liabilities")}
                                 <span className="ml-2 text-sm font-normal text-muted-foreground">
                                     ({debtCount}{planLimit === Infinity ? '' : `/${planLimit}`})
                                 </span>
                             </h2>
-                            <p className="text-sm text-gray-500">{t("accounts.liabilitiesDesc")}</p>
+                            <p className="text-sm text-kx-ink3">{t("accounts.liabilitiesDesc")}</p>
                         </div>
                     </div>
 
                     {debts.length === 0 ? (
-                        <div className="p-6 sm:p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-gray-50 dark:bg-black/30">
+                        <div className="p-6 sm:p-12 border border-dashed border-kx-line rounded-xl flex flex-col items-center justify-center text-kx-ink3 bg-kx-surface ">
                             <CreditCard size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">{t("accounts.noDebts")}</p>
                             <p className="text-sm opacity-60">{t("accounts.noDebtsHint")}</p>
@@ -809,31 +809,31 @@ export default function AccountsPage() {
                                 return (
                                     <Card
                                         key={acc.id}
-                                        className={`glass-card group transition-all duration-500 bg-white dark:bg-black/50 relative ${isLocked
-                                            ? 'opacity-60 border-rose-500/15 cursor-pointer'
-                                            : 'hover:border-rose-500/30'
-                                            }`}
+                                        className={`glass-card group transition-all duration-500 bg-kx-surface relative ${isLocked
+ ? 'opacity-60 border-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] cursor-pointer'
+ : 'hover:border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)]'
+ }`}
                                         onClick={isLocked ? () => setShowUpgradeModal(true) : undefined}
                                     >
                                         {/* Hover gradient — only on active cards */}
                                         {!isLocked && (
-                                            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                            <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                         )}
 
                                         {/* 🔒 Lock Overlay */}
                                         {isLocked && (
                                             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/30 backdrop-blur-[2px] rounded-lg pointer-events-none">
-                                                <div className="h-12 w-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-2">
-                                                    <Lock size={20} className="text-rose-400" />
+                                                <div className="h-12 w-12 rounded-full bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] flex items-center justify-center mb-2">
+                                                    <Lock size={20} className="text-kx-debt" />
                                                 </div>
-                                                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">{t('accounts.lockedBadge')}</span>
+                                                <span className="text-xs font-bold text-kx-debt uppercase tracking-wider">{t('accounts.lockedBadge')}</span>
                                             </div>
                                         )}
 
                                         {/* Delete button — only active */}
                                         {!isLocked && (
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => requestDeleteAccount(acc)}>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] hover:text-kx-debt" onClick={() => requestDeleteAccount(acc)}>
                                                     <Trash2 size={14} strokeWidth={1.5} />
                                                 </Button>
                                             </div>
@@ -842,32 +842,32 @@ export default function AccountsPage() {
                                         <CardHeader className="pb-2 relative z-10">
                                             <CardTitle className="flex justify-between items-start">
                                                 <span className={`text-lg font-bold truncate pr-8 transition-colors ${isLocked
-                                                    ? 'text-gray-500 dark:text-gray-400'
-                                                    : 'text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-200'
-                                                    }`}>{acc.name}</span>
-                                                <span className="text-[10px] bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/20 px-2 py-1 rounded text-rose-500 dark:text-rose-300 font-mono tracking-wide">
+ ? 'text-kx-ink3 '
+ : 'text-kx-ink group-hover:text-kx-debt dark:group-hover:text-kx-debt'
+ }`}>{acc.name}</span>
+                                                <span className="text-[10px] bg-kx-debt border border-kx-debt px-2 py-1 rounded text-kx-debt font-mono tracking-wide">
                                                     {acc.interest_rate}% APR
                                                 </span>
                                             </CardTitle>
                                         </CardHeader>
 
                                         <CardContent className="relative z-10">
-                                            <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
+                                            <div className="text-3xl font-extrabold text-kx-ink tracking-tight mb-1">
                                                 {formatMoney(acc.balance)}
                                             </div>
-                                            <p className="text-xs text-rose-500 dark:text-rose-400/80 font-medium uppercase tracking-wider mb-2">{t("accounts.outstandingBalance")}</p>
+                                            <p className="text-xs text-kx-debt font-medium uppercase tracking-wider mb-2">{t("accounts.outstandingBalance")}</p>
 
                                             {/* 📊 Credit Utilization Bar — only for revolving debts with a credit limit */}
                                             {acc.credit_limit && acc.credit_limit > 0 && ['credit_card', 'heloc'].includes(acc.debt_subtype || '') && (() => {
                                                 const utilPct = Math.min(100, Math.round((acc.balance / acc.credit_limit) * 100));
                                                 const utilColor = utilPct <= 30
-                                                    ? 'bg-emerald-500' : utilPct <= 50
-                                                        ? 'bg-amber-500' : utilPct <= 70
-                                                            ? 'bg-orange-500' : 'bg-rose-500';
+                                                    ? 'bg-kx-paid' : utilPct <= 50
+                                                        ? 'bg-kx-amber' : utilPct <= 70
+                                                            ? 'bg-kx-amber' : 'bg-kx-debt';
                                                 const utilTextColor = utilPct <= 30
-                                                    ? 'text-emerald-500' : utilPct <= 50
-                                                        ? 'text-amber-500' : utilPct <= 70
-                                                            ? 'text-orange-500' : 'text-rose-500';
+                                                    ? 'text-kx-paid' : utilPct <= 50
+                                                        ? 'text-kx-amber' : utilPct <= 70
+                                                            ? 'text-kx-amber' : 'text-kx-debt';
                                                 const utilLabel = utilPct <= 30
                                                     ? (language === 'es' ? 'Excelente' : 'Excellent')
                                                     : utilPct <= 50
@@ -879,20 +879,20 @@ export default function AccountsPage() {
                                                 return (
                                                     <div className="mb-3 animate-in fade-in slide-in-from-top-1 duration-300">
                                                         <div className="flex items-center justify-between text-[10px] mb-1">
-                                                            <span className="text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
+                                                            <span className="text-kx-ink3 uppercase font-bold tracking-wider">
                                                                 {language === 'es' ? 'Utilización' : 'Utilization'}
                                                             </span>
                                                             <span className={`font-bold ${utilTextColor}`}>
                                                                 {utilPct}% · {utilLabel}
                                                             </span>
                                                         </div>
-                                                        <div className="h-2 w-full bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                                                        <div className="h-2 w-full bg-kx-raised rounded-full overflow-hidden">
                                                             <div
                                                                 className={`h-full rounded-full transition-all duration-700 ease-out ${utilColor}`}
                                                                 style={{ width: `${utilPct}%` }}
                                                             />
                                                         </div>
-                                                        <div className="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-0.5 font-mono">
+                                                        <div className="flex justify-between text-[9px] text-kx-ink2 mt-0.5 font-mono">
                                                             <span>{formatMoney(acc.balance)}</span>
                                                             <span>{language === 'es' ? 'Límite' : 'Limit'}: {formatMoney(acc.credit_limit)}</span>
                                                         </div>
@@ -912,13 +912,13 @@ export default function AccountsPage() {
                                                 const isGracePeriod = daysLeft > 0 && daysLeft <= 25;
 
                                                 return isGracePeriod ? (
-                                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10 mb-3">
+                                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-kx-raised border border-kx-line mb-3">
                                                         <span className="text-base">⚡</span>
                                                         <div className="flex-1 min-w-0">
-                                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide">
+                                                            <span className="text-[10px] font-bold text-kx-ink2 uppercase tracking-wide">
                                                                 {language === 'es' ? 'Período de Gracia' : 'Grace Period'}
                                                             </span>
-                                                            <p className="text-[10px] text-blue-300/70 leading-tight">
+                                                            <p className="text-[10px] text-kx-ink2 leading-tight">
                                                                 {language === 'es'
                                                                     ? `${daysLeft} días antes del cierre. Paga el balance para evitar interés.`
                                                                     : `${daysLeft} days until due. Pay balance to avoid interest charges.`
@@ -931,50 +931,50 @@ export default function AccountsPage() {
 
                                             {/* 💧 Bleeding Money Badge — only on locked cards */}
                                             {isLocked && (
-                                                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/15 mb-4 pointer-events-none">
-                                                    <Flame size={14} className="text-rose-500 animate-pulse" />
-                                                    <span className="text-[11px] font-semibold text-rose-400">
+                                                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] mb-4 pointer-events-none">
+                                                    <Flame size={14} className="text-kx-debt animate-pulse" />
+                                                    <span className="text-[11px] font-semibold text-kx-debt">
                                                         {t('accounts.notMonitored')}{formatMoney(dailyLoss)}{t('accounts.perDayInterest')}
                                                     </span>
                                                 </div>
                                             )}
 
-                                            <div className="grid grid-cols-2 gap-4 text-xs bg-gray-50 dark:bg-black/30 p-3 rounded-lg border border-gray-200 dark:border-white/5 mb-6">
+                                            <div className="grid grid-cols-2 gap-4 text-xs bg-kx-surface p-3 rounded-lg border border-kx-line mb-6">
                                                 <div>
-                                                    <span className="block text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
-                                                    <span className="text-slate-700 dark:text-gray-200 font-mono text-sm">{formatMoney(acc.min_payment)}</span>
+                                                    <span className="block text-kx-ink3 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.minPayment")}</span>
+                                                    <span className="text-kx-ink font-mono text-sm">{formatMoney(acc.min_payment)}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="block text-gray-500 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
-                                                    <span className="text-slate-700 dark:text-gray-200 font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
+                                                    <span className="block text-kx-ink3 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
+                                                    <span className="text-kx-ink font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
                                                 </div>
                                             </div>
 
                                             {/* Action buttons — disabled when locked */}
                                             {isLocked ? (
-                                                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-gray-100 dark:bg-neutral-800/30 text-gray-400 dark:text-gray-500 text-xs font-medium pointer-events-none">
+                                                <div className="flex items-center justify-center gap-2 p-2 rounded-lg bg-kx-raised text-kx-ink2 text-xs font-medium pointer-events-none">
                                                     <Lock size={12} />
                                                     {t('upgrade.toManage')}
                                                 </div>
                                             ) : (
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-wrap gap-2">
                                                     <TransactionDrawer account={acc} onUpdate={fetchAccounts} />
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => setUpdatingAccount(acc)}
-                                                        className="h-9 px-3 border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
+                                                        className="h-9 px-3 border-kx-line hover:bg-kx-raised text-kx-ink3 hover:text-kx-ink "
                                                         title={t("accounts.manualAdjustment")}
                                                     >
                                                         <RefreshCw size={14} />
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="outline" size="sm" className="flex-1 h-9 border-rose-300 dark:border-rose-900/30 text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-300 hover:border-rose-400 dark:hover:border-rose-500/50 transition-all font-medium">
+                                                            <Button variant="outline" size="sm" className="flex-1 min-w-[96px] h-9 border-kx-debt text-kx-debt hover:bg-kx-debt hover:text-[#111418] hover:border-kx-debt transition-all font-medium">
                                                                 {t("accounts.payOff")}
                                                             </Button>
                                                         </AlertDialogTrigger>
-                                                        <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
+                                                        <AlertDialogContent className="glass-panel bg-kx-surface border-kx-line ">
                                                             <AccountActionDialog account={acc} type="payment" onClose={() => { }} onUpdate={fetchAccounts} />
                                                         </AlertDialogContent>
                                                     </AlertDialog>
@@ -990,42 +990,42 @@ export default function AccountsPage() {
 
                 {/* Assets */}
                 <div className="space-y-6 relative group">
-                    <div className="flex items-center gap-3 pb-2 border-b border-gray-200 dark:border-white/5">
+                    <div className="flex items-center gap-3 pb-2 border-b border-kx-line ">
                         <WidgetHelp helpKey="assetsSection" />
-                        <div className="p-2 bg-emerald-500/10 rounded-lg">
-                            <Landmark size={24} className="text-emerald-500" strokeWidth={1.5} />
+                        <div className="p-2 bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] rounded-lg">
+                            <Landmark size={24} className="text-kx-paid" strokeWidth={1.5} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("accounts.assets")}</h2>
-                            <p className="text-sm text-gray-500">{t("accounts.assetsDesc")}</p>
+                            <h2 className="text-xl font-bold text-kx-ink ">{t("accounts.assets")}</h2>
+                            <p className="text-sm text-kx-ink3">{t("accounts.assetsDesc")}</p>
                         </div>
                     </div>
 
                     {assets.length === 0 ? (
-                        <div className="p-12 border border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-gray-50 dark:bg-black/30">
+                        <div className="p-12 border border-dashed border-kx-line rounded-xl flex flex-col items-center justify-center text-kx-ink3 bg-kx-surface ">
                             <Landmark size={48} className="mb-4 opacity-20" />
                             <p className="text-lg font-medium">{t("accounts.noAssets")}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {assets.map(acc => (
-                                <Card key={acc.id} className="glass-card group hover:border-emerald-500/30 transition-all duration-500 bg-white dark:bg-black/50">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                                <Card key={acc.id} className="glass-card group hover:border-[color-mix(in_srgb,var(--kx-paid)_30%,transparent)] transition-all duration-500 bg-kx-surface ">
+                                    <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-rose-500 hover:bg-rose-500/10" onClick={() => requestDeleteAccount(acc)}>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-kx-ink2 hover:text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)]" onClick={() => requestDeleteAccount(acc)}>
                                             <Trash2 size={14} strokeWidth={1.5} />
                                         </Button>
                                     </div>
 
                                     <CardHeader className="pb-2 relative z-10">
-                                        <CardTitle className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{acc.name}</CardTitle>
+                                        <CardTitle className="text-lg font-bold text-kx-paid ">{acc.name}</CardTitle>
                                     </CardHeader>
 
                                     <CardContent className="relative z-10">
-                                        <div className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-1">
+                                        <div className="text-3xl font-extrabold text-kx-ink tracking-tight mb-1">
                                             {formatMoney(acc.balance)}
                                         </div>
-                                        <p className="text-xs text-emerald-500 dark:text-emerald-400/80 font-medium uppercase tracking-wider mb-6">{t("accounts.availableCash")}</p>
+                                        <p className="text-xs text-kx-paid font-medium uppercase tracking-wider mb-6">{t("accounts.availableCash")}</p>
 
                                         <div className="flex gap-2 mt-auto">
                                             <TransactionDrawer account={acc} onUpdate={fetchAccounts} />
@@ -1033,7 +1033,7 @@ export default function AccountsPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => setUpdatingAccount(acc)}
-                                                className="h-9 w-9 p-0 border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
+                                                className="h-9 w-9 p-0 border-kx-line hover:bg-kx-raised text-kx-ink3 hover:text-kx-ink "
                                                 title={t("accounts.manualAdjustment")}
                                             >
                                                 <RefreshCw size={14} />
@@ -1042,22 +1042,22 @@ export default function AccountsPage() {
                                             <div className="flex gap-1 flex-1">
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button size="sm" className="flex-1 h-9 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 text-xs font-semibold">
+                                                        <Button size="sm" className="flex-1 h-9 bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] text-kx-paid hover:bg-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--kx-paid)_40%,transparent)] text-xs font-semibold">
                                                             {t("accounts.deposit")}
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
+                                                    <AlertDialogContent className="glass-panel bg-kx-surface border-kx-line ">
                                                         <AccountActionDialog account={acc} type="deposit" onClose={() => { }} onUpdate={fetchAccounts} />
                                                     </AlertDialogContent>
                                                 </AlertDialog>
 
                                                 <AlertDialog>
                                                     <AlertDialogTrigger asChild>
-                                                        <Button size="sm" className="flex-1 h-9 bg-rose-500/10 text-rose-500 dark:text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 text-xs font-semibold">
+                                                        <Button size="sm" className="flex-1 h-9 bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] hover:border-[color-mix(in_srgb,var(--kx-debt)_40%,transparent)] text-xs font-semibold">
                                                             {t("accounts.spend")}
                                                         </Button>
                                                     </AlertDialogTrigger>
-                                                    <AlertDialogContent className="glass-panel bg-white dark:bg-black/90 border-gray-200 dark:border-white/10">
+                                                    <AlertDialogContent className="glass-panel bg-kx-surface border-kx-line ">
                                                         <AccountActionDialog account={acc} type="spend" onClose={() => { }} onUpdate={fetchAccounts} />
                                                     </AlertDialogContent>
                                                 </AlertDialog>
@@ -1071,7 +1071,7 @@ export default function AccountsPage() {
                 </div>
 
                 {/* Cashflow Section */}
-                <div className="pt-12 border-t border-gray-200 dark:border-white/5 relative group">
+                <div className="pt-12 border-t border-kx-line relative group">
                     <WidgetHelp helpKey="cashflowOverview" />
                     <CashflowManager refreshKey={cashflowRefreshKey} lockedIds={lockedIds} onUpgrade={() => setShowUpgradeModal(true)} />
                 </div>
@@ -1090,12 +1090,12 @@ export default function AccountsPage() {
 
             {/* 🗑️ Delete Account Confirmation Dialog */}
             <AlertDialog open={!!deleteAccountTarget} onOpenChange={(open) => { if (!open) setDeleteAccountTarget(null); }}>
-                <AlertDialogContent className="glass-panel border-rose-900/50 bg-white dark:bg-black/90 backdrop-blur-xl">
+                <AlertDialogContent className="glass-panel border-[color-mix(in_srgb,var(--kx-debt)_50%,transparent)] bg-kx-surface backdrop-blur-xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-rose-500 flex items-center gap-2">
+                        <AlertDialogTitle className="text-kx-debt flex items-center gap-2">
                             <Trash2 size={18} /> {t("accounts.deleteConfirm")}
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-slate-600 dark:text-gray-300">
+                        <AlertDialogDescription className="text-kx-ink2 ">
                             {deleteAccountTarget?.name
                                 ? (language === 'es'
                                     ? `¿Estás seguro de que deseas eliminar "${deleteAccountTarget.name}"? Esta acción no se puede deshacer.`
@@ -1104,10 +1104,10 @@ export default function AccountsPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="border-slate-300 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 text-slate-700 dark:text-gray-300">
+                        <AlertDialogCancel className="border-kx-line hover:bg-kx-raised text-kx-ink ">
                             {t("accounts.cancel")}
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={executeDeleteAccount} className="bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-900/50">
+                        <AlertDialogAction onClick={executeDeleteAccount} className="bg-kx-debt hover:bg-kx-debt text-[#111418] shadow-lg ">
                             {t("accounts.delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -1167,13 +1167,13 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
             <AlertDialogHeader>
-                <AlertDialogTitle className="text-slate-900 dark:text-white capitalize text-2xl font-bold flex items-center gap-2">
-                    {type === 'payment' && <CreditCard className="text-rose-500" />}
-                    {type === 'deposit' && <Landmark className="text-emerald-500" />}
-                    {type === 'spend' && <Trash2 className="text-rose-500" />}
+                <AlertDialogTitle className="text-kx-ink capitalize text-2xl font-bold flex items-center gap-2">
+                    {type === 'payment' && <CreditCard className="text-kx-debt" />}
+                    {type === 'deposit' && <Landmark className="text-kx-paid" />}
+                    {type === 'spend' && <Trash2 className="text-kx-debt" />}
                     {type} {t("accounts.transaction")}
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
+                <AlertDialogDescription className="text-kx-ink3 ">
                     {type === 'payment' ? `${t("accounts.payOffDesc")} ${account.name}` :
                         type === 'deposit' ? `${t("accounts.addFundsDesc")} ${account.name}` :
                             `${t("accounts.recordExpenseDesc")} ${account.name}`}
@@ -1181,31 +1181,31 @@ function AccountActionDialog({ account, type, onClose, onUpdate }: { account: Ac
             </AlertDialogHeader>
             <div className="space-y-4">
                 <div className="space-y-2">
-                    <label className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">{t("accounts.amount")}</label>
+                    <label className="text-xs text-kx-paid font-semibold uppercase tracking-wider">{t("accounts.amount")}</label>
                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-lg">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink2 text-lg">$</span>
                         <Input
                             type="number" step="0.01"
                             value={amount}
                             onChange={e => setAmount(e.target.value)}
-                            className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-xl font-mono h-12 pl-8 text-slate-900 dark:text-white focus:border-slate-400 dark:focus:border-white/20"
+                            className="bg-kx-surface border-kx-line text-xl font-mono h-12 pl-8 text-kx-ink focus:border-kx-line "
                             placeholder="0.00"
                             autoFocus
                         />
                     </div>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">{t("accounts.descriptionOptional")}</label>
+                    <label className="text-xs text-kx-ink3 font-semibold uppercase tracking-wider">{t("accounts.descriptionOptional")}</label>
                     <Input
                         placeholder={type === 'deposit' ? "Paycheck, Gift, etc." : "Groceries, Coffee, etc."}
                         value={desc}
                         onChange={e => setDesc(e.target.value)}
-                        className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 text-slate-900 dark:text-white h-11"
+                        className="bg-kx-surface border-kx-line text-kx-ink h-11"
                     />
                 </div>
             </div>
             <AlertDialogFooter className="pt-2">
-                <AlertDialogAction type="submit" className={`w-full h-12 text-lg shadow-lg ${type === 'deposit' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20' : 'bg-rose-600 hover:bg-rose-500 shadow-rose-900/20'}`} disabled={loading}>
+                <AlertDialogAction type="submit" className={`w-full h-12 text-lg shadow-lg ${type === 'deposit' ? 'bg-kx-paid hover:bg-kx-paid ' : 'bg-kx-debt hover:bg-kx-debt '}`} disabled={loading}>
                     {loading ? <Loader2 className="animate-spin" /> : t("accounts.confirmTransaction")}
                 </AlertDialogAction>
             </AlertDialogFooter>
@@ -1274,37 +1274,37 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="glass-panel sm:max-w-[420px] bg-white dark:bg-black/90 backdrop-blur-2xl border-gray-200 dark:border-white/10 text-slate-900 dark:text-white">
+            <DialogContent className="glass-panel sm:max-w-[420px] bg-kx-surface backdrop-blur-2xl border-kx-line text-kx-ink ">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-white text-xl font-bold">
-                        <RefreshCw size={20} className="text-blue-500" strokeWidth={2} />
+                    <DialogTitle className="flex items-center gap-2 text-kx-ink text-xl font-bold">
+                        <RefreshCw size={20} className="text-kx-ink2" strokeWidth={2} />
                         {t("accounts.manualAdjustment")}
                     </DialogTitle>
-                    <DialogDescription className="text-gray-500 dark:text-gray-400">
-                        {t("accounts.adjustBalanceFor")} <span className="text-slate-900 dark:text-white font-medium">{account.name}</span>.
+                    <DialogDescription className="text-kx-ink3 ">
+                        {t("accounts.adjustBalanceFor")} <span className="text-kx-ink font-medium">{account.name}</span>.
                         <br />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">{t("accounts.createsRecord")}</span>
+                        <span className="text-xs text-kx-ink2 ">{t("accounts.createsRecord")}</span>
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
                     {/* Operation Selector */}
-                    <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-[#0f0f0f]/50 p-1 rounded-lg border border-gray-200 dark:border-white/5">
+                    <div className="grid grid-cols-2 gap-2 bg-kx-raised dark:bg-[#0f0f0f]/50 p-1 rounded-lg border border-kx-line ">
                         <button
                             onClick={() => setOperation('add')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'add'
-                                ? (isDebt ? "bg-rose-500 text-white shadow-lg shadow-rose-900/20" : "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20")
-                                : "text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"
-                                }`}
+ ? (isDebt ? "bg-kx-debt text-[#111418] shadow-lg " : "bg-kx-paid text-[#111418] shadow-lg ")
+ : "text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
+ }`}
                         >
                             {isDebt ? t("accounts.addCharge") : t("accounts.addDeposit")}
                         </button>
                         <button
                             onClick={() => setOperation('subtract')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'subtract'
-                                ? (isDebt ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/20" : "bg-rose-500 text-white shadow-lg shadow-rose-900/20")
-                                : "text-gray-500 hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/5"
-                                }`}
+ ? (isDebt ? "bg-kx-paid text-[#111418] shadow-lg " : "bg-kx-debt text-[#111418] shadow-lg ")
+ : "text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
+ }`}
                         >
                             {isDebt ? t("accounts.subtractPayment") : t("accounts.subtractExpense")}
                         </button>
@@ -1312,50 +1312,50 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
 
                     {/* Amount Input */}
                     <div className="space-y-2">
-                        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-kx-ink3">
                             {t("accounts.adjustmentAmount")}
                         </label>
                         <div className="relative">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl font-light">$</span>
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-kx-ink2 text-xl font-light">$</span>
                             <Input
                                 type="number"
                                 step="0.01"
                                 value={amount}
                                 onChange={e => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="bg-gray-50 dark:bg-black/50 border-gray-200 dark:border-white/10 pl-8 text-3xl font-mono h-16 font-bold text-slate-900 dark:text-white focus:border-blue-500/50"
+                                className="bg-kx-surface border-kx-line pl-8 text-3xl font-mono h-16 font-bold text-kx-ink focus:border-kx-line"
                                 autoFocus
                             />
                         </div>
                     </div>
 
                     {/* Preview Section */}
-                    <div className="bg-gray-50 dark:bg-[#0f0f0f]/30 rounded-lg p-4 border border-gray-200 dark:border-white/5 space-y-3">
+                    <div className="bg-kx-surface dark:bg-[#0f0f0f]/30 rounded-lg p-4 border border-kx-line space-y-3">
                         <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-500">{t("accounts.currentBalanceLabel")}</span>
-                            <span className="font-mono text-slate-600 dark:text-gray-300">{formatMoney(currentBalance)}</span>
+                            <span className="text-kx-ink3">{t("accounts.currentBalanceLabel")}</span>
+                            <span className="font-mono text-kx-ink2 ">{formatMoney(currentBalance)}</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm pb-3 border-b border-gray-200 dark:border-white/5">
-                            <span className={operation === 'add' ? "text-emerald-500" : "text-rose-500"}>
+                        <div className="flex justify-between items-center text-sm pb-3 border-b border-kx-line ">
+                            <span className={operation === 'add' ? "text-kx-paid" : "text-kx-debt"}>
                                 {operation === 'add' ? '+' : '-'} {t("accounts.adjustment")}
                             </span>
-                            <span className={`font-mono font-medium ${operation === 'add' ? "text-emerald-500" : "text-rose-500"}`}>
+                            <span className={`font-mono font-medium ${operation === 'add' ? "text-kx-paid" : "text-kx-debt"}`}>
                                 {operation === 'add' ? '+' : '-'}{formatMoney(numAmount)}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-lg font-bold">
-                            <span className="text-slate-900 dark:text-white">{t("accounts.newBalance")}</span>
-                            <span className="font-mono text-blue-500 dark:text-blue-400">{formatMoney(newBalance)}</span>
+                            <span className="text-kx-ink ">{t("accounts.newBalance")}</span>
+                            <span className="font-mono text-kx-ink2 ">{formatMoney(newBalance)}</span>
                         </div>
                     </div>
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={onClose} className="hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400">{t("accounts.cancel")}</Button>
+                    <Button variant="ghost" onClick={onClose} className="hover:bg-kx-raised text-kx-ink3 ">{t("accounts.cancel")}</Button>
                     <Button
                         onClick={handleTransaction}
                         disabled={loading || !amount || parseFloat(amount) <= 0}
-                        className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20"
+                        className="bg-kx-raised hover:bg-kx-raised text-kx-ink shadow-lg "
                     >
                         {loading ? <Loader2 className="animate-spin mr-2" /> : t("accounts.applyTransaction")}
                     </Button>
@@ -1425,31 +1425,31 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
     return (
         <Sheet onOpenChange={(open: boolean) => open && fetchTransactions()}>
             <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="w-full text-xs h-9 border-slate-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800/50 hover:bg-gray-200 dark:hover:bg-neutral-800 text-slate-600 dark:text-zinc-300">{t("accounts.history")}</Button>
+                <Button variant="outline" size="sm" className="w-full text-xs h-9 border-kx-line bg-kx-raised hover:bg-kx-raised text-kx-ink2 ">{t("accounts.history")}</Button>
             </SheetTrigger>
-            <SheetContent className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white w-full sm:w-[540px]">
+            <SheetContent className="bg-kx-surface border-kx-line text-kx-ink w-full sm:w-[540px]">
                 <SheetHeader>
-                    <SheetTitle className="text-slate-900 dark:text-white">{t("accounts.transactions")} {account.name}</SheetTitle>
-                    <SheetDescription className="text-gray-500 dark:text-gray-400">
+                    <SheetTitle className="text-kx-ink ">{t("accounts.transactions")} {account.name}</SheetTitle>
+                    <SheetDescription className="text-kx-ink3 ">
                         {t("accounts.historyContext")} {account.type.toUpperCase()}.
                     </SheetDescription>
                 </SheetHeader>
 
                 <div className="py-6 space-y-6">
                     {/* Add Transaction Form */}
-                    <div className="bg-gray-50 dark:bg-[#0f0f0f]/50 p-4 rounded-lg border border-gray-200 dark:border-neutral-800">
-                        <h3 className="text-sm font-medium text-slate-600 dark:text-zinc-300 mb-3">{t("accounts.newTransaction")}</h3>
+                    <div className="bg-kx-surface dark:bg-[#0f0f0f]/50 p-4 rounded-lg border border-kx-line ">
+                        <h3 className="text-sm font-medium text-kx-ink2 mb-3">{t("accounts.newTransaction")}</h3>
                         <Form {...txForm}>
                             <form onSubmit={txForm.handleSubmit(onAddTransaction)} className="space-y-3">
                                 <div className="grid grid-cols-2 gap-2">
                                     <FormField control={txForm.control} name="description" render={({ field }) => (
                                         <FormItem>
-                                            <FormControl><Input placeholder={t("accounts.description")} {...field} className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 h-8 text-xs" /></FormControl>
+                                            <FormControl><Input placeholder={t("accounts.description")} {...field} className="bg-kx-surface border-kx-line h-8 text-xs" /></FormControl>
                                         </FormItem>
                                     )} />
                                     <FormField control={txForm.control} name="amount" render={({ field }) => (
                                         <FormItem>
-                                            <FormControl><Input type="number" placeholder={t("accounts.amount")} {...field} className="bg-white dark:bg-black border-gray-200 dark:border-neutral-800 h-8 text-xs" /></FormControl>
+                                            <FormControl><Input type="number" placeholder={t("accounts.amount")} {...field} className="bg-kx-surface border-kx-line h-8 text-xs" /></FormControl>
                                         </FormItem>
                                     )} />
                                 </div>
@@ -1458,11 +1458,11 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
                                         <FormItem>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
-                                                    <SelectTrigger className="bg-gray-100 dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-800 h-8 text-xs">
+                                                    <SelectTrigger className="bg-kx-raised dark:bg-[#0f0f0f] border-kx-line h-8 text-xs">
                                                         <SelectValue placeholder={t("accounts.type")} />
                                                     </SelectTrigger>
                                                 </FormControl>
-                                                <SelectContent className="bg-white dark:bg-[#0f0f0f] border-gray-200 dark:border-neutral-800 text-slate-900 dark:text-white">
+                                                <SelectContent className="bg-kx-surface dark:bg-[#0f0f0f] border-kx-line text-kx-ink ">
                                                     <SelectItem value="expense">{t("accounts.expense")}</SelectItem>
                                                     <SelectItem value="income">{t("accounts.income")}</SelectItem>
                                                     <SelectItem value="payment">{t("accounts.payment")}</SelectItem>
@@ -1470,7 +1470,7 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
                                             </Select>
                                         </FormItem>
                                     )} />
-                                    <Button type="submit" size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">{t("accounts.add")}</Button>
+                                    <Button type="submit" size="sm" className="h-8 bg-kx-paid hover:bg-kx-paid">{t("accounts.add")}</Button>
                                 </div>
                             </form>
                         </Form>
@@ -1478,24 +1478,24 @@ function TransactionDrawer({ account, onUpdate }: { account: Account, onUpdate: 
 
                     {/* Transaction List */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-slate-600 dark:text-zinc-300">{t("accounts.history")}</h3>
-                        <ScrollArea className="h-[400px] rounded-md border border-gray-200 dark:border-neutral-800 p-4 bg-gray-50 dark:bg-[#0f0f0f]/20">
+                        <h3 className="text-sm font-medium text-kx-ink2 ">{t("accounts.history")}</h3>
+                        <ScrollArea className="h-[400px] rounded-md border border-kx-line p-4 bg-kx-surface dark:bg-[#0f0f0f]/20">
                             {loading ? (
-                                <div className="flex justify-center items-center h-full text-gray-500">
+                                <div className="flex justify-center items-center h-full text-kx-ink3">
                                     <Loader2 className="animate-spin mr-2" /> {t("accounts.loading")}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     {transactions.length === 0 ? (
-                                        <p className="text-gray-500 text-sm text-center italic py-10">{t("accounts.noTransactions")}</p>
+                                        <p className="text-kx-ink3 text-sm text-center italic py-10">{t("accounts.noTransactions")}</p>
                                     ) : (
                                         transactions.map(tx => (
-                                            <div key={tx.id} className="flex justify-between items-center border-b border-gray-200 dark:border-neutral-800 pb-2 last:border-0 last:pb-0">
+                                            <div key={tx.id} className="flex justify-between items-center border-b border-kx-line pb-2 last:border-0 last:pb-0">
                                                 <div>
-                                                    <div className="font-medium text-slate-700 dark:text-zinc-200">{tx.description}</div>
-                                                    <div className="text-xs text-gray-500">{tx.date} • {tx.category}</div>
+                                                    <div className="font-medium text-kx-ink ">{tx.description}</div>
+                                                    <div className="text-xs text-kx-ink3">{tx.date} • {tx.category}</div>
                                                 </div>
-                                                <div className={`font-mono ${tx.amount < 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                                <div className={`font-mono ${tx.amount < 0 ? 'text-kx-debt ' : 'text-kx-paid '}`}>
                                                     {formatMoney(tx.amount)}
                                                 </div>
                                             </div>

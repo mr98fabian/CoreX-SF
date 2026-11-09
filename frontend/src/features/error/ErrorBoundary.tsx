@@ -45,10 +45,10 @@ export default class ErrorBoundary extends Component<Props, State> {
         if (!this.state.hasError) return this.props.children;
 
         return (
-            <div className="min-h-screen bg-gray-100 dark:bg-black flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
+            <div className="min-h-screen bg-kx-raised flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
                 {/* Ambient glow */}
                 <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-red-500/5 rounded-full blur-[120px]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)] rounded-full blur-[120px]" />
                 </div>
 
                 {/* Raccoon mascot */}
@@ -63,7 +63,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 {/* Error icon */}
                 <div className="relative z-10 mb-4">
                     <svg
-                        className="w-16 h-16 text-red-400/60 mx-auto"
+                        className="w-16 h-16 text-kx-debt mx-auto"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -78,25 +78,25 @@ export default class ErrorBoundary extends Component<Props, State> {
                 </div>
 
                 {/* Title */}
-                <h1 className="relative z-10 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                <h1 className="relative z-10 text-2xl sm:text-3xl font-bold text-kx-ink mb-3">
                     Algo salió mal
                 </h1>
 
                 {/* Message */}
-                <p className="relative z-10 text-gray-400 text-base max-w-md mb-2">
+                <p className="relative z-10 text-kx-ink2 text-base max-w-md mb-2">
                     La aplicación encontró un error inesperado. Tu información está segura.
                 </p>
-                <p className="relative z-10 text-gray-500 text-sm max-w-md">
+                <p className="relative z-10 text-kx-ink3 text-sm max-w-md">
                     Intenta recargar la página. Si el problema persiste, contacta soporte.
                 </p>
 
                 {/* Error details (dev-friendly, collapsed) */}
                 {this.state.error && (
                     <details className="relative z-10 mt-6 max-w-lg w-full text-left">
-                        <summary className="text-xs text-slate-600 cursor-pointer hover:text-gray-400 transition-colors">
+                        <summary className="text-xs text-kx-ink2 cursor-pointer hover:text-kx-ink2 transition-colors">
                             Detalles técnicos
                         </summary>
-                        <pre className="mt-2 p-3 bg-gray-100 dark:bg-[#0f0f0f]/80 border border-slate-300 dark:border-neutral-800 rounded-lg text-xs text-red-400/80 overflow-x-auto whitespace-pre-wrap break-words">
+                        <pre className="mt-2 p-3 bg-kx-raised dark:bg-[#0f0f0f]/80 border border-kx-line rounded-lg text-xs text-kx-debt overflow-x-auto whitespace-pre-wrap break-words">
                             {this.state.error.message}
                         </pre>
                     </details>
@@ -106,13 +106,13 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <div className="relative z-10 flex gap-4 mt-8">
                     <button
                         onClick={this.handleReload}
-                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-black font-semibold rounded-lg hover:from-amber-400 hover:to-orange-400 transition-all duration-300 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40"
+                        className="px-6 py-3 bg-kx-amber text-[#111418] font-semibold rounded-lg transition-all duration-300 shadow-lg "
                     >
                         Ir al Inicio
                     </button>
                     <button
                         onClick={this.handleRetry}
-                        className="px-6 py-3 bg-gray-200 dark:bg-neutral-800/60 text-slate-600 dark:text-gray-300 font-medium rounded-lg border border-slate-300 dark:border-neutral-700/50 hover:bg-slate-300 dark:hover:bg-slate-700/60 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                        className="px-6 py-3 bg-kx-raised text-kx-ink2 font-medium rounded-lg border border-kx-line hover:bg-kx-raised hover:text-kx-ink transition-all duration-300"
                     >
                         Reintentar
                     </button>

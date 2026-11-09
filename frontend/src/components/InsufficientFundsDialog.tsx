@@ -21,24 +21,24 @@ export function InsufficientFundsDialog({ data, onClose }: InsufficientFundsDial
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-sm mx-4 bg-black border border-rose-500/40 rounded-2xl shadow-2xl shadow-rose-500/10 animate-in zoom-in-95 fade-in duration-300">
+            <div className="relative w-full max-w-sm mx-4 bg-kx-bg border border-[color-mix(in_srgb,var(--kx-debt)_40%,transparent)] rounded-2xl shadow-2xl animate-in zoom-in-95 fade-in duration-300">
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors"
+                    className="absolute top-3 right-3 text-kx-ink3 hover:text-kx-ink transition-colors"
                 >
                     <X size={18} />
                 </button>
 
                 {/* Icon header */}
                 <div className="flex flex-col items-center pt-8 pb-4 px-6">
-                    <div className="p-4 rounded-full bg-rose-500/10 border border-rose-500/30 mb-4">
-                        <ShieldAlert className="h-8 w-8 text-rose-400" />
+                    <div className="p-4 rounded-full bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] mb-4">
+                        <ShieldAlert className="h-8 w-8 text-kx-debt" />
                     </div>
-                    <h3 className="text-lg font-bold text-white text-center">
+                    <h3 className="text-lg font-bold text-kx-ink text-center">
                         Fondos Insuficientes
                     </h3>
-                    <p className="text-sm text-gray-400 text-center mt-1">
+                    <p className="text-sm text-kx-ink2 text-center mt-1">
                         La operación no se puede completar
                     </p>
                 </div>
@@ -47,29 +47,29 @@ export function InsufficientFundsDialog({ data, onClose }: InsufficientFundsDial
                 <div className="px-6 pb-4 space-y-3">
                     <div className="bg-[#0f0f0f]/80 rounded-xl p-4 space-y-3">
                         <div className="flex justify-between items-center">
-                            <span className="text-xs uppercase tracking-wider text-gray-500 font-medium">Cuenta</span>
-                            <span className="text-sm font-semibold text-white">{data.account_name}</span>
+                            <span className="text-xs uppercase tracking-wider text-kx-ink3 font-medium">Cuenta</span>
+                            <span className="text-sm font-semibold text-kx-ink">{data.account_name}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-xs uppercase tracking-wider text-gray-500 font-medium flex items-center gap-1">
+                            <span className="text-xs uppercase tracking-wider text-kx-ink3 font-medium flex items-center gap-1">
                                 <DollarSign size={12} /> Saldo Actual
                             </span>
-                            <span className="text-sm font-bold text-amber-400">
+                            <span className="text-sm font-bold text-kx-amber">
                                 ${data.current_balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-xs uppercase tracking-wider text-gray-500 font-medium flex items-center gap-1">
+                            <span className="text-xs uppercase tracking-wider text-kx-ink3 font-medium flex items-center gap-1">
                                 <AlertTriangle size={12} /> Monto Solicitado
                             </span>
-                            <span className="text-sm font-bold text-rose-400">
+                            <span className="text-sm font-bold text-kx-debt">
                                 ${data.requested_amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                             </span>
                         </div>
-                        <hr className="border-neutral-800" />
+                        <hr className="border-kx-line" />
                         <div className="flex justify-between items-center">
-                            <span className="text-xs uppercase tracking-wider text-rose-400/80 font-medium">Déficit</span>
-                            <span className="text-sm font-bold text-rose-500">
+                            <span className="text-xs uppercase tracking-wider text-kx-debt font-medium">Déficit</span>
+                            <span className="text-sm font-bold text-kx-debt">
                                 -${deficit.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                             </span>
                         </div>
@@ -80,7 +80,7 @@ export function InsufficientFundsDialog({ data, onClose }: InsufficientFundsDial
                 <div className="px-6 pb-6">
                     <button
                         onClick={onClose}
-                        className="w-full py-3 rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold hover:bg-rose-500/30 transition-colors text-sm"
+                        className="w-full py-3 rounded-xl bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)] border border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt font-semibold hover:bg-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] transition-colors text-sm"
                     >
                         Entendido
                     </button>
