@@ -19,12 +19,12 @@ import {
 } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { PLAN_PRICES } from '@/lib/pricing';
-import { syncPlanFromBackend } from '@/lib/planLimits';
+import { fetchSubStatus, longDate, planLabel as planDisplayName, type SubStatus } from '@/lib/planLimits';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
 import { useAuth } from "@/features/auth/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, ApiError } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { ReferralProgram } from "@/components/ReferralProgram";
@@ -221,6 +221,7 @@ export default function SettingsPage() {
     const [promoStatus, setPromoStatus] = useState<'idle' | 'success' | 'error' | 'loading'>('idle');
     const [promoMessage, setPromoMessage] = useState('');
     const [activePlan, setActivePlan] = useState(() => localStorage.getItem('korex-plan') || 'starter');
+    const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
     const [savingsData, setSavingsData] = useState<SavingsData | null>(null);
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
@@ -237,9 +238,11 @@ export default function SettingsPage() {
             toast({ title: t('sub.checkoutReturnTitle'), description: t('sub.checkoutReturnDesc') });
         }
         const sync = async () => {
-            const plan = await syncPlanFromBackend();
+            const st = await fetchSubStatus();
+            const plan = st ? st.plan || 'starter' : (localStorage.getItem('korex-plan') || 'starter');
             if (cancelled) return;
             setActivePlan(plan);
+            setSubStatus(st);
             if (fromCheckout && plan === 'starter' && ++attempts < 8) {
                 setTimeout(sync, 3000);
             } else if (fromCheckout) {
@@ -898,33 +901,32 @@ export default function SettingsPage() {
 
     // ─── Render Subscription ────────────────────────────────────
     function renderSubscription() {
+        // Access codes (Founder / gift months): POST /api/codes/redeem. Errors stay discreet and
+        // generic — the server never says whether a code exists.
         const handleApplyPromo = async () => {
             if (!promoCode.trim()) return;
             setPromoStatus('loading');
-
+            const es = language === 'es';
             try {
-                const result = await apiFetch<{ valid: boolean; plan?: string; label?: string; message: string }>(
-                    '/api/subscriptions/apply-promo',
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({ code: promoCode.trim() }),
-                    }
+                const result = await apiFetch<{ plan: string; permanent: boolean; ends_at: string | null }>(
+                    '/api/codes/redeem',
+                    { method: 'POST', body: JSON.stringify({ code: promoCode.trim() }) },
                 );
-
-                if (result.valid && result.plan) {
-                    setActivePlan(result.plan);
-                    localStorage.setItem('korex-plan', result.plan);
-                    localStorage.setItem('korex-plan-label', result.label || result.plan);
-                    setPromoStatus('success');
-                    setPromoMessage(result.message);
-                    setPromoCode('');
-                } else {
-                    setPromoStatus('error');
-                    setPromoMessage(result.message);
-                }
-            } catch {
+                setPromoStatus('success');
+                setPromoMessage(result.permanent
+                    ? (es ? 'Tu cuenta ahora es Fundadora 🦝' : 'Your account is now a Founder account 🦝')
+                    : (es ? `Plan activo hasta el ${longDate(result.ends_at!, true)}` : `Plan active until ${longDate(result.ends_at!, false)}`));
+                setPromoCode('');
+                const st = await fetchSubStatus();
+                if (st) { setSubStatus(st); setActivePlan(st.plan); }
+            } catch (err) {
                 setPromoStatus('error');
-                setPromoMessage(t('sub.connectionError'));
+                const status = err instanceof ApiError ? err.status : 0;
+                setPromoMessage(status === 429
+                    ? (es ? 'Demasiados intentos. Espera un minuto.' : 'Too many attempts. Wait a minute.')
+                    : status === 400 || status === 403
+                        ? (es ? 'Código no válido o no disponible.' : 'Invalid or unavailable code.')
+                        : t('sub.connectionError'));
             }
         };
 
@@ -937,6 +939,14 @@ export default function SettingsPage() {
         };
 
         const currentPlan = activePlan === 'freedom-dev' ? 'freedom' : activePlan;
+        const checkoutHidden = !!subStatus?.checkout_hidden; // founder or a current gift: nothing to buy here
+        const grantLine = subStatus?.plan === 'founder'
+            ? (language === 'es' ? 'Cuenta Fundadora · acceso total y permanente' : 'Founder account · full, permanent access')
+            : subStatus?.grant_plan && subStatus.grant_ends_at
+                ? (language === 'es'
+                    ? `${planDisplayName(subStatus.grant_plan, true)} regalado · activo hasta el ${longDate(subStatus.grant_ends_at, true)}`
+                    : `${planDisplayName(subStatus.grant_plan, false)} gift · active until ${longDate(subStatus.grant_ends_at, false)}`)
+                : null;
         const isDevLicense = activePlan === 'freedom-dev';
         const planLabel = localStorage.getItem('korex-plan-label');
 
@@ -1224,7 +1234,11 @@ export default function SettingsPage() {
                                     )}
 
                                     {/* CTA Button */}
-                                    {isCurrent ? (
+                                    {checkoutHidden ? (
+                                        <p data-testid="checkout-hidden" className="w-full rounded-md border border-gray-200 dark:border-white/10 py-2 text-center text-xs text-zinc-500">
+                                            {isCurrent ? t('sub.active') : (language === 'es' ? 'Incluido en tu acceso' : 'Included in your access')}
+                                        </p>
+                                    ) : isCurrent ? (
                                         <Button disabled className="w-full bg-emerald-900/30 text-emerald-400 cursor-default border border-emerald-500/20" variant="outline">
                                             <CheckCircle size={14} className="mr-2" />
                                             {t('sub.active')}
@@ -1310,7 +1324,13 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Active Plan Badge */}
-                        {(isDevLicense || (activePlan !== 'starter')) && (
+                        {grantLine && (
+                            <div data-testid="grant-state" className="flex items-center gap-2 p-3 rounded-xl border bg-emerald-500/5 border-emerald-500/20">
+                                <CheckCircle size={14} className="text-emerald-500" />
+                                <span className="text-sm font-medium">{grantLine}</span>
+                            </div>
+                        )}
+                        {!grantLine && (isDevLicense || (activePlan !== 'starter')) && (
                             <div className={`flex items-center justify-between p-3 rounded-xl border ${isDevLicense
                                 ? 'bg-gradient-to-r from-amber-500/5 to-yellow-500/5 border-amber-500/20'
                                 : 'bg-emerald-500/5 border-emerald-500/20'

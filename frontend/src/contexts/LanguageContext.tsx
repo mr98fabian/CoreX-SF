@@ -798,9 +798,9 @@ const translations: Record<string, Record<Language, string>> = {
     "sub.securePlatform": { en: "Secure Platform", es: "Plataforma Segura" },
     "sub.securePlatformDesc": { en: "Your data is encrypted and protected at all times.", es: "Tus datos están encriptados y protegidos en todo momento." },
     // Promo code
-    "sub.promoCode": { en: "Promo Code", es: "Código Promocional" },
-    "sub.promoCodeDesc": { en: "Have a discount or special access code?", es: "¿Tienes un código de descuento o acceso especial?" },
-    "sub.promoPlaceholder": { en: "Enter code (e.g. LAUNCH50)", es: "Ingresa código (ej. LAUNCH50)" },
+    "sub.promoCode": { en: "Access code", es: "Código de acceso" },
+    "sub.promoCodeDesc": { en: "Have a Founder or gift code?", es: "¿Tienes un código Fundador o de regalo?" },
+    "sub.promoPlaceholder": { en: "KX-XXX-XXXXXX-XXXXXX", es: "KX-XXX-XXXXXX-XXXXXX" },
     "sub.apply": { en: "Apply", es: "Aplicar" },
     "sub.remove": { en: "Remove", es: "Quitar" },
     "sub.devLicense": { en: "👑 Developer License — Unlimited Forever", es: "👑 Licencia Developer — Ilimitada para Siempre" },

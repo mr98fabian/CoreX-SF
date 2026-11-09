@@ -11,10 +11,10 @@ from fastapi.responses import JSONResponse
 from sqlmodel import Session, select
 from pydantic import BaseModel
 
-from database import get_session
+from database import get_session, request_session
 from auth import get_current_user_id
 from models import Subscription
-from plan_guard import PLAN_LIMITS, effective_plan, effective_plan_limit, _parse_ts
+from plan_guard import PLAN_LIMITS, entitlement, effective_plan_limit, _parse_ts
 from helpers import filter_active_debt_accounts
 from velocity_engine import daily_interest
 
@@ -32,7 +32,6 @@ PLAN_VARIANTS = {
     "accelerator": {"monthly": os.getenv("LS_VARIANT_ACCELERATOR_MONTHLY", ""), "annual": os.getenv("LS_VARIANT_ACCELERATOR_ANNUAL", "")},
     "freedom":   {"monthly": os.getenv("LS_VARIANT_FREEDOM_MONTHLY", ""),   "annual": os.getenv("LS_VARIANT_FREEDOM_ANNUAL", "")},
 }
-IS_DEV = os.getenv("ENVIRONMENT", "production") == "development"
 
 
 def _parse_legacy_variants(raw: str) -> dict:
@@ -71,6 +70,9 @@ class CheckoutResponse(BaseModel):
 
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout(body: CheckoutRequest, user_id: str = Depends(get_current_user_id)):
+    with request_session() as s:
+        if entitlement(s, user_id)["plan"] == "founder":  # can't pay for what they already have
+            raise HTTPException(status_code=409, detail="This account already has full access.")
     if not LS_API_KEY or not LS_STORE_ID:
         raise HTTPException(status_code=503, detail="Payment system not configured. Contact support.")
 
@@ -201,18 +203,21 @@ async def handle_webhook(request: Request, session: Session = Depends(get_sessio
 
 @router.get("/status")
 async def get_subscription_status(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
+    ent = entitlement(session, user_id)  # grants first: a founder with no subscriptions row is NOT starter
     sub = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
-    if not sub:
-        return {"plan": "starter", "status": "active", "accounts_limit": 2, "customer_portal_url": None, "current_period_end": None}
-
-    plan = effective_plan(sub)
-    limit = PLAN_LIMITS.get(plan)
+    limit = PLAN_LIMITS.get(ent["plan"])
+    ends = ent["grant_ends_at"]
     return {
-        "plan": plan, "status": sub.status,
+        "plan": ent["plan"], "status": sub.status if sub else "active",
+        "source": ent["source"],
+        "grant_plan": ent["grant_plan"],
+        "grant_ends_at": ends.isoformat() + "Z" if ends else None,
+        # founder, or any current gift: the UI hides checkout and shows the state instead
+        "checkout_hidden": ent["plan"] == "founder" or ent["grant_plan"] is not None,
         "accounts_limit": limit if limit is not None else 999,
-        "customer_portal_url": sub.customer_portal_url,
-        "current_period_end": sub.current_period_end,
-        "ls_subscription_id": sub.ls_subscription_id,
+        "customer_portal_url": sub.customer_portal_url if sub else None,
+        "current_period_end": sub.current_period_end if sub else None,
+        "ls_subscription_id": sub.ls_subscription_id if sub else None,
     }
 
 
@@ -285,24 +290,6 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
         "plans": plans_result,
         "social_proof": {"total_accounts_monitored": len(accounts), "total_debt_tracked": round(total_debt, 2)},
     }
-
-
-# ── Promo Code ───────────────────────────────────────────────
-
-class PromoRequest(BaseModel):
-    code: str
-
-
-@router.post("/apply-promo")
-async def apply_promo_code(body: PromoRequest, user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
-    code = body.code.strip().upper()
-    # Dev-only: this code is in a public repo, so outside development it must not exist.
-    if IS_DEV and code == "KOREX-DEV-UNLIMITED":
-        _upsert_subscription(session, user_id, "freedom-dev", "active", "dev-license", "developer")
-        logger.info(f"Developer license activated for user={user_id}")
-        return {"valid": True, "plan": "freedom-dev", "label": "Freedom (Developer)",
-                "message": "🎉 Developer license activated — Unlimited accounts, forever."}
-    return {"valid": False, "message": "Invalid code. Please check and try again."}
 
 
 # ── Helpers ──────────────────────────────────────────────────

@@ -269,3 +269,34 @@ class LeagueWeek(SQLModel, table=True):
     tier: str = Field(default="bronce", max_length=10)  # bronce | plata | oro | diamante
     cohort: int = Field(default=1)
     points: int = Field(default=0)
+
+
+class AccessCode(SQLModel, table=True):
+    """Redeemable access code. Only the HMAC of the code is stored; the plain text
+    is shown once at creation. kind: founder (permanent) | months (gift)."""
+    __tablename__ = "access_codes"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code_hmac: str = Field(max_length=64, sa_column_kwargs={"unique": True})
+    prefix: str = Field(max_length=16)  # e.g. "KX-FND-AB3" — enough to recognise it in the admin list
+    kind: str = Field(max_length=10)
+    months: Optional[int] = Field(default=None)
+    plan: str = Field(max_length=20)
+    max_uses: int = Field(default=1)
+    uses_count: int = Field(default=0)
+    expires_at: Optional[datetime] = Field(default=None)
+    created_by: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), nullable=False))
+    revoked_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AccessGrant(SQLModel, table=True):
+    """Entitlement granted by a code, independent from Lemon Squeezy's subscriptions
+    row (which webhooks overwrite). ends_at None = permanent."""
+    __tablename__ = "access_grants"
+    __table_args__ = (UniqueConstraint("code_id", "user_id", name="uq_access_grant_code_user"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    plan: str = Field(max_length=20)
+    starts_at: datetime
+    ends_at: Optional[datetime] = Field(default=None)
+    code_id: int = Field(foreign_key="access_codes.id")
