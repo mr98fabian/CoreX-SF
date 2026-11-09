@@ -14,6 +14,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { buildMonths } from '@/lib/calendarSeries';
 import { DebtCalendar } from '@/components/kx/DebtCalendar';
 import { PlanCards } from '@/components/kx/PlanCards';
+import { ANNUAL_PRICE } from '@/lib/pricing';
 import { AmberRule, Section } from '@/components/kx';
 import { VelocityCalculatorModal } from './VelocityCalculatorModal';
 
@@ -67,7 +68,7 @@ export default function KxLanding() {
     ];
 
     const facts = [
-        { t: es ? 'Desde $9.99 al mes' : 'From $9.99 a month', d: es ? 'Precio publicado abajo. Empiezas gratis y cancelas cuando quieras.' : 'Price listed below. Start free, cancel anytime.' },
+        { t: es ? `${ANNUAL_PRICE} dólares al año` : `${ANNUAL_PRICE} dollars a year`, d: es ? 'Precio publicado abajo. Empiezas gratis, con 1 mes de prueba, y cancelas cuando quieras.' : 'Price listed below. Start free, with a 1-month trial, cancel anytime.' },
         { t: es ? '$0 en cada corte' : '$0 at every statement', d: es ? 'Método avalancha: primero la deuda de interés más alto, sin dejar saldo que cobre interés al cierre.' : 'Avalanche method: highest interest first, leaving no balance to accrue interest at closing.' },
         { t: es ? 'Hecho en español' : 'Built in Spanish', d: es ? 'Pensado en español desde el primer día, no traducido después.' : 'Designed in Spanish from day one, not translated later.' },
         { t: es ? 'Funciona con tu IA' : 'Works with your AI', d: es ? 'Conecta tu asistente de IA para que registre pagos y te explique tu plan.' : 'Connect your AI assistant to log payments and explain your plan.' },
@@ -206,8 +207,8 @@ export default function KxLanding() {
                 </p>
                 <p className="mt-6 rounded-2xl border border-kx-line bg-kx-surface p-4 text-sm text-kx-ink2">
                     {es ? 'United First Financial cobraba ' : 'United First Financial charged '}<b className="kx-num text-kx-ink">$3,500</b>
-                    {es ? ' por su programa (plan de agente, octubre de 2019). KoreX: desde ' : ' for its program (agent plan, October 2019). KoreX: from '}
-                    <b className="kx-num text-kx-ink">$9.99</b>{es ? ' al mes.' : ' a month.'}
+                    {es ? ' por su programa (plan de agente, octubre de 2019). KoreX: ' : ' for its program (agent plan, October 2019). KoreX: '}
+                    <b className="kx-num text-kx-ink">${ANNUAL_PRICE}</b>{es ? ' al año, con 1 mes gratis.' : ' a year, with 1 month free.'}
                 </p>
             </section>
 

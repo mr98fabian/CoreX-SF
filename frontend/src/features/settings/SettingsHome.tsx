@@ -14,6 +14,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { apiFetch } from '@/lib/api';
 import { usePlans } from '@/lib/plans';
+import { PAID_KEYS } from '@/lib/pricing';
 import { AmberRule, BankHeader, Section } from '@/components/kx';
 import { ConnectAI } from '@/components/ConnectAI';
 import { FingerprintLockRow } from './FingerprintLockRow';
@@ -72,7 +73,7 @@ export default function SettingsHome() {
     usePageTitle(es ? 'Ajustes' : 'Settings');
     const { user, isDemo, signOut } = useAuth();
     const [status, setStatus] = useState<Status | null>(null);
-    const { plans } = usePlans();
+    const { plans } = usePlans(es);
     const location = useLocation();
 
     useEffect(() => { apiFetch<Status>('/api/subscriptions/status').then(setStatus).catch(() => setStatus(null)); }, []);
@@ -90,6 +91,11 @@ export default function SettingsHome() {
         : status?.source === 'grant' && status.grant_ends_at
             ? (es ? `regalado · activo hasta el ${longDate(status.grant_ends_at, true)}` : `gift · active until ${longDate(status.grant_ends_at, false)}`)
             : null;
+    // A plan that isn't sold any more (velocity/accelerator) isn't in the public list: say what it
+    // is ("Plan pago activo") instead of waiting forever for a card that will never come.
+    const fallbackText = status && !plan
+        ? (PAID_KEYS.has(status.plan) ? (es ? 'Plan pago activo' : 'Paid plan active') : (es ? `hasta ${status.accounts_limit} deudas · sin IA` : `up to ${status.accounts_limit} debts · no AI`))
+        : null;
     const limitText = plan ? (plan.debtLimit == null ? (es ? 'deudas ilimitadas' : 'unlimited debts') : (es ? `hasta ${plan.debtLimit} deudas` : `up to ${plan.debtLimit} debts`)) : '';
     const advanced = (section: string) => `/dashboard/settings/advanced?section=${section}`;
 
@@ -111,7 +117,7 @@ export default function SettingsHome() {
                         <div>
                             <p className="text-base font-semibold text-kx-ink">{founder ? planLabel('founder', es) : plan?.name ?? (status ? planLabel(status.plan, es) : '…')}</p>
                             <p className="text-[12.5px] text-kx-ink2">
-                                {grantText ?? (plan ? `${limitText} · ${plan.ai ? (es ? 'con IA conectada' : 'AI connected') : (es ? 'sin IA' : 'no AI')}` : (es ? 'Cargando tu plan…' : 'Loading your plan…'))}
+                                {grantText ?? (plan ? `${limitText} · ${plan.ai ? (es ? 'con IA conectada' : 'AI connected') : (es ? 'sin IA' : 'no AI')}` : (fallbackText ?? (es ? 'Cargando tu plan…' : 'Loading your plan…')))}
                             </p>
                         </div>
                         {!status?.checkout_hidden && <Link to="/dashboard/settings/plans" className="flex-none rounded-xl bg-kx-amber px-3.5 py-2 text-xs font-bold text-[#111418]">

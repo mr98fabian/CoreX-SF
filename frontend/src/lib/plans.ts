@@ -1,29 +1,24 @@
 /**
  * Plans as shown to people: debt limits come from the server
- * (GET /api/public/plans → plan_guard.PLAN_LIMITS, the same values it
- * enforces), prices from lib/pricing.ts (the billing config). Nothing about
- * limits is hardcoded here.
+ * (GET /api/public/plans → plan_guard.PLAN_LIMITS, the same values it enforces),
+ * names and prices from lib/pricing.ts (the only commercial source).
  */
 import { useEffect, useState } from 'react';
 import { API_BASE } from '@/lib/api';
-import { PLAN_PRICES } from '@/lib/pricing';
+import { COMMERCIAL_ORDER, COMMERCIAL_PLANS, type CommercialPlanId } from '@/lib/pricing';
 
-export type PlanId = 'starter' | 'velocity' | 'accelerator' | 'freedom';
+export type PlanId = CommercialPlanId;
 
 export interface PlanView {
     id: PlanId;
     name: string;
-    monthly: number;
     annual: number;
+    trialDays: number;
     debtLimit: number | null; // null = unlimited
-    ai: boolean;              // AI connection (tokens/MCP) — paid plans only, enforced by the server
-    prioritySupport: boolean;
+    ai: boolean;
 }
 
-const NAMES: Record<PlanId, string> = { starter: 'Gratis', velocity: 'Velocity', accelerator: 'Accelerator', freedom: 'Freedom' };
-const ORDER: PlanId[] = ['starter', 'velocity', 'accelerator', 'freedom'];
-
-export function usePlans() {
+export function usePlans(es = true) {
     const [plans, setPlans] = useState<PlanView[] | null>(null);
     const [error, setError] = useState(false);
     useEffect(() => {
@@ -32,12 +27,12 @@ export function usePlans() {
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
             .then((rows: { plan: string; debt_limit: number | null }[]) => {
                 const limits = new Map(rows.map((r) => [r.plan, r.debt_limit]));
-                setPlans(ORDER.filter((id) => limits.has(id)).map((id) => ({
-                    id, name: NAMES[id], monthly: PLAN_PRICES[id].monthly, annual: PLAN_PRICES[id].annual,
-                    debtLimit: limits.get(id) ?? null, ai: id !== 'starter', prioritySupport: id === 'freedom',
-                })));
+                setPlans(COMMERCIAL_ORDER.filter((id) => limits.has(id)).map((id) => {
+                    const c = COMMERCIAL_PLANS[id];
+                    return { id, name: es ? c.name.es : c.name.en, annual: c.annual, trialDays: c.trialDays, debtLimit: limits.get(id) ?? null, ai: c.ai };
+                }));
             })
             .catch(() => setError(true));
-    }, []);
+    }, [es]);
     return { plans, error };
 }

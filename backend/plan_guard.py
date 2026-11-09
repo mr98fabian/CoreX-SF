@@ -20,7 +20,9 @@ from models import Subscription
 PLAN_LIMITS: dict[str, Optional[int]] = {
     "starter": 2, "velocity": 15, "accelerator": None, "freedom": None, "freedom-dev": None, "founder": None,
 }
-HIDDEN_PLANS = {"freedom-dev", "founder"}  # internal: never listed in /public/plans, never sold
+# Never listed in /public/plans, never sold. velocity/accelerator are retired tiers: their keys stay
+# here and in PLAN_RANK (existing subscribers, issued grants, the locks consume by key).
+HIDDEN_PLANS = {"freedom-dev", "founder", "velocity", "accelerator"}
 PLAN_RANK = {"starter": 0, "velocity": 1, "accelerator": 2, "freedom": 3, "freedom-dev": 3, "founder": 4}
 DEMO_PLAN = "freedom-dev"  # the shared demo sandbox shows the full product
 PAID_ACCESS_STATUSES = {"active", "on_trial", "past_due", "cancelled"}  # cancelled = paid until period end

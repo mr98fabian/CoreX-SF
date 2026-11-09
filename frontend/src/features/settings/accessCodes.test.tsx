@@ -108,7 +108,7 @@ describe('Planes con acceso por código', () => {
         apiFetch.mockResolvedValue({ plan: 'accelerator', status: 'active', accounts_limit: 999, source: 'grant', grant_plan: 'accelerator', grant_ends_at: '2027-05-08T12:00:00Z', checkout_hidden: true });
         const el = await render(<PlansPage />);
         expect(el.querySelector('[data-testid="plan-cards"]')).toBeNull();
-        expect(el.textContent).toContain('Accelerator regalado, activo hasta el 8 de mayo de 2027');
+        expect(el.textContent).toContain('Plan pago regalado, activo hasta el 8 de mayo de 2027');
     });
 
     it('normal user: the plan cards with checkout stay', async () => {

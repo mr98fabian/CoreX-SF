@@ -101,14 +101,14 @@ def test_resolver_precedence_grant_over_paid_over_starter():
     assert (ent(U1)["plan"], ent(U1)["source"]) == ("velocity", "subscription")
     _, gift = make("months", months=3)
     give(gift, U1)
-    assert (ent(U1)["plan"], ent(U1)["source"]) == ("accelerator", "grant")
+    assert (ent(U1)["plan"], ent(U1)["source"]) == ("freedom", "grant")
     _, fnd = make("founder")
     give(fnd, U1)
     assert ent(U1)["plan"] == "founder"
-    paid(U2, "freedom")  # a higher paid tier beats a lower gift
+    paid(U2, "freedom")  # same rank: the gift wins the tie, the plan is the same
     _, gift2 = make("months", months=1)
     give(gift2, U2)
-    assert ent(U2)["plan"] == "freedom" and ent(U2)["grant_plan"] == "accelerator"
+    assert ent(U2)["plan"] == "freedom" and ent(U2)["grant_plan"] == "freedom"
 
 
 def test_demo_lives_inside_the_resolver():
@@ -244,7 +244,7 @@ def test_admin_is_owner_only_and_nobody_without_the_env(client, monkeypatch):
 def test_admin_creates_shows_plain_once_lists_without_it_and_revokes(client):
     as_user(OWNER)
     created = client.post("/api/admin/codes", json={"kind": "months", "months": 6}, headers=H).json()
-    assert created["code"].startswith("KX-REG-") and created["plan"] == "accelerator" and created["status"] == "active"
+    assert created["code"].startswith("KX-REG-") and created["plan"] == "freedom" and created["status"] == "active"
     listed = client.get("/api/admin/codes", headers=H).json()
     assert len(listed) == 1 and "code" not in listed[0] and listed[0]["prefix"] == created["code"][:10]
     assert client.post(f"/api/admin/codes/{created['id']}/revoke", headers=H).json()["status"] == "revoked"
@@ -279,3 +279,14 @@ def test_custom_code_rules(client):
     assert post("mi codigo secreto 1").status_code == 409  # same code after normalizing
     as_user(U1)
     assert client.post("/api/admin/codes", json={"kind": "founder", "custom_code": "OtroCodigo99"}, headers=H).status_code == 403
+
+
+def test_months_code_grants_the_plan_on_sale_and_old_accelerator_grants_still_count():
+    _, gift = make("months", months=3)
+    assert give(gift, U1).plan == "freedom"
+    with Session(database.engine) as s:  # a grant issued before the change
+        cid, _ = make("months", months=1)
+        s.add(AccessGrant(user_id=U2, plan="accelerator", starts_at=datetime.utcnow() - timedelta(days=1),
+                          ends_at=datetime.utcnow() + timedelta(days=20), code_id=cid))
+        s.commit()
+    assert ent(U2)["plan"] == "accelerator" and plan_limit_for(Session(database.engine), U2) is None
