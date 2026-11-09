@@ -61,7 +61,7 @@ export default function CashflowMonitor() {
                             id="mode-toggle"
                             checked={type === 'expense'}
                             onCheckedChange={(checked) => setType(checked ? 'expense' : 'income')}
-                            className={cn("data-[state=checked]:bg-rose-500 data-[state=unchecked]:bg-emerald-500")}
+                            trackClassName="group-data-[state=checked]:bg-rose-500 group-data-[state=unchecked]:bg-emerald-500"
                         />
                         <Label htmlFor="mode-toggle" className={cn("text-xs cursor-pointer select-none", type === 'expense' ? "text-rose-500 font-bold" : "text-zinc-500")}>Out</Label>
                     </div>

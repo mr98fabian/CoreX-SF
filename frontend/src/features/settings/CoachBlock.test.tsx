@@ -54,6 +54,24 @@ describe('Tu coach IA', () => {
         expect((el.querySelector('input[aria-label="Tu alias"]') as HTMLInputElement).value).toBe('Zorro Ámbar 12');
     });
 
+    it('switch: the button is the 44×44 touch target, the 44×24 pill lives inside it', async () => {
+        const el = await render();
+        const sw = el.querySelector('[role="switch"]') as HTMLButtonElement;
+        expect(sw.className).toMatch(/\bh-11\b/);
+        expect(sw.className).toMatch(/\bw-11\b/);
+        expect(sw.className).toContain('bg-transparent');
+        expect(sw.className).not.toMatch(/\bh-6\b|rounded-full|bg-kx-amber/); // the global coarse-pointer min 44×44 can't inflate the pill
+        const track = sw.querySelector('[data-kx="switch-track"]') as HTMLSpanElement;
+        expect(track.tagName).toBe('SPAN');
+        expect(track.className).toMatch(/\bh-6\b/);
+        expect(track.className).toMatch(/\bw-11\b/);
+        expect(track.className).toContain('rounded-full');
+        const knob = track.querySelector('span') as HTMLSpanElement;
+        const on = sw.getAttribute('aria-checked') === 'true';
+        expect(knob.className).toContain(on ? 'translate-x-[22px]' : 'translate-x-0.5');
+        expect(track.className.includes('bg-kx-amber')).toBe(on);
+    });
+
     it('saves the tone and the name with PATCH /api/coach-profile', async () => {
         const el = await render();
         const pesado = [...el.querySelectorAll('[role="radio"]')].find((b) => b.textContent === 'Modo pesado') as HTMLButtonElement;
