@@ -98,10 +98,10 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
 
             {/* 2. Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="glass-card border-l-4 border-l-kx-paid relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Card className="glass-card border-l-4 border-l-kx-line relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--kx-ink)_3%,transparent)] opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-kx-paid flex items-center gap-2 uppercase tracking-wider">
+                        <CardTitle className="text-sm font-semibold text-kx-ink flex items-center gap-2 uppercase tracking-wider">
                             <TrendingUp className="h-4 w-4" /> {t(`cashflow.${currentTimeframe === 'annually' ? 'yearly' : currentTimeframe}`)} {t('cashflow.income')}
                         </CardTitle>
                     </CardHeader>
@@ -262,7 +262,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                                 key={day}
                                                 type="button"
                                                 variant={newItem.day_of_week === idx ? "default" : "outline"}
-                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-kx-paid hover:bg-kx-paid text-[#111418] border-kx-paid' : 'bg-kx-raised border-kx-line text-kx-ink2 hover:text-kx-ink hover:bg-kx-surface'}`}
+                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-kx-amber hover:bg-kx-amber text-[#111418] border-kx-amber' : 'bg-kx-raised border-kx-line text-kx-ink2 hover:text-kx-ink hover:bg-kx-surface'}`}
                                                 onClick={() => setNewItem({ ...newItem, day_of_week: idx })}
                                             >
                                                 {day[0]}
@@ -370,7 +370,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Income Column */}
                 <div className="space-y-4">
-                    <h3 className="text-kx-paid font-semibold text-sm uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-kx-line">
+                    <h3 className="text-kx-ink font-semibold text-sm uppercase tracking-wider flex items-center gap-2 pb-2 border-b border-kx-line">
                         <TrendingUp size={16} /> {t('cashflow.incomeStreams')}
                     </h3>
                     {income.length === 0 && (
@@ -379,13 +379,13 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         </div>
                     )}
                     {income.map(item => (
-                        <div key={item.id} className="flex justify-between items-center gap-3 p-3 sm:p-4 rounded-xl bg-kx-raised border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] group hover:border-[color-mix(in_srgb,var(--kx-paid)_30%,transparent)] hover:bg-kx-surface transition-all duration-300">
+                        <div key={item.id} className="flex justify-between items-center gap-3 p-3 sm:p-4 rounded-xl bg-kx-raised border border-kx-line group hover:border-kx-ink3 hover:bg-kx-surface transition-all duration-300">
                             <div className="flex min-w-0 items-center gap-3">
-                                <div className="bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] p-2.5 rounded-lg group-hover:bg-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] transition-colors">
-                                    <TrendingUp size={18} className="text-kx-paid" />
+                                <div className="bg-[color-mix(in_srgb,var(--kx-ink)_6%,transparent)] p-2.5 rounded-lg group-hover:bg-[color-mix(in_srgb,var(--kx-ink)_10%,transparent)] transition-colors">
+                                    <TrendingUp size={18} className="text-kx-ink2" />
                                 </div>
                                 <div className="min-w-0">
-                                    <div className="truncate font-semibold text-kx-ink group-hover:text-kx-paid transition-colors">{item.name}</div>
+                                    <div className="truncate font-semibold text-kx-ink group-hover:text-kx-ink transition-colors">{item.name}</div>
                                     <div className="text-xs text-kx-ink3 flex items-center gap-1.5 mt-0.5">
                                         <span className="bg-kx-surface px-1.5 py-0.5 rounded text-kx-ink2">{item.frequency}</span>
                                         <span>• {t('cashflow.dayPrefix')} {item.day_of_month}</span>
@@ -393,7 +393,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                 </div>
                             </div>
                             <div className="flex flex-none items-center gap-2">
-                                <span className="font-mono text-kx-paid font-bold text-base sm:text-lg">+{formatMoney(item.amount)}</span> {/* Display raw amount here, maybe update later to show timeframe specific */}
+                                <span className="font-mono text-kx-ink font-bold text-base sm:text-lg">+{formatMoney(item.amount)}</span> {/* Display raw amount here, maybe update later to show timeframe specific */}
                                 <Button
                                     variant="ghost"
                                     size="icon"
