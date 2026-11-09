@@ -20,6 +20,8 @@ export function OwnerCodesPanel({ es }: { es: boolean }) {
     const [kind, setKind] = useState<'founder' | 'months'>('founder');
     const [months, setMonths] = useState(3);
     const [uses, setUses] = useState(1);
+    const [custom, setCustom] = useState('');
+    const [error, setError] = useState<string | null>(null);
     const [fresh, setFresh] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -33,15 +35,21 @@ export function OwnerCodesPanel({ es }: { es: boolean }) {
 
     const create = async () => {
         setBusy(true);
+        setError(null);
         try {
             const out = await apiFetch<AdminCode & { code: string }>('/api/admin/codes', {
                 method: 'POST',
-                body: JSON.stringify({ kind, months: kind === 'months' ? months : null, max_uses: uses }),
+                body: JSON.stringify({ kind, months: kind === 'months' ? months : null, max_uses: uses, custom_code: custom.trim() || null }),
             });
             setFresh(out.code);
             setCopied(false);
+            setCustom('');
             load();
-        } catch { /* stays quiet; the list is unchanged */ }
+        } catch (e) {
+            const status = (e as { status?: number }).status;
+            if (status === 409) setError(es ? 'Ese código ya existe.' : 'That code already exists.');
+            else if (status === 422) setError(es ? 'Personalizado: 8 a 40 letras o números.' : 'Custom: 8 to 40 letters or digits.');
+        }
         setBusy(false);
     };
 
@@ -73,10 +81,14 @@ export function OwnerCodesPanel({ es }: { es: boolean }) {
                         {es ? 'Usos' : 'Uses'}
                         <input type="number" min={1} max={100} value={uses} onChange={(e) => setUses(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} className={`${field} w-16`} />
                     </label>
+                    <input aria-label={es ? 'Código personalizado' : 'Custom code'} value={custom} onChange={(e) => setCustom(e.target.value)}
+                        placeholder={es ? 'Personalizado (opcional)' : 'Custom (optional)'} maxLength={60} className={`${field} w-48`} />
                     <button type="button" onClick={create} disabled={busy} className="kx-press rounded-lg bg-kx-amber px-3 py-1.5 text-xs font-bold text-[#111418] disabled:opacity-60">
                         {es ? 'Crear código' : 'Create code'}
                     </button>
                 </div>
+
+                {error && <p data-testid="code-error" className="mt-2 text-[12px] text-kx-debt">{error}</p>}
 
                 {fresh && (
                     <div data-testid="fresh-code" className="mt-3 rounded-xl border border-kx-amber/40 p-3">

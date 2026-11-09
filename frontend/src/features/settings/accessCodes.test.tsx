@@ -61,6 +61,24 @@ describe('Panel de códigos del dueño', () => {
     });
 });
 
+describe('Código personalizado', () => {
+    it('sends the custom text and shows a discreet error when it already exists', async () => {
+        apiFetch.mockImplementation(async (_url: string, opts?: { method?: string; body?: string }) => {
+            if (opts?.method === 'POST') throw Object.assign(new Error('Conflict'), { status: 409 });
+            return [CODE];
+        });
+        const el = await render(<OwnerCodesPanel es />);
+        const input = el.querySelector('input[aria-label="Código personalizado"]') as HTMLInputElement;
+        const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+        await act(async () => { setter.call(input, 'Elduenodelcastillo77'); input.dispatchEvent(new Event('input', { bubbles: true })); });
+        const create = [...el.querySelectorAll('button')].find((b) => b.textContent === 'Crear código')!;
+        await act(async () => create.click());
+        const post = apiFetch.mock.calls.find((c) => c[1]?.method === 'POST')!;
+        expect(JSON.parse(post[1].body).custom_code).toBe('Elduenodelcastillo77');
+        expect(el.querySelector('[data-testid="code-error"]')!.textContent).toBe('Ese código ya existe.');
+    });
+});
+
 describe('Planes con acceso por código', () => {
     it('founder: no checkout buttons, the state instead', async () => {
         apiFetch.mockResolvedValue({ plan: 'founder', status: 'active', accounts_limit: 999, source: 'grant', grant_plan: 'founder', grant_ends_at: null, checkout_hidden: true });

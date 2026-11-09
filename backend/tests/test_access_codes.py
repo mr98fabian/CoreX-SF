@@ -250,3 +250,32 @@ def test_admin_creates_shows_plain_once_lists_without_it_and_revokes(client):
     assert client.post(f"/api/admin/codes/{created['id']}/revoke", headers=H).json()["status"] == "revoked"
     as_user(U1)
     assert client.post("/api/codes/redeem", json={"code": created["code"]}, headers=H).status_code == 400
+
+
+# ── Custom codes (owner-chosen) ──────────────────────────────
+
+def test_custom_code_is_forgiving_to_type_and_single_use(client):
+    as_user(OWNER)
+    r = client.post("/api/admin/codes", json={"kind": "founder", "custom_code": "Elduenodelcastillo77"}, headers=H)
+    assert r.status_code == 200 and r.json()["code"] == "Elduenodelcastillo77"
+    assert r.json()["prefix"] == "ELD"  # only 3 chars stored in clear
+    with Session(database.engine) as s:
+        row = s.get(AccessCode, r.json()["id"])
+        assert "ELDUENODELCASTILLO" not in row.code_hmac
+    as_user(U1)  # typed naturally: lower case, ñ, spaces
+    ok = client.post("/api/codes/redeem", json={"code": "el dueño del castillo 77"}, headers=H)
+    assert ok.status_code == 200 and ok.json()["plan"] == "founder"
+    as_user(U2)
+    assert client.post("/api/codes/redeem", json={"code": "Elduenodelcastillo77"}, headers=H).status_code == 400
+
+
+def test_custom_code_rules(client):
+    as_user(OWNER)
+    post = lambda c: client.post("/api/admin/codes", json={"kind": "founder", "custom_code": c}, headers=H)
+    assert post("corto").status_code == 422          # < 8
+    assert post("con!simbolos#raros").status_code == 422
+    assert post("KXFNDAAAAAAAAAAAA").status_code == 422  # can't impersonate the generated format
+    assert post("MiCodigoSecreto1").status_code == 200
+    assert post("mi codigo secreto 1").status_code == 409  # same code after normalizing
+    as_user(U1)
+    assert client.post("/api/admin/codes", json={"kind": "founder", "custom_code": "OtroCodigo99"}, headers=H).status_code == 403

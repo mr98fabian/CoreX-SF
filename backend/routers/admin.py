@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field as PField
 from sqlmodel import select
 
-from access_codes import CodesDisabled, code_status, create_code
+from access_codes import CodeTaken, CodesDisabled, code_status, create_code
 from auth import get_current_user_id
 from database import request_session
 from models import AccessCode
@@ -32,6 +32,7 @@ class CreateCode(BaseModel):
     months: Optional[int] = PField(default=None, ge=1, le=36)
     max_uses: int = PField(default=1, ge=1, le=100)
     expires_at: Optional[datetime] = None
+    custom_code: Optional[str] = PField(default=None, max_length=60)
 
 
 def _public(row: AccessCode) -> dict:
@@ -49,11 +50,16 @@ def create(body: CreateCode, owner: str = Depends(require_owner)):
     try:
         with request_session() as session:
             row, plain = create_code(session, kind=body.kind, created_by=owner, months=body.months,
-                                     max_uses=body.max_uses, expires_at=expires)
+                                     max_uses=body.max_uses, expires_at=expires,
+                                     custom=body.custom_code or None)
             out = _public(row)
+    except CodeTaken:
+        raise HTTPException(status_code=409, detail="That code already exists")
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except CodesDisabled:
         raise HTTPException(status_code=503, detail="ACCESS_CODE_HMAC_KEY is not configured")
-    logger.info("Access code created: id=%s kind=%s by owner", out["id"], body.kind)
+    logger.info("Access code created: id=%s kind=%s custom=%s by owner", out["id"], body.kind, bool(body.custom_code))
     return {**out, "code": plain}  # the only time the plain code ever leaves the server
 
 
