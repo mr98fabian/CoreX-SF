@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Wallet, Settings, LogOut, PanelLeft, ListChecks, Sun, Moon, Menu, X, CalendarDays, Repeat } from 'lucide-react';
+import { LogOut, PanelLeft, Sun, Moon, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AppLock } from '@/components/AppLock';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import FeedbackWidget from '@/components/FeedbackWidget';
 import { syncPlanFromBackend } from '@/lib/planLimits';
 import { apiFetch } from '@/lib/api';
-import { TabBar } from '@/components/kx';
+import { SideNav, TabBar } from '@/components/kx';
 import UpgradeNudge from '@/components/UpgradeNudge';
 import InstallPrompt from '@/components/InstallPrompt';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -77,22 +77,6 @@ export default function DashboardLayout() {
         if (isMobile) setIsSidebarOpen(false);
     }
 
-    const isActive = (path: string) => {
-        if (path === '/dashboard') return location.pathname === '/dashboard';
-        return location.pathname.startsWith(path);
-    };
-
-    // Fase 6 navigation: the 4 tabs of the mobile tab bar + the calendar (signature piece) and the plan
-    const es = language === 'es';
-    const navLinks = [
-        { path: '/dashboard', icon: LayoutDashboard, label: es ? 'Inicio' : 'Home' },
-        { path: '/dashboard/calendar', icon: CalendarDays, label: es ? 'Calendario' : 'Calendar' },
-        { path: '/dashboard/accounts', icon: Wallet, label: es ? 'Cuentas' : 'Accounts' },
-        { path: '/dashboard/subscriptions', icon: Repeat, label: es ? 'Suscripciones' : 'Subscriptions' },
-        { path: '/dashboard/action-plan', icon: ListChecks, label: es ? 'Plan de ataque' : 'Attack plan' },
-        { path: '/dashboard/settings', icon: Settings, label: es ? 'Ajustes' : 'Settings' },
-    ];
-
     const sidebarContent = (
         <>
             <div className="flex h-16 items-center justify-between px-6 border-b border-kx-line ">
@@ -116,23 +100,7 @@ export default function DashboardLayout() {
                 )}
             </div>
 
-            <nav className="flex-1 space-y-1.5 px-3 py-4">
-                {navLinks.map(({ path, icon: Icon, label }) => (
-                    <Link key={path} to={path} onClick={() => isMobile && setIsSidebarOpen(false)}>
-                        <Button
-                            variant="ghost"
-                            className={cn(
-                                "w-full justify-start gap-2 h-10 transition-colors",
-                                isActive(path)
-                                    ? "bg-kx-amber-soft text-kx-amber hover:bg-kx-amber-soft hover:text-kx-amber"
-                                    : "text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
-                            )}
-                        >
-                            <Icon size={18} strokeWidth={1.5} /> <span className="whitespace-nowrap">{label}</span>
-                        </Button>
-                    </Link>
-                ))}
-            </nav>
+            <SideNav onNavigate={() => isMobile && setIsSidebarOpen(false)} />
 
             <div className="border-t border-kx-line p-4 space-y-3">
                 {user && (

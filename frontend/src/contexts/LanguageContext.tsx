@@ -9,6 +9,16 @@ const translations: Record<string, Record<Language, string>> = {
     //  GLOBAL / NAVIGATION
     // ═══════════════════════════════════════════════════════════════════
     "nav.dashboard": { en: "Dashboard", es: "Panel" },
+    // Navigation top-5 (lib/nav.ts)
+    "nav.home": { en: "Home", es: "Inicio" },
+    "nav.calendar": { en: "Calendar", es: "Calendario" },
+    "nav.plan": { en: "Plan", es: "Plan" },
+    "nav.accountsShort": { en: "Accounts", es: "Cuentas" },
+    "nav.subscriptions": { en: "Subscriptions", es: "Suscripciones" },
+    "nav.activity": { en: "Activity", es: "Actividad" },
+    "nav.analysis": { en: "Analysis", es: "Análisis" },
+    "nav.settingsShort": { en: "Settings", es: "Ajustes" },
+    "nav.more": { en: "More", es: "Más" },
     "nav.actionPlan": { en: "Action Plan", es: "Plan de Acción" },
     "nav.accounts": { en: "My Accounts", es: "Mis Cuentas" },
     "nav.rankings": { en: "Rankings", es: "Rangos" },
