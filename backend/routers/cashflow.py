@@ -13,11 +13,30 @@ from models import Account, CashflowItem, Transaction
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
+from plan_guard import scoped_plan_limit
 import audit_text
 from schemas import CashflowUpdate
 
 logger = logging.getLogger("korex.cashflow")
 router = APIRouter(prefix="/api", tags=["cashflow"])
+
+
+# ── Monthly summary (Reloj de dinero, Cuentas) ───────────────
+
+@router.get("/cashflow/summary")
+async def get_cashflow_summary(
+    user_id: str = Depends(require_scope("read:dashboard")),
+    plan_limit: int | None = Depends(scoped_plan_limit),
+):
+    """Monthly income / expenses / debt payments / surplus, computed only by the engine."""
+    from helpers import accounts_to_active_debt_objects
+    from velocity_engine import cashflow_summary
+    with request_session() as session:
+        items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
+        s = cashflow_summary([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)
+        return {k: (float(v) if isinstance(v, Decimal) else v) for k, v in s.items()}
 
 
 # ── Cashflow Item CRUD ───────────────────────────────────────

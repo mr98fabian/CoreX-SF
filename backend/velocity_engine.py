@@ -2139,6 +2139,29 @@ def house_goal_estimate(target: Decimal, home_price: Decimal, down_pct: Decimal,
             "eta_months": eta, "piti": piti, "debt_minimums": debt_minimums, "monthly_income": monthly_income, "dti": dti}
 
 
+def cashflow_summary(cashflow_items, debts: List["DebtAccount"]) -> dict:
+    """Monthly totals for the Reloj de dinero and Cuentas (GET /api/cashflow/summary).
+    Same frequency table (MONTHLY_FACTOR) and same debt payments (plan_minimum) as
+    monthly_surplus. surplus_monthly is monthly_surplus itself (floored at $0, None
+    without income); balance_monthly is the unfloored income − expenses − payments."""
+    items = list(cashflow_items)
+    expenses = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in items if not inc), Decimal("0"))
+    payments = sum((plan_minimum(d) for d in debts if d.balance > 0), Decimal("0"))
+    income = monthly_income(items)
+    surplus = monthly_surplus(items, debts)
+    q = lambda x: x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # noqa: E731
+    inc = income or Decimal("0")
+    return {
+        "income_monthly": q(inc),
+        "expenses_monthly": q(expenses),
+        "debt_payments_monthly": q(payments),
+        "outflow_monthly": q(expenses + payments),
+        "surplus_monthly": surplus,
+        "balance_monthly": q(inc - expenses - payments),
+        "has_income": surplus is not None,
+    }
+
+
 def monthly_income(cashflow_items) -> Optional[Decimal]:
     """Monthly income from (amount, frequency, is_income) tuples; None without income."""
     income = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in cashflow_items if inc), Decimal("0"))
