@@ -1326,6 +1326,8 @@ def calculate_purchase_time_cost(
         return {
             "days_delayed": 0,
             "cost_in_interest": 0.0,
+            "freedom_date_baseline": None,
+            "freedom_date_impact": None,
             "message": "No active debts — buy freely (but wisely).",
         }
 
@@ -1415,6 +1417,9 @@ def calculate_purchase_time_cost(
         "days_delayed": days_delayed,
         "months_delayed": months_delayed,
         "cost_in_interest": float(cost_in_interest),
+        # The engine's own velocity dates (response-only addition; the math above is untouched)
+        "freedom_date_baseline": baseline["velocity_date"],
+        "freedom_date_impact": impact["velocity_date"],
         "message": message,
         "debug": {
             "baseline_months": baseline_months,

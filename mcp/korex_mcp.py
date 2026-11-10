@@ -172,9 +172,25 @@ def delete_account(account: str, confirm: bool = False) -> dict:
 
 
 @mcp.tool()
-def run_purchase_simulation(amount: float) -> dict:
-    """Estimate how much a purchase of `amount` dollars delays the user's debt-free date and costs in interest. Scope: run:simulations."""
-    return _call("POST", "/api/simulator/time-cost", {"amount": amount})
+def korex_judge_purchase(amount: float) -> dict:
+    """Juez de compras: how much a purchase of `amount` dollars delays the user's debt-free date.
+    Returns months_delayed, days_delayed (months x 30), cost_in_interest (an ESTIMATE: say so),
+    freedom_date_baseline -> freedom_date_impact (ISO dates, null when there are no active debts),
+    and out_of_scale=True when the plan breaks (>50 years). Show the number; never lecture: the user decides.
+    Scope: run:simulations."""
+    r = _call("POST", "/api/simulator/time-cost", {"amount": amount})
+    months = int(r.get("months_delayed") or 0)
+    base = (r.get("debug") or {}).get("baseline_months") or 0
+    return {
+        "amount": r.get("purchase_amount", amount),
+        "months_delayed": months,
+        "days_delayed": int(r.get("days_delayed") or 0),
+        "cost_in_interest_estimate": r.get("cost_in_interest", 0.0),
+        "freedom_date_baseline": r.get("freedom_date_baseline"),
+        "freedom_date_impact": r.get("freedom_date_impact"),
+        "has_debts": r.get("freedom_date_baseline") is not None,
+        "out_of_scale": months >= 999 or base >= 600,
+    }
 
 
 @mcp.tool()
