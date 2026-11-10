@@ -4,8 +4,9 @@
  * color + label + bar (<StageChip> + <StageBar>), never color alone.
  */
 import type { ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Home, Wallet, Repeat, Activity, Settings as SettingsIcon, ShieldCheck } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ShieldCheck } from 'lucide-react';
+import { NAV_PRIMARY, NAV_MORE, isNavActive } from '@/lib/nav';
 import { STAGE_LABEL, type Stage } from '@/lib/stage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { prefersReducedMotion } from '@/lib/motion';
@@ -215,35 +216,28 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
     );
 }
 
-// ── Bottom tab bar: Inicio · Cuentas · Suscripciones · Actividad · Ajustes ──
+// ── Bottom tab bar (< 768px): exactly NAV_PRIMARY, active by isNavActive ──
 export function TabBar() {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const es = language === 'es';
-    const tabs = [
-        { to: '/dashboard', end: true, icon: Home, label: es ? 'Inicio' : 'Home' },
-        { to: '/dashboard/accounts', icon: Wallet, label: es ? 'Cuentas' : 'Accounts' },
-        { to: '/dashboard/subscriptions', icon: Repeat, label: es ? 'Suscripciones' : 'Subscriptions' },
-        { to: '/dashboard/activity', icon: Activity, label: es ? 'Actividad' : 'Activity' },
-        { to: '/dashboard/settings', icon: SettingsIcon, label: es ? 'Ajustes' : 'Settings' },
-    ];
+    const { pathname } = useLocation();
     return (
-        <nav aria-label={es ? 'Navegación principal' : 'Main navigation'}
-            className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,env(safe-area-inset-bottom))] pt-2.5 lg:hidden">
-            {tabs.map(({ to, end, icon: Icon, label }) => (
-                <NavLink key={to} to={to} end={end}
-                    className={({ isActive }) => cx('kx-press relative flex-1 text-center text-[10.5px] transition-colors duration-[var(--kx-dur-base)]', isActive ? 'font-semibold text-kx-amber' : 'text-kx-ink3')}>
-                    {({ isActive }) => (
-                        <>
-                            {isActive && (
-                                <motion.span layoutId="kx-tab-indicator" transition={tx('base', prefersReducedMotion())}
-                                    aria-hidden="true" className="absolute -top-2.5 left-1/2 -ml-4 h-[3px] w-8 rounded-full bg-kx-amber" />
-                            )}
-                            <Icon className="mx-auto mb-1 h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
-                            {label}
-                        </>
-                    )}
-                </NavLink>
-            ))}
+        <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar"
+            className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
+            {NAV_PRIMARY.map(({ to, icon: Icon, labelKey }) => {
+                const active = isNavActive(pathname, to);
+                return (
+                    <Link key={to} to={to} aria-current={active ? 'page' : undefined}
+                        className={cx('kx-press relative min-w-0 flex-1 text-center text-[10.5px] transition-colors duration-[var(--kx-dur-base)]', active ? 'font-semibold text-kx-amber' : 'text-kx-ink3')}>
+                        {active && (
+                            <motion.span layoutId="kx-tab-indicator" transition={tx('base', prefersReducedMotion())}
+                                aria-hidden="true" className="absolute -top-2.5 left-1/2 -ml-4 h-[3px] w-8 rounded-full bg-kx-amber" />
+                        )}
+                        <Icon className="mx-auto mb-1 h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
+                        <span className="block truncate">{t(labelKey)}</span>
+                    </Link>
+                );
+            })}
         </nav>
     );
 }
@@ -254,5 +248,32 @@ export function FigureLine({ phrase, figure }: { phrase: ReactNode; figure?: Rea
         <p className="text-[13.5px] leading-snug text-kx-ink2">
             {phrase}{figure != null && <> <b className="kx-num font-semibold text-kx-ink">{figure}</b></>}
         </p>
+    );
+}
+
+// ── Sidebar / hamburger list: NAV_PRIMARY, then "Más" + NAV_MORE (same isNavActive) ──
+export function SideNav({ onNavigate }: { onNavigate?: () => void }) {
+    const { t } = useLanguage();
+    const { pathname } = useLocation();
+    return (
+        <nav className="flex-1 overflow-y-auto px-3 py-4" data-testid="sidebar-nav" aria-label={t('nav.coreX')}>
+            {[NAV_PRIMARY, NAV_MORE].map((group, gi) => (
+                <div key={gi} className={gi ? 'mt-4 border-t border-kx-line pt-3' : ''} data-testid={gi ? 'nav-more' : 'nav-primary'}>
+                    {gi === 1 && <p className="kx-label mb-1.5 px-3">{t('nav.more')}</p>}
+                    <div className="space-y-1.5">
+                        {group.map(({ to, icon: Icon, labelKey }) => {
+                            const active = isNavActive(pathname, to);
+                            return (
+                                <Link key={to} to={to} aria-current={active ? 'page' : undefined} onClick={onNavigate}
+                                    className={cx('flex h-10 w-full items-center gap-2 rounded-md px-4 text-sm font-medium transition-colors',
+                                        active ? 'bg-[color-mix(in_srgb,var(--kx-amber)_14%,transparent)] text-kx-amber' : 'text-kx-ink2 hover:bg-kx-raised hover:text-kx-ink')}>
+                                    <Icon size={18} strokeWidth={1.5} aria-hidden="true" /> <span className="whitespace-nowrap">{t(labelKey)}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
+        </nav>
     );
 }

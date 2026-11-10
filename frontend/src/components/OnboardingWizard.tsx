@@ -114,7 +114,7 @@ function inferInterestType(subtype: string): string {
 type Tone = 'neutral' | 'amber' | 'debt';
 const TONE: Record<Tone, { row: string; icon: string; amount: string; chip: string; chipIcon: string; pick: string }> = {
     neutral: { row: 'border-kx-line', icon: 'text-kx-ink2', amount: 'text-kx-ink', chip: 'bg-kx-raised border-kx-line', chipIcon: 'text-kx-ink2', pick: 'bg-kx-raised border border-kx-ink3 text-kx-ink' },
-    amber: { row: 'border-kx-line', icon: 'text-kx-amber', amount: 'text-kx-ink', chip: 'bg-kx-amber-soft border-kx-line', chipIcon: 'text-kx-amber', pick: 'bg-kx-amber-soft border border-kx-amber text-kx-ink' },
+    amber: { row: 'border-kx-line', icon: 'text-kx-amber', amount: 'text-kx-ink', chip: 'bg-[color-mix(in_srgb,var(--kx-amber)_14%,transparent)] border-kx-line', chipIcon: 'text-kx-amber', pick: 'bg-[color-mix(in_srgb,var(--kx-amber)_14%,transparent)] border border-kx-amber text-kx-ink' },
     debt: { row: 'border-kx-line', icon: 'text-kx-debt', amount: 'text-kx-debt', chip: 'bg-kx-raised border-kx-line', chipIcon: 'text-kx-debt', pick: 'bg-kx-raised border border-kx-debt text-kx-ink' },
 };
 

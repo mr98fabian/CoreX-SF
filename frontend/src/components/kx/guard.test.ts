@@ -55,3 +55,10 @@ describe('Design guard', () => {
         expect('className="bg-kx-debt text-kx-ink"').not.toMatch(HARD_COLOR);
     });
 });
+
+describe('Design guard — amber-soft is a solid color, not a tint', () => {
+    it('no bg-kx-amber-soft fills (it painted active items solid amber under amber text)', () => {
+        const offenders = Object.entries(code).filter(([f, s]) => !f.endsWith('.css') && /bg-kx-amber-soft/.test(s)).map(([f]) => f);
+        expect(offenders).toEqual([]);
+    });
+});
