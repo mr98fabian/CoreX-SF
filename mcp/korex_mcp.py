@@ -284,6 +284,53 @@ def korex_set_house_goal(target_total: float, home_price: float, saved_amount: f
 
 
 @mcp.tool()
+def korex_goals() -> list[dict]:
+    """Metas: the user's own savings goals (the house goal is korex_house_goal, not here). Each has id, name,
+    target_amount, saved_amount, monthly_saving, deadline, pct, remaining, completed, eta_months/eta_date (null
+    without a monthly saving pace). The ETA is an ESTIMATE from the pace the user declared: say so. Scope: read:dashboard."""
+    return _call("GET", "/api/goals")["goals"]
+
+
+def _resolve_goal(goal: str) -> dict:
+    goals = _call("GET", "/api/goals")["goals"]
+    for g in goals:
+        if str(g["id"]) == str(goal) or g["name"].lower() == str(goal).lower():
+            return g
+    raise KorexError(f"No goal called '{goal}'. Goals: {', '.join(g['name'] for g in goals) or 'none'}.")
+
+
+@mcp.tool()
+def korex_set_goal(name: str, target_amount: Optional[float] = None, saved_amount: Optional[float] = None,
+                   monthly_saving: Optional[float] = None, deadline: Optional[str] = None,
+                   goal: Optional[str] = None) -> dict:
+    """Create a savings goal, or edit one when `goal` (id or name) is given or `name` matches an existing goal.
+    Creating needs name + target_amount. deadline = YYYY-MM-DD. Never use it for the house goal (that is
+    korex_set_house_goal). Use the numbers the user gave. Scope: write:accounts."""
+    fields = {"name": name, "target_amount": target_amount, "saved_amount": saved_amount,
+              "monthly_saving": monthly_saving, "deadline": deadline}
+    body = {k: v for k, v in fields.items() if v is not None}
+    existing = None
+    try:
+        existing = _resolve_goal(goal or name)
+    except KorexError:
+        if goal:
+            raise
+    if existing:
+        return _call("PATCH", f"/api/goals/{existing['id']}", body)
+    if target_amount is None:
+        raise KorexError("To create a goal I need its target_amount.")
+    return _call("POST", "/api/goals", body)
+
+
+@mcp.tool()
+def korex_add_goal_savings(goal: str, amount: float) -> dict:
+    """Record money the user put aside for a goal (`goal` = id or name, `amount` > 0). It only records what the
+    user says they saved; it never moves money. Scope: write:accounts."""
+    g = _resolve_goal(goal)
+    return _call("POST", f"/api/goals/{g['id']}/add-savings", {"amount": amount})
+
+
+@mcp.tool()
 def korex_record_cut(account: str, cut_date: str, reported_balance: float) -> dict:
     """Record what a debt reported at its statement cut (Corte en Cero ritual). `account` = id or name of a DEBT,
     `cut_date` = YYYY-MM-DD of the cut, `reported_balance` = the statement balance (0 = corte en cero). Recording

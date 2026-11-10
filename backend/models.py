@@ -216,6 +216,20 @@ class CoachProfile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+class Goal(SQLModel, table=True):
+    """Metas: the user's own savings goals (the house goal lives in house_goals, not here)."""
+    __tablename__ = "goals"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    name: str = Field(max_length=80)
+    target_amount: Decimal = Field(max_digits=14, decimal_places=2)
+    saved_amount: Decimal = Field(default=0, max_digits=14, decimal_places=2)
+    monthly_saving: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2)
+    deadline: Optional[date] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class HouseGoal(SQLModel, table=True):
     """Modo Compra de Casa: the user's down-payment goal (one per user)."""
     __tablename__ = "house_goals"

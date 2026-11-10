@@ -4,7 +4,7 @@ Core financial calculations for debt optimization strategy.
 
 Uses Decimal for precision as per project standards.
 """
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, ROUND_CEILING
 from datetime import date, timedelta
 from typing import List, Dict, Optional
 from dataclasses import dataclass
@@ -2115,6 +2115,28 @@ def estimated_piti(home_price: Decimal, down_pct: Decimal) -> Decimal:
     pi = loan * r * growth / (growth - Decimal("1")) if loan > 0 else Decimal("0")
     tax_ins = home_price * (HOUSE_TAX_PCT + HOUSE_INSURANCE_PCT) / Decimal("100") / Decimal("12")
     return pi + tax_ins
+
+
+def goal_progress(target: Decimal, saved: Decimal, monthly_saving: Optional[Decimal], today: Optional[date] = None) -> dict:
+    """Metas: progress of a savings goal from its declared monthly pace (an ESTIMATE).
+    pct = saved / target (0-100, capped), remaining floored at $0, eta_months =
+    ceil(remaining / monthly_saving); no pace (None or 0) → eta None; saved ≥ target → completed."""
+    target, saved = Decimal(str(target)), Decimal(str(saved))
+    remaining = max(Decimal("0"), target - saved)
+    completed = target > 0 and saved >= target
+    pct = min(Decimal("100"), saved / target * Decimal("100")) if target > 0 else Decimal("0")
+    pace = Decimal(str(monthly_saving)) if monthly_saving is not None else None
+    eta_months = eta_date = None
+    if completed:
+        eta_months = 0
+    elif pace is not None and pace > 0:
+        eta_months = int((remaining / pace).to_integral_value(rounding=ROUND_CEILING))
+        start = today or date.today()
+        y, m = divmod(start.month - 1 + eta_months, 12)
+        eta_date = date(start.year + y, m + 1, min(start.day, 28))
+    q = lambda x: x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # noqa: E731
+    return {"pct": pct.quantize(Decimal("0.1"), rounding=ROUND_HALF_UP), "remaining": q(remaining),
+            "completed": completed, "eta_months": eta_months, "eta_date": eta_date}
 
 
 def house_goal_estimate(target: Decimal, home_price: Decimal, down_pct: Decimal, closing_pct: Decimal,

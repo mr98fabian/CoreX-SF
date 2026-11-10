@@ -44,7 +44,7 @@ cd backend && DATABASE_URL="sqlite:///./korex.db" ./venv/Scripts/python.exe -m a
 ```
 
 Si la DB nunca fue estampada (sin tabla `alembic_version`): primero `alembic stamp bd322c6ada8b`, luego `upgrade head`.
-Head actual: `a1f4c2e97b30`. Los tests pasan con SQLite en memoria creada desde los modelos, así que **un modelo con columna nueva puede dar 500 `no such column` en local aunque los tests estén verdes** — aplicar la migración.
+Head actual: `a9e3c7d1f5b2` (goals, nov 2026). Los tests pasan con SQLite en memoria creada desde los modelos, así que **un modelo con columna nueva puede dar 500 `no such column` en local aunque los tests estén verdes** — aplicar la migración.
 
 ## Reglas del dominio (no negociables)
 

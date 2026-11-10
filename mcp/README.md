@@ -55,6 +55,9 @@ Optional: `KOREX_API_URL` (default `https://corex-sf-production.up.railway.app`;
 | `update_account` | Correct an account: only the fields you pass `{account, name?, balance?, interest_rate?, min_payment?, ...}` | `write:accounts` |
 | `delete_account` | Delete an account and its transactions `{account, confirm}`; asks for confirmation first | `write:accounts` |
 | `korex_judge_purchase` | Juez de compras: months/days a purchase `{amount}` delays your freedom, freedom date before → after | `run:simulations` |
+| `korex_goals` | Your own savings goals with progress and estimated date (house goal excluded) | `read:dashboard` |
+| `korex_set_goal` | Create or edit a goal `{name, target_amount, saved_amount?, monthly_saving?, deadline?, goal?}` | `write:accounts` |
+| `korex_add_goal_savings` | Record money put aside for a goal `{goal, amount}` | `write:accounts` |
 | `get_settings` | Your app settings | `read:dashboard` |
 
 ## Security
