@@ -46,7 +46,7 @@ export function HouseGoalRow({ es }: { es: boolean }) {
 
     return (
         <Section tone="neutral" title={es ? 'Compra de casa' : 'Home buying'}>
-            <div data-testid="house-goal-row">
+            <div data-testid="house-goal-row" id="casa">
                 {rows.map(([f, label, hint], i) => (
                     <label key={f} className={`flex items-center gap-3 ${i ? 'border-t border-[var(--kx-line-soft)] pt-3 mt-3' : ''}`}>
                         <span className="flex w-6 flex-none items-center justify-center">{i === 0 && <Home className="h-[18px] w-[18px] text-kx-ink2" strokeWidth={1.75} />}</span>

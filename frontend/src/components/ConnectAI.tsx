@@ -23,7 +23,7 @@ const SCOPES: { scope: string; es: string; en: string }[] = [
     { scope: 'read:plan', es: 'Ver mi plan de acción', en: 'See my action plan' },
     { scope: 'run:simulations', es: 'Simular compras', en: 'Simulate purchases' },
     { scope: 'write:payments', es: 'Registrar pagos', en: 'Record payments' },
-    { scope: 'write:accounts', es: 'Agregar cuentas', en: 'Add accounts' },
+    { scope: 'write:accounts', es: 'Cuentas y metas', en: 'Accounts and goals' },
 ];
 const READ_ONLY = ['read:accounts', 'read:dashboard', 'read:plan', 'run:simulations'];
 

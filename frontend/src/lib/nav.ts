@@ -4,7 +4,7 @@
  * sidebar/hamburger. MORE = only in the sidebar/hamburger, under "Más".
  * No section appears in both groups. Panel de Crédito has no entry: it lives in Cuentas.
  */
-import { Home, CalendarDays, ListChecks, Wallet, Repeat, Activity, Gavel, Clock, BarChart3, Trophy, Settings, type LucideIcon } from 'lucide-react';
+import { Home, CalendarDays, ListChecks, Wallet, Repeat, Activity, Gavel, Clock, Target, BarChart3, Trophy, Settings, type LucideIcon } from 'lucide-react';
 
 export interface NavItem {
     to: string;
@@ -25,6 +25,7 @@ export const NAV_MORE: readonly NavItem[] = [
     { to: '/dashboard/activity', labelKey: 'nav.activity', icon: Activity },
     { to: '/dashboard/judge', labelKey: 'nav.judge', icon: Gavel },
     { to: '/dashboard/money-clock', labelKey: 'nav.moneyClock', icon: Clock },
+    { to: '/dashboard/goals', labelKey: 'nav.goals', icon: Target },
     { to: '/dashboard/analytics', labelKey: 'nav.analysis', icon: BarChart3 },
     { to: '/dashboard/rankings', labelKey: 'nav.rankings', icon: Trophy },
     { to: '/dashboard/settings', labelKey: 'nav.settingsShort', icon: Settings },
