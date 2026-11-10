@@ -19,11 +19,11 @@ from sqlmodel import select
 from api_tokens import audit_summary, require_scope
 from database import request_session
 from helpers import accounts_to_active_debt_objects, filter_active_debt_accounts, get_attack_percentage, get_cashflow_surplus, get_liquid_cash
-from models import Account, CoachProfile, Transaction
+from models import Account, CoachProfile, Goal, Transaction
 from routers.cuts import streak
 from routers.engagement import generate_alias, leave_leagues
 from plan_guard import scoped_plan_limit
-from velocity_engine import daily_interest, get_projections
+from velocity_engine import daily_interest, get_projections, goal_progress
 
 router = APIRouter(prefix="/api", tags=["coach"])
 
@@ -113,6 +113,8 @@ async def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
         free_date = proj.get("velocity_debt_free_date") if debts else None
         cut_streak = streak(session, user_id)
         today_daily = daily_interest(filter_active_debt_accounts(accounts, plan_limit))["total"]  # same source as the dashboard
+        goals_done = sum(1 for g in session.exec(select(Goal).where(Goal.user_id == user_id)).all()
+                         if goal_progress(Decimal(g.target_amount), Decimal(g.saved_amount), None)["completed"])
 
     def item(value, label: str, note: Optional[str] = None):
         return {"valor": value, "etiqueta": label, **({"nota": note} if note else {})}
@@ -128,6 +130,7 @@ async def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
                              "Interés que aún pagarás siguiendo tu plan (estimado)"),
         "interes_diario": item(_money(today_daily), "Interés que tu deuda te cobra cada día (estimado, al ritmo de hoy)"),
         "fecha_libre": item(free_date, "Fecha estimada en que quedas libre de deudas"),
+        "metas_cumplidas": item(goals_done, "Metas de ahorro propias cumplidas"),
         "racha_cortes_cero": item(cut_streak, "Cortes seguidos reportando $0",
                                   None if cut_streak is not None else
                                   "Aún no hay cortes registrados; se calcula al registrar el primero."),

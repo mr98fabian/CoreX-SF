@@ -137,6 +137,17 @@ export function StageBar({ stage, pct }: { stage: Stage; pct: number | null }) {
     );
 }
 
+// ── Savings-goal bar (Metas, Modo casa): thin, amber, never the debt stage colors ──
+export function GoalBar({ pct, label }: { pct: number; label?: string }) {
+    const v = Math.max(0, Math.min(100, Math.round(pct)));
+    return (
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--kx-ink)_10%,transparent)]" role="progressbar"
+            aria-label={label} aria-valuenow={v} aria-valuemin={0} aria-valuemax={100} data-testid="goal-bar">
+            <i className="block h-full origin-left rounded-full bg-kx-amber transition-[width] duration-[var(--kx-dur-base)]" style={{ width: `${v > 0 ? Math.max(3, v) : 0}%` }} />
+        </div>
+    );
+}
+
 // ── PAGADA stamp: bordered, rotated −4°, sober ──
 export function PaidStamp({ className }: { className?: string }) {
     const { language } = useLanguage();

@@ -37,7 +37,7 @@ SCOPES = {
     "read:dashboard": "Ver mi panel y ajustes",
     "read:plan": "Ver mi plan de acción",
     "write:payments": "Registrar pagos",
-    "write:accounts": "Agregar cuentas",
+    "write:accounts": "Cuentas y metas",
     "run:simulations": "Simular compras",
 }
 RATE_LIMIT_PER_MIN = 60

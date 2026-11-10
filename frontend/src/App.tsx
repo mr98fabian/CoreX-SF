@@ -12,6 +12,7 @@ const AnalyticsPage = lazy(() => import("@/features/analytics/AnalyticsPage"));
 const RankingsPage = lazy(() => import("@/features/rankings/RankingsPage"));
 const JudgePage = lazy(() => import("@/features/judge/JudgePage"));
 const MoneyClockPage = lazy(() => import("@/features/moneyclock/MoneyClockPage"));
+const GoalsPage = lazy(() => import("@/features/goals/GoalsPage"));
 const HomePage = lazy(() => import("@/features/home/HomePage"));
 const CalendarPage = lazy(() => import("@/features/home/CalendarPage"));
 const AccountsStagePage = lazy(() => import("@/features/accounts/AccountsStagePage"));
@@ -83,6 +84,7 @@ function AppShell() {
                   <Route path="rankings" element={<RankingsPage />} />
                   <Route path="judge" element={<JudgePage />} />
                   <Route path="money-clock" element={<MoneyClockPage />} />
+                  <Route path="goals" element={<GoalsPage />} />
                   <Route path="settings" element={<SettingsHome />} />
                   <Route path="settings/plans" element={<PlansPage />} />
                   <Route path="settings/ia" element={<IAGuidePage />} />

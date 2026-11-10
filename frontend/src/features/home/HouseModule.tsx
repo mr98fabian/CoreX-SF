@@ -1,11 +1,11 @@
 /**
  * Inicio → Modo compra de casa: only when the user has a house goal.
- * Thermometer in the stage language, "$X de $Y · te faltan $Z", estimated
+ * Amber GoalBar (a savings goal never paints green), "$X de $Y · te faltan $Z", estimated
  * date when there is a saving pace, and the DTI line when income exists.
  * Every figure comes from /api/house-goal and is labelled as an estimate.
  */
 import { useQuery } from '@tanstack/react-query';
-import { Section, StageBar } from '@/components/kx';
+import { GoalBar, Section } from '@/components/kx';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { apiFetch } from '@/lib/api';
 
@@ -28,7 +28,7 @@ export function HouseModule({ es }: { es: boolean }) {
                         ? <> · {es ? 'te faltan' : 'missing'} <b className="kx-num text-kx-ink">{formatMoney(data.missing ?? 0)}</b></>
                         : <> · {es ? 'meta alcanzada' : 'goal reached'}</>}
                 </p>
-                <StageBar stage={pct >= 1 ? 'paid' : 'almost'} pct={pct} />
+                <GoalBar pct={pct * 100} label={es ? 'Progreso de la meta de casa' : 'Home goal progress'} />
                 <div className="mt-2 space-y-0.5 text-xs text-kx-ink2">
                     {data.eta_date && (data.missing ?? 0) > 0 && (
                         <p>{es ? 'Fecha estimada: ' : 'Estimated date: '}<span className="kx-num text-kx-ink">{new Date(`${data.eta_date}T12:00:00`).toLocaleDateString(es ? 'es' : 'en', { month: 'long', year: 'numeric' })}</span></p>

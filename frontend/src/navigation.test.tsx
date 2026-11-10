@@ -7,7 +7,7 @@ import layoutSrc from './layouts/DashboardLayout.tsx?raw';
 
 const LABELS: Record<string, string> = {
     'nav.home': 'Inicio', 'nav.calendar': 'Calendario', 'nav.plan': 'Plan', 'nav.accountsShort': 'Cuentas', 'nav.subscriptions': 'Suscripciones',
-    'nav.activity': 'Actividad', 'nav.judge': 'Juez de compras', 'nav.moneyClock': 'Reloj de dinero', 'nav.analysis': 'Análisis', 'nav.rankings': 'Rangos', 'nav.settingsShort': 'Ajustes', 'nav.more': 'Más', 'nav.coreX': 'KoreX',
+    'nav.activity': 'Actividad', 'nav.judge': 'Juez de compras', 'nav.moneyClock': 'Reloj de dinero', 'nav.goals': 'Metas', 'nav.analysis': 'Análisis', 'nav.rankings': 'Rangos', 'nav.settingsShort': 'Ajustes', 'nav.more': 'Más', 'nav.coreX': 'KoreX',
 };
 vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'es', t: (k: string) => LABELS[k] ?? k }) }));
 
@@ -29,7 +29,7 @@ afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChi
 
 const hrefs = (el: Element) => [...el.querySelectorAll('a')].map((a) => a.getAttribute('href'));
 const PRIMARY = ['/dashboard', '/dashboard/calendar', '/dashboard/action-plan', '/dashboard/accounts', '/dashboard/subscriptions'];
-const MORE = ['/dashboard/activity', '/dashboard/judge', '/dashboard/money-clock', '/dashboard/analytics', '/dashboard/rankings', '/dashboard/settings'];
+const MORE = ['/dashboard/activity', '/dashboard/judge', '/dashboard/money-clock', '/dashboard/goals', '/dashboard/analytics', '/dashboard/rankings', '/dashboard/settings'];
 
 describe('Navegación top-5', () => {
     it('the tab bar holds exactly the 5 primary entries, in order', async () => {

@@ -18,6 +18,7 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.activity": { en: "Activity", es: "Actividad" },
     "nav.judge": { en: "Purchase judge", es: "Juez de compras" },
     "nav.moneyClock": { en: "Money clock", es: "Reloj de dinero" },
+    "nav.goals": { en: "Goals", es: "Metas" },
     "nav.analysis": { en: "Analysis", es: "Análisis" },
     "nav.settingsShort": { en: "Settings", es: "Ajustes" },
     "nav.more": { en: "More", es: "Más" },

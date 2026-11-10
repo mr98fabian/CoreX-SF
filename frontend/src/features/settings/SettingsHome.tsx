@@ -77,6 +77,13 @@ export default function SettingsHome() {
     const location = useLocation();
 
     useEffect(() => { apiFetch<Status>('/api/subscriptions/status').then(setStatus).catch(() => setStatus(null)); }, []);
+    // Deep links (#casa from Metas, #ia from KoreX con tu IA): SPA navigation doesn't scroll to a hash by itself
+    useEffect(() => {
+        const id = location.hash.slice(1);
+        if (!id) return;
+        const t = window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 150);
+        return () => window.clearTimeout(t);
+    }, [location.hash]);
 
     // Lemon Squeezy returns to /dashboard/settings?tab=subscription&checkout=success (backend
     // redirect_url); the plan-sync + "payment received" logic lives in the advanced screen.
