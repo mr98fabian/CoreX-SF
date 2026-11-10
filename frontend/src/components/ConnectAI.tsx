@@ -10,6 +10,7 @@ import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { AIKit } from '@/components/AIKit';
 
 /**
  * "Conecta tu IA" — personal API tokens for an AI assistant (MCP server in mcp/).
@@ -36,18 +37,6 @@ interface ApiTokenRow {
     active: boolean;
 }
 
-function mcpConfig(token: string) {
-    return JSON.stringify({
-        mcpServers: {
-            korex: {
-                command: '/RUTA/A/KoreX/mcp/.venv/bin/python',
-                args: ['/RUTA/A/KoreX/mcp/korex_mcp.py'],
-                env: { KOREX_API_TOKEN: token },
-            },
-        },
-    }, null, 2);
-}
-
 export function ConnectAI() {
     const { language } = useLanguage();
     const es = language === 'es';
@@ -58,7 +47,7 @@ export function ConnectAI() {
     const [scopes, setScopes] = useState<string[]>(READ_ONLY);
     const [creating, setCreating] = useState(false);
     const [newToken, setNewToken] = useState<string | null>(null);
-    const [copied, setCopied] = useState<'token' | 'config' | null>(null);
+    const [copied, setCopied] = useState<'token' | null>(null);
 
     // The lock is the server's answer (GET /api/tokens/access), never decided here
     const [access, setAccess] = useState<{ allowed: boolean; reason: string | null } | null>(null);
@@ -100,7 +89,7 @@ export function ConnectAI() {
         load();
     };
 
-    const copy = async (text: string, what: 'token' | 'config') => {
+    const copy = async (text: string, what: 'token') => {
         try {
             await navigator.clipboard.writeText(text);
             setCopied(what);
@@ -160,17 +149,8 @@ export function ConnectAI() {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium">
-                                        {es ? 'Configuración para Claude Desktop (cambia /RUTA/A/ por tu carpeta)' : 'Claude Desktop config (replace /RUTA/A/ with your folder)'}
-                                    </p>
-                                    <Button size="sm" variant="ghost" onClick={() => copy(mcpConfig(newToken), 'config')}>
-                                        {copied === 'config' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                    </Button>
-                                </div>
-                                <pre className="overflow-x-auto rounded-lg bg-black/40 p-3 font-mono text-xs text-kx-ink">{mcpConfig(newToken)}</pre>
-                            </div>
+                            {/* Kit para tu IA: only here, right after creation, with the real token */}
+                            <AIKit token={newToken} es={es} onceNotice />
                             <Button variant="outline" onClick={() => setNewToken(null)}>
                                 {es ? 'Listo, ya lo guardé' : "Done, I've saved it"}
                             </Button>
