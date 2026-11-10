@@ -43,60 +43,6 @@ export function useCashflowStats(refreshKey: number = 0) {
 
     useEffect(() => { fetchCashflow(); }, [refreshKey]);
 
-    // 1. Normalize everything to MONTHLY first (Base Unit)
-    const getMonthlyAmount = (item: CashflowItem) => {
-        const amt = Number(item.amount);
-        switch (item.frequency) {
-            case 'weekly': return amt * 4.345; // 52.14 weeks / 12 months
-            case 'biweekly': return amt * 2.17; // 26.07 fortnights / 12 months
-            case 'semi_monthly': return amt * 2; // Exactly 24 payments / 12 months
-            case 'monthly': return amt;
-            case 'annually': return amt / 12;
-            default: return amt;
-        }
-    };
-
-    // 2. Calculator for dynamic timeframes
-    const calculateStats = (timeframe: Timeframe) => {
-        const factor = getFactor(timeframe); // Multiplier from Monthly -> Target Timeframe
-
-        const incomeItems = items.filter(i => i.category === 'income');
-        const expenseItems = items.filter(i => i.category === 'expense');
-        const debtExpenseItems = items.filter(i => i.is_debt_virtual);
-        const regularExpenseItems = items.filter(i => i.category === 'expense' && !i.is_debt_virtual);
-
-        const totalIncomeMonthly = incomeItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
-        const totalExpensesMonthly = expenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
-        const totalDebtMonthly = debtExpenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
-        const totalRegularMonthly = regularExpenseItems.reduce((acc, i) => acc + getMonthlyAmount(i), 0);
-
-        // Debt Drain: % of income consumed by debt payments
-        const debtDrainPct = totalIncomeMonthly > 0 ? (totalDebtMonthly / totalIncomeMonthly) * 100 : 0;
-
-        return {
-            income: totalIncomeMonthly * factor,
-            expenses: totalExpensesMonthly * factor,
-            surplus: (totalIncomeMonthly - totalExpensesMonthly) * factor,
-            // Debt intelligence
-            debtExpenses: totalDebtMonthly * factor,
-            regularExpenses: totalRegularMonthly * factor,
-            debtDrainPct,
-            // Raw monthly values for Peace Shield reference
-            monthlyExpenses: totalExpensesMonthly
-        };
-    };
-
-    // Helper: Convert Monthly -> Target Timeframe
-    const getFactor = (timeframe: Timeframe) => {
-        switch (timeframe) {
-            case 'daily': return 1 / 30.44; // Avg days in month
-            case 'weekly': return 1 / 4.345;
-            case 'monthly': return 1;
-            case 'annually': return 12;
-            default: return 1;
-        }
-    };
-
     const formatMoney = (val: number) => {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(isNaN(val) ? 0 : val);
     };
@@ -106,7 +52,6 @@ export function useCashflowStats(refreshKey: number = 0) {
         loading,
         error,
         fetchCashflow,
-        calculateStats,
         formatMoney
     };
 }

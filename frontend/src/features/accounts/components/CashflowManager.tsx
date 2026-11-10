@@ -12,11 +12,16 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCashflowStats } from "../hooks/useCashflowStats";
+import { useCashflowSummary } from "@/hooks/useCashflowSummary";
+import { perPeriod, type Period } from "@/lib/moneyClock";
 import type { Timeframe, CashflowItem } from "../hooks/useCashflowStats";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(), onUpgrade }: { refreshKey?: number; lockedIds?: Set<number>; onUpgrade?: () => void }) {
-    const { items, fetchCashflow, calculateStats, formatMoney } = useCashflowStats(refreshKey);
+    const { items, fetchCashflow: fetchItems, formatMoney } = useCashflowStats(refreshKey);
+    // Totals come from the engine (GET /api/cashflow/summary), not from a frontend frequency table
+    const summary = useCashflowSummary(refreshKey);
+    const fetchCashflow = () => { fetchItems(); void summary.refetch(); };
     const { t } = useLanguage();
     const [currentTimeframe, setCurrentTimeframe] = useState<Timeframe>('monthly');
 
@@ -32,7 +37,18 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
         date_specific_2: 30
     });
 
-    const stats = calculateStats(currentTimeframe);
+    const PERIOD: Record<Timeframe, Period> = { daily: 'day', weekly: 'week', monthly: 'month', annually: 'year' };
+    const s = summary.data;
+    const per = (monthly: number) => perPeriod(monthly, PERIOD[currentTimeframe]);
+    const stats = {
+        income: per(s?.income_monthly ?? 0),
+        expenses: per(s?.outflow_monthly ?? 0),
+        regularExpenses: per(s?.expenses_monthly ?? 0),
+        debtExpenses: per(s?.debt_payments_monthly ?? 0),
+        surplus: per(s?.balance_monthly ?? 0),
+        yearly: perPeriod(s?.balance_monthly ?? 0, 'year'),
+        debtDrainPct: s && s.income_monthly > 0 ? (s.debt_payments_monthly / s.income_monthly) * 100 : 0,
+    };
 
     const handleAdd = async () => {
         if (!newItem.name || !newItem.amount) {
@@ -107,7 +123,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-extrabold text-kx-ink drop-shadow-[0_0_10px_rgba(16,185,129,0.3)]">
-                            {formatMoney(stats.income)}
+                            <span data-testid="cf-income">{formatMoney(stats.income)}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -121,7 +137,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-extrabold text-kx-ink drop-shadow-[0_0_10px_rgba(244,63,94,0.3)]">
-                            {formatMoney(stats.expenses)}
+                            <span data-testid="cf-expenses">{formatMoney(stats.expenses)}</span>
                         </div>
                         {stats.debtExpenses > 0 && (
                             <div className="mt-2 space-y-1">
@@ -149,7 +165,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-3xl font-extrabold drop-shadow-md ${stats.surplus >= 0 ? 'text-kx-ink2' : 'text-kx-amber'}`}>
+                        <div data-testid="cf-surplus" className={`text-3xl font-extrabold drop-shadow-md ${stats.surplus >= 0 ? 'text-kx-ink2' : 'text-kx-debt'}`}>
                             {formatMoney(stats.surplus)}
                         </div>
                         <p className="text-xs text-kx-ink3 mt-1 capitalize">
@@ -159,11 +175,11 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             <div className="flex flex-col gap-0.5 mt-1.5">
                                 {currentTimeframe !== 'annually' && (
                                     <span className="text-xs text-kx-amber font-semibold">
-                                        ⚡ {formatMoney(stats.surplus * (currentTimeframe === 'daily' ? 365.25 : currentTimeframe === 'weekly' ? 52.14 : 12))}/año
+                                        ⚡ {formatMoney(stats.yearly)}/año
                                     </span>
                                 )}
                                 <span className="text-xs text-kx-amber font-medium">
-                                    🎯 {((stats.surplus / stats.income) * 100).toFixed(0)}% {t('cashflow.attackPower') || 'Poder de Ataque'}
+                                    🎯 {stats.income > 0 ? ((stats.surplus / stats.income) * 100).toFixed(0) : 0}% {t('cashflow.attackPower') || 'Poder de Ataque'}
                                 </span>
                             </div>
                         )}
