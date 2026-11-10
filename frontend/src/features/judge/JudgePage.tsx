@@ -96,7 +96,7 @@ export default function JudgePage() {
                                 </p>
                                 <p className="mt-1 text-[15px] text-kx-ink2">{es ? 'de deuda' : 'of debt'}</p>
                                 <p className="mt-3 text-[14px] text-kx-ink">
-                                    ≈ +<span className="kx-num">{verdict.days}</span> {es ? 'días' : 'days'} · <span className="kx-num font-semibold">{formatMoney(verdict.interest)}</span> {es ? 'más de interés (estimado)' : 'more interest (estimate)'}
+                                    ≈ +<span className="kx-num">{verdict.days}</span> {es ? 'días' : 'days'}
                                 </p>
                                 <p className="mt-1 text-[14px] text-kx-ink2">
                                     {es ? 'Tu libertad: ' : 'Your freedom: '}<b className="font-semibold text-kx-ink">{monthYear(verdict.from, es)}</b> → <b className="font-semibold text-kx-debt">{monthYear(verdict.to, es)}</b>

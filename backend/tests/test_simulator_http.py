@@ -65,3 +65,8 @@ def test_mcp_exposes_one_judge_tool_for_this_endpoint():
     assert "def korex_judge_purchase(" in src
     assert "run_purchase_simulation" not in src
     assert src.count('"/api/simulator/time-cost"') == 1
+    # The engine's interest figure is a linear approximation: the tool must not pass it on
+    body = src[src.index("def korex_judge_purchase("):src.index("@mcp.tool()", src.index("def korex_judge_purchase("))]
+    assert "cost_in_interest" not in body
+    for k in ("months_delayed", "days_delayed", "freedom_date_baseline", "freedom_date_impact", "has_debts", "out_of_scale"):
+        assert f'"{k}"' in body

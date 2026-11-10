@@ -174,7 +174,7 @@ def delete_account(account: str, confirm: bool = False) -> dict:
 @mcp.tool()
 def korex_judge_purchase(amount: float) -> dict:
     """Juez de compras: how much a purchase of `amount` dollars delays the user's debt-free date.
-    Returns months_delayed, days_delayed (months x 30), cost_in_interest (an ESTIMATE: say so),
+    Returns months_delayed, days_delayed (months x 30),
     freedom_date_baseline -> freedom_date_impact (ISO dates, null when there are no active debts),
     and out_of_scale=True when the plan breaks (>50 years). Show the number; never lecture: the user decides.
     Scope: run:simulations."""
@@ -185,7 +185,6 @@ def korex_judge_purchase(amount: float) -> dict:
         "amount": r.get("purchase_amount", amount),
         "months_delayed": months,
         "days_delayed": int(r.get("days_delayed") or 0),
-        "cost_in_interest_estimate": r.get("cost_in_interest", 0.0),
         "freedom_date_baseline": r.get("freedom_date_baseline"),
         "freedom_date_impact": r.get("freedom_date_impact"),
         "has_debts": r.get("freedom_date_baseline") is not None,

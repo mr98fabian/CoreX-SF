@@ -54,7 +54,7 @@ Optional: `KOREX_API_URL` (default `https://corex-sf-production.up.railway.app`;
 | `add_account` | Add `{name, type, balance, interest_rate, min_payment}` | `write:accounts` |
 | `update_account` | Correct an account: only the fields you pass `{account, name?, balance?, interest_rate?, min_payment?, ...}` | `write:accounts` |
 | `delete_account` | Delete an account and its transactions `{account, confirm}`; asks for confirmation first | `write:accounts` |
-| `korex_judge_purchase` | Juez de compras: months/days a purchase `{amount}` delays your freedom, estimated interest, freedom date before → after | `run:simulations` |
+| `korex_judge_purchase` | Juez de compras: months/days a purchase `{amount}` delays your freedom, freedom date before → after | `run:simulations` |
 | `get_settings` | Your app settings | `read:dashboard` |
 
 ## Security

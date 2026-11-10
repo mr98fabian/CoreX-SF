@@ -38,13 +38,15 @@ async function judge(amount: string, label = '') {
 const base = { message: 'English message that must never show', debug: { baseline_months: 20 } };
 
 describe('Juez de compras — veredicto', () => {
-    it('delay: hero in months, days + estimated interest, freedom month → month, "Tú decides."', async () => {
+    it('delay: hero in months, days, freedom month → month, "Tú decides." — no interest figure', async () => {
         apiFetch.mockResolvedValue({ ...base, days_delayed: 60, months_delayed: 2, cost_in_interest: 84.5, freedom_date_baseline: '2027-06-01', freedom_date_impact: '2027-08-01' });
         const el = await judge('1500', 'Laptop');
         expect(apiFetch).toHaveBeenCalledWith('/api/simulator/time-cost', { method: 'POST', body: JSON.stringify({ amount: 1500 }) });
         const v = el.querySelector('[data-testid="verdict-delay"]')!;
         expect(v.textContent).toContain('+2 meses');
-        expect(v.textContent).toContain('≈ +60 días · $84.50 más de interés (estimado)');
+        expect(v.textContent).toContain('≈ +60 días');
+        expect(v.textContent).not.toMatch(/inter[eé]s|\$84\.50/);
+        expect(el.textContent).toContain('Cifras estimadas con tus datos actuales.');
         expect(v.textContent).toMatch(/Tu libertad: junio de 2027 → agosto de 2027/);
         expect(v.textContent).toContain('Laptop · $1500.00');
         expect(v.textContent).toContain('Tú decides.');
