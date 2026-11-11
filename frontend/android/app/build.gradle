@@ -18,6 +18,9 @@ android {
     }
     buildTypes {
         release {
+            // v1 was signed with the machine's ~/.android/debug.keystore: every
+            // release must keep the SAME key or Android forces an uninstall.
+            signingConfig signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
