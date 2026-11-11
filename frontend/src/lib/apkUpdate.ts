@@ -46,6 +46,30 @@ export function muteVersion(versionCode: number, now: number) {
     write(MUTE_KEY, { version_code: versionCode, until: d.getTime() });
 }
 
+/** The announced version is above the installed one (no cache, no mute: the manual check uses this). */
+export function isNewer(installed: number, manifest: ApkManifest | null): manifest is ApkManifest {
+    return !!manifest && Number.isInteger(installed) && manifest.version_code > installed;
+}
+
+/** Automatic banner: newer AND not muted. */
 export function shouldOffer(installed: number, manifest: ApkManifest | null, now: number): boolean {
-    return !!manifest && Number.isInteger(installed) && manifest.version_code > installed && !isMuted(manifest.version_code, now);
+    return isNewer(installed, manifest) && !isMuted(manifest.version_code, now);
+}
+
+/** Manual check ("Buscar actualización" in Más): always visible feedback, never silent. */
+export type ManualCheck =
+    | { state: 'checking' }
+    | { state: 'new'; manifest: ApkManifest }
+    | { state: 'current'; version_name: string }
+    | { state: 'error' };
+
+export function manualCheckResult(installed: number, installedName: string, manifest: ApkManifest | null): ManualCheck {
+    if (!manifest || !Number.isInteger(installed)) return { state: 'error' };
+    return isNewer(installed, manifest) ? { state: 'new', manifest } : { state: 'current', version_name: installedName };
+}
+
+/** iPhone / iPad (iPadOS reports "Macintosh" with touch): the download row is hidden there,
+ *  iOS waits for the App Store (owner decision). */
+export function isIOS(userAgent: string, maxTouchPoints = 0): boolean {
+    return /iPhone|iPad|iPod/i.test(userAgent) || (/Macintosh/i.test(userAgent) && maxTouchPoints > 1);
 }
