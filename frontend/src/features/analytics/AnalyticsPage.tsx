@@ -49,7 +49,10 @@ function getCategoryColor(name: string): string {
 
 // ─── Component ─────────────────────────────────────────────
 export default function AnalyticsPage() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const es = language === 'es';
+    // Server sentinels shown in the user's language
+    const catLabel = (name: string) => name === 'Uncategorized' ? (es ? 'Sin categoría' : 'Uncategorized') : name === 'None' ? (es ? 'Sin datos' : 'No data') : name;
     usePageTitle(t('nav.analytics'));
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
@@ -72,7 +75,7 @@ export default function AnalyticsPage() {
             })
             .catch((err) => {
                 console.error('Analytics load error:', err);
-                toast({ title: 'Error', description: 'Failed to load analytics data.', variant: 'destructive' });
+                toast({ title: 'Error', description: es ? 'No pudimos cargar tu análisis.' : 'Failed to load analytics data.', variant: 'destructive' });
             })
             .finally(() => setIsLoading(false));
         // toast is stable (from useToast) — including it would refetch on every toast change
@@ -106,10 +109,10 @@ export default function AnalyticsPage() {
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                     <BarChart3 className="text-kx-amber" size={28} />
-                    Analytics
+                    {es ? 'Análisis' : 'Analytics'}
                 </h1>
                 <p className="text-muted-foreground">
-                    Spending insights and financial trends to optimize your velocity strategy.
+                    {es ? 'En qué se va tu dinero y cómo cambia mes a mes, para afinar tu estrategia.' : 'Spending insights and financial trends to optimize your velocity strategy.'}
                 </p>
             </div>
 
@@ -121,7 +124,7 @@ export default function AnalyticsPage() {
                             <DollarSign className="text-kx-amber" size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Avg Monthly Spending</p>
+                            <p className="text-sm text-muted-foreground">{es ? 'Gasto mensual promedio' : 'Avg Monthly Spending'}</p>
                             <p className="text-2xl font-bold">{formatMoney(summary?.avg_monthly_spending ?? 0)}</p>
                         </div>
                     </CardContent>
@@ -133,7 +136,7 @@ export default function AnalyticsPage() {
                             <TrendingDown className="text-kx-debt" size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Total 3-Month Spend</p>
+                            <p className="text-sm text-muted-foreground">{es ? 'Gasto total (3 meses)' : 'Total 3-Month Spend'}</p>
                             <p className="text-2xl font-bold">{formatMoney(summary?.total_3m_spending ?? 0)}</p>
                         </div>
                     </CardContent>
@@ -145,8 +148,8 @@ export default function AnalyticsPage() {
                             <Tag className="text-kx-ink2" size={24} />
                         </div>
                         <div>
-                            <p className="text-sm text-muted-foreground">Top Category</p>
-                            <p className="text-2xl font-bold">{summary?.top_category ?? 'N/A'}</p>
+                            <p className="text-sm text-muted-foreground">{es ? 'Categoría principal' : 'Top Category'}</p>
+                            <p className="text-2xl font-bold">{summary ? catLabel(summary.top_category) : (es ? 'Sin datos' : 'N/A')}</p>
                             <p className="text-xs text-muted-foreground">{formatMoney(summary?.top_category_amount ?? 0)}</p>
                         </div>
                     </CardContent>
@@ -158,12 +161,12 @@ export default function AnalyticsPage() {
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <BarChart3 size={18} className="text-kx-amber" />
-                        Spending by Category
+                        {es ? 'Gasto por categoría' : 'Spending by Category'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {categories.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">No spending data available yet.</p>
+                        <p className="text-sm text-muted-foreground text-center py-8">{es ? 'Aún no hay gastos registrados.' : 'No spending data available yet.'}</p>
                     ) : (
                         categories.map((cat) => {
                             const pct = (cat.amount / maxCatAmount) * 100;
@@ -172,7 +175,7 @@ export default function AnalyticsPage() {
                                     <div className="flex justify-between text-sm">
                                         <span className="font-medium flex items-center gap-2">
                                             <span className={`h-2.5 w-2.5 rounded-full ${getCategoryColor(cat.name)}`} />
-                                            {cat.name}
+                                            {catLabel(cat.name)}
                                         </span>
                                         <span className="text-muted-foreground font-mono">{formatMoney(cat.amount)}</span>
                                     </div>
@@ -194,12 +197,12 @@ export default function AnalyticsPage() {
                 <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                         <TrendingUp size={18} className="text-kx-paid" />
-                        Monthly Income vs Expense
+                        {es ? 'Ingresos vs. gastos por mes' : 'Monthly Income vs Expense'}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     {trend.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">No trend data available yet.</p>
+                        <p className="text-sm text-muted-foreground text-center py-8">{es ? 'Aún no hay datos de tendencia.' : 'No trend data available yet.'}</p>
                     ) : (
                         <div className="space-y-4">
                             {trend.map((month) => (
@@ -208,12 +211,12 @@ export default function AnalyticsPage() {
                                         <span className="font-semibold">{month.month}</span>
                                         <span className={`font-mono font-bold flex items-center gap-1 ${month.net >= 0 ? 'text-kx-paid' : 'text-kx-debt'}`}>
                                             {month.net >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                                            {formatMoney(Math.abs(month.net))} net
+                                            {formatMoney(Math.abs(month.net))} {es ? 'neto' : 'net'}
                                         </span>
                                     </div>
                                     {/* Income bar */}
                                     <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-kx-paid font-medium">Income</span>
+                                        <span className="w-16 text-kx-paid font-medium">{es ? 'Ingresos' : 'Income'}</span>
                                         <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-kx-paid rounded-full transition-all duration-700"
@@ -224,7 +227,7 @@ export default function AnalyticsPage() {
                                     </div>
                                     {/* Expense bar */}
                                     <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-kx-debt font-medium">Expense</span>
+                                        <span className="w-16 text-kx-debt font-medium">{es ? 'Gastos' : 'Expense'}</span>
                                         <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
                                             <div
                                                 className="h-full bg-kx-debt rounded-full transition-all duration-700"
