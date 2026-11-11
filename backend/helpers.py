@@ -253,3 +253,15 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
     incomes, expenses = cashflow_events(items, today, MISSION_WINDOW_DAYS)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
                              incomes, expenses, today=today)
+
+
+def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -> dict:
+    """The user's monthly summary (velocity_engine.cashflow_summary, Decimal).
+    One call site for GET /api/cashflow/summary and GET /api/analytics/v2."""
+    from sqlmodel import select
+    from models import Account, CashflowItem
+    from velocity_engine import cashflow_summary
+    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+    accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+    debts = accounts_to_active_debt_objects(accounts, plan_limit)
+    return cashflow_summary([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)

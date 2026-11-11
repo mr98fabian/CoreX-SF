@@ -118,3 +118,72 @@ def test_a_confirmed_attack_after_the_cut_reduces_the_pending_statement():
         r = build_daily_mission(s, U, s.exec(select(Account).where(Account.user_id == U)).all())
     [estado] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
     assert estado["monto"] == D("1179.27")  # 1679.27 − 100 manual − 400 attack (before: the attack was ignored → 1579.27)
+
+
+# ── /api/analytics/v2: contract — every figure == its source ──
+
+def test_v2_owner_dataset_with_zero_transactions_gives_real_numbers_equal_to_sources(client):
+    seed(OWNER)
+    v2 = get(client, "/api/analytics/v2").json()
+    summary = get(client, "/api/cashflow/summary").json()
+    subs = get(client, "/api/subscriptions").json()
+    dash = get(client, "/api/dashboard").json()
+    assert v2["estado"] == "ok" and v2["etiqueta"] == "estimado"
+    b = v2["bloque"]
+    assert b["entra"] == summary["income_monthly"] == 4300.0
+    assert b["gastos_de_vida"] == summary["expenses_monthly"] == 1909.88
+    assert b["pagos_a_deudas"] == summary["debt_payments_monthly"] == 976.12
+    assert b["suscripciones"] == float(subs["monthly_total"])
+    assert v2["heroe"]["sale_de_tu_bolsillo"] == round(summary["expenses_monthly"] + float(subs["monthly_total"]), 2)
+    assert b["te_quedan"] == round(b["entra"] - b["gastos_de_vida"] - b["suscripciones"] - b["pagos_a_deudas"], 2)
+    assert "surplus" not in str(v2)  # the engine surplus is not shown on this page
+    assert v2["deudas"]["interes_por_dia"] == dash["total_daily_interest"]
+    assert v2["deudas"]["objetivo"] == {"nombre": "Fortiva", "apr": 36.0}
+    assert v2["deudas"]["pagado_este_mes"] == 0.0
+
+
+def test_v2_bars_are_by_concept_and_add_up_exactly_to_the_hero(client):
+    seed(OWNER)
+    v2 = get(client, "/api/analytics/v2").json()
+    bars = v2["en_que_se_va"]
+    names = [x["nombre"] for x in bars]
+    assert len(bars) == 7 and names[-1] == "Otros" and "Suscripciones" in names and names[0] == "Renta"
+    assert round(sum(x["monto"] for x in bars), 2) == v2["heroe"]["sale_de_tu_bolsillo"]
+
+
+def test_v2_without_hidden_bars_the_cents_still_close(client):
+    seed(DEMO, subs=[])  # 6 expenses = 6 bars, nothing hidden
+    v2 = get(client, "/api/analytics/v2").json()
+    bars = v2["en_que_se_va"]
+    assert "Otros" not in [x["nombre"] for x in bars]
+    assert round(sum(x["monto"] for x in bars), 2) == v2["heroe"]["sale_de_tu_bolsillo"] == 2570.0
+
+
+def test_v2_paid_this_month_counts_manual_payments_and_attacks_only(client):
+    seed(OWNER)
+    t = date.today()
+    with Session(database.engine) as s:
+        acc = s.exec(select(Account).where(Account.user_id == U, Account.name == "Fortiva")).first()
+        for amount, cat, d in (("120", "payment", t), ("300", "Debt Payment", t), ("50", "payment", t.replace(day=1) - timedelta(days=1)),
+                               ("80", "food", t), ("-40", "payment", t)):
+            s.add(Transaction(user_id=U, account_id=acc.id, date=d.isoformat(), amount=D(amount), description=cat, category=cat))
+        s.commit()
+    assert get(client, "/api/analytics/v2").json()["deudas"]["pagado_este_mes"] == 420.0
+
+
+@pytest.mark.parametrize("data,motivo", [([], "sin_recurrentes"), ([("Renta", "1200", "monthly", False)], "sin_ingresos")])
+def test_v2_empty_states_are_explicit_never_silent_zeros(client, data, motivo):
+    seed(data, subs=[])
+    v2 = get(client, "/api/analytics/v2").json()
+    assert (v2["estado"], v2["motivo"]) == ("vacio", motivo)
+
+
+def test_v2_with_kx_token_200_and_without_auth_rejected(client):
+    from tests.test_api_tokens import bearer, make_token
+    seed(OWNER)
+    tok = make_token(client, U, scopes=["read:dashboard"])
+    assert client.get("/api/analytics/v2", headers=bearer(tok)).status_code == 200
+    tok_no_scope = make_token(client, U, scopes=["read:accounts"], name="sin dashboard")
+    assert client.get("/api/analytics/v2", headers=bearer(tok_no_scope)).status_code == 403
+    app.dependency_overrides.pop(get_current_user_id, None)
+    assert client.get("/api/analytics/v2").status_code in (401, 403)

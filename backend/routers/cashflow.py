@@ -29,13 +29,9 @@ async def get_cashflow_summary(
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
     """Monthly income / expenses / debt payments / surplus, computed only by the engine."""
-    from helpers import accounts_to_active_debt_objects
-    from velocity_engine import cashflow_summary
+    from helpers import cashflow_summary_for
     with request_session() as session:
-        items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        s = cashflow_summary([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)
+        s = cashflow_summary_for(session, user_id, plan_limit)
         return {k: (float(v) if isinstance(v, Decimal) else v) for k, v in s.items()}
 
 
