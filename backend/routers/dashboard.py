@@ -9,14 +9,14 @@ from datetime import date, timedelta
 from database import engine
 from database import request_session
 from models import Account, CashflowItem, Transaction
-from helpers import accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
+from helpers import cashflow_events, build_daily_mission, accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
 from auth import get_current_user_id
 from api_tokens import require_scope
 from plan_guard import effective_plan_limit, scoped_plan_limit
 from velocity_engine import daily_interest, debt_daily_interest, interest_periods
 from velocity_engine import (
     DebtAccount, get_velocity_target,
-    calculate_safe_attack_equity, detect_debt_alerts,
+    calculate_safe_attack_equity, detect_debt_alerts, MISSION_WINDOW_DAYS, mission_json,
 )
 
 import sys, os
@@ -66,37 +66,19 @@ async def get_dashboard_metrics(
             select(CashflowItem).where(CashflowItem.user_id == user_id)
         ).all()
 
-        # Build recurring incomes list from actual DB data
-        real_incomes = [
-            {
-                "name": item.name,
-                "amount": Decimal(str(item.amount)),
-                "day": item.day_of_month or 1,
-            }
-            for item in cashflow_items
-            if item.category == "income" and item.frequency == "monthly"
-        ]
-
-        # Build recurring expenses list (non-debt bills: rent, utilities, etc.)
-        real_expenses = [
-            {
-                "name": item.name,
-                "amount": Decimal(str(item.amount)),
-                "day": item.day_of_month or 1,
-            }
-            for item in cashflow_items
-            if item.category == "expense" and item.frequency == "monthly"
-        ]
-
-        # Calculate Safe Attack Equity with REAL data
+        # Real recurring incomes/expenses, any frequency, income by is_income
+        # (never an invented salary: no income on record = nothing comes in)
+        real_incomes, real_expenses = cashflow_events(cashflow_items, date.today(), MISSION_WINDOW_DAYS)
         safety_data = calculate_safe_attack_equity(
             liquid_cash, shield_target, debt_objects,
-            recurring_incomes=real_incomes if real_incomes else None,
-            recurring_expenses=real_expenses if real_expenses else None,
+            recurring_incomes=real_incomes, recurring_expenses=real_expenses,
         )
 
-        attack_equity = safety_data["safe_equity"]
-        reserved_for_bills = safety_data["reserved_for_bills"]
+        # Same mission as the Plan (velocity_engine.get_daily_mission): the
+        # "safe" surplus is what is left after the cycle's obligations
+        mission = build_daily_mission(session, user_id, accounts, plan_limit)
+        attack_equity = mission["ataque"]
+        reserved_for_bills = mission["reserva"]
 
         # Velocity Target (Highest Interest ACTIVE Debt)
         debts = active_debts
@@ -109,7 +91,7 @@ async def get_dashboard_metrics(
             today = date.today()
 
             # 1. Find Next Payday (from Cashflow Items)
-            incomes = [cf for cf in cashflow_items if cf.amount > 0]
+            incomes = [cf for cf in cashflow_items if cf.is_income or cf.category == "income"]
             next_payday = today + timedelta(days=30)  # Default backup
 
             if incomes:
@@ -311,6 +293,7 @@ async def get_dashboard_metrics(
         ]
 
         return {
+            "mision": mission_json(mission),
             "total_debt": total_debt,
             "liquid_cash": liquid_cash,
             "chase_balance": chase_balance,

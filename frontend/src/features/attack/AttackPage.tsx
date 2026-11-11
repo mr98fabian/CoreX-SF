@@ -27,8 +27,10 @@ import { useAccountLogos } from '@/hooks/useAccounts';
 import { AccountLogo } from '@/components/AccountLogo';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
 import { DrawnCheck } from '@/components/kx/motion';
+import { MissionCard, type MissionResult } from '@/components/kx/MissionCard';
 
 interface CommandCenter {
+    mision?: MissionResult;
     morning_briefing: {
         recommended_action: { amount: number; destination: string; destination_balance: number; destination_apr: number; reason: string } | null;
         impact?: { interest_saved_monthly?: number };
@@ -107,6 +109,9 @@ export default function AttackPage() {
     };
 
     const loading = s.loading || (!cc && !ccError);
+    // The same mission Inicio shows (server). An obligation comes first; the attack is what is left after it.
+    const mission = cc?.mision?.mision ?? null;
+    const obligationFirst = !!mission && mission.tipo !== 'avalancha';
 
     return (
         <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
@@ -121,7 +126,9 @@ export default function AttackPage() {
                     </Section>
                 )}
 
-                {!loading && !s.error && !ccError && (!rec || amount <= 0) && (
+                {!loading && !s.error && !ccError && obligationFirst && mission && <MissionCard mission={mission} es={es} />}
+
+                {!loading && !s.error && !ccError && !obligationFirst && (!rec || amount <= 0) && (
                     <Section tone={s.debts.length ? 'paid' : 'neutral'} title={es ? 'Hoy no hay ataque' : 'No attack today'}>
                         <p className="text-sm text-kx-ink2">
                             {s.debts.length === 0
@@ -135,7 +142,9 @@ export default function AttackPage() {
                     <>
                         <StatePhrase tone={done ? 'paid' : 'amber'}>
                             {done ? (es ? 'Listo: tu ataque de hoy quedó registrado. Míralo en Actividad.' : 'Done: today’s attack is recorded. See it in Activity.')
-                                : (es ? `Hoy toca atacar la ${rec.destination}: es la que más interés te cobra.` : `Today you attack ${rec.destination}: it charges you the most interest.`)}
+                                : obligationFirst
+                                    ? (es ? `Con lo que sobra después de ese pago, ataca la ${rec.destination}: es la que más interés te cobra.` : `With what is left after that payment, attack ${rec.destination}: it charges you the most interest.`)
+                                    : (es ? `Hoy toca atacar la ${rec.destination}: es la que más interés te cobra.` : `Today you attack ${rec.destination}: it charges you the most interest.`)}
                         </StatePhrase>
 
                         <div>

@@ -178,3 +178,59 @@ def calc_attack_streak(executed_logs) -> dict:
             else:
                 break
     return {"current": streak, "total_attacks": total}
+
+
+# ── Daily mission (one source for Inicio and Plan) ───────────
+
+def cashflow_events(items, start, days: int):
+    """Real recurring incomes and expenses as dated events in [start, start+days):
+    any frequency (monthly, semi-monthly, weekly, biweekly, annual) expanded with
+    the cashflow's own trigger rule. Income = is_income flag (or the legacy
+    category "income"). Nothing invented when there is nothing on record."""
+    from datetime import timedelta
+    from routers.cashflow import _item_triggers
+    incomes, expenses = [], []
+    for it in items:
+        dates = {start + timedelta(days=i) for i in range(days) if _item_triggers(it, start + timedelta(days=i))}
+        if not dates:
+            continue
+        ev = {"name": it.name, "amount": abs(Decimal(str(it.amount))), "dates": dates}
+        (incomes if (it.is_income or it.category == "income") else expenses).append(ev)
+    return incomes, expenses
+
+
+def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None):
+    """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
+    Callers (dashboard, command-center) only serialize the result."""
+    from datetime import date as _date
+    from sqlmodel import select
+    from models import CashflowItem, CutHistory, Transaction
+    from velocity_engine import MissionAccount, MISSION_WINDOW_DAYS, get_daily_mission
+    today = today or _date.today()
+    debts = filter_active_debt_accounts(accounts, plan_limit)
+    ids = [a.id for a in debts if a.id is not None]
+    last_cut = {}
+    if ids:
+        for c in session.exec(select(CutHistory).where(CutHistory.user_id == user_id, CutHistory.account_id.in_(ids))
+                              .order_by(CutHistory.cut_date.desc())).all():
+            last_cut.setdefault(c.account_id, c)
+    mission_accounts = []
+    for a in debts:
+        cut = last_cut.get(a.id)
+        paid = Decimal("0")
+        if cut:
+            txs = session.exec(select(Transaction).where(Transaction.user_id == user_id, Transaction.account_id == a.id,
+                                                         Transaction.category == "payment",
+                                                         Transaction.date > cut.cut_date.isoformat())).all()
+            paid = sum((abs(Decimal(str(t.amount))) for t in txs), Decimal("0"))
+        mission_accounts.append(MissionAccount(
+            name=a.name, balance=Decimal(str(a.balance)), interest_rate=Decimal(str(a.interest_rate or 0)),
+            min_payment=Decimal(str(a.min_payment or 0)), debt_subtype=a.debt_subtype or "",
+            due_day=a.due_day or None, closing_day=a.closing_day or None,
+            last_cut_date=cut.cut_date if cut else None,
+            last_cut_reported=Decimal(str(cut.reported_balance)) if cut else None, paid_since_cut=paid,
+        ))
+    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+    incomes, expenses = cashflow_events(items, today, MISSION_WINDOW_DAYS)
+    return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
+                             incomes, expenses, today=today)

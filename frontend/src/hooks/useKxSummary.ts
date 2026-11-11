@@ -21,6 +21,7 @@ import { ACTIVITY_KEY } from '@/hooks/useActivityData';
 import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 import type { SubsResponse } from '@/features/subscriptions/subscriptionText';
+import type { MissionResult } from '@/components/kx/MissionCard';
 
 export interface KxAccount {
     logo_url?: string | null;
@@ -38,7 +39,7 @@ export interface KxAccount {
     interest_type?: string;
 }
 
-interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number;
+interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number; mision?: MissionResult;
     interes_diario?: { periodos: Record<'dia' | 'semana' | 'mes' | 'anio', number> } }
 interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number }
 
@@ -122,13 +123,15 @@ export function useKxSummary() {
             return map;
         };
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
+            mission: data?.dashboard?.mision?.mision ?? null,
             staged, debts, counts, months, freedom, paydays, cutDays, dayDetail, chargesIn };
     }, [data, subs]);
 
     return { ...state, ...derived, reload: load };
 }
 
-/** The next statement cut among open debts (today counts), with days left. */
+/** The next statement cut among open debts (today counts). Visual data only:
+ *  the "único pendiente" is the server's mission (useKxSummary().mission). */
 export function nextCut(debts: StagedAccount[], today = new Date()) {
     let best: { acc: StagedAccount; date: Date } | null = null;
     for (const a of debts) {

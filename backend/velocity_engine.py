@@ -1044,6 +1044,14 @@ class CalendarDay:
     is_reinforcement: bool = False # Has Income
     status: str = "safe" # safe, warning, danger (below shield)
 
+def _event_hits(item: dict, d: date) -> bool:
+    """A recurring item hits day d: by exact dates when given (any frequency,
+    expanded by the caller), else by day of month (legacy shape)."""
+    if "dates" in item:
+        return d in item["dates"]
+    return item.get("day") == d.day
+
+
 def generate_projected_calendar(
     start_date: date,
     num_days: int,
@@ -1056,9 +1064,9 @@ def generate_projected_calendar(
     """
     Simulates daily cashflow to find the 'Lowest Low' and build a visual calendar.
     """
+    # No invented income: without real income on record, nothing comes in.
     if recurring_incomes is None:
-        # Default fallback if no income data provided
-        recurring_incomes = [{"name": "Salary", "amount": Decimal("2000.00"), "day": 12}]
+        recurring_incomes = []
 
     if recurring_expenses is None:
         recurring_expenses = []
@@ -1094,7 +1102,7 @@ def generate_projected_calendar(
 
         # 1b. Check for Recurring Expenses (non-debt bills: rent, utilities, etc.)
         for expense in recurring_expenses:
-            if expense["day"] == day_num:
+            if _event_hits(expense, current_date):
                 amount = expense["amount"]
                 running_balance -= amount
                 daily_events.append({
@@ -1106,7 +1114,7 @@ def generate_projected_calendar(
                 
         # 2. Check for Income
         for income in recurring_incomes:
-            if income["day"] == day_num:
+            if _event_hits(income, current_date):
                 amount = income["amount"]
                 running_balance += amount
                 daily_events.append({
@@ -2271,3 +2279,220 @@ def interest_periods(daily: Decimal) -> dict:
     """The daily figure carried at today's pace: day ×1, week ×7, month ×365/12, year ×365."""
     d = Decimal(daily)
     return {"dia": d, "semana": d * 7, "mes": d * DAYS_PER_YEAR / 12, "anio": d * DAYS_PER_YEAR}
+
+
+# ================================================================
+# DAILY MISSION — obligations first, then avalanche (Plan-Obligaciones)
+# One function feeds Inicio's "único pendiente" and the Plan's mission.
+# ================================================================
+
+MISSION_WINDOW_DAYS = 35  # same horizon as calculate_safe_attack_equity's days_buffer
+CORTE_LEAD_DAYS = 2       # pay by corte − 2 so the payment posts before the cut
+_MONTHS_ES = ("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+              "agosto", "septiembre", "octubre", "noviembre", "diciembre")
+_CENT = Decimal('0.01')
+
+
+@dataclass
+class MissionAccount:
+    """A debt as the mission sees it. due_day / closing_day are the DB values:
+    None means unknown, and an unknown date never becomes an obligation."""
+    name: str
+    balance: Decimal
+    interest_rate: Decimal
+    min_payment: Decimal
+    debt_subtype: str = ""
+    due_day: Optional[int] = None
+    closing_day: Optional[int] = None
+    last_cut_date: Optional[date] = None       # most recent CutHistory.cut_date
+    last_cut_reported: Optional[Decimal] = None
+    paid_since_cut: Decimal = Decimal('0')     # payments recorded after that cut
+
+
+def _day_in(year: int, month: int, day: int) -> date:
+    import calendar as _cal
+    return date(year, month, min(day, _cal.monthrange(year, month)[1]))
+
+
+def _next_on_or_after(day: int, ref: date) -> date:
+    d = _day_in(ref.year, ref.month, day)
+    if d >= ref:
+        return d
+    y, m = (ref.year + 1, 1) if ref.month == 12 else (ref.year, ref.month + 1)
+    return _day_in(y, m, day)
+
+
+def _last_before(day: int, ref: date) -> date:
+    d = _day_in(ref.year, ref.month, day)
+    if d < ref:
+        return d
+    y, m = (ref.year - 1, 12) if ref.month == 1 else (ref.year, ref.month - 1)
+    return _day_in(y, m, day)
+
+
+def _fecha_es(d: date) -> str:
+    return f"{d.day} de {_MONTHS_ES[d.month - 1]}"
+
+
+def _usd(x: Decimal) -> str:
+    return f"${Decimal(x).quantize(_CENT, rounding=ROUND_HALF_UP):,.2f}"
+
+
+def _obligation(tipo: str, acc: MissionAccount, monto: Decimal, accion: date, evento: date) -> Dict:
+    copy = {
+        "corte": f"Deja la {acc.name} en $0 — paga a más tardar el {_fecha_es(accion)} para que reporte $0 el {_fecha_es(evento)}",
+        "estado": f"Paga el estado de la {acc.name} ({_usd(monto)}) antes del {_fecha_es(evento)}",
+        "prestamo": f"Reserva el pago de la {acc.name} ({_usd(monto)}) para el {_fecha_es(evento)}",
+    }[tipo]
+    return {"tipo": tipo, "cuenta": acc.name, "monto": monto, "fecha_accion": accion, "fecha_evento": evento, "copy": copy}
+
+
+def mission_obligations(accounts: List[MissionAccount], today: date, window: int = MISSION_WINDOW_DAYS) -> List[Dict]:
+    """The cycle's obligations inside [today, today + window), most urgent first.
+
+    - Fixed loans: the contractual payment on its real due_day.
+    - Cards, EXCLUSIVE states:
+      (a) after the cut with the statement uncovered: statement = last
+          CutHistory.reported_balance − payments since that cut (no record of
+          this cycle: the full balance), due on due_day;
+      (b) otherwise, before the next cut: the full balance so it reports $0,
+          action date = cut − 2, event = cut.
+    """
+    end = today + timedelta(days=window)
+    out: List[Dict] = []
+    for a in accounts:
+        if a.balance <= 0:
+            continue
+        if a.debt_subtype in FIXED_SUBTYPES:
+            if a.due_day and a.min_payment > 0:
+                due = _next_on_or_after(a.due_day, today)
+                if due < end:
+                    out.append(_obligation("prestamo", a, min(a.min_payment, a.balance), due, due))
+            continue
+        if a.closing_day and a.due_day:
+            last_close = _last_before(a.closing_day, today)
+            stmt_due = _next_on_or_after(a.due_day, last_close + timedelta(days=1))
+            if today <= stmt_due:
+                this_cycle = a.last_cut_date is not None and a.last_cut_date >= last_close - timedelta(days=3)
+                if this_cycle and a.last_cut_reported is not None:
+                    pending = a.last_cut_reported - a.paid_since_cut
+                else:
+                    pending = a.balance
+                pending = max(Decimal('0'), min(pending, a.balance))
+                if pending > 0:
+                    out.append(_obligation("estado", a, pending, stmt_due, stmt_due))
+                    continue
+        if a.closing_day:
+            cut = _next_on_or_after(a.closing_day, today)
+            if cut < end:
+                out.append(_obligation("corte", a, a.balance, max(today, cut - timedelta(days=CORTE_LEAD_DAYS)), cut))
+    # Contractual due dates first: by event date, then hardness (a loan payment
+    # or statement due beats a cut on the same day), then the bigger amount.
+    hardness = {"prestamo": 0, "estado": 0, "corte": 1}
+    out.sort(key=lambda o: (o["fecha_evento"], hardness[o["tipo"]], -o["monto"]))
+    return out
+
+
+def _what(o: Dict) -> str:
+    noun = {"corte": "el corte", "estado": "el estado", "prestamo": "el pago"}[o["tipo"]]
+    return f"{noun} de la {o['cuenta']} del {_fecha_es(o['fecha_evento'])}"
+
+
+def get_daily_mission(
+    accounts: List[MissionAccount],
+    liquid_cash: Decimal,
+    shield_target: Decimal,
+    recurring_incomes: List[dict],
+    recurring_expenses: List[dict],
+    today: Optional[date] = None,
+    window: int = MISSION_WINDOW_DAYS,
+) -> Dict:
+    """Today's single mission: the most urgent obligation; with none in the
+    window, the avalanche attack with what is left after the cycle's reserve.
+
+    - Reserve = sum of the window's obligations. It REPLACES the minimum-payment
+      reserve of safe equity for those accounts (they leave the simulation), so
+      nothing is counted twice; debts without an obligation keep theirs, and a
+      debt with no due_day in the DB is never billed on a default day.
+    - Attack = safe equity simulated from (liquid − reserve) with REAL incomes
+      and expenses, minus the monthly interest gaps, capped at the target's
+      balance and the cash. No income on record: attack 0 (no invented salary).
+    - Reserve > liquid: "faltante", the exact amount missing to cover the first
+      obligation the cash cannot reach. Never a silent $0 attack.
+    """
+    today = today or date.today()
+    liquid_cash = Decimal(str(liquid_cash))
+    obligations = mission_obligations(accounts, today, window)
+    reserve = sum((o["monto"] for o in obligations), Decimal('0'))
+    covered = {o["cuenta"] for o in obligations}
+
+    open_debts = [a for a in accounts if a.balance > 0]
+    gap_debts, gap_cost = [], Decimal('0')
+    for a in open_debts:
+        mi = (a.balance * (a.interest_rate / Decimal('100')) / Decimal('12')).quantize(_CENT, rounding=ROUND_HALF_UP)
+        shortfall = mi - a.min_payment
+        if shortfall > 0:
+            gap_cost += shortfall
+            gap_debts.append({"name": a.name, "shortfall": shortfall, "apr": a.interest_rate})
+
+    def as_debt(a: MissionAccount, billed: bool) -> DebtAccount:
+        # due_day 0 never matches a calendar day: no phantom default bill
+        return DebtAccount(name=a.name, balance=a.balance, interest_rate=a.interest_rate, min_payment=a.min_payment,
+                           due_day=(a.due_day or 0) if billed else 0, closing_day=a.closing_day or 0,
+                           debt_subtype=a.debt_subtype)
+
+    sim_debts = [as_debt(a, True) for a in open_debts if a.name not in covered]
+    target = get_velocity_target([as_debt(a, False) for a in open_debts])
+    attack = Decimal('0')
+    if recurring_incomes and target and liquid_cash > reserve:
+        safe = calculate_safe_attack_equity(liquid_cash - reserve, shield_target, sim_debts, days_buffer=window,
+                                            recurring_incomes=recurring_incomes,
+                                            recurring_expenses=recurring_expenses or [])["safe_equity"]
+        attack = max(Decimal('0'), min(safe - gap_cost, target.balance, liquid_cash - reserve))
+        attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
+
+    mission = None
+    if reserve > liquid_cash:
+        running = Decimal('0')
+        for o in obligations:
+            running += o["monto"]
+            if running > liquid_cash:
+                falta = (running - liquid_cash).quantize(_CENT, rounding=ROUND_HALF_UP)
+                mission = {"tipo": "faltante", "cuenta": o["cuenta"], "monto": falta, "obligacion": o["tipo"],
+                           "fecha_accion": o["fecha_accion"], "fecha_evento": o["fecha_evento"],
+                           "copy": f"Te faltan {_usd(falta)} para cubrir {_what(o)}"}
+                break
+    elif obligations:
+        mission = obligations[0]
+    elif attack > 0:
+        mission = {"tipo": "avalancha", "cuenta": target.name, "monto": attack, "fecha_accion": today,
+                   "fecha_evento": today, "copy": f"Ataca la {target.name} con {_usd(attack)} hoy"}
+
+    return {
+        "mision": mission,
+        "obligaciones": obligations,
+        "reserva": reserve.quantize(_CENT, rounding=ROUND_HALF_UP),
+        "ataque": attack,
+        "objetivo": target.name if target else None,
+        "objetivo_apr": target.interest_rate if target else None,
+        "objetivo_saldo": target.balance if target else None,
+        "gap_cost": gap_cost,
+        "gap_debts": gap_debts,
+        "ventana_dias": window,
+        "etiqueta": "estimado",
+    }
+
+
+def mission_json(result: Dict) -> Dict:
+    """JSON-safe view of get_daily_mission (Decimal to float, date to ISO)."""
+    def conv(v):
+        if isinstance(v, Decimal):
+            return float(v.quantize(_CENT, rounding=ROUND_HALF_UP))
+        if isinstance(v, date):
+            return v.isoformat()
+        if isinstance(v, dict):
+            return {k: conv(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [conv(x) for x in v]
+        return v
+    return conv(result)

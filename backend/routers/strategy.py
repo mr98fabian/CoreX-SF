@@ -15,6 +15,7 @@ from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, funding_accounts,
+    build_daily_mission,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -31,7 +32,7 @@ from velocity_engine import (
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
     detect_float_kill_opportunities, get_closing_day_intelligence,
     get_hybrid_kill_target, detect_interest_rate_arbitrage, calculate_risky_opportunity,
-    DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE,
+    DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE, mission_json,
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 
@@ -306,25 +307,19 @@ async def get_strategy_command_center(
         debt_accounts = accounts_to_active_debt_objects(accounts, plan_limit)
         liquid_cash = Decimal(str(get_liquid_cash(accounts)))
         shield = get_peace_shield_status(liquid_cash, shield_target)
-        attack_amount = calculate_safe_attack_equity(liquid_cash, shield_target, debt_accounts)["safe_equity"]
-        target = get_velocity_target(debt_accounts)
+        # One source with Inicio: obligations first, attack = what is left (engine)
+        mission = build_daily_mission(session, user_id, accounts, plan_limit)
+        attack_amount = mission["ataque"]
+        target = next((d for d in debt_accounts if d.name == mission["objetivo"]), None)
 
         # Morning Briefing
         morning_briefing = None
         if target and attack_amount > 0:
             daily_interest = debt_daily_interest(target.balance, target.interest_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            total_gap_cost = Decimal('0')
-            gap_debts = []
-            for d in debt_accounts:
-                if d.balance <= 0: continue
-                mi = ((d.balance * (d.interest_rate / Decimal('100'))) / Decimal('12')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                shortfall = mi - d.min_payment
-                if shortfall > 0:
-                    total_gap_cost += shortfall
-                    gap_debts.append({"name": d.name, "shortfall": float(shortfall), "apr": float(d.interest_rate)})
-            effective_attack = max(attack_amount - total_gap_cost, Decimal('0'))
+            total_gap_cost = mission["gap_cost"]
+            gap_debts = [{"name": g["name"], "shortfall": float(g["shortfall"]), "apr": float(g["apr"])} for g in mission["gap_debts"]]
             # Engine: amount capped at the debt balance / cash; days from the same simulation route
-            impact = attack_impact(debt_accounts, target, effective_attack, liquid_cash,
+            impact = attack_impact(debt_accounts, target, attack_amount, liquid_cash,
                                    monthly_attack(get_cashflow_surplus(session, user_id, debt_accounts),
                                                   liquid_cash, get_attack_percentage(session, user_id)))
             effective_attack = impact["amount"]
@@ -408,12 +403,14 @@ async def get_strategy_command_center(
 
         # Risky Opportunity
         risky_opportunity = None
-        if morning_briefing is None:
+        # Never suggest dipping into the shield while an obligation is pending
+        if morning_briefing is None and mission["mision"] is None:
             asset_accounts = funding_accounts(accounts)
             risky_opportunity = calculate_risky_opportunity(liquid_cash, shield_target, debt_accounts,
                                                             asset_accounts[0].name if asset_accounts else "Checking")
 
         return {
+            "mision": mission_json(mission),
             "morning_briefing": morning_briefing,
             "confidence_meter": confidence_meter,
             "freedom_counter": freedom_counter,
