@@ -235,7 +235,7 @@ export function TabBar() {
     const { pathname } = useLocation();
     return (
         <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar"
-            className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,env(safe-area-inset-bottom))] pt-2.5 md:hidden">
+            className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden">
             {NAV_PRIMARY.map(({ to, icon: Icon, labelKey }) => {
                 const active = isNavActive(pathname, to);
                 return (

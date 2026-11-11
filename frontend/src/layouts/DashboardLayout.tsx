@@ -48,6 +48,12 @@ export default function DashboardLayout() {
         }
     }, []);
 
+    // Shell owns the viewport while mounted (see .kx-app-shell in kx.css)
+    useEffect(() => {
+        document.documentElement.classList.add('kx-app-shell');
+        return () => document.documentElement.classList.remove('kx-app-shell');
+    }, []);
+
     // Warm the bottom-bar sections (chunks + cached data) once the app is idle
     const queryClient = useQueryClient();
     const userId = user?.id;
@@ -158,6 +164,8 @@ export default function DashboardLayout() {
                 <aside
                     className="fixed inset-y-0 left-0 z-50 flex flex-col border-r border-kx-line transition-transform duration-300 ease-in-out"
                     style={{
+                        paddingTop: 'var(--kx-safe-top)',
+                        paddingBottom: 'var(--kx-safe-bottom)',
                         width: '85vw',
                         maxWidth: '320px',
                         backgroundColor: isDark ? 'rgb(2 6 23 / 0.98)' : 'rgb(255 255 255 / 0.98)',
@@ -184,7 +192,8 @@ export default function DashboardLayout() {
             {/* MAIN AREA */}
             <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
                 {/* TOP BAR / HEADER */}
-                <header className="flex h-14 items-center gap-4 border-b px-4 sticky top-0 z-10 bg-kx-surface border-kx-line dark:bg-[#020617] ">
+                <header data-testid="app-header" className="flex items-center gap-4 border-b px-4 sticky top-0 z-10 bg-kx-surface border-kx-line dark:bg-[#020617] "
+                    style={{ paddingTop: 'var(--kx-safe-top)', height: 'calc(3.5rem + var(--kx-safe-top))' }}>
                     <Button
                         variant="ghost"
                         size="icon"

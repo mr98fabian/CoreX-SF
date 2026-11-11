@@ -1,3 +1,16 @@
+/* ── Safe areas (2026-11, tanda móvil) ──────────────────────────────────────
+   viewport-fit=cover (index.html) turns on env(safe-area-inset-*). Capacitor 8's
+   SystemBars also injects --safe-area-inset-* for Android WebViews where env()
+   still reads 0: take whichever is larger. */
+:root {
+  --kx-safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  --kx-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
+}
+/* Dashboard shell: the document never scrolls (only the content pane does), so the
+   fixed tab bar can't detach when Chrome Android shows/hides its toolbar. Scoped to
+   the shell: landing/login keep normal document scroll. */
+html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
 /*
  * KoreX Fase 6 design tokens — dark-first, one saturated moment per screen
  * (the amber stripe). Values taken from the approved previews (v7 / v8 / ★ Lo mejor).

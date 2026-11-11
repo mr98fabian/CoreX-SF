@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { setDemoToken, clearDemoToken, getDemoToken } from '@/lib/api';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { NATIVE_AUTH_REDIRECT, completeNativeOAuth } from '@/lib/nativeAuth';
 
 // Demo mode constants — must match backend
 const DEMO_TOKEN = 'demo-stress-test-token';
@@ -84,7 +87,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, []);
 
+    // APK: Google returns to korex://auth-callback (AndroidManifest intent-filter);
+    // finish the session here so the user lands back in the app, signed in.
+    useEffect(() => {
+        if (!Capacitor.isNativePlatform()) return;
+        const finish = (url?: string | null) => {
+            if (url) completeNativeOAuth(url, supabase.auth).catch((e) => console.error('Google sign-in failed:', e));
+        };
+        CapApp.getLaunchUrl().then((r) => finish(r?.url)).catch(() => undefined); // cold start from the link
+        const sub = CapApp.addListener('appUrlOpen', ({ url }) => finish(url));
+        return () => { sub.then((h) => h.remove()).catch(() => undefined); };
+    }, []);
+
     const signInWithGoogle = useCallback(async () => {
+        if (Capacitor.isNativePlatform()) {
+            // The WebView can't receive the redirect: ask for the URL and open it in the
+            // system browser; Google comes back through the korex:// deep link.
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo: NATIVE_AUTH_REDIRECT, skipBrowserRedirect: true },
+            });
+            if (error) throw error;
+            if (data?.url) window.location.href = data.url; // external https → Capacitor hands it to the browser
+            return;
+        }
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
