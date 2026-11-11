@@ -12,7 +12,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { nextCut, useKxSummary } from '@/hooks/useKxSummary';
+import { useKxSummary } from '@/hooks/useKxSummary';
+import { MissionCard } from '@/components/kx/MissionCard';
 import { AmberStripe, BankHeader, HeroNumber, PaidStamp, Section, StatePhrase } from '@/components/kx';
 import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
@@ -60,7 +61,6 @@ export default function HomePage() {
         );
     }
 
-    const cut = nextCut(s.debts);
     const noDebt = s.debts.length === 0 || s.totalDebt <= 0;
     const freedomLabel = s.freedom ? `${names[s.freedom.month]} ${s.freedom.year}` : null;
 
@@ -99,24 +99,8 @@ export default function HomePage() {
                     phrase={<>{es ? 'Disponible para tu plan: ' : 'Available for your plan: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b></>} />
                 <DailyInterestLine es={es} periods={s.dailyPeriods} debtBalances={s.debts.map((a) => a.bal)} />
 
-                {/* HOY — the single active signal */}
-                {cut && (
-                    <Section tone="amber" title={es ? 'Hoy · tu único pendiente' : 'Today · your one to-do'}>
-                        <div className="flex items-center gap-4">
-                            <div className="flex-none border-r border-[rgba(245,158,11,.3)] pr-4 text-center">
-                                <p className="kx-num font-editorial text-2xl text-kx-ink">{cut.date.getDate()}</p>
-                                <p className="kx-tech text-[10px] uppercase text-kx-amber-soft">{names[cut.date.getMonth()].slice(0, 3)}</p>
-                            </div>
-                            <div className="min-w-0">
-                                <p className="text-[15px] font-semibold text-kx-ink">{es ? `Corta la ${cut.acc.name}` : `${cut.acc.name} closes`}</p>
-                                <p className="text-[13.5px] text-kx-ink2">
-                                    {es ? 'Te faltan ' : 'You need '}<b className="kx-num font-semibold text-kx-amber-soft">{formatMoney(cut.acc.bal)}</b>
-                                    {es ? ' para reportar $0 ese día.' : ' to report $0 that day.'}
-                                </p>
-                            </div>
-                        </div>
-                    </Section>
-                )}
+                {/* HOY — the single active signal: the server's mission, same as the Plan */}
+                {s.mission && <MissionCard mission={s.mission} es={es} />}
 
                 {/* TU AVANCE — the calendar (heat map here; full piece one tap away) */}
                 {!noDebt && (
