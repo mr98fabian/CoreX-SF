@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import './styles/kx.css' // <--- ESTA LINEA ES LA CLAVE
 
+import './lib/installPrompt' // capture beforeinstallprompt on page load (fires once)
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { QueryProvider } from './providers/QueryProvider.tsx'
 

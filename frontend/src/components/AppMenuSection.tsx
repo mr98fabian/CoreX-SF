@@ -1,14 +1,18 @@
-import { Download, Loader2, RefreshCw } from 'lucide-react';
+import { Download, Loader2, MonitorSmartphone, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAppMenu } from '@/hooks/useAppMenu';
+import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 
 const ROW = 'flex min-h-10 w-full items-center gap-2 rounded-md px-4 py-2 text-left text-sm font-medium text-kx-ink2 transition-colors hover:bg-kx-raised hover:text-kx-ink';
 
 /** Last section of Más: "Descargar la app" (web, not iOS) or "Buscar actualización" (native). */
 export function AppMenuSection() {
     const { t } = useLanguage();
-    const { showDownload, showCheck, info, check, downloadApp, checkNow } = useAppMenu();
-    if (!showDownload && !showCheck) return null;
+    const { native, showDownload, showCheck, info, check, downloadApp, checkNow } = useAppMenu();
+    // Persistent PWA install offer: whenever the browser offers it, regardless of the toast's mute
+    const pwa = useInstallPrompt();
+    const showInstall = !native && pwa.available;
+    if (!showDownload && !showCheck && !showInstall) return null;
     const fill = (key: string, v: string) => t(key).replace('{v}', v);
 
     let label = t('app.check');
@@ -22,6 +26,15 @@ export function AppMenuSection() {
         <div className="mt-4 border-t border-kx-line pt-3" data-testid="nav-app">
             <p className="kx-label mb-1.5 px-3">{t('app.section')}</p>
             <div className="space-y-1.5">
+                {showInstall && (
+                    <button type="button" onClick={() => { void pwa.install(); }} className={ROW} data-testid="app-install">
+                        <MonitorSmartphone size={18} strokeWidth={1.5} className="shrink-0 text-kx-amber" aria-hidden="true" />
+                        <span className="flex flex-col">
+                            <span>{t('app.install')}</span>
+                            <span className="text-xs font-normal text-kx-ink3">{t('app.installSub')}</span>
+                        </span>
+                    </button>
+                )}
                 {showDownload && (
                     <button type="button" onClick={downloadApp} className={ROW} data-testid="app-download">
                         <Download size={18} strokeWidth={1.5} className="shrink-0 text-kx-amber" aria-hidden="true" />

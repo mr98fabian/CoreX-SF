@@ -24,6 +24,8 @@ const translations: Record<string, Record<Language, string>> = {
     "nav.more": { en: "More", es: "Más" },
     "app.section": { en: "App", es: "App" },
     "app.download": { en: "Download the app", es: "Descargar la app" },
+    "app.install": { en: "Install KoreX", es: "Instalar KoreX" },
+    "app.installSub": { en: "Home-screen app · works offline", es: "App en tu pantalla de inicio · funciona sin conexión" },
     "app.downloadSub": { en: "Android · official APK", es: "Android · APK oficial" },
     "app.check": { en: "Check for updates", es: "Buscar actualización" },
     "app.checking": { en: "Checking…", es: "Buscando…" },
