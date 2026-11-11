@@ -27,7 +27,7 @@ async def spending_by_category(
         cutoff = date.today() - timedelta(days=months * 30)
         txs = session.exec(
             select(Transaction)
-            .where(Transaction.user_id == user_id, Transaction.date >= cutoff, Transaction.amount < 0)
+            .where(Transaction.user_id == user_id, Transaction.date >= cutoff.isoformat(), Transaction.amount < 0)
         ).all()
 
         categories: dict[str, float] = defaultdict(float)
@@ -57,12 +57,12 @@ async def monthly_trend(
         cutoff = date.today() - timedelta(days=months * 30)
         txs = session.exec(
             select(Transaction)
-            .where(Transaction.user_id == user_id, Transaction.date >= cutoff)
+            .where(Transaction.user_id == user_id, Transaction.date >= cutoff.isoformat())
         ).all()
 
         monthly: dict[str, dict] = defaultdict(lambda: {"income": 0.0, "expense": 0.0})
         for tx in txs:
-            key = tx.date.strftime("%Y-%m")
+            key = str(tx.date)[:7]  # Transaction.date is ISO "YYYY-MM-DD" (str by design)
             if tx.amount > 0:
                 monthly[key]["income"] += float(tx.amount)
             else:
@@ -97,7 +97,7 @@ async def analytics_summary(
         cutoff_3m = date.today() - timedelta(days=90)
         txs = session.exec(
             select(Transaction)
-            .where(Transaction.user_id == user_id, Transaction.date >= cutoff_3m, Transaction.amount < 0)
+            .where(Transaction.user_id == user_id, Transaction.date >= cutoff_3m.isoformat(), Transaction.amount < 0)
         ).all()
 
         total_spent = sum(float(abs(tx.amount)) for tx in txs)
