@@ -32,10 +32,20 @@ def _debt_account(acc) -> DebtAccount:
     """Build a DebtAccount from an Account ORM row."""
     return DebtAccount(
         name=acc.name, balance=acc.balance, interest_rate=acc.interest_rate,
-        min_payment=acc.min_payment or Decimal("50"), due_day=acc.due_day or 15,
+        min_payment=acc.min_payment or Decimal("0"), due_day=acc.due_day or 15,
         closing_day=acc.closing_day or 0, debt_subtype=acc.debt_subtype or "",
         credit_limit=acc.credit_limit or Decimal("0"),
     )
+
+def account_plan_minimum(acc) -> Decimal:
+    """The minimum every screen charges for this account: velocity_engine.plan_minimum
+    (the single source; the stored value is only an input to it and the bank's
+    display), capped at the balance. 0 for non-debt or paid-off accounts."""
+    from velocity_engine import plan_minimum
+    if acc.type != "debt" or acc.balance <= 0:
+        return Decimal("0")
+    return min(plan_minimum(_debt_account(acc)), Decimal(str(acc.balance))).quantize(Decimal("0.01"))
+
 
 def accounts_to_debt_objects(accounts) -> list[DebtAccount]:
     return [_debt_account(acc) for acc in accounts if acc.type == "debt" and acc.balance > 0]

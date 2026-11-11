@@ -11,9 +11,9 @@ from database import engine
 from database import request_session
 from models import Account, Transaction, MovementLog, CashflowItem, UserSettings, CutHistory
 from schemas import BalanceUpdate, AccountUpdate
-from helpers import bypass_fk, filter_active_debt_accounts
+from helpers import bypass_fk, filter_active_debt_accounts, account_plan_minimum
 from plan_guard import scoped_plan_limit
-from velocity_engine import credit_panel, round_utilization, utilization_band
+from velocity_engine import credit_panel, round_utilization, utilization_band, FIXED_SUBTYPES
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
 import audit_text
@@ -26,10 +26,30 @@ from core_engine.calculators import calculate_minimum_payment
 router = APIRouter(prefix="/api", tags=["accounts"])
 
 
-@router.get("/accounts", response_model=List[Account])
+def _out(acc: Account) -> dict:
+    """Account as stored + plan_minimum (additive): the minimum every screen
+    charges (velocity_engine.plan_minimum, capped at the balance). min_payment
+    stays as the bank's minimum, display only. Clients never recompute it."""
+    data = acc.model_dump(mode="json")
+    data["plan_minimum"] = str(account_plan_minimum(acc))
+    return data
+
+
+def _is_fixed(acc: Account) -> bool:
+    return (acc.debt_subtype or "") in FIXED_SUBTYPES or acc.interest_type == "fixed"
+
+
+def _autofill_minimum(acc: Account) -> None:
+    """A revolving debt saved without a minimum gets the rule. A fixed loan does
+    NOT: its installment is contractual, so a 0 stays 0 (no invented payment)."""
+    if acc.type == "debt" and not _is_fixed(acc) and (acc.min_payment is None or acc.min_payment == 0):
+        acc.min_payment = calculate_minimum_payment(acc.balance, acc.interest_rate)
+
+
+@router.get("/accounts")
 async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
     with request_session() as session:
-        return session.exec(select(Account).where(Account.user_id == user_id)).all()
+        return [_out(a) for a in session.exec(select(Account).where(Account.user_id == user_id)).all()]
 
 
 def _pct(x):
@@ -64,28 +84,26 @@ async def get_credit_panel(user_id: str = Depends(require_scope("read:accounts")
     }
 
 
-@router.post("/accounts", response_model=Account)
+@router.post("/accounts")
 async def create_account(account: Account, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         account.user_id = user_id
         account.id = None  # never let the client pick (or collide with) a primary key
         account.logo_url = clean_logo(account.logo_url)
-        if account.type == "debt":
-            if account.min_payment is None or account.min_payment == 0:
-                account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
+        _autofill_minimum(account)
 
         with bypass_fk(session):
             session.add(account)
             session.commit()
         session.refresh(account)
         audit_summary(audit_text.account_created(account))  # no-op unless written by the user's AI
-        return account
+        return _out(account)
 
 
 DECIMAL_FIELDS = {"balance", "interest_rate", "min_payment", "credit_limit"}
 
 
-@router.put("/accounts/{id}", response_model=Account)
+@router.put("/accounts/{id}")
 async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         # Ownership checked in the query: someone else's account is a plain 404
@@ -101,18 +119,17 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
                 value = clean_logo(value)
             setattr(account, field, value)
 
-        if account.type == "debt" and (account.min_payment is None or account.min_payment == 0):
-            account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
+        _autofill_minimum(account)
 
         with bypass_fk(session):
             session.add(account)
             session.commit()
         session.refresh(account)
         audit_summary(audit_text.account_updated(before, account))
-        return account
+        return _out(account)
 
 
-@router.patch("/accounts/{id}/balance", response_model=Account)
+@router.patch("/accounts/{id}/balance")
 async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
@@ -120,14 +137,15 @@ async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = De
             raise HTTPException(status_code=404, detail="Account not found")
 
         account.balance = Decimal(str(data.balance))
-        if account.type == "debt":
+        # Revolving minimum moves with the balance; a fixed loan keeps its installment
+        if account.type == "debt" and not _is_fixed(account):
             account.min_payment = calculate_minimum_payment(account.balance, account.interest_rate)
 
         session.add(account)
         with bypass_fk(session):
             session.commit()
         session.refresh(account)
-        return account
+        return _out(account)
 
 
 @router.delete("/accounts/{id}")
