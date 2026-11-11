@@ -18,11 +18,11 @@ from database import request_session
 from api_tokens import require_scope, audit_summary
 from logos import clean_logo
 from models import Account, RecurringSubscription
+from velocity_engine import monthly_amount
 
 router = APIRouter(prefix="/api/subscriptions", tags=["recurring-subscriptions"])
 
 Freq = Literal["monthly", "annual", "weekly"]
-PER_MONTH = {"monthly": Decimal("1"), "annual": Decimal("1") / Decimal("12"), "weekly": Decimal("52") / Decimal("12")}
 CENT = Decimal("0.01")
 
 
@@ -46,7 +46,8 @@ class SubUpdate(BaseModel):
 
 
 def monthly_equivalent(amount: Decimal, frequency: str) -> Decimal:
-    return amount * PER_MONTH[frequency]
+    """Same table as cashflow (velocity_engine.monthly_amount)."""
+    return monthly_amount(amount, frequency)
 
 
 def summarize(items) -> dict:
