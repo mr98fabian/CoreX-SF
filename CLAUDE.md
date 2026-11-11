@@ -44,7 +44,7 @@ cd backend && DATABASE_URL="sqlite:///./korex.db" ./venv/Scripts/python.exe -m a
 ```
 
 Si la DB nunca fue estampada (sin tabla `alembic_version`): primero `alembic stamp bd322c6ada8b`, luego `upgrade head`.
-Head actual: `a9e3c7d1f5b2` (goals, nov 2026). Los tests pasan con SQLite en memoria creada desde los modelos, así que **un modelo con columna nueva puede dar 500 `no such column` en local aunque los tests estén verdes** — aplicar la migración.
+Head actual: `c4e8a1f7d2b6` (RLS deny-by-default, nov 2026). Los tests pasan con SQLite en memoria creada desde los modelos, así que **un modelo con columna nueva puede dar 500 `no such column` en local aunque los tests estén verdes** — aplicar la migración.
 
 ## Reglas del dominio (no negociables)
 
@@ -53,6 +53,7 @@ Head actual: `a9e3c7d1f5b2` (goals, nov 2026). Los tests pasan con SQLite en mem
 - **Toda cifra mostrada al usuario es una estimación** y debe etiquetarse como tal. Es requisito legal (FTC), no estético.
 - **Para renderizar dinero en el frontend usa `<MoneyAmount>`** (`components/MoneyAmount.tsx`) o `<AnimatedCurrency>`, no `$` a mano. Ya envuelven el hook `useFormatMoney` (respeta la moneda del usuario) y aplican `font-mono tabular-nums` para que los dígitos no bailen al actualizarse. Si necesitas el string suelto (dentro de un template), usa el hook `useFormatMoney` directamente.
 - **Fechas**: al parsear `YYYY-MM-DD` en el frontend, anclar siempre a mediodía añadiendo el sufijo `T12:00:00` antes de construir el `Date`. Sin eso, en timezones negativas el día cae en el mes anterior (ver `useFormatMoney.ts` como referencia).
+- **RLS en Supabase**: toda tabla de `public` lleva RLS activo y CERO políticas (el backend entra como `postgres`, que lo salta; el frontend solo usa Auth). Una tabla nueva debe hacer `ENABLE ROW LEVEL SECURITY` en su migración.
 - **Multi-tenant**: todo query debe filtrar por `user_id`. La tabla `users` es la única sin esa columna — no usarla para datos por usuario; usar `user_settings`.
 
 ## Rendimiento del bundle
