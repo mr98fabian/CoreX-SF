@@ -31,6 +31,8 @@ export interface KxAccount {
     balance: number | string;
     interest_rate: number | string;
     min_payment: number | string;
+    /** server: velocity_engine.plan_minimum capped at the balance (what screens charge) */
+    plan_minimum?: number | string;
     credit_limit?: number | string | null;
     original_amount?: number | string | null;
     closing_day?: number | null;

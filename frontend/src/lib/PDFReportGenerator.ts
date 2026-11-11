@@ -38,6 +38,7 @@ interface AccountRow {
     interest_rate: number;
     credit_limit?: number;
     min_payment?: number;
+    plan_minimum?: number | string;
 }
 
 interface TransactionRow {
@@ -321,7 +322,7 @@ export async function generateMonthlyReport(
                 a.type === 'debt' ? t.debt : t.asset,
                 formatCurrency(a.balance, currency),
                 a.interest_rate ? `${a.interest_rate}%` : '—',
-                a.min_payment ? formatCurrency(a.min_payment, currency) : '—',
+                Number(a.plan_minimum) > 0 ? formatCurrency(Number(a.plan_minimum), currency) : '—',
             ]),
             headStyles: {
                 fillColor: COLORS.tableHeaderBg,

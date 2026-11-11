@@ -12,8 +12,8 @@ const cashflow: IncomeItem[] = [
     { name: 'Deuda: Tarjeta Visa', amount: 204, frequency: 'monthly', day_of_month: 15, category: 'expense', is_debt_virtual: true },
 ];
 const debts: DayDebt[] = [
-    { name: 'Tarjeta Visa', type: 'debt', balance: 6800, min_payment: 204, due_day: 15, closing_day: 8 },
-    { name: 'Préstamo del auto', type: 'debt', balance: 16500, min_payment: 385, due_day: 10 },
+    { name: 'Tarjeta Visa', type: 'debt', balance: 6800, min_payment: 150, plan_minimum: 204, due_day: 15, closing_day: 8 },
+    { name: 'Préstamo del auto', type: 'debt', balance: 16500, min_payment: 385, plan_minimum: 385, due_day: 10 },
     { name: 'Tarjeta pagada', type: 'debt', balance: 0, min_payment: 0, due_day: 8, closing_day: 8 },
     { name: 'Cheques', type: 'checking', balance: 2150, min_payment: 0 },
 ];
@@ -32,6 +32,11 @@ describe('buildDayDetail', () => {
         const day = buildDayDetail(new Date(2026, 10, 8), months, cashflow, debts);
         expect(day.cuts).toEqual([{ name: 'Tarjeta Visa', balance: 6800 }]);
         expect(day.totalOut).toBe(0); // a cut is a target to report $0, not a charge
+    });
+
+    it('charges the server plan_minimum, never the stale stored min_payment (Visa stored $150, plan $204)', () => {
+        const day = buildDayDetail(new Date(2026, 4, 15, 12), months, cashflow, debts);
+        expect(day.minimums.map((m) => m.amount)).toEqual([204]);
     });
 
     it('a due day shows the minimum — counted once, not again from the virtual cashflow row', () => {

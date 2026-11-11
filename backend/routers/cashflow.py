@@ -10,7 +10,7 @@ import logging, calendar
 from database import engine
 from database import request_session
 from models import Account, CashflowItem, Transaction
-from helpers import bypass_fk, update_account_balance
+from helpers import bypass_fk, update_account_balance, account_plan_minimum
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
 from plan_guard import scoped_plan_limit
@@ -51,7 +51,7 @@ async def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
         ).all():
             result.append({
                 "id": -acc.id, "user_id": user_id, "name": f"Deuda: {acc.name}",
-                "amount": float(acc.min_payment) if acc.min_payment and acc.min_payment > 0 else 50.0,
+                "amount": float(account_plan_minimum(acc)),
                 "category": "expense", "frequency": "monthly",
                 "day_of_month": acc.due_day or 15, "day_of_week": None,
                 "date_specific_1": None, "date_specific_2": None, "month_of_year": None,
@@ -163,7 +163,7 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
             last_day = calendar.monthrange(d.year, d.month)[1]
             for acc in accounts:
                 if acc.type == "debt" and acc.balance > 0 and d.day == min(acc.due_day or 15, last_day):
-                    events[d_str].append({"name": f"Deuda: {acc.name}", "amount": -float(acc.min_payment or 50), "category": "debt_payment"})
+                    events[d_str].append({"name": f"Deuda: {acc.name}", "amount": -float(account_plan_minimum(acc)), "category": "debt_payment"})
 
         balances: dict[str, float] = {today.isoformat(): liquid_cash}
         bal = liquid_cash

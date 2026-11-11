@@ -949,7 +949,7 @@ def get_projections(
         block that makes the attack_percentage and its dollar effect explicit.
     """
     total_debt = sum(d.balance for d in debts) if debts else Decimal('0')
-    total_min_payments = sum(d.min_payment for d in debts) if debts else Decimal('0')
+    total_min_payments = sum((min(plan_minimum(d), d.balance) for d in debts if d.balance > 0), Decimal('0'))
 
     # Real attack = the user's cashflow surplus when known (helpers.get_attack_extra);
     # otherwise the declared default: attack_percentage of liquid cash.

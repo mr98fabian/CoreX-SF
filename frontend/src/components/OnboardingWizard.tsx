@@ -357,7 +357,8 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 id: result.id,
                 name: accountForm.name,
                 amount: parseFloat(accountForm.balance),
-                ...(type === 'debt' && { min_payment: parseFloat(accountForm.min_payment || '0') }),
+                // The server's plan_minimum (what the plan charges), not the typed value
+                ...(type === 'debt' && { min_payment: Number((result as { plan_minimum?: number | string }).plan_minimum) || 0 }),
             };
 
             if (type === 'debt') {

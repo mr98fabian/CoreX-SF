@@ -1,13 +1,10 @@
 """
-Unit tests for core_engine/calculators.py — Pure financial math.
+Unit tests for backend/core_engine/calculators.py — Pure financial math.
 No database, no API. These tests validate the formulas directly.
 
 Formula: min_payment = (balance * APR/12/100) + (balance * 1%)
-         floor: $25 (or balance if balance < $25)
+         floor: $35 (or balance if balance < $35) — owner decision 2026-11-04
 """
-import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-
 from decimal import Decimal
 from core_engine.calculators import calculate_minimum_payment
 
