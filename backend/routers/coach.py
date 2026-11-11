@@ -18,7 +18,7 @@ from sqlmodel import select
 
 from api_tokens import audit_summary, require_scope
 from database import request_session
-from helpers import accounts_to_active_debt_objects, filter_active_debt_accounts, get_attack_percentage, get_cashflow_surplus, get_liquid_cash
+from helpers import accounts_to_active_debt_objects, filter_active_debt_accounts, get_attack_percentage, get_cashflow_surplus, get_liquid_cash, is_payment_category
 from models import Account, CoachProfile, Goal, Transaction
 from routers.cuts import streak
 from routers.engagement import generate_alias, leave_leagues
@@ -29,7 +29,6 @@ router = APIRouter(prefix="/api", tags=["coach"])
 
 TONE_LABEL = {"calido": "Cálido", "directo": "Directo", "pesado": "Modo pesado"}
 WEEKDAYS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
-PAYMENT_CATEGORIES = ("payment", "debt payment")
 
 
 def _profile(session, user_id: str) -> CoachProfile:
@@ -101,7 +100,7 @@ async def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debt_ids = {a.id for a in accounts if a.type == "debt"}
         payments = [t for t in session.exec(select(Transaction).where(Transaction.user_id == user_id)).all()
-                    if (t.category or "").lower() in PAYMENT_CATEGORIES and Decimal(str(t.amount)) > 0]
+                    if is_payment_category(t.category) and Decimal(str(t.amount)) > 0]
         total_paid = sum((Decimal(str(t.amount)) for t in payments), Decimal("0"))
         debts_all = [a for a in accounts if a.type == "debt"]
         at_zero = sum(1 for a in debts_all if Decimal(str(a.balance)) <= 0)

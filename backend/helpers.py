@@ -13,6 +13,15 @@ from velocity_engine import DebtAccount
 
 DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
 
+# A payment to a debt, however it was recorded: manual payment ("payment") or a
+# confirmed attack ("Debt Payment"). Compared lower-case. One list for logros,
+# the daily mission and Análisis.
+PAYMENT_CATEGORIES = ("payment", "debt payment")
+
+
+def is_payment_category(category) -> bool:
+    return (category or "").lower() in PAYMENT_CATEGORIES
+
 
 @contextmanager
 def bypass_fk(session):
@@ -230,9 +239,9 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
         paid = Decimal("0")
         if cut:
             txs = session.exec(select(Transaction).where(Transaction.user_id == user_id, Transaction.account_id == a.id,
-                                                         Transaction.category == "payment",
                                                          Transaction.date > cut.cut_date.isoformat())).all()
-            paid = sum((abs(Decimal(str(t.amount))) for t in txs), Decimal("0"))
+            # manual payments AND confirmed attacks ("Debt Payment") both reduce the statement
+            paid = sum((abs(Decimal(str(t.amount))) for t in txs if is_payment_category(t.category)), Decimal("0"))
         mission_accounts.append(MissionAccount(
             name=a.name, balance=Decimal(str(a.balance)), interest_rate=Decimal(str(a.interest_rate or 0)),
             min_payment=Decimal(str(a.min_payment or 0)), debt_subtype=a.debt_subtype or "",
@@ -244,3 +253,15 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
     incomes, expenses = cashflow_events(items, today, MISSION_WINDOW_DAYS)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
                              incomes, expenses, today=today)
+
+
+def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -> dict:
+    """The user's monthly summary (velocity_engine.cashflow_summary, Decimal).
+    One call site for GET /api/cashflow/summary and GET /api/analytics/v2."""
+    from sqlmodel import select
+    from models import Account, CashflowItem
+    from velocity_engine import cashflow_summary
+    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+    accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+    debts = accounts_to_active_debt_objects(accounts, plan_limit)
+    return cashflow_summary([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)

@@ -1,247 +1,174 @@
-import { useState, useEffect } from 'react';
+/**
+ * Análisis v2 — computed from the KoreX model (recurring items + subscriptions +
+ * accounts), not from imported transactions. Reads ONLY GET /api/analytics/v2,
+ * which composes existing sources on the server (no math here: every amount is
+ * the server's, the bars and "Te quedan" already close to the cent).
+ * One hero per screen. Never a $0.00 card: no data → guided empty state;
+ * endpoint error → retry. The engine surplus is NOT shown here (it ignores
+ * subscriptions; that is another mission).
+ */
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useFormatMoney } from '@/hooks/useFormatMoney';
-import { useToast } from '@/components/ui/use-toast';
-import { BarChart3, TrendingUp, TrendingDown, DollarSign, Tag, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { MoneyAmount } from '@/components/MoneyAmount';
+import { AmberRule, BankHeader, HeroNumber, Section } from '@/components/kx';
 
-// ─── Types ─────────────────────────────────────────────────
-interface CategoryData {
-    name: string;
-    amount: number;
+export interface AnalyticsV2 {
+    estado: 'ok' | 'vacio';
+    motivo: 'sin_recurrentes' | 'sin_ingresos' | null;
+    etiqueta: string;
+    heroe: { sale_de_tu_bolsillo: number };
+    bloque: { entra: number; gastos_de_vida: number; suscripciones: number; pagos_a_deudas: number; te_quedan: number };
+    en_que_se_va: { nombre: string; monto: number; tipo: 'gasto' | 'suscripciones' | 'otros'; pct: number }[];
+    deudas: { interes_por_dia: number; objetivo: { nombre: string; apr: number } | null; pagado_este_mes: number };
+    suscripciones: { activas: number; total_mensual: number };
 }
 
-interface MonthlyTrend {
-    month: string;
-    income: number;
-    expense: number;
-    net: number;
+const CASHFLOW_ROUTE = '/dashboard/accounts/manage';
+const SUBS_ROUTE = '/dashboard/subscriptions';
+
+function EstimateChip({ es }: { es: boolean }) {
+    return <span data-testid="estimate-chip" className="ml-2 inline-block rounded-full border border-kx-line px-2 py-0.5 align-middle text-[10.5px] font-semibold uppercase tracking-wide text-kx-amber">{es ? 'estimado' : 'estimate'}</span>;
 }
 
-interface AnalyticsSummary {
-    avg_monthly_spending: number;
-    total_3m_spending: number;
-    top_category: string;
-    top_category_amount: number;
-    transaction_count: number;
+function Line({ label, value, strong = false, sign, testId }: { label: string; value: number; strong?: boolean; sign?: '+' | '−'; testId: string }) {
+    return (
+        <div className={`flex items-baseline justify-between py-2 ${strong ? 'border-t border-kx-line pt-3' : ''}`} data-testid={testId}>
+            <span className={strong ? 'text-sm font-semibold text-kx-ink' : 'text-sm text-kx-ink2'}>{label}</span>
+            <span className={`kx-num text-sm ${strong ? 'font-semibold text-kx-ink' : 'text-kx-ink'}`}>
+                {sign && <span className="mr-1 text-kx-ink3">{sign}</span>}<MoneyAmount value={value} />
+            </span>
+        </div>
+    );
 }
 
-// ─── Category Colors ─────────────────────────────────────────
-const CATEGORY_COLORS: Record<string, string> = {
-    Food: 'bg-kx-amber',
-    Transport: 'bg-kx-raised',
-    Entertainment: 'bg-kx-raised',
-    Shopping: 'bg-kx-raised',
-    Utilities: 'bg-kx-paid',
-    Health: 'bg-kx-debt',
-    Housing: 'bg-kx-raised',
-    Insurance: 'bg-kx-raised',
-    Education: 'bg-kx-paid',
-    Uncategorized: 'bg-kx-line',
-};
-
-function getCategoryColor(name: string): string {
-    return CATEGORY_COLORS[name] || 'bg-kx-amber';
-}
-
-// ─── Component ─────────────────────────────────────────────
 export default function AnalyticsPage() {
-    const { t, language } = useLanguage();
+    const { language } = useLanguage();
     const es = language === 'es';
-    // Server sentinels shown in the user's language
-    const catLabel = (name: string) => name === 'Uncategorized' ? (es ? 'Sin categoría' : 'Uncategorized') : name === 'None' ? (es ? 'Sin datos' : 'No data') : name;
-    usePageTitle(t('nav.analytics'));
-    const { formatMoney } = useFormatMoney();
-    const { toast } = useToast();
+    usePageTitle(es ? 'Análisis' : 'Analysis');
+    const [data, setData] = useState<AnalyticsV2 | null>(null);
+    const [error, setError] = useState(false);
 
-    const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-    const [categories, setCategories] = useState<CategoryData[]>([]);
-    const [trend, setTrend] = useState<MonthlyTrend[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const fetchV2 = useCallback(() => apiFetch<AnalyticsV2>('/api/analytics/v2')
+        .then((d) => { setData(d); setError(false); })
+        .catch(() => setError(true)), []);
+    useEffect(() => { fetchV2(); }, [fetchV2]);
+    const retry = () => { setError(false); setData(null); fetchV2(); };
 
-    useEffect(() => {
-        Promise.all([
-            apiFetch<AnalyticsSummary>('/api/analytics/summary'),
-            apiFetch<{ categories?: CategoryData[] }>('/api/analytics/spending-by-category'),
-            apiFetch<{ trend?: MonthlyTrend[] }>('/api/analytics/monthly-trend'),
-        ])
-            .then(([summaryData, catData, trendData]) => {
-                setSummary(summaryData);
-                setCategories(catData.categories || []);
-                setTrend(trendData.trend || []);
-            })
-            .catch((err) => {
-                console.error('Analytics load error:', err);
-                toast({ title: 'Error', description: es ? 'No pudimos cargar tu análisis.' : 'Failed to load analytics data.', variant: 'destructive' });
-            })
-            .finally(() => setIsLoading(false));
-        // toast is stable (from useToast) — including it would refetch on every toast change
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    // ─── Skeleton ─────────────────────────────────────────
-    if (isLoading) {
-        return (
-            <div className="container mx-auto p-6 space-y-6 max-w-7xl animate-in fade-in duration-500">
-                <Skeleton className="h-10 w-64" />
-                <Skeleton className="h-5 w-96" />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[...Array(3)].map((_, i) => (
-                        <Skeleton key={i} className="h-32 rounded-xl" />
-                    ))}
-                </div>
-                <Skeleton className="h-80 rounded-xl" />
-                <Skeleton className="h-64 rounded-xl" />
+    const shell = (body: React.ReactNode) => (
+        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+            <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
+                <BankHeader title={es ? 'Análisis' : 'Analysis'} greeting={es ? 'a dónde va tu dinero' : 'where your money goes'} />
+                <AmberRule />
+                {body}
             </div>
+        </div>
+    );
+
+    if (error) {
+        return shell(
+            <Section tone="debt" title={es ? 'No pudimos cargar tu análisis' : "We couldn't load your analysis"}>
+                <div data-testid="analytics-error">
+                    <p className="text-sm text-kx-ink2">{es ? 'Revisa tu conexión e inténtalo de nuevo. Tus datos están a salvo.' : 'Check your connection and try again. Your data is safe.'}</p>
+                    <button type="button" onClick={retry} data-testid="analytics-retry" className="mt-3 text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
+                </div>
+            </Section>,
         );
     }
 
-    // ─── Max bar for scaling the visual chart ─────────────
-    const maxCatAmount = categories.length > 0 ? Math.max(...categories.map((c) => c.amount)) : 1;
-    const maxTrendVal = trend.length > 0 ? Math.max(...trend.flatMap((t) => [t.income, t.expense])) : 1;
+    if (!data) return shell(<div className="h-48 kx-shimmer rounded-[20px]" aria-busy="true" data-testid="analytics-loading" />);
 
-    return (
-        <div className="container mx-auto p-6 space-y-8 max-w-7xl animate-in fade-in duration-700 pb-20">
-            {/* Header */}
-            <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                    <BarChart3 className="text-kx-amber" size={28} />
-                    {es ? 'Análisis' : 'Analytics'}
-                </h1>
-                <p className="text-muted-foreground">
-                    {es ? 'En qué se va tu dinero y cómo cambia mes a mes, para afinar tu estrategia.' : 'Spending insights and financial trends to optimize your velocity strategy.'}
+    if (data.estado === 'vacio') {
+        const noItems = data.motivo === 'sin_recurrentes';
+        return shell(
+            <Section tone="amber" title={es ? 'Tu análisis empieza con tus recurrentes' : 'Your analysis starts with your recurring items'}>
+                <div data-testid="analytics-empty" data-motivo={data.motivo ?? ''}>
+                    <p className="text-sm text-kx-ink2">
+                        {noItems
+                            ? (es ? 'Carga tus ingresos y gastos fijos (sueldo, renta, luz, súper…) y KoreX te muestra a dónde va tu dinero cada mes.' : 'Add your income and fixed expenses (salary, rent, utilities, groceries…) and KoreX shows you where your money goes each month.')
+                            : (es ? 'Ya tienes gastos cargados. Agrega tu ingreso para ver cuánto te queda cada mes.' : 'Your expenses are in. Add your income to see what you keep each month.')}
+                    </p>
+                    <Link to={CASHFLOW_ROUTE} data-testid="analytics-cta" className="mt-4 inline-flex items-center rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-[#111418]">
+                        {noItems ? (es ? 'Cargar mis recurrentes' : 'Add my recurring items') : (es ? 'Agregar mi ingreso' : 'Add my income')}
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                    </Link>
+                </div>
+            </Section>,
+        );
+    }
+
+    const b = data.bloque;
+    const d = data.deudas;
+    const label = (n: string) => (n === 'Suscripciones' ? (es ? 'Suscripciones' : 'Subscriptions') : n === 'Otros' ? (es ? 'Otros' : 'Other') : n);
+    const hasDebts = b.pagos_a_deudas > 0 || !!d.objetivo;
+
+    return shell(
+        <>
+            <div data-testid="analytics-hero">
+                <HeroNumber
+                    label={es ? 'Sale de tu bolsillo · al mes' : 'Out of your pocket · per month'}
+                    amount={data.heroe.sale_de_tu_bolsillo}
+                    phrase={<>{es ? 'Gastos de vida + suscripciones activas.' : 'Living expenses + active subscriptions.'}<EstimateChip es={es} /></>} />
+            </div>
+
+            <Section tone="neutral" title={es ? 'Tu mes, en cinco líneas' : 'Your month, in five lines'}>
+                <div data-testid="analytics-block">
+                    <Line testId="line-entra" label={es ? 'Entra' : 'Comes in'} value={b.entra} />
+                    <Line testId="line-vida" label={es ? 'Gastos de vida' : 'Living expenses'} value={b.gastos_de_vida} sign="−" />
+                    {b.suscripciones > 0 && <Line testId="line-subs" label={es ? 'Suscripciones' : 'Subscriptions'} value={b.suscripciones} sign="−" />}
+                    {b.pagos_a_deudas > 0 && <Line testId="line-deudas" label={es ? 'Pagos a deudas' : 'Debt payments'} value={b.pagos_a_deudas} sign="−" />}
+                    <Line testId="line-quedan" label={es ? 'Te quedan' : 'You keep'} value={b.te_quedan} strong />
+                    <p className="mt-1 text-[11.5px] text-kx-ink3">{es ? 'Estimado con tus recurrentes y suscripciones de hoy.' : 'Estimated from your recurring items and subscriptions today.'}</p>
+                </div>
+            </Section>
+
+            <Section tone="neutral" title={es ? 'A dónde va tu dinero' : 'Where your money goes'}>
+                <ul className="space-y-3" data-testid="analytics-bars">
+                    {data.en_que_se_va.map((bar) => (
+                        <li key={`${bar.tipo}-${bar.nombre}`} data-testid="bar" data-monto={bar.monto}>
+                            <div className="flex items-baseline justify-between text-sm">
+                                <span className="truncate text-kx-ink">{label(bar.nombre)}</span>
+                                <span className="kx-num text-kx-ink2"><MoneyAmount value={bar.monto} /></span>
+                            </div>
+                            <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-kx-raised">
+                                <div className="h-full rounded-full bg-kx-amber" style={{ width: `${Math.max(2, Math.min(100, bar.pct))}%` }} />
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+            </Section>
+
+            {hasDebts && (
+                <Section tone="neutral" title={es ? 'Tus deudas este mes' : 'Your debts this month'}>
+                    <div data-testid="analytics-debts" className="space-y-1">
+                        <Line testId="debt-min" label={es ? 'Pagos mínimos del mes' : 'Minimum payments this month'} value={b.pagos_a_deudas} />
+                        {d.interes_por_dia > 0 && <Line testId="debt-daily" label={es ? 'Interés por día' : 'Interest per day'} value={d.interes_por_dia} />}
+                        {d.objetivo && (
+                            <p className="py-2 text-sm text-kx-ink2" data-testid="debt-target">
+                                {es ? 'Objetivo de ataque: ' : 'Attack target: '}<b className="text-kx-ink">{d.objetivo.nombre}</b>
+                                <span className="kx-tech ml-1 text-kx-ink3">{d.objetivo.apr.toFixed(2)}%</span>
+                            </p>
+                        )}
+                        <p className="text-[13px] text-kx-ink2" data-testid="debt-paid">
+                            {d.pagado_este_mes > 0
+                                ? <>{es ? 'Este mes ya pagaste ' : 'This month you already paid '}<b className="kx-num text-kx-ink"><MoneyAmount value={d.pagado_este_mes} /></b>{es ? ' a tus deudas.' : ' to your debts.'}</>
+                                : (es ? 'Aún no registras pagos a tus deudas este mes.' : 'No debt payments recorded this month yet.')}
+                        </p>
+                    </div>
+                </Section>
+            )}
+
+            <Section tone="neutral" title={es ? 'Suscripciones' : 'Subscriptions'}
+                action={<Link to={SUBS_ROUTE} className="flex items-center text-xs font-semibold text-kx-amber" data-testid="subs-link">{es ? 'Ver todas' : 'See all'}<ChevronRight className="h-4 w-4" /></Link>}>
+                <p className="text-sm text-kx-ink2" data-testid="analytics-subs">
+                    {data.suscripciones.activas > 0
+                        ? <>{es ? `${data.suscripciones.activas} activas · ` : `${data.suscripciones.activas} active · `}<b className="kx-num text-kx-ink"><MoneyAmount value={data.suscripciones.total_mensual} /></b>{es ? ' al mes' : ' per month'}</>
+                        : (es ? 'No tienes suscripciones registradas.' : 'No subscriptions recorded.')}
                 </p>
-            </div>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-kx-surface border-kx-line ">
-                    <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] flex items-center justify-center">
-                            <DollarSign className="text-kx-amber" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">{es ? 'Gasto mensual promedio' : 'Avg Monthly Spending'}</p>
-                            <p className="text-2xl font-bold">{formatMoney(summary?.avg_monthly_spending ?? 0)}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-kx-surface border-kx-line ">
-                    <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] flex items-center justify-center">
-                            <TrendingDown className="text-kx-debt" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">{es ? 'Gasto total (3 meses)' : 'Total 3-Month Spend'}</p>
-                            <p className="text-2xl font-bold">{formatMoney(summary?.total_3m_spending ?? 0)}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-kx-surface border-kx-line ">
-                    <CardContent className="p-6 flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-kx-raised flex items-center justify-center">
-                            <Tag className="text-kx-ink2" size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-muted-foreground">{es ? 'Categoría principal' : 'Top Category'}</p>
-                            <p className="text-2xl font-bold">{summary ? catLabel(summary.top_category) : (es ? 'Sin datos' : 'N/A')}</p>
-                            <p className="text-xs text-muted-foreground">{formatMoney(summary?.top_category_amount ?? 0)}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Spending by Category — Horizontal bars */}
-            <Card className="border-kx-line ">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <BarChart3 size={18} className="text-kx-amber" />
-                        {es ? 'Gasto por categoría' : 'Spending by Category'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {categories.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">{es ? 'Aún no hay gastos registrados.' : 'No spending data available yet.'}</p>
-                    ) : (
-                        categories.map((cat) => {
-                            const pct = (cat.amount / maxCatAmount) * 100;
-                            return (
-                                <div key={cat.name} className="space-y-1">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="font-medium flex items-center gap-2">
-                                            <span className={`h-2.5 w-2.5 rounded-full ${getCategoryColor(cat.name)}`} />
-                                            {catLabel(cat.name)}
-                                        </span>
-                                        <span className="text-muted-foreground font-mono">{formatMoney(cat.amount)}</span>
-                                    </div>
-                                    <div className="h-3 w-full bg-kx-raised rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full ${getCategoryColor(cat.name)} transition-all duration-700 ease-out`}
-                                            style={{ width: `${pct}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Monthly Trend — Visual "bar chart" */}
-            <Card className="border-kx-line ">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <TrendingUp size={18} className="text-kx-paid" />
-                        {es ? 'Ingresos vs. gastos por mes' : 'Monthly Income vs Expense'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {trend.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">{es ? 'Aún no hay datos de tendencia.' : 'No trend data available yet.'}</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {trend.map((month) => (
-                                <div key={month.month} className="space-y-2 p-3 rounded-lg bg-kx-surface /[0.02]">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="font-semibold">{month.month}</span>
-                                        <span className={`font-mono font-bold flex items-center gap-1 ${month.net >= 0 ? 'text-kx-paid' : 'text-kx-debt'}`}>
-                                            {month.net >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                                            {formatMoney(Math.abs(month.net))} {es ? 'neto' : 'net'}
-                                        </span>
-                                    </div>
-                                    {/* Income bar */}
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-kx-paid font-medium">{es ? 'Ingresos' : 'Income'}</span>
-                                        <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-kx-paid rounded-full transition-all duration-700"
-                                                style={{ width: `${(month.income / maxTrendVal) * 100}%` }}
-                                            />
-                                        </div>
-                                        <span className="w-24 text-right font-mono text-muted-foreground">{formatMoney(month.income)}</span>
-                                    </div>
-                                    {/* Expense bar */}
-                                    <div className="flex items-center gap-2 text-xs">
-                                        <span className="w-16 text-kx-debt font-medium">{es ? 'Gastos' : 'Expense'}</span>
-                                        <div className="flex-1 h-2.5 bg-kx-raised rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-kx-debt rounded-full transition-all duration-700"
-                                                style={{ width: `${(month.expense / maxTrendVal) * 100}%` }}
-                                            />
-                                        </div>
-                                        <span className="w-24 text-right font-mono text-muted-foreground">{formatMoney(month.expense)}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+            </Section>
+        </>,
     );
 }

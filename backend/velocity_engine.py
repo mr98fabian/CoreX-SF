@@ -29,6 +29,15 @@ MONTHLY_FACTOR = {
     "monthly": Decimal("1"), "semi_monthly": Decimal("2"), "biweekly": Decimal("26") / Decimal("12"),
     "weekly": Decimal("52") / Decimal("12"), "annually": Decimal("1") / Decimal("12"),
 }
+# Subscriptions store "annual"; cashflow stores "annually". Same factor, one table.
+_FREQ_ALIAS = {"annual": "annually"}
+
+
+def monthly_amount(amount, frequency: str) -> Decimal:
+    """The single monthly normalisation for any recurring amount (cashflow items
+    AND subscriptions). Unknown frequency = monthly, as cashflow always did."""
+    f = _FREQ_ALIAS.get(frequency, frequency)
+    return Decimal(str(amount)) * MONTHLY_FACTOR.get(f, Decimal("1"))
 
 
 def monthly_surplus(cashflow_items, debts: List["DebtAccount"]) -> Optional[Decimal]:
@@ -38,7 +47,7 @@ def monthly_surplus(cashflow_items, debts: List["DebtAccount"]) -> Optional[Deci
     record, so the caller can fall back to its declared default."""
     income = expenses = Decimal("0")
     for amount, frequency, is_income in cashflow_items:
-        monthly = Decimal(str(amount)) * MONTHLY_FACTOR.get(frequency, Decimal("1"))
+        monthly = monthly_amount(amount, frequency)
         if is_income:
             income += monthly
         else:
@@ -2175,7 +2184,7 @@ def cashflow_summary(cashflow_items, debts: List["DebtAccount"]) -> dict:
     monthly_surplus. surplus_monthly is monthly_surplus itself (floored at $0, None
     without income); balance_monthly is the unfloored income − expenses − payments."""
     items = list(cashflow_items)
-    expenses = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in items if not inc), Decimal("0"))
+    expenses = sum((monthly_amount(a, f) for a, f, inc in items if not inc), Decimal("0"))
     payments = sum((plan_minimum(d) for d in debts if d.balance > 0), Decimal("0"))
     income = monthly_income(items)
     surplus = monthly_surplus(items, debts)
@@ -2194,7 +2203,7 @@ def cashflow_summary(cashflow_items, debts: List["DebtAccount"]) -> dict:
 
 def monthly_income(cashflow_items) -> Optional[Decimal]:
     """Monthly income from (amount, frequency, is_income) tuples; None without income."""
-    income = sum((Decimal(str(a)) * MONTHLY_FACTOR.get(f, Decimal("1")) for a, f, inc in cashflow_items if inc), Decimal("0"))
+    income = sum((monthly_amount(a, f) for a, f, inc in cashflow_items if inc), Decimal("0"))
     return income if income > 0 else None
 
 
