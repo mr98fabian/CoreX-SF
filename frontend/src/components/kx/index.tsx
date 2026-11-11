@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { NAV_PRIMARY, NAV_MORE, isNavActive } from '@/lib/nav';
+import { AppMenuSection } from '@/components/AppMenuSection';
 import { STAGE_LABEL, type Stage } from '@/lib/stage';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { prefersReducedMotion } from '@/lib/motion';
@@ -285,6 +286,7 @@ export function SideNav({ onNavigate }: { onNavigate?: () => void }) {
                     </div>
                 </div>
             ))}
+            <AppMenuSection />
         </nav>
     );
 }
