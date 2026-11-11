@@ -100,7 +100,7 @@ export default function HomePage() {
                 <DailyInterestLine es={es} periods={s.dailyPeriods} debtBalances={s.debts.map((a) => a.bal)} />
 
                 {/* HOY — the single active signal: the server's mission, same as the Plan */}
-                {s.mission && <MissionCard mission={s.mission} es={es} />}
+                {s.mission && <MissionCard mission={s.mission} faltante={s.faltante} es={es} />}
 
                 {/* TU AVANCE — the calendar (heat map here; full piece one tap away) */}
                 {!noDebt && (

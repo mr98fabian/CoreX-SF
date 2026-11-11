@@ -2451,25 +2451,31 @@ def get_daily_mission(
         attack = max(Decimal('0'), min(safe - gap_cost, target.balance, liquid_cash - reserve))
         attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
 
-    mission = None
+    # The first obligation the cumulative cash cannot reach: a warning of its own
+    faltante = None
     if reserve > liquid_cash:
         running = Decimal('0')
         for o in obligations:
             running += o["monto"]
             if running > liquid_cash:
                 falta = (running - liquid_cash).quantize(_CENT, rounding=ROUND_HALF_UP)
-                mission = {"tipo": "faltante", "cuenta": o["cuenta"], "monto": falta, "obligacion": o["tipo"],
-                           "fecha_accion": o["fecha_accion"], "fecha_evento": o["fecha_evento"],
-                           "copy": f"Te faltan {_usd(falta)} para cubrir {_what(o)}"}
+                faltante = {"tipo": "faltante", "cuenta": o["cuenta"], "monto": falta, "obligacion": o["tipo"],
+                            "fecha_accion": o["fecha_accion"], "fecha_evento": o["fecha_evento"],
+                            "copy": f"Te faltan {_usd(falta)} para cubrir {_what(o)}"}
                 break
-    elif obligations:
-        mission = obligations[0]
+
+    # Headline: the first obligation when the cash covers it; the faltante only
+    # when not even the first one is covered.
+    mission = None
+    if obligations:
+        mission = faltante if obligations[0]["monto"] > liquid_cash else obligations[0]
     elif attack > 0:
         mission = {"tipo": "avalancha", "cuenta": target.name, "monto": attack, "fecha_accion": today,
                    "fecha_evento": today, "copy": f"Ataca la {target.name} con {_usd(attack)} hoy"}
 
     return {
         "mision": mission,
+        "faltante": faltante,
         "obligaciones": obligations,
         "reserva": reserve.quantize(_CENT, rounding=ROUND_HALF_UP),
         "ataque": attack,

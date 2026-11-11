@@ -124,6 +124,7 @@ export function useKxSummary() {
         };
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
             mission: data?.dashboard?.mision?.mision ?? null,
+            faltante: data?.dashboard?.mision?.faltante ?? null,
             staged, debts, counts, months, freedom, paydays, cutDays, dayDetail, chargesIn };
     }, [data, subs]);
 
