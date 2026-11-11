@@ -13,7 +13,7 @@ import api_tokens
 import database
 from auth import get_current_user_id
 from main import app
-from models import Account, ApiToken, ApiTokenAudit, CashflowItem, RecurringSubscription, Subscription, Transaction
+from models import Account, ApiToken, ApiTokenAudit, CashflowItem, CutHistory, RecurringSubscription, Subscription, Transaction
 
 U = "a2a2a2a2-a2a2-4a2a-a2a2-a2a2a2a2a2a2"
 H = {"Authorization": "Bearer x"}
@@ -36,7 +36,7 @@ def clean():
     app.dependency_overrides.pop(get_current_user_id, None)
     api_tokens._hits.clear()
     with Session(database.engine) as s:
-        for model in (ApiTokenAudit, ApiToken, Transaction, RecurringSubscription, CashflowItem, Account, Subscription):
+        for model in (ApiTokenAudit, ApiToken, Transaction, CutHistory, RecurringSubscription, CashflowItem, Account, Subscription):
             for row in s.exec(select(model).where(model.user_id == U)).all():
                 s.delete(row)
         s.commit()
@@ -89,3 +89,32 @@ def test_summary_and_subscription_totals_identical_to_before(client, name, data)
     if os.environ.get("KX_CAPTURE_BASELINE"):
         return
     assert now == BASELINE[name]
+
+
+# ── Step 2: one PAYMENT_CATEGORIES; the mission counts attacks too ──
+
+def test_payment_categories_live_in_helpers_and_coach_imports_them():
+    import routers.coach as coach
+    from helpers import PAYMENT_CATEGORIES, is_payment_category
+    assert PAYMENT_CATEGORIES == ("payment", "debt payment") and not hasattr(coach, "PAYMENT_CATEGORIES")
+    assert is_payment_category("Debt Payment") and is_payment_category("payment") and not is_payment_category("Food: food")
+
+
+def test_a_confirmed_attack_after_the_cut_reduces_the_pending_statement():
+    from helpers import build_daily_mission
+    t = date.today()
+    seed([], subs=[], debts=False)
+    with Session(database.engine) as s:
+        amex = Account(user_id=U, name="Amex", type="debt", balance=D("2500"), interest_rate=D("27"), min_payment=D("80"),
+                       debt_subtype="credit_card", closing_day=(t - timedelta(days=2)).day, due_day=(t + timedelta(days=20)).day)
+        s.add(amex); s.commit(); s.refresh(amex)
+        cut = t - timedelta(days=2)
+        s.add(CutHistory(user_id=U, account_id=amex.id, cut_date=cut, reported_balance=D("1679.27")))
+        s.add(Transaction(user_id=U, account_id=amex.id, date=(cut + timedelta(days=1)).isoformat(), amount=D("100"),
+                          description="Pago", category="payment"))
+        s.add(Transaction(user_id=U, account_id=amex.id, date=t.isoformat(), amount=D("400"),
+                          description="Velocity Execution: Ataque", category="Debt Payment"))
+        s.commit()
+        r = build_daily_mission(s, U, s.exec(select(Account).where(Account.user_id == U)).all())
+    [estado] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
+    assert estado["monto"] == D("1179.27")  # 1679.27 − 100 manual − 400 attack (before: the attack was ignored → 1579.27)

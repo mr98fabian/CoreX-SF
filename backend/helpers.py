@@ -13,6 +13,15 @@ from velocity_engine import DebtAccount
 
 DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
 
+# A payment to a debt, however it was recorded: manual payment ("payment") or a
+# confirmed attack ("Debt Payment"). Compared lower-case. One list for logros,
+# the daily mission and Análisis.
+PAYMENT_CATEGORIES = ("payment", "debt payment")
+
+
+def is_payment_category(category) -> bool:
+    return (category or "").lower() in PAYMENT_CATEGORIES
+
 
 @contextmanager
 def bypass_fk(session):
@@ -230,9 +239,9 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
         paid = Decimal("0")
         if cut:
             txs = session.exec(select(Transaction).where(Transaction.user_id == user_id, Transaction.account_id == a.id,
-                                                         Transaction.category == "payment",
                                                          Transaction.date > cut.cut_date.isoformat())).all()
-            paid = sum((abs(Decimal(str(t.amount))) for t in txs), Decimal("0"))
+            # manual payments AND confirmed attacks ("Debt Payment") both reduce the statement
+            paid = sum((abs(Decimal(str(t.amount))) for t in txs if is_payment_category(t.category)), Decimal("0"))
         mission_accounts.append(MissionAccount(
             name=a.name, balance=Decimal(str(a.balance)), interest_rate=Decimal(str(a.interest_rate or 0)),
             min_payment=Decimal(str(a.min_payment or 0)), debt_subtype=a.debt_subtype or "",
