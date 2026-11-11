@@ -17,7 +17,7 @@ export interface DailyMission {
     obligacion?: 'corte' | 'estado' | 'prestamo';
     copy?: string;
 }
-export interface MissionResult { mision: DailyMission | null; reserva: number; ataque: number; objetivo: string | null }
+export interface MissionResult { mision: DailyMission | null; faltante?: DailyMission | null; reserva: number; ataque: number; objetivo: string | null }
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -25,7 +25,8 @@ const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July
 // YYYY-MM-DD anchored at noon (negative timezones would fall a day back)
 const isoDate = (s: string) => new Date(`${s}T12:00:00`);
 
-export function MissionCard({ mission, es }: { mission: DailyMission; es: boolean }) {
+/** mission = the headline; faltante = the first obligation the cash can't reach (secondary warning). */
+export function MissionCard({ mission, faltante, es }: { mission: DailyMission; faltante?: DailyMission | null; es: boolean }) {
     const months = es ? MONTHS_ES : MONTHS_EN;
     const fmt = (s: string) => { const d = isoDate(s); return es ? `${d.getDate()} de ${months[d.getMonth()]}` : `${months[d.getMonth()]} ${d.getDate()}`; };
     const action = isoDate(mission.fecha_accion);
@@ -66,6 +67,13 @@ export function MissionCard({ mission, es }: { mission: DailyMission; es: boolea
                     <p className="text-[15px] font-semibold text-kx-ink" data-testid="mission-title">{title}</p>
                     <p className="text-[13.5px] text-kx-ink2" data-testid="mission-body">{body}</p>
                     <p className="text-[11.5px] text-kx-ink2">{es ? 'Monto estimado con tus datos de hoy.' : 'Estimated from your data today.'}</p>
+                    {faltante && mission.tipo !== 'faltante' && (
+                        <p data-testid="mission-faltante" className="mt-1.5 text-[12.5px] text-kx-debt">
+                            {es
+                                ? <>Ojo: te faltan <b className="kx-num font-semibold"><MoneyAmount value={faltante.monto} /></b> para cubrir {noun(faltante.obligacion)} de la {faltante.cuenta} del {fmt(faltante.fecha_evento)}.</>
+                                : <>Heads up: you need <b className="kx-num font-semibold"><MoneyAmount value={faltante.monto} /></b> more to cover {noun(faltante.obligacion)} {faltante.cuenta} on {fmt(faltante.fecha_evento)}.</>}
+                        </p>
+                    )}
                 </div>
             </div>
         </Section>

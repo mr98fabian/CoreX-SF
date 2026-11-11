@@ -126,7 +126,7 @@ export default function AttackPage() {
                     </Section>
                 )}
 
-                {!loading && !s.error && !ccError && obligationFirst && mission && <MissionCard mission={mission} es={es} />}
+                {!loading && !s.error && !ccError && obligationFirst && mission && <MissionCard mission={mission} faltante={cc?.mision?.faltante} es={es} />}
 
                 {!loading && !s.error && !ccError && !obligationFirst && (!rec || amount <= 0) && (
                     <Section tone={s.debts.length ? 'paid' : 'neutral'} title={es ? 'Hoy no hay ataque' : 'No attack today'}>

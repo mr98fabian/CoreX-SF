@@ -84,14 +84,27 @@ def test_without_income_there_is_no_attack_and_only_obligations_show():
     assert r["mision"] is None and r["ataque"] == D("0")
 
 
-def test_reserve_above_liquid_is_a_faltante_with_the_exact_amount():
-    amex = card(name="Amex", bal="1679.27", closing=5, due=28)
-    r = get_daily_mission([loan(), amex], D("1000"), D("1000"), INCOME, [], today=TODAY)
-    m = r["mision"]
-    # 641.12 (Nov 11) fits; 641.12 + 1679.27 = 2320.39 → 1320.39 missing for the Amex statement
-    assert (m["tipo"], m["cuenta"], m["monto"], m["obligacion"]) == ("faltante", "Amex", D("1320.39"), "estado")
-    assert m["copy"] == "Te faltan $1,320.39 para cubrir el estado de la Amex del 28 de noviembre"
+def test_owner_data_first_obligation_covered_is_the_headline_and_faltante_goes_apart():
+    # 10-nov: liquid $1,915.32 · car $641.12 on the 11th · Amex $1,679.27 cut on the 12th
+    amex = card(name="Amex", bal="1679.27", closing=12, due=7)
+    r = get_daily_mission([amex, loan(due=11)], D("1915.32"), D("1000"), INCOME, [], today=TODAY)
+    assert (r["mision"]["tipo"], r["mision"]["cuenta"]) == ("prestamo", "Auto")
+    f = r["faltante"]
+    # 641.12 + 1679.27 = 2320.39 − 1915.32 = 405.07 missing for the Amex cut
+    assert (f["tipo"], f["cuenta"], f["monto"], f["obligacion"]) == ("faltante", "Amex", D("405.07"), "corte")
+    assert f["copy"] == "Te faltan $405.07 para cubrir el corte de la Amex del 12 de noviembre"
     assert r["ataque"] == D("0")
+
+
+def test_cash_below_the_first_obligation_makes_the_faltante_the_headline():
+    r = get_daily_mission([loan(due=11)], D("500"), D("1000"), INCOME, [], today=TODAY)
+    assert (r["mision"]["tipo"], r["mision"]["monto"], r["mision"]["obligacion"]) == ("faltante", D("141.12"), "prestamo")
+    assert r["faltante"] == r["mision"]
+
+
+def test_everything_covered_means_no_faltante():
+    r = get_daily_mission([loan(due=11)], D("5000"), D("1000"), INCOME, [], today=TODAY)
+    assert r["mision"]["tipo"] == "prestamo" and r["faltante"] is None
 
 
 def test_account_without_due_day_has_no_obligation_on_the_15th():

@@ -59,10 +59,26 @@ describe('MissionCard — one mission, one amount, one date', () => {
     });
 });
 
+describe('MissionCard — headline vs faltante', () => {
+    it('owner data: the car is the headline and the Amex shortfall is a secondary warning', async () => {
+        const car = m({ tipo: 'prestamo', cuenta: 'Auto', monto: 641.12, fecha_accion: '2026-11-11', fecha_evento: '2026-11-11' });
+        const short = m({ tipo: 'faltante', obligacion: 'corte', cuenta: 'Amex', monto: 405.07, fecha_accion: '2026-11-10', fecha_evento: '2026-11-12' });
+        const el = await render(<MissionCard es mission={car} faltante={short} />);
+        expect(el.querySelector('[data-testid="mission"]')!.getAttribute('data-tipo')).toBe('prestamo');
+        expect(el.querySelector('[data-testid="mission-faltante"]')!.textContent).toBe('Ojo: te faltan $405.07 para cubrir el corte de la Amex del 12 de noviembre.');
+    });
+
+    it('when the faltante IS the headline, no duplicated warning', async () => {
+        const short = m({ tipo: 'faltante', obligacion: 'prestamo', cuenta: 'Auto', monto: 141.12 });
+        const el = await render(<MissionCard es mission={short} faltante={short} />);
+        expect(el.querySelector('[data-testid="mission-faltante"]')).toBeNull();
+    });
+});
+
 describe('Inicio and Plan show the same server mission', () => {
     it('Inicio no longer derives its to-do from nextCut', () => {
         expect(homeSrc).not.toMatch(/nextCut\(/);
-        expect(homeSrc).toContain('<MissionCard mission={s.mission}');
+        expect(homeSrc).toContain('<MissionCard mission={s.mission} faltante={s.faltante}');
     });
 
     it('Plan puts the obligation first and the attack becomes "what is left"', async () => {
