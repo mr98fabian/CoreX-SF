@@ -2386,7 +2386,10 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
             cut = _next_on_or_after(a.closing_day, today)
             if cut < end:
                 out.append(_obligation("corte", a, a.balance, max(today, cut - timedelta(days=CORTE_LEAD_DAYS)), cut))
-    out.sort(key=lambda o: (o["fecha_accion"], -o["monto"]))
+    # Contractual due dates first: by event date, then hardness (a loan payment
+    # or statement due beats a cut on the same day), then the bigger amount.
+    hardness = {"prestamo": 0, "estado": 0, "corte": 1}
+    out.sort(key=lambda o: (o["fecha_evento"], hardness[o["tipo"]], -o["monto"]))
     return out
 
 

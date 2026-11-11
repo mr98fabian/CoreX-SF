@@ -193,3 +193,22 @@ def test_statement_uses_cut_history_minus_payments_recorded_after_it(client):
         r = build_daily_mission(s, A, accounts)
     [estado] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
     assert (estado["tipo"], estado["monto"]) == ("estado", D("1500.00"))
+
+
+# ── Order: contractual due dates beat a cut's action date ────
+
+def test_loan_due_tomorrow_beats_a_card_cutting_in_two_days():
+    t = TODAY
+    tomorrow, in_two = t + timedelta(days=1), t + timedelta(days=2)
+    chase = card(closing=in_two.day, due=5)  # cut action = max(today, cut − 2) = today
+    r = get_daily_mission([chase, loan(due=tomorrow.day)], D("10000"), D("1000"), INCOME, [], today=t)
+    assert [o["tipo"] for o in r["obligaciones"]] == ["prestamo", "corte"]
+    assert r["mision"]["tipo"] == "prestamo"
+
+
+def test_owner_like_data_car_on_the_11th_before_the_amex_cut_on_the_12th():
+    amex = card(name="Amex Gold", bal="1679.27", closing=12, due=7)  # statement of Oct 12 was due Nov 7 (past)
+    r = get_daily_mission([amex, loan(due=11)], D("5000"), D("1000"), INCOME, [], today=date(2026, 11, 10))
+    assert [(o["cuenta"], o["fecha_evento"]) for o in r["obligaciones"]] == [
+        ("Auto", date(2026, 11, 11)), ("Amex Gold", date(2026, 11, 12))]
+    assert r["mision"]["cuenta"] == "Auto"
