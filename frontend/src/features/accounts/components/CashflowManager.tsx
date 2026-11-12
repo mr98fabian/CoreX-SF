@@ -22,7 +22,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
     // Totals come from the engine (GET /api/cashflow/summary), not from a frontend frequency table
     const summary = useCashflowSummary(refreshKey);
     const fetchCashflow = () => { fetchItems(); void summary.refetch(); };
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const [currentTimeframe, setCurrentTimeframe] = useState<Timeframe>('monthly');
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -44,6 +44,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
         income: per(s?.income_monthly ?? 0),
         expenses: per(s?.outflow_monthly ?? 0),
         regularExpenses: per(s?.expenses_monthly ?? 0),
+        subscriptions: per(s?.subscriptions_monthly ?? 0),
         debtExpenses: per(s?.debt_payments_monthly ?? 0),
         surplus: per(s?.balance_monthly ?? 0),
         yearly: perPeriod(s?.balance_monthly ?? 0, 'year'),
@@ -143,6 +144,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                             <div className="mt-2 space-y-1">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-kx-ink3">{t('cashflow.fixed')}: {formatMoney(stats.regularExpenses)}</span>
+                                    {stats.subscriptions > 0 && <span className="text-kx-ink3" data-testid="cf-subs">{language === 'es' ? 'Suscripciones' : 'Subscriptions'}: {formatMoney(stats.subscriptions)}</span>}
                                     <span className="text-kx-amber">{t('cashflow.debt')}: {formatMoney(stats.debtExpenses)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs mt-1">

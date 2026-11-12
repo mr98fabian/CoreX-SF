@@ -7,7 +7,7 @@ write:accounts (token writes leave an audit summary). DELETE is soft
 Totals are computed here, active only, normalised to a month.
 """
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -52,7 +52,9 @@ def monthly_equivalent(amount: Decimal, frequency: str) -> Decimal:
 
 def summarize(items) -> dict:
     monthly = sum((monthly_equivalent(s.amount, s.frequency) for s in items if s.status == "active"), Decimal("0"))
-    return {"monthly_total": str(monthly.quantize(CENT)), "annual_total": str((monthly * 12).quantize(CENT))}
+    # Same rounding as the engine summary (half-up), so the two totals agree to the cent
+    return {"monthly_total": str(monthly.quantize(CENT, rounding=ROUND_HALF_UP)),
+            "annual_total": str((monthly * 12).quantize(CENT, rounding=ROUND_HALF_UP))}
 
 
 def _sort_key(s: RecurringSubscription):

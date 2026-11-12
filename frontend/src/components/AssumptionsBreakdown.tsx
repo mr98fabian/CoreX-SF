@@ -10,6 +10,10 @@ export interface ProjectionAssumptions {
     attack_percentage?: number;
     liquid_cash_used?: number;
     extra_monthly_payment: number;
+    /** Active subscriptions per month, already subtracted from the surplus (server figure). */
+    subscriptions_monthly?: number;
+    /** true when subscriptions take the whole surplus */
+    subscriptions_eat_surplus?: boolean;
     note?: string;
 }
 
@@ -63,6 +67,12 @@ export function AssumptionsBreakdown({ assumptions, extraRows, className }: Assu
                         <div className="flex items-center justify-between gap-3">
                             <span className="text-muted-foreground">{isEs ? 'Efectivo líquido usado' : 'Liquid cash used'}</span>
                             <MoneyAmount value={assumptions.liquid_cash_used} className="font-semibold" />
+                        </div>
+                    )}
+                    {(assumptions.subscriptions_monthly ?? 0) > 0 && (
+                        <div className="flex items-center justify-between gap-3" data-testid="assumption-subs">
+                            <span className="text-muted-foreground">{isEs ? 'Suscripciones / mes (ya restadas)' : 'Subscriptions / mo (already subtracted)'}</span>
+                            <MoneyAmount value={assumptions.subscriptions_monthly!} className="font-semibold" />
                         </div>
                     )}
                     <div className="flex items-center justify-between gap-3">

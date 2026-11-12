@@ -29,6 +29,8 @@ export function perHour(monthly: number): number {
 export interface CashflowSummary {
     income_monthly: number;
     expenses_monthly: number;
+    /** active subscriptions (already part of outflow and subtracted from balance/surplus) */
+    subscriptions_monthly?: number;
     debt_payments_monthly: number;
     outflow_monthly: number;
     surplus_monthly: number | null;

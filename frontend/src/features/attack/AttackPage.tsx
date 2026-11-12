@@ -28,8 +28,10 @@ import { AccountLogo } from '@/components/AccountLogo';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
 import { DrawnCheck } from '@/components/kx/motion';
 import { MissionCard, type MissionResult } from '@/components/kx/MissionCard';
+import { MoneyAmount } from '@/components/MoneyAmount';
 
 interface CommandCenter {
+    excedente?: { mensual: number | null; suscripciones_mensuales: number; comido_por_suscripciones: boolean };
     mision?: MissionResult;
     morning_briefing: {
         recommended_action: { amount: number; destination: string; destination_balance: number; destination_apr: number; reason: string } | null;
@@ -123,6 +125,17 @@ export default function AttackPage() {
                 {!loading && (s.error || ccError) && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tu plan' : "We couldn't load your plan"}>
                         <button onClick={() => { setCcError(false); s.reload(); fetchCc(); }} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
+                    </Section>
+                )}
+
+                {!loading && !s.error && !ccError && cc?.excedente?.comido_por_suscripciones && (
+                    <Section tone="debt" title={es ? 'Tus suscripciones se comen todo tu excedente' : 'Your subscriptions eat your whole surplus'}>
+                        <p className="text-sm text-kx-ink2" data-testid="subs-eat-surplus">
+                            {es ? 'Pagas ' : 'You pay '}<b className="kx-num text-kx-ink"><MoneyAmount value={cc.excedente.suscripciones_mensuales} /></b>
+                            {es ? ' al mes en suscripciones y no queda excedente para atacar: tu plan va solo con los pagos mínimos (estimado). Revisa cuáles puedes cancelar.'
+                                : ' a month in subscriptions and nothing is left to attack with: your plan runs on minimum payments only (estimate). See which ones you can cancel.'}
+                        </p>
+                        <Link to="/dashboard/subscriptions" className="mt-2 inline-block text-sm font-semibold text-kx-amber">{es ? 'Ver mis suscripciones' : 'See my subscriptions'}</Link>
                     </Section>
                 )}
 
