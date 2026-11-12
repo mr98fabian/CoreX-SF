@@ -140,6 +140,22 @@ def load_cashflow_inputs(session, user_id: str) -> dict:
     }
 
 
+def get_cashflow_breakdown(session, user_id: str, debts) -> dict:
+    """Surplus with and without subscriptions, for the Plan's transparency line:
+    when subscriptions take the whole surplus the UI says so (never a silent
+    'minimums only')."""
+    from velocity_engine import monthly_amount, monthly_surplus
+    data = load_cashflow_inputs(session, user_id)
+    surplus = monthly_surplus(data["tuples"], debts, data["subscriptions"])
+    without = monthly_surplus(data["tuples"], debts)
+    subs = sum((monthly_amount(a, f) for a, f in data["subscriptions"]), Decimal("0")).quantize(Decimal("0.01"))
+    return {
+        "surplus": surplus,
+        "subscriptions_monthly": subs,
+        "eaten_by_subscriptions": surplus is not None and surplus == 0 and (without or 0) > 0,
+    }
+
+
 def get_cashflow_surplus(session, user_id: str, debts):
     """The user's monthly surplus from their cashflow (velocity_engine.monthly_surplus),
     or None when no income is on record (callers then use the declared default)."""
@@ -254,6 +270,47 @@ def cashflow_events(items, start, days: int):
     return incomes, expenses
 
 
+def subscription_occurs_on(sub, d) -> bool:
+    """Backend port of frontend/src/lib/subscriptionOccurrences.ts (same rule as the
+    calendar): only ACTIVE subscriptions with a next_charge_date occur.
+      monthly → the anchor's day every month, clamped to month end (31 → 30/29/28)
+      weekly  → every 7 days from the anchor, in both directions
+      annual  → only its own date
+    No date on record → never: a charge day is never invented."""
+    import calendar
+    from datetime import date as _date
+    if sub.status != "active" or not sub.next_charge_date:
+        return False
+    try:
+        a = _date.fromisoformat(str(sub.next_charge_date)[:10])
+    except ValueError:
+        return False
+    if sub.frequency == "monthly":
+        return d.day == min(a.day, calendar.monthrange(d.year, d.month)[1])
+    if sub.frequency == "weekly":
+        return (d - a).days % 7 == 0
+    return d == a
+
+
+def dated_cashflow(session, user_id: str, start, days: int):
+    """Dated incomes/expenses for the attack and the daily mission (safe equity):
+    recurring items + charges of ACTIVE subscriptions that have a next_charge_date.
+    A recurring item that duplicates a DATED subscription is dropped (the service
+    is charged once, on the subscription's day); if the subscription has no date,
+    the recurring item stays so the service is not lost from this path."""
+    from datetime import timedelta
+    data = load_cashflow_inputs(session, user_id)
+    dated = [s for s in data["active_subs"] if s.next_charge_date]
+    dated_names = {norm_name(s.name) for s in dated}
+    dupe_ids = {id(i) for i in data["dupes"] if norm_name(i.name) in dated_names}
+    incomes, expenses = cashflow_events([i for i in data["items"] if id(i) not in dupe_ids], start, days)
+    for s in dated:
+        dates = {start + timedelta(days=i) for i in range(days) if subscription_occurs_on(s, start + timedelta(days=i))}
+        if dates:
+            expenses.append({"name": s.name, "amount": abs(Decimal(str(s.amount))), "dates": dates})
+    return incomes, expenses
+
+
 def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None):
     """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
     Callers (dashboard, command-center) only serialize the result."""
@@ -285,8 +342,7 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
             last_cut_date=cut.cut_date if cut else None,
             last_cut_reported=Decimal(str(cut.reported_balance)) if cut else None, paid_since_cut=paid,
         ))
-    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-    incomes, expenses = cashflow_events(items, today, MISSION_WINDOW_DAYS)
+    incomes, expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
                              incomes, expenses, today=today)
 

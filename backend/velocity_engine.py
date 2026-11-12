@@ -945,9 +945,13 @@ def get_projections(
     liquid_cash: Decimal,
     attack_percentage: Decimal = DEFAULT_ATTACK_PERCENTAGE,
     extra_monthly: Optional[Decimal] = None,
+    subscriptions_monthly: Optional[Decimal] = None,
+    eaten_by_subscriptions: bool = False,
 ) -> Dict:
     """
     Generate complete velocity banking projections.
+    subscriptions_monthly / eaten_by_subscriptions only surface in the
+    assumptions block (the surplus passed in already subtracts them).
 
     Args:
         debts: List of debt accounts
@@ -994,7 +998,9 @@ def get_projections(
             "liquid_cash_used": float(liquid_cash),
             "extra_monthly_payment": float(extra_monthly),
             "extra_source": "cashflow_surplus" if from_cashflow else "attack_percentage_default",
-            "note": ("Estimate: assumes your monthly surplus (income − expenses − debt payments) goes to debt every month, and paid-off debts' payments roll to the next."
+            **({"subscriptions_monthly": float(subscriptions_monthly)} if subscriptions_monthly is not None else {}),
+            "subscriptions_eat_surplus": bool(eaten_by_subscriptions),
+            "note": ("Estimate: assumes your monthly surplus (income − expenses − subscriptions − debt payments) goes to debt every month, and paid-off debts' payments roll to the next."
                      if from_cashflow else
                      "Estimate: no income on record, so it assumes this % of your liquid cash goes to debt each month, and paid-off debts' payments roll to the next."),
         },

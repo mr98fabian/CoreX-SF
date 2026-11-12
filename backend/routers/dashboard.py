@@ -9,7 +9,7 @@ from datetime import date, timedelta
 from database import engine
 from database import request_session
 from models import Account, CashflowItem, Transaction
-from helpers import cashflow_events, build_daily_mission, accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
+from helpers import cashflow_events, dated_cashflow, build_daily_mission, accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
 from auth import get_current_user_id
 from api_tokens import require_scope
 from plan_guard import effective_plan_limit, scoped_plan_limit
@@ -68,7 +68,7 @@ async def get_dashboard_metrics(
 
         # Real recurring incomes/expenses, any frequency, income by is_income
         # (never an invented salary: no income on record = nothing comes in)
-        real_incomes, real_expenses = cashflow_events(cashflow_items, date.today(), MISSION_WINDOW_DAYS)
+        real_incomes, real_expenses = dated_cashflow(session, user_id, date.today(), MISSION_WINDOW_DAYS)
         safety_data = calculate_safe_attack_equity(
             liquid_cash, shield_target, debt_objects,
             recurring_incomes=real_incomes, recurring_expenses=real_expenses,

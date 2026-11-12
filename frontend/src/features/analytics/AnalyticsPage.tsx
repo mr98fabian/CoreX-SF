@@ -4,8 +4,8 @@
  * which composes existing sources on the server (no math here: every amount is
  * the server's, the bars and "Te quedan" already close to the cent).
  * One hero per screen. Never a $0.00 card: no data → guided empty state;
- * endpoint error → retry. The engine surplus is NOT shown here (it ignores
- * subscriptions; that is another mission).
+ * endpoint error → retry. "Te quedan" is the summary's balance_monthly: the
+ * engine counts subscriptions (duplicates once), so this page and the Plan agree.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';

@@ -14,7 +14,7 @@ from models import Account, CashflowItem, Transaction, MovementLog, UserSettings
 from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
-    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, funding_accounts,
+    find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, get_cashflow_breakdown, funding_accounts,
     build_daily_mission,
 )
 from auth import get_current_user_id
@@ -96,9 +96,11 @@ async def get_velocity_projections(
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
+        cf = get_cashflow_breakdown(session, user_id, debts)
         return get_projections(debts, Decimal(str(get_liquid_cash(accounts))),
                                get_attack_percentage(session, user_id),
-                               extra_monthly=get_cashflow_surplus(session, user_id, debts))
+                               extra_monthly=cf["surplus"], subscriptions_monthly=cf["subscriptions_monthly"],
+                               eaten_by_subscriptions=cf["eaten_by_subscriptions"])
 
 
 @router.get("/velocity/freedom-path")
@@ -409,7 +411,11 @@ async def get_strategy_command_center(
             risky_opportunity = calculate_risky_opportunity(liquid_cash, shield_target, debt_accounts,
                                                             asset_accounts[0].name if asset_accounts else "Checking")
 
+        cf = get_cashflow_breakdown(session, user_id, debt_accounts)
         return {
+            "excedente": {"mensual": float(cf["surplus"]) if cf["surplus"] is not None else None,
+                          "suscripciones_mensuales": float(cf["subscriptions_monthly"]),
+                          "comido_por_suscripciones": cf["eaten_by_subscriptions"]},
             "mision": mission_json(mission),
             "morning_briefing": morning_briefing,
             "confidence_meter": confidence_meter,
