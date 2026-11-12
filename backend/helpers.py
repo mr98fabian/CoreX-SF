@@ -102,14 +102,34 @@ def get_attack_percentage(session, user_id: str) -> Decimal:
     return Decimal(str(settings.attack_percentage)) if settings and settings.attack_percentage is not None else DEFAULT_ATTACK_PERCENTAGE
 
 
+def norm_name(name: str) -> str:
+    """Name for the "same service" match between a recurring item and a
+    subscription: lower-case, no spaces or punctuation. 'Planet Fitness' ==
+    'planet-fitness'; 'Hello Fitness (en cancelación)' != 'Hello Fitness'."""
+    import re
+    return re.sub(r"[\W_]+", "", (name or "").lower())
+
+
+def is_income_item(item) -> bool:
+    return bool(item.is_income or item.category == "income")
+
+
+def load_cashflow_inputs(session, user_id: str) -> dict:
+    """THE single loader of the monthly cashflow inputs. Every monthly surplus
+    and summary (strategy, coach, dashboard, /api/cashflow/summary, Análisis)
+    reads its tuples from here, so they can't drift apart.
+    Returns the rows and the (amount, frequency, is_income) tuples."""
+    from sqlmodel import select
+    from models import CashflowItem
+    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+    return {"items": items, "tuples": [(i.amount, i.frequency, is_income_item(i)) for i in items]}
+
+
 def get_cashflow_surplus(session, user_id: str, debts):
     """The user's monthly surplus from their cashflow (velocity_engine.monthly_surplus),
     or None when no income is on record (callers then use the declared default)."""
-    from sqlmodel import select
-    from models import CashflowItem
     from velocity_engine import monthly_surplus
-    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-    return monthly_surplus([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)
+    return monthly_surplus(load_cashflow_inputs(session, user_id)["tuples"], debts)
 
 
 # ── Balance Update Helpers ───────────────────────────────────
@@ -259,9 +279,8 @@ def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -
     """The user's monthly summary (velocity_engine.cashflow_summary, Decimal).
     One call site for GET /api/cashflow/summary and GET /api/analytics/v2."""
     from sqlmodel import select
-    from models import Account, CashflowItem
+    from models import Account
     from velocity_engine import cashflow_summary
-    items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
     accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
     debts = accounts_to_active_debt_objects(accounts, plan_limit)
-    return cashflow_summary([(i.amount, i.frequency, bool(i.is_income or i.category == "income")) for i in items], debts)
+    return cashflow_summary(load_cashflow_inputs(session, user_id)["tuples"], debts)

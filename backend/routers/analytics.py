@@ -128,10 +128,10 @@ TOP_BARS = 6
 
 
 def _norm(name: str) -> str:
-    """Name for the duplicate match: lower-case, no spaces or punctuation.
-    'Planet Fitness' == 'planet-fitness'; 'Frontier Sec' != 'Frontier (internet)'."""
-    import re
-    return re.sub(r"[\W_]+", "", (name or "").lower())
+    from helpers import norm_name  # one rule for Análisis and the engine
+    return norm_name(name)
+
+
 _C = Decimal("0.01")
 
 
