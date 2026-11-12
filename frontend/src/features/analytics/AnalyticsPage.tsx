@@ -18,13 +18,14 @@ import { AmberRule, BankHeader, HeroNumber, Section } from '@/components/kx';
 
 export interface AnalyticsV2 {
     estado: 'ok' | 'vacio';
-    motivo: 'sin_recurrentes' | 'sin_ingresos' | null;
+    motivo: 'sin_recurrentes' | 'sin_ingresos' | 'sin_gastos' | null;
     etiqueta: string;
     heroe: { sale_de_tu_bolsillo: number };
     bloque: { entra: number; gastos_de_vida: number; suscripciones: number; pagos_a_deudas: number; te_quedan: number };
     en_que_se_va: { nombre: string; monto: number; tipo: 'gasto' | 'suscripciones' | 'otros'; pct: number }[];
     deudas: { interes_por_dia: number; objetivo: { nombre: string; apr: number } | null; pagado_este_mes: number };
-    suscripciones: { activas: number; total_mensual: number };
+    suscripciones: { activas: number; total_mensual: number; top_3?: { nombre: string; monto: number }[] };
+    duplicados?: { cantidad: number; monto_mensual: number; servicios: string[] };
 }
 
 const CASHFLOW_ROUTE = '/dashboard/accounts/manage';
@@ -83,16 +84,19 @@ export default function AnalyticsPage() {
 
     if (data.estado === 'vacio') {
         const noItems = data.motivo === 'sin_recurrentes';
+        const noSpend = data.motivo === 'sin_gastos';
         return shell(
             <Section tone="amber" title={es ? 'Tu análisis empieza con tus recurrentes' : 'Your analysis starts with your recurring items'}>
                 <div data-testid="analytics-empty" data-motivo={data.motivo ?? ''}>
                     <p className="text-sm text-kx-ink2">
                         {noItems
                             ? (es ? 'Carga tus ingresos y gastos fijos (sueldo, renta, luz, súper…) y KoreX te muestra a dónde va tu dinero cada mes.' : 'Add your income and fixed expenses (salary, rent, utilities, groceries…) and KoreX shows you where your money goes each month.')
-                            : (es ? 'Ya tienes gastos cargados. Agrega tu ingreso para ver cuánto te queda cada mes.' : 'Your expenses are in. Add your income to see what you keep each month.')}
+                            : noSpend
+                                ? (es ? 'Ya tienes tu ingreso. Agrega tus gastos fijos (renta, luz, súper…) para ver a dónde se va.' : 'Your income is in. Add your fixed expenses (rent, utilities, groceries…) to see where it goes.')
+                                : (es ? 'Ya tienes gastos cargados. Agrega tu ingreso para ver cuánto te queda cada mes.' : 'Your expenses are in. Add your income to see what you keep each month.')}
                     </p>
                     <Link to={CASHFLOW_ROUTE} data-testid="analytics-cta" className="mt-4 inline-flex items-center rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-[#111418]">
-                        {noItems ? (es ? 'Cargar mis recurrentes' : 'Add my recurring items') : (es ? 'Agregar mi ingreso' : 'Add my income')}
+                        {noItems ? (es ? 'Cargar mis recurrentes' : 'Add my recurring items') : noSpend ? (es ? 'Agregar mis gastos' : 'Add my expenses') : (es ? 'Agregar mi ingreso' : 'Add my income')}
                         <ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
                 </div>
@@ -122,6 +126,13 @@ export default function AnalyticsPage() {
                     {b.pagos_a_deudas > 0 && <Line testId="line-deudas" label={es ? 'Pagos a deudas' : 'Debt payments'} value={b.pagos_a_deudas} sign="−" />}
                     <Line testId="line-quedan" label={es ? 'Te quedan' : 'You keep'} value={b.te_quedan} strong />
                     <p className="mt-1 text-[11.5px] text-kx-ink3">{es ? 'Estimado con tus recurrentes y suscripciones de hoy.' : 'Estimated from your recurring items and subscriptions today.'}</p>
+                    {data.duplicados && data.duplicados.cantidad > 0 && (
+                        <p className="mt-1 text-[11.5px] text-kx-ink3" data-testid="dupes-note">
+                            {es
+                                ? <>Contamos una sola vez {data.duplicados.cantidad} {data.duplicados.cantidad === 1 ? 'servicio que tienes' : 'servicios que tienes'} como gasto y como suscripción (<MoneyAmount value={data.duplicados.monto_mensual} /> al mes).</>
+                                : <>{data.duplicados.cantidad} {data.duplicados.cantidad === 1 ? 'service' : 'services'} listed both as an expense and a subscription {data.duplicados.cantidad === 1 ? 'is' : 'are'} counted once (<MoneyAmount value={data.duplicados.monto_mensual} /> a month).</>}
+                        </p>
+                    )}
                 </div>
             </Section>
 
@@ -168,6 +179,16 @@ export default function AnalyticsPage() {
                         ? <>{es ? `${data.suscripciones.activas} activas · ` : `${data.suscripciones.activas} active · `}<b className="kx-num text-kx-ink"><MoneyAmount value={data.suscripciones.total_mensual} /></b>{es ? ' al mes' : ' per month'}</>
                         : (es ? 'No tienes suscripciones registradas.' : 'No subscriptions recorded.')}
                 </p>
+                {(data.suscripciones.top_3?.length ?? 0) > 0 && (
+                    <ul className="mt-2 space-y-1" data-testid="subs-top3">
+                        {data.suscripciones.top_3!.map((x) => (
+                            <li key={x.nombre} className="flex items-baseline justify-between text-sm">
+                                <span className="truncate text-kx-ink">{x.nombre}</span>
+                                <span className="kx-num text-kx-ink2"><MoneyAmount value={x.monto} /></span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </Section>
         </>,
     );

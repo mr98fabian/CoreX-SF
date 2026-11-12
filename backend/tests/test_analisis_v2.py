@@ -187,3 +187,61 @@ def test_v2_with_kx_token_200_and_without_auth_rejected(client):
     assert client.get("/api/analytics/v2", headers=bearer(tok_no_scope)).status_code == 403
     app.dependency_overrides.pop(get_current_user_id, None)
     assert client.get("/api/analytics/v2").status_code in (401, 403)
+
+
+# ── Dedupe (presentation only), top 3, zero-hero guard ──
+
+DUP_RECURRENTES = [("Nómina", "9000", "monthly", True), ("Renta", "1500", "monthly", False),
+                   ("AT&T", "1036", "monthly", False), ("Washington National", "38.41", "monthly", False),
+                   ("Planet Fitness", "27.28", "monthly", False), ("Hello Fitness", "45", "monthly", False),
+                   ("Self Lender", "27.87", "monthly", False), ("CreditStrong", "28.30", "monthly", False),
+                   ("RentReporters", "11", "monthly", False), ("Frontier Sec", "86", "monthly", False),
+                   ("Suscripciones (varias)", "330", "monthly", False), ("Kikoff", "35", "monthly", False)]
+DUP_SUBS = [("AT&T", "1035.99", "monthly", "active"), ("Washington  National", "38.41", "monthly", "active"),
+            ("planet-fitness", "27.11", "monthly", "active"), ("Hello Fitness", "45", "monthly", "active"),
+            ("Self Lender", "26.20", "monthly", "active"), ("CreditStrong", "29.14", "monthly", "active"),
+            ("RentReporters", "10.95", "monthly", "active"), ("Frontier (internet)", "86.49", "monthly", "active"),
+            ("Kikoff", "35", "monthly", "cancelled")]  # cancelled: Kikoff stays a living expense
+
+
+def test_v2_counts_a_service_once_when_it_is_both_recurring_and_subscription(client):
+    seed(DUP_RECURRENTES, subs=DUP_SUBS, debts=False)
+    with Session(database.engine) as s:
+        before = (len(s.exec(select(CashflowItem).where(CashflowItem.user_id == U)).all()),
+                  len(s.exec(select(RecurringSubscription).where(RecurringSubscription.user_id == U)).all()))
+    v2 = get(client, "/api/analytics/v2").json()
+    summary = get(client, "/api/cashflow/summary").json()
+    subs = get(client, "/api/subscriptions").json()
+    d = v2["duplicados"]
+    assert d["cantidad"] == 7 and d["monto_mensual"] == 1213.86
+    assert d["servicios"] == sorted(["AT&T", "Washington National", "Planet Fitness", "Hello Fitness", "Self Lender",
+                                     "CreditStrong", "RentReporters"])
+    # Frontier Sec vs Frontier (internet): different names, NOT deduplicated (pending owner confirmation)
+    assert "Frontier Sec" in [b["nombre"] for b in v2["en_que_se_va"]] or v2["en_que_se_va"][-1]["nombre"] == "Otros"
+    # the summary (Plan, mission) is untouched; this page subtracts the overlap
+    assert summary["expenses_monthly"] == 3164.86
+    assert v2["bloque"]["gastos_de_vida"] == round(3164.86 - 1213.86, 2) == 1951.0
+    assert v2["bloque"]["suscripciones"] == float(subs["monthly_total"]) == 1299.29
+    assert v2["heroe"]["sale_de_tu_bolsillo"] == round(1951.0 + 1299.29, 2)
+    b = v2["bloque"]
+    assert b["te_quedan"] == round(b["entra"] - b["gastos_de_vida"] - b["suscripciones"] - b["pagos_a_deudas"], 2)
+    assert round(sum(x["monto"] for x in v2["en_que_se_va"]), 2) == v2["heroe"]["sale_de_tu_bolsillo"]
+    assert not {"AT&T", "Planet Fitness"} & {x["nombre"] for x in v2["en_que_se_va"]}
+    # no user data touched
+    with Session(database.engine) as s:
+        after = (len(s.exec(select(CashflowItem).where(CashflowItem.user_id == U)).all()),
+                 len(s.exec(select(RecurringSubscription).where(RecurringSubscription.user_id == U)).all()))
+    assert before == after
+
+
+def test_v2_top_3_subscriptions_by_monthly_amount(client):
+    seed(DUP_RECURRENTES, subs=DUP_SUBS + [("Dominio", "1200", "annual", "active")], debts=False)
+    top = get(client, "/api/analytics/v2").json()["suscripciones"]["top_3"]
+    assert top == [{"nombre": "AT&T", "monto": 1035.99}, {"nombre": "Dominio", "monto": 100.0},
+                   {"nombre": "Frontier (internet)", "monto": 86.49}]
+
+
+def test_v2_income_but_nothing_going_out_is_the_guided_empty_state_not_a_zero_hero(client):
+    seed([("Nómina", "3000", "monthly", True)], subs=[], debts=False)
+    v2 = get(client, "/api/analytics/v2").json()
+    assert (v2["estado"], v2["motivo"]) == ("vacio", "sin_gastos")
