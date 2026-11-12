@@ -142,22 +142,25 @@ async def analytics_v2(
 ):
     """Every figure comes from an existing source; this endpoint only composes:
     - summary  = helpers.cashflow_summary_for (same as /api/cashflow/summary)
-    - subscriptions = routers.recurring.summarize (same as /api/subscriptions)
+    - subscriptions = summary.subscriptions_monthly (== /api/subscriptions monthly_total)
     - debt payments = summary.debt_payments_monthly (plan_minimum)
     - daily interest = velocity_engine.daily_interest on the plan set (same as /api/dashboard)
     - avalanche target = velocity_engine.get_velocity_target
     - paid this month = transactions with helpers.PAYMENT_CATEGORIES, amount > 0
-    Hero "Sale de tu bolsillo" = living expenses + active subscriptions (the
-    summary reads only CashflowItem, so subscriptions are not counted twice)."""
+    Hero "Sale de tu bolsillo" = summary living expenses + summary subscriptions.
+    The duplicate rule (a recurring item named like an active subscription counts
+    once, as the subscription) lives in helpers.load_cashflow_inputs, shared with
+    the engine; "Te quedan" is the summary's balance_monthly."""
     from helpers import (accounts_to_active_debt_objects, cashflow_summary_for, filter_active_debt_accounts,
-                         is_payment_category)
+                         is_payment_category, load_cashflow_inputs)
     from models import Account, CashflowItem, RecurringSubscription
     from routers.recurring import monthly_equivalent, summarize
     from velocity_engine import daily_interest, get_velocity_target, monthly_amount
 
     with request_session() as session:
         s = cashflow_summary_for(session, user_id, plan_limit)
-        items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
+        inputs = load_cashflow_inputs(session, user_id)
+        items = inputs["items"]
         subs = session.exec(select(RecurringSubscription).where(RecurringSubscription.user_id == user_id)).all()
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         month = date.today().isoformat()[:7]
@@ -165,18 +168,14 @@ async def analytics_v2(
                     if is_payment_category(t.category) and Decimal(str(t.amount)) > 0 and str(t.date)[:7] == month), Decimal("0"))
 
     active_subs = [x for x in subs if x.status == "active"]
-    subs_monthly = Decimal(summarize(subs)["monthly_total"])
+    subs_monthly = s["subscriptions_monthly"]  # == /api/subscriptions monthly_total (same rounding)
     income, living, payments = s["income_monthly"], s["expenses_monthly"], s["debt_payments_monthly"]
 
-    # Dedupe (presentation only, this page): a living expense whose normalised name
-    # matches an ACTIVE subscription is the same service entered twice. It is counted
-    # once, on the subscription side. Data, the summary and the engine are untouched.
-    sub_names = {_norm(x.name) for x in active_subs} - {""}
-    expenses = [i for i in items if not (i.is_income or i.category == "income") and not is_payment_category(i.category)]
-    dupes = [i for i in expenses if _norm(i.name) in sub_names]
+    # Same figures as the summary (the engine): duplicates already count once
+    dupes = inputs["dupes"]
     dupe_ids = {id(i) for i in dupes}
     dupe_monthly = sum((monthly_amount(i.amount, i.frequency) for i in dupes), Decimal("0")).quantize(_C, rounding=ROUND_HALF_UP)
-    living_net = living - dupe_monthly
+    living_net = living
     hero = living_net + subs_monthly
 
     top_3 = sorted(({"nombre": x.name, "monto": monthly_equivalent(x.amount, x.frequency).quantize(_C)} for x in active_subs),
@@ -217,7 +216,7 @@ async def analytics_v2(
             "gastos_de_vida": f(living_net),
             "suscripciones": f(subs_monthly),
             "pagos_a_deudas": f(payments),
-            "te_quedan": f(income - living_net - subs_monthly - payments),
+            "te_quedan": f(s["balance_monthly"]),
         },
         "en_que_se_va": [{**b, "monto": f(b["monto"]), "pct": round(float(b["monto"] / hero * 100), 1) if hero > 0 else 0}
                          for b in shown],

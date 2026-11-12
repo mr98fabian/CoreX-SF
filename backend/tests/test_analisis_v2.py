@@ -69,11 +69,15 @@ def get(client, url, headers=H):
 # Captured on main 8ee3335, before monthly_amount existed.
 SUBS_BASE = {"monthly_total": "63.10", "annual_total": "757.24", "each": ["34.62", "10.00", "2.99", "15.49", "13.99"]}
 BASELINE = {
-    "demo": {"summary": {"income_monthly": 4008.33, "expenses_monthly": 2570.0, "debt_payments_monthly": 976.12,
-                         "outflow_monthly": 3546.12, "surplus_monthly": 462.21, "balance_monthly": 462.21, "has_income": True},
+    # feat/suscripciones-en-motor: the summary now counts the 63.10/mes of active subscriptions
+    # (before: outflow 3546.12, surplus 462.21 · owner: outflow 2886.00, surplus 1414.01)
+    "demo": {"summary": {"income_monthly": 4008.33, "expenses_monthly": 2570.0, "subscriptions_monthly": 63.1,
+                         "debt_payments_monthly": 976.12, "outflow_monthly": 3609.22, "surplus_monthly": 399.11,
+                         "balance_monthly": 399.11, "has_income": True},
              "subs": SUBS_BASE},
-    "owner": {"summary": {"income_monthly": 4300.0, "expenses_monthly": 1909.88, "debt_payments_monthly": 976.12,
-                          "outflow_monthly": 2886.0, "surplus_monthly": 1414.01, "balance_monthly": 1414.01, "has_income": True},
+    "owner": {"summary": {"income_monthly": 4300.0, "expenses_monthly": 1909.88, "subscriptions_monthly": 63.1,
+                          "debt_payments_monthly": 976.12, "outflow_monthly": 2949.1, "surplus_monthly": 1350.9,
+                          "balance_monthly": 1350.9, "has_income": True},
               "subs": SUBS_BASE},
 }
 
@@ -218,8 +222,8 @@ def test_v2_counts_a_service_once_when_it_is_both_recurring_and_subscription(cli
                                      "CreditStrong", "RentReporters"])
     # Frontier Sec vs Frontier (internet): different names, NOT deduplicated (pending owner confirmation)
     assert "Frontier Sec" in [b["nombre"] for b in v2["en_que_se_va"]] or v2["en_que_se_va"][-1]["nombre"] == "Otros"
-    # the summary (Plan, mission) is untouched; this page subtracts the overlap
-    assert summary["expenses_monthly"] == 3164.86
+    # the engine applies the same rule: the summary's living expenses already exclude the overlap
+    assert summary["expenses_monthly"] == 1951.0 and summary["subscriptions_monthly"] == 1299.29
     assert v2["bloque"]["gastos_de_vida"] == round(3164.86 - 1213.86, 2) == 1951.0
     assert v2["bloque"]["suscripciones"] == float(subs["monthly_total"]) == 1299.29
     assert v2["heroe"]["sale_de_tu_bolsillo"] == round(1951.0 + 1299.29, 2)

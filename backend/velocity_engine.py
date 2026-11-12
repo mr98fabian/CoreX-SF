@@ -40,12 +40,16 @@ def monthly_amount(amount, frequency: str) -> Decimal:
     return Decimal(str(amount)) * MONTHLY_FACTOR.get(f, Decimal("1"))
 
 
-def monthly_surplus(cashflow_items, debts: List["DebtAccount"]) -> Optional[Decimal]:
-    """The user's real monthly attack: income − expenses − debt payments
-    (plan_minimum of each debt), floored at $0. `cashflow_items` are
-    (amount, frequency, is_income) tuples. None when there is no income on
-    record, so the caller can fall back to its declared default."""
+def monthly_surplus(cashflow_items, debts: List["DebtAccount"], subscriptions=()) -> Optional[Decimal]:
+    """The user's real monthly attack: income − expenses − active subscriptions
+    − debt payments (plan_minimum of each debt), floored at $0. `cashflow_items`
+    are (amount, frequency, is_income) tuples; `subscriptions` are (amount,
+    frequency) of ACTIVE subscriptions (helpers.load_cashflow_inputs already
+    dropped the recurring items that duplicate one). None when there is no
+    income on record, so the caller can fall back to its declared default."""
     income = expenses = Decimal("0")
+    for amount, frequency in subscriptions:
+        expenses += monthly_amount(amount, frequency)
     for amount, frequency, is_income in cashflow_items:
         monthly = monthly_amount(amount, frequency)
         if is_income:
@@ -2178,25 +2182,32 @@ def house_goal_estimate(target: Decimal, home_price: Decimal, down_pct: Decimal,
             "eta_months": eta, "piti": piti, "debt_minimums": debt_minimums, "monthly_income": monthly_income, "dti": dti}
 
 
-def cashflow_summary(cashflow_items, debts: List["DebtAccount"]) -> dict:
-    """Monthly totals for the Reloj de dinero and Cuentas (GET /api/cashflow/summary).
-    Same frequency table (MONTHLY_FACTOR) and same debt payments (plan_minimum) as
-    monthly_surplus. surplus_monthly is monthly_surplus itself (floored at $0, None
-    without income); balance_monthly is the unfloored income − expenses − payments."""
+def cashflow_summary(cashflow_items, debts: List["DebtAccount"], subscriptions=()) -> dict:
+    """Monthly totals for the Reloj de dinero, Cuentas and Análisis (GET /api/cashflow/summary).
+    Same frequency table (monthly_amount) and same debt payments (plan_minimum) as
+    monthly_surplus. expenses_monthly = living expenses (recurring, without the
+    ones that duplicate a subscription); subscriptions_monthly = active
+    subscriptions; outflow = living + subscriptions + payments. Each line is
+    rounded once for display and balance_monthly is the arithmetic of the lines
+    shown (Ganas − Gastas = Te sobra to the cent). surplus_monthly is
+    monthly_surplus itself (floored at $0, None without income)."""
     items = list(cashflow_items)
-    expenses = sum((monthly_amount(a, f) for a, f, inc in items if not inc), Decimal("0"))
-    payments = sum((plan_minimum(d) for d in debts if d.balance > 0), Decimal("0"))
-    income = monthly_income(items)
-    surplus = monthly_surplus(items, debts)
+    subs = list(subscriptions)
     q = lambda x: x.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)  # noqa: E731
-    inc = income or Decimal("0")
+    expenses = q(sum((monthly_amount(a, f) for a, f, inc in items if not inc), Decimal("0")))
+    subs_monthly = q(sum((monthly_amount(a, f) for a, f in subs), Decimal("0")))
+    payments = q(sum((plan_minimum(d) for d in debts if d.balance > 0), Decimal("0")))
+    income = monthly_income(items)
+    surplus = monthly_surplus(items, debts, subs)
+    inc = q(income or Decimal("0"))
     return {
-        "income_monthly": q(inc),
-        "expenses_monthly": q(expenses),
-        "debt_payments_monthly": q(payments),
-        "outflow_monthly": q(expenses + payments),
+        "income_monthly": inc,
+        "expenses_monthly": expenses,
+        "subscriptions_monthly": subs_monthly,
+        "debt_payments_monthly": payments,
+        "outflow_monthly": expenses + subs_monthly + payments,
         "surplus_monthly": surplus,
-        "balance_monthly": q(inc - expenses - payments),
+        "balance_monthly": inc - expenses - subs_monthly - payments,
         "has_income": surplus is not None,
     }
 

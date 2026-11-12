@@ -120,16 +120,32 @@ def load_cashflow_inputs(session, user_id: str) -> dict:
     reads its tuples from here, so they can't drift apart.
     Returns the rows and the (amount, frequency, is_income) tuples."""
     from sqlmodel import select
-    from models import CashflowItem
+    from models import CashflowItem, RecurringSubscription
     items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-    return {"items": items, "tuples": [(i.amount, i.frequency, is_income_item(i)) for i in items]}
+    active_subs = session.exec(select(RecurringSubscription).where(
+        RecurringSubscription.user_id == user_id, RecurringSubscription.status == "active")).all()
+    # A living expense whose normalised name matches an ACTIVE subscription is the
+    # same service typed twice: it counts once, on the subscription side (same rule
+    # as Análisis). Nothing is deleted. Cancelled subscriptions never count.
+    sub_names = {norm_name(s.name) for s in active_subs} - {""}
+    dupes = [i for i in items if not is_income_item(i) and not is_payment_category(i.category)
+             and norm_name(i.name) in sub_names]
+    dupe_ids = {id(i) for i in dupes}
+    return {
+        "items": items,
+        "tuples": [(i.amount, i.frequency, is_income_item(i)) for i in items if id(i) not in dupe_ids],
+        "subscriptions": [(s.amount, s.frequency) for s in active_subs],
+        "active_subs": active_subs,
+        "dupes": dupes,
+    }
 
 
 def get_cashflow_surplus(session, user_id: str, debts):
     """The user's monthly surplus from their cashflow (velocity_engine.monthly_surplus),
     or None when no income is on record (callers then use the declared default)."""
     from velocity_engine import monthly_surplus
-    return monthly_surplus(load_cashflow_inputs(session, user_id)["tuples"], debts)
+    data = load_cashflow_inputs(session, user_id)
+    return monthly_surplus(data["tuples"], debts, data["subscriptions"])
 
 
 # ── Balance Update Helpers ───────────────────────────────────
@@ -283,4 +299,5 @@ def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -
     from velocity_engine import cashflow_summary
     accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
     debts = accounts_to_active_debt_objects(accounts, plan_limit)
-    return cashflow_summary(load_cashflow_inputs(session, user_id)["tuples"], debts)
+    data = load_cashflow_inputs(session, user_id)
+    return cashflow_summary(data["tuples"], debts, data["subscriptions"])
