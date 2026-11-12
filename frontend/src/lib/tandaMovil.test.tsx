@@ -60,10 +60,12 @@ describe('Safe areas', () => {
         expect(layoutSrc).toContain('h-[100dvh]');
         expect(layoutSrc).toContain("classList.add('kx-app-shell')");
         expect(kxCss).toMatch(/html\.kx-app-shell, html\.kx-app-shell body \{ height: 100%; overflow: hidden;/);
-        // <TabBar /> is a direct child of the shell root, outside the animated .kx-page
+        // shell móvil parte 3: <TabBar /> is the last child of the <main> column, after the
+        // scrolling pane (so outside the animated .kx-page and never under a transform)
         const page = layoutSrc.indexOf('className="kx-page');
-        const pageClose = layoutSrc.indexOf('</main>');
-        expect(layoutSrc.indexOf('<TabBar />')).toBeGreaterThan(pageClose);
+        const tab = layoutSrc.indexOf('<TabBar />');
+        expect(tab).toBeGreaterThan(layoutSrc.indexOf('<AppLock />'));
+        expect(tab).toBeLessThan(layoutSrc.indexOf('</main>'));
         expect(page).toBeGreaterThan(0);
     });
 });

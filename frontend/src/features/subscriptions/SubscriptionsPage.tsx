@@ -111,7 +111,7 @@ export default function SubscriptionsPage() {
     const valid = !!draft && draft.name.trim().length > 0 && parseFloat(draft.amount) > 0;
 
     return (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Suscripciones' : 'Subscriptions'} greeting={es ? 'lo que te cobran cada mes, en un solo lugar' : 'what you are charged every month, in one place'} />
                 <AmberRule />

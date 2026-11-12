@@ -109,7 +109,7 @@ export default function SettingsHome() {
     if (returning) return <Navigate to={`/dashboard/settings/advanced${location.search}`} replace />;
 
     return (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Ajustes' : 'Settings'} greeting={user?.user_metadata?.full_name || user?.email || ''} />
                 <AmberRule />

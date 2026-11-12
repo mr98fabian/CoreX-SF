@@ -23,8 +23,12 @@ const config: CapacitorConfig = {
       backgroundColor: '#020617',
     },
     Keyboard: {
-      resize: 'body',
-      resizeOnFullScreen: true,
+      // Shell móvil parte 3: resizeOnFullScreen shrank the whole view to
+      // "screen − keyboard" and only restored it on the keyboard's close
+      // animation → the app stayed cut in half (Home / focus loss / sheet
+      // closed with the keyboard up). The web engine decides the height now
+      // (index.html: interactive-widget=resizes-content). `resize` is iOS-only.
+      resizeOnFullScreen: false,
     },
   },
 };

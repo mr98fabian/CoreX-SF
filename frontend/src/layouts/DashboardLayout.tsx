@@ -228,8 +228,9 @@ export default function DashboardLayout() {
                     </div>
                     <AppLock />
                 </div>
+                {/* In the flow, last child of the column: always on the shell's bottom edge */}
+                <TabBar />
             </main>
-            <TabBar />
             <FeedbackWidget />
             <UpgradeNudge suppressed={onboarding.isLoading || !onboarding.hasCompleted} />
             <InstallPrompt />

@@ -5,6 +5,7 @@ import { setDemoToken, clearDemoToken, getDemoToken } from '@/lib/api';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { NATIVE_AUTH_REDIRECT, completeNativeOAuth } from '@/lib/nativeAuth';
+import { dismissKeyboard } from '@/lib/keyboard';
 
 // Demo mode constants — must match backend
 const DEMO_TOKEN = 'demo-stress-test-token';
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 options: { redirectTo: NATIVE_AUTH_REDIRECT, skipBrowserRedirect: true },
             });
             if (error) throw error;
+            dismissKeyboard(); // leaving for the system browser: close the keyboard first
             if (data?.url) window.location.href = data.url; // external https → Capacitor hands it to the browser
             return;
         }

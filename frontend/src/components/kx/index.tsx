@@ -3,7 +3,7 @@
  * One saturated moment per screen: <AmberStripe>. Stages always travel as
  * color + label + bar (<StageChip> + <StageBar>), never color alone.
  */
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { NAV_PRIMARY, NAV_MORE, isNavActive } from '@/lib/nav';
@@ -17,6 +17,7 @@ import { CountUp } from './motion';
 import { motion } from 'framer-motion';
 import { tx } from '@/lib/motion';
 import { editorialDate } from '@/lib/editorialDate';
+import { onKeyboardChange } from '@/lib/keyboard';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -229,13 +230,18 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
 }
 
 // ── Bottom tab bar (< 768px): exactly NAV_PRIMARY, active by isNavActive ──
+// Lives IN the shell's flex column (header / content / tab bar), not fixed: it
+// sits on the shell's bottom edge whatever height the view has, and the content
+// can never scroll under it. Hidden while the soft keyboard is open.
 export function TabBar() {
     const { language, t } = useLanguage();
     const es = language === 'es';
     const { pathname } = useLocation();
+    const [keyboard, setKeyboard] = useState(false);
+    useEffect(() => onKeyboardChange(setKeyboard), []);
     return (
-        <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar"
-            className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden">
+        <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar" data-keyboard={keyboard ? 'open' : 'closed'}
+            className={cx('relative z-40 shrink-0 border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden', keyboard ? 'hidden' : 'flex')}>
             {NAV_PRIMARY.map(({ to, icon: Icon, labelKey }) => {
                 const active = isNavActive(pathname, to);
                 return (
