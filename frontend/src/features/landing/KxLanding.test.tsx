@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
 vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'es', setLanguage: vi.fn() }) }));
@@ -21,7 +22,7 @@ describe('Landing · María', () => {
         host = document.createElement('div');
         document.body.appendChild(host);
         root = createRoot(host);
-        await act(async () => root.render(<MemoryRouter><KxLanding /></MemoryRouter>));
+        await act(async () => root.render(<QueryClientProvider client={new QueryClient()}><MemoryRouter><KxLanding /></MemoryRouter></QueryClientProvider>));
         const line = host.querySelector('[data-testid="maria-daily"]')!.textContent;
         // Same figures as backend/tests/test_demo_persona.py MARIA_DAILY_BEFORE / MARIA_DAILY_MONTH12
         expect(line).toContain('$13.12');

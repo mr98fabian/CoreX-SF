@@ -31,7 +31,7 @@ export default function CalendarPage() {
                         <p className="text-sm text-kx-ink2">{es ? 'No tienes deuda registrada: tu calendario está en verde.' : 'No debt on record: your calendar is green.'}</p>
                     </Section>
                     : <Section tone="neutral" title={es ? 'El color es tu deuda' : 'Color is your debt'}>
-                        <DebtCalendar months={s.months} maxDebt={s.totalDebt} paydays={s.paydays} cutDays={s.cutDays} chargesIn={s.chargesIn} dayDetail={s.dayDetail} />
+                        <DebtCalendar live months={s.months} maxDebt={s.totalDebt} />
                     </Section>)}
             </div>
         </div>

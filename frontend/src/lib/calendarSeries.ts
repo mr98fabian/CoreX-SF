@@ -8,8 +8,6 @@
  * freedom month is estimated from the previous month's pace. Calibrating the
  * engine (daily series, real payday effects) is a separate mission.
  */
-import type { RecurringSub } from '@/features/subscriptions/subscriptionText';
-import { subsOn } from '@/lib/subscriptionOccurrences';
 
 export interface TimelinePoint { date: string; total_balance: number }
 
@@ -129,13 +127,13 @@ export function paydaysIn(year: number, month: number, income: IncomeItem[]): Se
 // ── Day detail (the popup when you tap a day) ────────────────
 
 export interface DayLine { name: string; amount: number }
-export interface DayCut { name: string; balance: number }
+/** payBy = last day to pay so it reports $0 (server: velocity_engine.corte_action_date). */
+export interface DayCut { name: string; balance: number; payBy?: string }
 /** plan_minimum comes from the server (/api/accounts): the minimum every screen charges.
  *  min_payment is the bank's stored value, display only — never charged here. */
 export interface DayDebt { name: string; type: string; balance: number | string; min_payment: number | string; plan_minimum?: number | string; due_day?: number | null; closing_day?: number | null }
 
 export interface DaySub { id: number; name: string; amount: number; logo_url: string | null; account_name: string | null }
-type SubLike = Pick<RecurringSub, 'id' | 'name' | 'amount' | 'logo_url' | 'account_name' | 'status' | 'frequency' | 'next_charge_date'>;
 
 export interface DayDetail {
     date: Date;
@@ -149,25 +147,3 @@ export interface DayDetail {
     totalOut: number;       // = Σ expenses + Σ minimums + Σ subscriptions (a cut is a target, not a charge)
 }
 
-const num = (v: unknown) => Number(v) || 0;
-const dayMatches = (day: number | null | undefined, date: Date) =>
-    !!day && date.getDate() === Math.min(day, daysIn(date.getFullYear(), date.getMonth()));
-
-/** Everything that happens on one day, from the same summary the screens use. */
-export function buildDayDetail(date: Date, months: CalendarMonth[], cashflow: IncomeItem[], debts: DayDebt[], subs: SubLike[] = []): DayDetail {
-    const mo = months.find((m) => m.year === date.getFullYear() && m.month === date.getMonth());
-    const real = cashflow.filter((it) => !it.is_debt_virtual); // virtual debt rows are the minimums below
-    const incoming = real.filter((it) => isIncome(it) && occursOn(it, date)).map((it) => ({ name: it.name ?? '', amount: num(it.amount) }));
-    const expenses = real.filter((it) => !isIncome(it) && occursOn(it, date)).map((it) => ({ name: it.name ?? '', amount: num(it.amount) }));
-    const open = debts.filter((a) => a.type === 'debt' && num(a.balance) > 0);
-    const minimums = open.filter((a) => dayMatches(a.due_day, date) && num(a.plan_minimum) > 0)
-        .map((a) => ({ name: a.name, amount: num(a.plan_minimum) }));
-    const cuts = open.filter((a) => dayMatches(a.closing_day, date)).map((a) => ({ name: a.name, balance: num(a.balance) }));
-    const subscriptions = subsOn(subs, date).map((x) => ({ id: x.id, name: x.name, amount: num(x.amount), logo_url: x.logo_url, account_name: x.account_name }));
-    const sum = (xs: DayLine[]) => Math.round(xs.reduce((s, x) => s + x.amount, 0) * 100) / 100;
-    return {
-        date, projected: mo ? debtOn(mo, date.getDate()) : 0,
-        incoming, expenses, minimums, subscriptions, cuts,
-        totalIn: sum(incoming), totalOut: sum([...expenses, ...minimums, ...subscriptions]),
-    };
-}
