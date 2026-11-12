@@ -9,7 +9,7 @@ const apiFetch = vi.fn(async (path: string) => {
     if (path === '/api/subscriptions') return { items: [], monthly_total: '0', annual_total: '0' };
     return [];
 });
-// The 4 summary calls; subscriptions ride their own cached query (shared with the Suscripciones section)
+// The 4 summary calls; the summary no longer fetches subscriptions (calendar events are server-side)
 const summaryCalls = () => apiFetch.mock.calls.filter(([p]) => p !== '/api/subscriptions').length;
 const subsCalls = () => apiFetch.mock.calls.filter(([p]) => p === '/api/subscriptions').length;
 vi.mock('@/lib/api', () => ({ apiFetch: (p: string) => apiFetch(p) }));
@@ -52,14 +52,14 @@ describe('useKxSummary shares one cached query', () => {
     it('a second mount within staleTime paints from cache without repeating the 4 calls', async () => {
         await mount();
         expect(summaryCalls()).toBe(4);
-        expect(subsCalls()).toBe(1);
+        expect(subsCalls()).toBe(0); // the calendar's subscriptions come from /api/calendar/events now
         expect(host.textContent).toBe('1000');
 
         await act(async () => root.render(<QueryClientProvider client={client}><span>otra pantalla</span></QueryClientProvider>));
         await mount();
         expect(host.textContent).toBe('1000'); // instantly, from cache
         expect(summaryCalls()).toBe(4); // no new calls
-        expect(subsCalls()).toBe(1);
+        expect(subsCalls()).toBe(0); // the calendar's subscriptions come from /api/calendar/events now
     });
 
     it('reload() invalidates the entry and refetches the 4 calls', async () => {

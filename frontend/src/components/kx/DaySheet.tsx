@@ -3,8 +3,9 @@
  * Order: the date as you'd say it (+ HOY), the projected debt (labeled
  * "Proyección": daily values are interpolated from the monthly engine), COBRAS
  * (blue), TE COBRAN (bills · minimums due · cards that close), and ONE closing
- * hero: "Ese día entran $X y salen $Y". Data comes from lib/calendarSeries
- * buildDayDetail — no extra API calls.
+ * hero: "Ese día entran $X y salen $Y". Data comes from the server's month
+ * (GET /api/calendar/events, mapped by lib/calendarEvents.toDayDetail): the same
+ * functions as the daily mission, so a cut's "pay by" date is the mission's.
  */
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,6 +40,11 @@ function Row({ name, amount, sub, tone, logo, to }: { name: string; amount: stri
         </li>
     );
 }
+
+const payByLabel = (iso: string, es: boolean) => {
+    const d = new Date(`${iso}T12:00:00`);
+    return es ? `${d.getDate()} de ${MONTHS.es[d.getMonth()]}` : `${MONTHS.en[d.getMonth()]} ${d.getDate()}`;
+};
 
 export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null; onClose: () => void; today: Date }) {
     const { language } = useLanguage();
@@ -87,7 +93,9 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
                                     ))}
                                     {detail.cuts.map((c, i) => (
                                         <Row key={`k${i}`} name={es ? `Corta la ${c.name}` : `${c.name} closes`} amount={formatMoney(c.balance)}
-                                            sub={es ? 'que reporte en $0: este es su saldo hoy' : 'make it report $0: this is its balance today'} tone="out" logo={logoOf(c.name)} />
+                                            sub={[es ? 'que reporte en $0: este es su saldo hoy' : 'make it report $0: this is its balance today',
+                                                c.payBy && (es ? `Paga a más tardar el ${payByLabel(c.payBy, true)}` : `Pay by ${payByLabel(c.payBy, false)}`)].filter(Boolean).join(' · ')}
+                                            tone="out" logo={logoOf(c.name)} />
                                     ))}
                                 </ul>
                             </section>

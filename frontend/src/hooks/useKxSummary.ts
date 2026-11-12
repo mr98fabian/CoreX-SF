@@ -4,7 +4,9 @@
  *   /api/dashboard               total_debt, liquid_cash, daily interest
  *   /api/accounts                per-account balances and cut days
  *   /api/velocity/freedom-path   monthly projection → calendar + freedom date
- *   /api/cashflow                income items → paydays
+ *   /api/cashflow                income items
+ * Calendar EVENTS (paydays, charges, cuts) come from the server, per month:
+ * hooks/useCalendarEvents → GET /api/calendar/events (same functions as the mission).
  * Debt totals shown to the user come from /api/dashboard only.
  *
  * Perf 2026-11-05: ONE React Query entry shared by Inicio / Calendario /
@@ -18,9 +20,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
 import { ACTIVITY_KEY } from '@/hooks/useActivityData';
-import { buildDayDetail, buildMonths, paydaysIn, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
+import { buildMonths, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
+import { CALENDAR_KEY } from '@/lib/calendarEvents';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
-import type { SubsResponse } from '@/features/subscriptions/subscriptionText';
 import type { MissionResult } from '@/components/kx/MissionCard';
 
 export interface KxAccount {
@@ -83,16 +85,10 @@ export function useKxSummary() {
         queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }),
         queryClient.invalidateQueries({ queryKey: [ACTIVITY_KEY] }),
         queryClient.invalidateQueries({ queryKey: ['credit-panel'] }),
+        // the calendar's events (server) move with every payment and attack too
+        queryClient.invalidateQueries({ queryKey: [CALENDAR_KEY] }),
     ]), [queryClient]);
 
-    // Active subscriptions are real dated charges: same cache as the Suscripciones section
-    const subsQ = useQuery({
-        queryKey: ['recurring-subscriptions'],
-        queryFn: () => apiFetch<SubsResponse>('/api/subscriptions'),
-        staleTime: KX_SUMMARY_STALE_MS,
-        enabled: !!q.data,
-    });
-    const subs = subsQ.data?.items;
 
     const data = q.data;
     const derived = useMemo(() => {
@@ -105,30 +101,11 @@ export function useKxSummary() {
         for (const a of debts) if (a.stage !== 'support') counts[a.stage] += 1;
         const months: CalendarMonth[] = buildMonths(data?.path?.timeline ?? [], totalDebt);
         const freedom = months.find((m) => m.zeroDay) ?? null;
-        const paydays = (y: number, m: number) => paydaysIn(y, m, (data?.income ?? []));
-        const cutDays = (y: number, m: number) => {
-            const map = new Map<number, string>();
-            const n = new Date(y, m + 1, 0).getDate();
-            for (const a of debts) if (a.closing_day && a.bal > 0) map.set(Math.min(a.closing_day, n), 'C');
-            return map;
-        };
-        // Tap a calendar day → COBRAS / TE COBRAN, from this same summary (no extra calls)
-        const dayDetail = (date: Date) => buildDayDetail(date, months, data?.income ?? [], staged, subs ?? []);
-        // What leaves on each day of a month (bills + minimums + subscriptions): calendar mark + month total
-        const chargesIn = (y: number, m: number) => {
-            const map = new Map<number, number>();
-            const n = new Date(y, m + 1, 0).getDate();
-            for (let d = 1; d <= n; d++) {
-                const out = dayDetail(new Date(y, m, d, 12)).totalOut;
-                if (out > 0) map.set(d, out);
-            }
-            return map;
-        };
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
             mission: data?.dashboard?.mision?.mision ?? null,
             faltante: data?.dashboard?.mision?.faltante ?? null,
-            staged, debts, counts, months, freedom, paydays, cutDays, dayDetail, chargesIn };
-    }, [data, subs]);
+            staged, debts, counts, months, freedom };
+    }, [data]);
 
     return { ...state, ...derived, reload: load };
 }

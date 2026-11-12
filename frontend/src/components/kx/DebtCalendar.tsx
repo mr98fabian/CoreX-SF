@@ -11,8 +11,12 @@
  * Each week is a band whose gradient runs through that week's days, bands sit
  * edge to edge, and days are separated by hairlines like a ledger. The day
  * number (Fraunces) is the protagonist; marks are sober: blue dot = payday,
- * amber ring + HOY = today, ★ = the $0 day, C = statement cut. Tapping a day
- * (when `dayDetail` is given) opens the day sheet: COBRAS / TE COBRAN.
+ * amber ring + HOY = today, ★ = the $0 day, amber ◆ = statement cut, grey dash
+ * = a charge. With `live`, every event (paydays, charges, cuts, the day sheet,
+ * the month total) comes from the server (GET /api/calendar/events, the daily
+ * mission's own functions); the client only paints. Fixed positions so marks
+ * never collide: ◆ top-left · dash bottom-right · dot bottom-centre.
+ * `compact` (Inicio) keeps only the dot and the ◆.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnimate } from 'framer-motion';
@@ -20,7 +24,10 @@ import { tx, useReducedMotion } from '@/lib/motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { Link } from 'react-router-dom';
 import { daysIn, debtColor, debtOn, type CalendarMonth, type DayDetail } from '@/lib/calendarSeries';
+import { toDayDetail } from '@/lib/calendarEvents';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { DaySheet } from './DaySheet';
 
 const MONTHS = {
@@ -33,17 +40,17 @@ const DOW = { es: ['D', 'L', 'M', 'X', 'J', 'V', 'S'], en: ['S', 'M', 'T', 'W', 
 export interface DebtCalendarProps {
     months: CalendarMonth[];
     maxDebt: number;
+    /** landing example only: paydays painted from sample data */
     paydays?: (year: number, month: number) => Set<number>;
-    cutDays?: (year: number, month: number) => Map<number, string>;
-    chargesIn?: (year: number, month: number) => Map<number, number>; // day → what leaves (bills + minimums + subscriptions)
+    /** real user: events from the server (GET /api/calendar/events) + tap → day sheet */
+    live?: boolean;
     compact?: boolean;
     example?: boolean; // landing demo: label as example data
-    dayDetail?: (date: Date) => DayDetail; // tap a day → COBRAS / TE COBRAN sheet
 }
 
 const DOW_LONG = { es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
 
-export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, compact, example, dayDetail }: DebtCalendarProps) {
+export function DebtCalendar({ months, maxDebt, paydays, live, compact, example }: DebtCalendarProps) {
     const { language } = useLanguage();
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
@@ -62,6 +69,7 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, com
         animateGrid(gridRef.current, { x: [dir.current * 56, 0], opacity: [0.15, 1] }, tx('slow'));
     }, [idx, reduced, animateGrid, gridRef]);
     const mo = months[Math.min(idx, months.length - 1)];
+    const { events } = useCalendarEvents(live && mo ? mo.year : null, live && mo ? mo.month : null);
     const names = MONTHS[es ? 'es' : 'en'];
     const [openDay, setOpenDay] = useState<DayDetail | null>(null);
     const [today] = useState(() => new Date());
@@ -69,23 +77,26 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, com
     const cells = useMemo(() => {
         if (!mo) return [];
         const lead = new Date(mo.year, mo.month, 1).getDay();
-        const pay = paydays?.(mo.year, mo.month) ?? new Set<number>();
-        const cuts = cutDays?.(mo.year, mo.month) ?? new Map<number, string>();
-        const charges = chargesIn?.(mo.year, mo.month) ?? new Map<number, number>();
-        const out: { day: number | null; debt: number; pay: boolean; cut?: string; free: boolean; charge?: boolean }[] =
+        const sample = paydays?.(mo.year, mo.month) ?? new Set<number>();
+        const byDay = new Map((events?.dias ?? []).map((d) => [d.dia, d]));
+        const out: { day: number | null; debt: number; pay: boolean; cut?: boolean; free: boolean; charge?: boolean }[] =
             Array.from({ length: lead }, () => ({ day: null, debt: 0, pay: false, free: false }));
         for (let d = 1; d <= daysIn(mo.year, mo.month); d++) {
-            out.push({ day: d, debt: debtOn(mo, d), pay: pay.has(d), cut: cuts.get(d), free: mo.zeroDay === d, charge: charges.has(d) });
+            const ev = byDay.get(d);
+            out.push({
+                day: d, debt: debtOn(mo, d), free: mo.zeroDay === d,
+                pay: live ? !!ev?.marcas.payday : sample.has(d),
+                charge: !!ev?.marcas.cobro, cut: !!ev?.marcas.corte,
+            });
         }
         return out;
-    }, [mo, paydays, cutDays, chargesIn]);
-    // Month summary: everything that leaves this month (subscriptions included)
-    const monthCharges = useMemo(() => {
-        if (!mo || !chargesIn) return null;
-        let t = 0;
-        chargesIn(mo.year, mo.month).forEach((v) => { t += v; });
-        return Math.round(t * 100) / 100;
-    }, [mo, chargesIn]);
+    }, [mo, paydays, live, events]);
+    // Month summary: everything that leaves this month (server total, subscriptions included)
+    const monthCharges = live ? (events?.total_mes_sale ?? null) : null;
+    const openDetail = (day: number) => {
+        const ev = events?.dias.find((d) => d.dia === day);
+        if (ev && mo) setOpenDay(toDayDetail(ev, debtOn(mo, day)));
+    };
 
     if (!mo) return null;
     const monthName = names[mo.month];
@@ -181,14 +192,14 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, com
                                         {isToday && <span className="pointer-events-none absolute inset-[3px] rounded-[10px] ring-2 ring-kx-amber" aria-hidden="true" />}
                                         {isToday && !compact && <span className="kx-tech pointer-events-none absolute left-1/2 top-[3px] -translate-x-1/2 rounded-sm bg-kx-amber px-1 text-[7.5px] font-bold leading-[11px] text-[#111418]" aria-hidden="true">{es ? 'HOY' : 'TODAY'}</span>}
                                         {c.free && <span className="absolute right-1 top-0.5 text-[10px] text-kx-amber" aria-hidden="true">★</span>}
-                                        {c.cut && !compact && !isToday && <span className="kx-tech absolute left-1 top-0.5 text-[8px] font-bold opacity-70" aria-hidden="true">C</span>}
-                                        {c.charge && !compact && <span data-testid="charge-mark" className="absolute bottom-[5px] right-1.5 h-[2px] w-[6px] rounded-full bg-current opacity-70" aria-hidden="true" />}
-                                        {c.pay && <span className="absolute bottom-[4px] left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-kx-pay ring-1 ring-black/20" aria-hidden="true" />}
+                                        {c.cut && <span data-testid="cut-mark" className="pointer-events-none absolute left-1 top-0.5 text-[9px] leading-none text-kx-amber [text-shadow:0_0_2px_rgba(0,0,0,.7)]" aria-hidden="true">◆</span>}
+                                        {c.charge && !compact && <span data-testid="charge-mark" className="absolute bottom-[5px] right-1.5 h-[2px] w-[6px] rounded-full bg-kx-ink2" aria-hidden="true" />}
+                                        {c.pay && <span data-testid="payday-mark" className="absolute bottom-[4px] left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-kx-pay ring-1 ring-black/20" aria-hidden="true" />}
                                     </>
                                 );
                                 const cls = 'relative flex aspect-square items-center justify-center border-l border-black/10 first:border-l-0';
-                                return dayDetail ? (
-                                    <button key={i} type="button" role="gridcell" aria-label={label} onClick={() => setOpenDay(dayDetail(date))}
+                                return live ? (
+                                    <button key={i} type="button" role="gridcell" aria-label={label} onClick={() => openDetail(c.day!)} data-day={c.day}
                                         className={cx(cls, 'kx-press focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-kx-amber')} style={ink}>
                                         {body}
                                     </button>
@@ -200,15 +211,29 @@ export function DebtCalendar({ months, maxDebt, paydays, cutDays, chargesIn, com
                     );
                 })}
             </div>
-            {dayDetail && <DaySheet detail={openDay} onClose={() => setOpenDay(null)} today={today} />}
+            {live && <DaySheet detail={openDay} onClose={() => setOpenDay(null)} today={today} />}
 
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-kx-ink2">
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded" style={{ background: 'linear-gradient(90deg,#DC2626,#FBBF24,#34D399)' }} />{es ? 'fondo = tu deuda' : 'background = your debt'}</span>
                 <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-kx-pay" />{es ? 'día de pago' : 'payday'}</span>
-                {chargesIn && <span className="flex items-center gap-1.5"><span className="h-[2px] w-[8px] rounded-full bg-kx-ink2" />{es ? 'te cobran' : 'charge'}</span>}
+                {live && !compact && <span className="flex items-center gap-1.5"><span className="h-[2px] w-[8px] rounded-full bg-kx-ink2" />{es ? 'te cobran' : 'charge'}</span>}
+                {live && <span className="flex items-center gap-1.5"><span className="text-[10px] text-kx-amber">◆</span>{es ? 'corte' : 'statement cut'}</span>}
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded ring-2 ring-kx-amber" />{es ? 'hoy' : 'today'}</span>
                 <span className="flex items-center gap-1.5"><span className="text-kx-amber">★</span>{es ? 'libre' : 'free'}</span>
             </div>
+            {live && events?.vacio && (
+                <p className="mt-2 text-[12.5px] text-kx-ink2" data-testid="cal-empty">
+                    {es ? 'Aún no hay cobros ni ingresos cargados para este mes. ' : 'No charges or income on record for this month yet. '}
+                    <Link to="/dashboard/accounts/manage" className="font-semibold text-kx-amber">{es ? 'Cargar mis recurrentes' : 'Add my recurring items'}</Link>
+                </p>
+            )}
+            {live && !compact && (events?.suscripciones_sin_fecha ?? 0) > 0 && (
+                <p className="mt-1.5 text-[12px] text-kx-ink3" data-testid="cal-undated">
+                    {es ? `${events!.suscripciones_sin_fecha} ${events!.suscripciones_sin_fecha === 1 ? 'suscripción sin fecha de cobro' : 'suscripciones sin fecha de cobro'} · `
+                        : `${events!.suscripciones_sin_fecha} subscription${events!.suscripciones_sin_fecha === 1 ? '' : 's'} without a charge date · `}
+                    <Link to="/dashboard/subscriptions" className="font-semibold text-kx-amber">{es ? 'ponles fecha' : 'add a date'}</Link>
+                </p>
+            )}
             <p className="mt-2 text-[11px] text-kx-ink3">
                 {example
                     ? (es ? 'Datos de ejemplo. Las cifras son estimaciones ilustrativas.' : 'Example data. Figures are illustrative estimates.')

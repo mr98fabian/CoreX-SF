@@ -8,7 +8,7 @@ vi.mock('@/hooks/useAccounts', () => ({ useAccountLogos: () => () => null }));
 vi.mock('react-router-dom', () => ({ Link: ({ to, children, className }: { to: string; children: React.ReactNode; className?: string }) => <a href={to} className={className}>{children}</a> }));
 
 import { subOccursOn, subsOn } from './subscriptionOccurrences';
-import { buildDayDetail } from './calendarSeries';
+import { toDayDetail } from './calendarEvents';
 import { DaySheet } from '@/components/kx/DaySheet';
 import type { RecurringSub } from '@/features/subscriptions/subscriptionText';
 
@@ -61,8 +61,15 @@ describe('DaySheet with subscriptions', () => {
 
     it('lists them under "Te cobran" (logo, name, amount, faint card) and adds them to "salen"', () => {
         const date = day(2026, 10, 9);
-        const detail = buildDayDetail(date, [], [{ name: 'Renta', amount: 100, category: 'expense', frequency: 'monthly', day_of_month: 9 } as never], [],
-            [sub({ id: 7, next_charge_date: '2026-11-09' }), sub({ id: 8, name: 'Spotify', status: 'cancelled', next_charge_date: '2026-11-09' })]);
+        // The day as the server sends it (GET /api/calendar/events): the cancelled Spotify never comes
+        const n = sub({ id: 7, next_charge_date: '2026-11-09' });
+        const detail = toDayDetail({
+            dia: 9, fecha: '2026-11-09', marcas: { payday: false, cobro: true, corte: false }, ingresos: [], cortes: [],
+            cobros: [{ nombre: 'Renta', monto: 100, tipo: 'gasto' },
+                     { nombre: n.name, monto: Number(n.amount), tipo: 'suscripcion', id: n.id, logo_url: n.logo_url, cuenta: n.account_name }],
+            total_entra: 0, total_sale: 115.49,
+        }, 0);
+        expect(date.getDate()).toBe(9);
         expect(detail.subscriptions.map((s) => s.name)).toEqual(['Netflix']);
         expect(detail.totalOut).toBe(115.49);
 
