@@ -30,7 +30,8 @@ const OWNER: AnalyticsV2 = {
         { nombre: 'Otros', monto: 79.10, tipo: 'otros', pct: 4.0 },
     ],
     deudas: { interes_por_dia: 18.84, objetivo: { nombre: 'Fortiva', apr: 36 }, pagado_este_mes: 420 },
-    suscripciones: { activas: 4, total_mensual: 49.11 },
+    suscripciones: { activas: 4, total_mensual: 49.11, top_3: [{ nombre: 'Netflix', monto: 15.49 }, { nombre: 'Dominio', monto: 10 }, { nombre: 'iCloud', monto: 2.99 }] },
+    duplicados: { cantidad: 0, monto_mensual: 0, servicios: [] },
 };
 
 let host: HTMLDivElement | null = null;
@@ -93,7 +94,21 @@ describe('Análisis v2', () => {
         expect($('subs-link')!.getAttribute('href')).toBe('/dashboard/subscriptions');
     });
 
-    it.each([['sin_recurrentes', 'Cargar mis recurrentes'], ['sin_ingresos', 'Agregar mi ingreso']])(
+    it('subscriptions show the top 3 by amount; the duplicates note appears only when there is overlap', async () => {
+        vi.mocked(apiFetch).mockResolvedValue({ ...OWNER, duplicados: { cantidad: 7, monto_mensual: 1213.86, servicios: [] } });
+        await render();
+        const top = [...host!.querySelectorAll('[data-testid="subs-top3"] li')].map((li) => li.textContent);
+        expect(top).toEqual(['Netflix$15.49', 'Dominio$10.00', 'iCloud$2.99']);
+        expect($('dupes-note')!.textContent).toBe('Contamos una sola vez 7 servicios que tienes como gasto y como suscripción ($1213.86 al mes).');
+    });
+
+    it('no duplicates note without overlap', async () => {
+        vi.mocked(apiFetch).mockResolvedValue(OWNER);
+        await render();
+        expect($('dupes-note')).toBeNull();
+    });
+
+    it.each([['sin_recurrentes', 'Cargar mis recurrentes'], ['sin_ingresos', 'Agregar mi ingreso'], ['sin_gastos', 'Agregar mis gastos']])(
         'empty (%s): guided state with CTA, never a $0.00', async (motivo, cta) => {
             vi.mocked(apiFetch).mockResolvedValue({ ...OWNER, estado: 'vacio', motivo });
             const el = await render();
