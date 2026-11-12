@@ -2356,6 +2356,12 @@ def _last_before(day: int, ref: date) -> date:
     return _day_in(y, m, day)
 
 
+def corte_action_date(cut: date, today: date) -> date:
+    """Last day to pay so the card reports $0 on its cut: cut − 2, never before
+    today. ONE rule for the daily mission and the calendar's day sheet."""
+    return max(today, cut - timedelta(days=CORTE_LEAD_DAYS))
+
+
 def _fecha_es(d: date) -> str:
     return f"{d.day} de {_MONTHS_ES[d.month - 1]}"
 
@@ -2411,7 +2417,7 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
         if a.closing_day:
             cut = _next_on_or_after(a.closing_day, today)
             if cut < end:
-                out.append(_obligation("corte", a, a.balance, max(today, cut - timedelta(days=CORTE_LEAD_DAYS)), cut))
+                out.append(_obligation("corte", a, a.balance, corte_action_date(cut, today), cut))
     # Contractual due dates first: by event date, then hardness (a loan payment
     # or statement due beats a cut on the same day), then the bigger amount.
     hardness = {"prestamo": 0, "estado": 0, "corte": 1}

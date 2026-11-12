@@ -265,7 +265,8 @@ def cashflow_events(items, start, days: int):
         dates = {start + timedelta(days=i) for i in range(days) if _item_triggers(it, start + timedelta(days=i))}
         if not dates:
             continue
-        ev = {"name": it.name, "amount": abs(Decimal(str(it.amount))), "dates": dates}
+        ev = {"name": it.name, "amount": abs(Decimal(str(it.amount))), "dates": dates,
+              "kind": "ingreso" if (it.is_income or it.category == "income") else "gasto"}
         (incomes if (it.is_income or it.category == "income") else expenses).append(ev)
     return incomes, expenses
 
@@ -307,7 +308,8 @@ def dated_cashflow(session, user_id: str, start, days: int):
     for s in dated:
         dates = {start + timedelta(days=i) for i in range(days) if subscription_occurs_on(s, start + timedelta(days=i))}
         if dates:
-            expenses.append({"name": s.name, "amount": abs(Decimal(str(s.amount))), "dates": dates})
+            expenses.append({"name": s.name, "amount": abs(Decimal(str(s.amount))), "dates": dates,
+                             "kind": "suscripcion", "id": s.id, "logo_url": s.logo_url, "account_id": s.account_id})
     return incomes, expenses
 
 
@@ -357,3 +359,63 @@ def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -
     debts = accounts_to_active_debt_objects(accounts, plan_limit)
     data = load_cashflow_inputs(session, user_id)
     return cashflow_summary(data["tuples"], debts, data["subscriptions"])
+
+
+def calendar_month(session, user_id: str, year: int, month: int, plan_limit: int | None = None, today=None) -> dict:
+    """Events of one month for the Calendar, built with THE SAME functions as the
+    daily mission (one source, so the calendar and the mission never disagree):
+      - incomes / bills / dated subscriptions → dated_cashflow (duplicates once)
+      - minimums → account_plan_minimum on due_day
+      - cuts → closing_day, with velocity_engine.corte_action_date
+    Subscriptions without next_charge_date are not painted (no invented day) but counted."""
+    import calendar as _cal
+    from datetime import date as _date
+    from sqlmodel import select
+    from models import Account
+    from velocity_engine import corte_action_date
+    today = today or _date.today()
+    n = _cal.monthrange(year, month)[1]
+    start = _date(year, month, 1)
+    incomes, expenses = dated_cashflow(session, user_id, start, n)
+    accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+    names = {a.id: a.name for a in accounts}
+    debts = [a for a in filter_active_debt_accounts(accounts, plan_limit) if a.balance > 0]
+    data = load_cashflow_inputs(session, user_id)
+    undated = [s for s in data["active_subs"] if not s.next_charge_date]
+    q = lambda x: Decimal(x).quantize(Decimal("0.01"))  # noqa: E731
+    days = []
+    for d in range(1, n + 1):
+        day = _date(year, month, d)
+        ingresos = [{"nombre": e["name"], "monto": q(e["amount"])} for e in incomes if day in e["dates"]]
+        cobros = []
+        for e in expenses:
+            if day not in e["dates"]:
+                continue
+            row = {"nombre": e["name"], "monto": q(e["amount"]), "tipo": e.get("kind", "gasto")}
+            if row["tipo"] == "suscripcion":
+                row.update({"id": e.get("id"), "logo_url": e.get("logo_url"), "cuenta": names.get(e.get("account_id"))})
+            cobros.append(row)
+        for a in debts:
+            if a.due_day and d == min(a.due_day, n):
+                m = account_plan_minimum(a)
+                if m > 0:
+                    cobros.append({"nombre": a.name, "monto": m, "tipo": "minimo"})
+        cortes = [{"nombre": a.name, "saldo": q(a.balance), "pagar_antes_de": corte_action_date(day, today).isoformat()}
+                  for a in debts if a.closing_day and d == min(a.closing_day, n)]
+        days.append({
+            "dia": d, "fecha": day.isoformat(),
+            "marcas": {"payday": bool(ingresos), "cobro": bool(cobros), "corte": bool(cortes)},
+            "ingresos": ingresos, "cobros": cobros, "cortes": cortes,
+            "total_entra": sum((x["monto"] for x in ingresos), Decimal("0")),
+            "total_sale": sum((x["monto"] for x in cobros), Decimal("0")),
+        })
+    total_out = sum((x["total_sale"] for x in days), Decimal("0"))
+    return {
+        "mes": f"{year:04d}-{month:02d}",
+        "dias": days,
+        "total_mes_sale": total_out,
+        "total_mes_entra": sum((x["total_entra"] for x in days), Decimal("0")),
+        "vacio": not any(x["marcas"]["payday"] or x["marcas"]["cobro"] for x in days),
+        "suscripciones_sin_fecha": len(undated),
+        "etiqueta": "estimado",
+    }
