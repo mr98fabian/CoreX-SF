@@ -78,9 +78,11 @@ def test_analisis_matches_its_sources(owner):
     assert b["pagos_a_deudas"] == summary["debt_payments_monthly"]
     assert b["suscripciones"] == float(subs["monthly_total"])
     # living = summary expenses minus the services counted once on the subscription side
-    # (works before and after the dedupe branch: without it there is no overlap field)
-    overlap = v2.get("duplicados", {}).get("monto_mensual", 0)
-    assert cents(b["gastos_de_vida"]) == cents(summary["expenses_monthly"]) - cents(overlap)
+    # since feat/suscripciones-en-motor the summary already counts duplicates once:
+    # Análisis composes straight from it
+    assert b["gastos_de_vida"] == summary["expenses_monthly"]
+    assert b["suscripciones"] == summary["subscriptions_monthly"]
+    assert b["te_quedan"] == summary["balance_monthly"]
 
 
 # ── Suscripciones ──
