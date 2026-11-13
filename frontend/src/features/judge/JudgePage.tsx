@@ -7,6 +7,7 @@
 import { useState, type FormEvent } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { MoneyAmount } from '@/components/MoneyAmount';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { apiFetch } from '@/lib/api';
 import { AmberRule, BankHeader, PrimaryPill, Section, StatePhrase } from '@/components/kx';
@@ -94,7 +95,10 @@ export default function JudgePage() {
                                 <p className="kx-hero-number text-[56px] leading-[0.95] text-kx-debt sm:text-[72px]">
                                     +{verdict.months} {verdict.months === 1 ? (es ? 'mes' : 'month') : (es ? 'meses' : 'months')}
                                 </p>
-                                <p className="mt-1 text-[15px] text-kx-ink2">{es ? 'de deuda' : 'of debt'}</p>
+                                <p className="mt-1 text-[15px] text-kx-ink2">
+                                    {es ? 'de deuda' : 'of debt'}
+                                    {verdict.interest > 0 && <span data-testid="verdict-interest">{es ? ' y ' : ' and '}<b className="font-semibold text-kx-debt"><MoneyAmount value={verdict.interest} /></b>{es ? ' más de interés' : ' more in interest'}</span>}
+                                </p>
                                 <p className="mt-3 text-[14px] text-kx-ink">
                                     ≈ +<span className="kx-num">{verdict.days}</span> {es ? 'días' : 'days'}
                                 </p>
@@ -105,7 +109,10 @@ export default function JudgePage() {
                         )}
 
                         {verdict.kind === 'absorbed' && (
-                            <StatePhrase>{es ? 'Tu plan lo absorbe: $0 días extra.' : 'Your plan absorbs it: $0 extra days.'}</StatePhrase>
+                            <StatePhrase>
+                                {es ? 'Tu plan lo absorbe: $0 días extra.' : 'Your plan absorbs it: $0 extra days.'}
+                                {verdict.interest > 0 && <span data-testid="verdict-interest">{es ? ' Pagas ' : ' You pay '}<MoneyAmount value={verdict.interest} />{es ? ' más de interés.' : ' more in interest.'}</span>}
+                            </StatePhrase>
                         )}
 
                         {verdict.kind === 'free' && (

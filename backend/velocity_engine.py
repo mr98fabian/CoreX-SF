@@ -7,6 +7,7 @@ Uses Decimal for precision as per project standards.
 from decimal import Decimal, ROUND_HALF_UP, ROUND_CEILING
 from datetime import date, timedelta
 from typing import List, Dict, Optional
+import dataclasses
 from dataclasses import dataclass
 
 
@@ -1425,7 +1426,8 @@ def calculate_purchase_time_cost(
         1. Baseline: Run simulation with current debts.
         2. Impact: Run simulation as if we added 'purchase_amount' to the 
            highest interest debt (Simulating: "I spent this instead of paying off debt").
-        3. Difference = days delayed.
+        3. Difference = days delayed; cost_in_interest = impact total interest −
+           baseline total interest (compare_paths, the simulator's real figure).
     """
     if not debts:
         return {
@@ -1440,67 +1442,26 @@ def calculate_purchase_time_cost(
     baseline = calculate_debt_free_date(debts, extra_monthly)
     baseline_months = baseline["velocity_months"]
 
-    # 2. Simulated Impact (Opportunity Cost)
-    # We clone the debts to avoid mutating the original objects
-    # We choose the velocity target (highest APR) to add the "phantom debt" to
-    # because that's where the money WOULD have gone.
-    simulated_debts = [
-        DebtAccount(
-            name=d.name,
-            balance=d.balance,
-            interest_rate=d.interest_rate,
-            min_payment=d.min_payment,
-            due_day=d.due_day
-        ) for d in debts
-    ]
-    
+    # 2. Simulated Impact (Opportunity Cost): the purchase lands on the velocity
+    # target (highest APR), where that money would have gone. Full copy of every
+    # DebtAccount field (subtype decides fixed vs revolving minimums).
+    simulated_debts = [dataclasses.replace(d) for d in debts]
     target = get_velocity_target(simulated_debts)
     if target:
         target.balance += purchase_amount
-    
+
     impact = calculate_debt_free_date(simulated_debts, extra_monthly)
     impact_months = impact["velocity_months"]
 
-    # 3. Calculate Delay
+    # 3. Delay
     months_delayed = max(0, impact_months - baseline_months)
     days_delayed = months_delayed * 30
 
-    # 4. Calculate Interest Cost
-    # Difference in total interest paid
-    baseline_interest = baseline["interest_saved"] # Wait, this is 'saved' vs standard. 
-    # We need total interest PAID. calculate_debt_free_date doesn't return total interest paid directly?
-    # It returns 'interest_saved'. Standard Interest - Velocity Interest.
-    # Standard Interest shouldn't change much for the baseline debts (except the extra phantom debt).
-    # Let's verify calculate_debt_free_date return values.
-    # It returns "interest_saved".
-    
-    # We really want (Impact Velocity Interest - Baseline Velocity Interest).
-    # Since we don't have that direct value, we can infer it or we should update calculate_debt_free_date to return it.
-    # checking velocity_engine.py again... 
-    # velocity_interest is calculated locally but not returned explicitly except in the difference.
-    
-    # Let's estimate using the daily interest method as fallback, 
-    # but strictly speaking, the cost is the interest on the purchase amount over the payoff time + interest on existing debt delayed.
-    
-    # Simple rigorous math: Cost = Impact Total Interest - Baseline Total Interest + Purchase Amount?
-    # No, just Interest Difference.
-    
-    # Since we can't get velocity_interest easily without modifying the helper, 
-    # we'll stick to the estimation method but refined.
-    
-    # ESTIMATION: Average daily interest of the portfolio * days_delayed.
-    # + The interest allowed to accrue on the purchase amount itself?
-    # If I don't pay off $5000 today, that $5000 accrues 20% APR for N months.
-    
-    if target:
-        # Approximate interest on the diverted funds
-        # Interest = Amount * Rate * Time
-        years = baseline_months / 12
-        diverted_funds_interest = purchase_amount * (target.interest_rate / Decimal('100')) * Decimal(str(years))
-    else:
-        diverted_funds_interest = Decimal('0')
-
-    cost_in_interest = diverted_funds_interest.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    # 4. Interest cost: total interest of the impact projection minus the baseline's,
+    # both from compare_paths (same source as Inicio's chart).
+    interest_baseline = Decimal(str(baseline["velocity_interest"]))
+    interest_impact = Decimal(str(impact["velocity_interest"]))
+    cost_in_interest = (interest_impact - interest_baseline).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
     message = f"This delays your freedom by ~{months_delayed} months."
     
@@ -1522,6 +1483,8 @@ def calculate_purchase_time_cost(
         "days_delayed": days_delayed,
         "months_delayed": months_delayed,
         "cost_in_interest": float(cost_in_interest),
+        "interest_baseline": float(interest_baseline),
+        "interest_impact": float(interest_impact),
         # The engine's own velocity dates (response-only addition; the math above is untouched)
         "freedom_date_baseline": baseline["velocity_date"],
         "freedom_date_impact": impact["velocity_date"],

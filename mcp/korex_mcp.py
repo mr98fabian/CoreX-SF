@@ -183,7 +183,9 @@ def korex_judge_purchase(amount: float) -> dict:
     """Juez de compras: how much a purchase of `amount` dollars delays the user's debt-free date.
     Returns months_delayed, days_delayed (months x 30),
     freedom_date_baseline -> freedom_date_impact (ISO dates, null when there are no active debts),
-    and out_of_scale=True when the plan breaks (>50 years). Show the number; never lecture: the user decides.
+    interest_extra = how much more total interest the plan pays with this purchase (impact − baseline projection,
+    an estimate; omit it when out_of_scale), and out_of_scale=True when the plan breaks (>50 years).
+    Show the numbers; never lecture: the user decides.
     Scope: run:simulations."""
     r = _call("POST", "/api/simulator/time-cost", {"amount": amount})
     months = int(r.get("months_delayed") or 0)
@@ -194,6 +196,7 @@ def korex_judge_purchase(amount: float) -> dict:
         "days_delayed": int(r.get("days_delayed") or 0),
         "freedom_date_baseline": r.get("freedom_date_baseline"),
         "freedom_date_impact": r.get("freedom_date_impact"),
+        "interest_extra": r.get("cost_in_interest") or 0,
         "has_debts": r.get("freedom_date_baseline") is not None,
         "out_of_scale": months >= 999 or base >= 600,
     }
