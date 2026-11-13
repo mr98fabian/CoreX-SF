@@ -33,7 +33,7 @@ Backend: 137 tests. Frontend: 3 archivos de test (Vitest) — cobertura baja, es
   (el `PYTHONIOENCODING` es obligatorio: `database.py` imprime emojis que revientan en consolas cp1252).
 - **Pasa siempre `DATABASE_URL=sqlite:///./korex.db` explícito en local.** `backend/.env` contiene la URL de PRODUCCIÓN y `load_dotenv()` la carga si la variable no existe. En cmd, `set DATABASE_URL=` *borra* la variable (no la deja vacía) → el servidor "local" se conectaba a producción (incidente 2026-11-03). El log de arranque imprime a qué base se conectó: compruébalo.
 - `.claude/launch.json` tiene configs de preview para `korex-frontend` (5173) y `korex-backend` (8001).
-- Login local: botón **"Try Demo"** en `/login` (token `demo-stress-test-token`, ver `backend/auth.py`).
+- Login local: botón **"Probar demo"** en `/login` ("Try Demo" con el idioma en inglés) (token `demo-stress-test-token`, ver `backend/auth.py`).
 
 ### Migraciones (Alembic)
 

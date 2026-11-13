@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { NOT_FOUND_COPY } from './notFoundCopy';
 
 export default function NotFoundPage() {
-    usePageTitle('404');
+    const { language } = useLanguage();
+    const c = NOT_FOUND_COPY[language === 'en' ? 'en' : 'es'];
+    usePageTitle(c.title);
 
     return (
         <div className="kx-scope min-h-screen flex flex-col items-center justify-center text-center px-6 relative overflow-hidden">
@@ -15,7 +19,7 @@ export default function NotFoundPage() {
             <div className="relative z-10 mb-8 animate-bounce-slow">
                 <img
                     src="/korex-isotipo.svg"
-                    alt="KoreX Raccoon"
+                    alt={c.mascotAlt}
                     className="kx-logo h-32 mx-auto opacity-60 drop-shadow-[0_0_40px_rgba(251,191,36,0.2)]"
                 />
             </div>
@@ -27,10 +31,10 @@ export default function NotFoundPage() {
 
             {/* Message */}
             <p className="relative z-10 text-kx-ink2 text-lg mt-4 max-w-md">
-                The raccoon searched everywhere, but this page doesn't exist.
+                {c.lead}
             </p>
             <p className="relative z-10 text-kx-ink3 text-sm mt-2">
-                Maybe it was moved, deleted, or never existed in the first place.
+                {c.hint}
             </p>
 
             {/* Actions */}
@@ -39,13 +43,13 @@ export default function NotFoundPage() {
                     to="/"
                     className="px-6 py-3 bg-kx-amber text-kx-on-amber font-semibold rounded-lg transition-all duration-300 shadow-lg "
                 >
-                    Go to Dashboard
+                    {c.home}
                 </Link>
                 <button
                     onClick={() => window.history.back()}
                     className="px-6 py-3 bg-kx-raised text-kx-ink2 font-medium rounded-lg border border-kx-line hover:bg-kx-raised hover:text-kx-ink transition-all duration-300"
                 >
-                    Go Back
+                    {c.back}
                 </button>
             </div>
 
