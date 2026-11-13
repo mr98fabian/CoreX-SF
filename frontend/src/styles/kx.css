@@ -94,11 +94,12 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
   --kx-halo: rgba(245, 158, 11, 0.20);
   --kx-debt: #B91C1C;
   --kx-debt-chip-ink: #991B1B;
-  --kx-almost: #A16207;
+  --kx-almost: #8F5A00;   /* #A16207 was 4.29:1 on paper */
   --kx-almost-chip-ink: #854D0E;
   --kx-paid: #047857;
   --kx-paid-chip-ink: #065F46;
-  --kx-pay: #0284C7;
+  --kx-pay: #0369A1;      /* #0284C7 was 3.57:1 on paper */
+  --kx-warm: #A8380B;     /* PAGADA stamp: #FB923C was 1.9:1 on paper */
 }
 
 .kx-scope {
@@ -358,3 +359,14 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
   -webkit-mask: url(/korex-isotipo.svg) center / contain no-repeat;
   mask: url(/korex-isotipo.svg) center / contain no-repeat;
 }
+
+/* ── Modo light (2026-11-13): QA pass ─────────────────────────────────────
+   Sheets carry .kx-scope, whose background (grain + --kx-bg) overrode
+   bg-kx-sheet: on paper the sheet was the same paper as the page and its inputs
+   (paper too) read flat. In light the sheet is the white level; dark untouched. */
+:root:not(.dark) .kx-scope.bg-kx-sheet { background: var(--kx-grain) repeat, var(--kx-sheet); }
+
+/* Brand SVGs are white (#FFFFFF): on paper they vanished (drawer, landing, lock,
+   404, legal). Light inverts them to black; dark keeps them white. Login stays
+   on its own dark design and does not use .kx-logo. */
+:root:not(.dark) .kx-logo { filter: invert(1); }

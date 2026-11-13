@@ -96,3 +96,52 @@ describe('Noche con luz — tokens', () => {
         expect(css).toMatch(/\.kx-fill \{ animation: none !important; \}/);
     });
 });
+
+// ── Modo light QA (2026-11-13) ──────────────────────────────────────────────
+import darkSnapshot from './dark-tokens.snapshot.txt?raw';
+import { debtColor } from '@/lib/calendarSeries';
+import layoutSrc from '@/layouts/DashboardLayout.tsx?raw';
+import landingSrc from '@/features/landing/KxLanding.tsx?raw';
+
+const rgbOf = (s: string) => (s.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
+const lumRgb = (c: number[]) => {
+    const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+};
+const ratioRgb = (a: number[], b: number[]) => { const [h, l] = [lumRgb(a), lumRgb(b)].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
+const hexRgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+
+describe('Modo light — QA', () => {
+    it('the dark tokens are byte-identical to before this pass', () => {
+        const blocks = [...css.matchAll(/:root,\s*\.dark \{[\s\S]*?\n\}/g)].map((m) => m[0]).join('\n\n') + '\n';
+        expect(blocks).toBe(darkSnapshot.split(String.fromCharCode(13) + String.fromCharCode(10)).join(String.fromCharCode(10)));
+    });
+
+    it('meaning colours used as TEXT read on paper (≥ 4.5:1 on every light surface); meaning unchanged', () => {
+        const light2 = { ...dark, ...block(':root:not(.dark) .kx-scope {') };
+        for (const tok of ['--kx-debt', '--kx-almost', '--kx-paid', '--kx-pay', '--kx-warm']) {
+            for (const s of SURFACES) expect(ratio(light2[tok], light2[s]), `${tok} on ${s}`).toBeGreaterThanOrEqual(4.5);
+        }
+        expect(light2).toMatchObject({ '--kx-almost': '#8F5A00', '--kx-pay': '#0369A1', '--kx-warm': '#A8380B' });
+        // the PAGADA stamp sits on the paid section tint (green 6% over paper)
+        const paidSec = hexRgb('#34D399').map((v, i) => Math.round(v * 0.06 + hexRgb('#F3EFE7')[i] * 0.94));
+        expect(ratioRgb(hexRgb(light2['--kx-warm']), paidSec)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('calendar day numbers on paper are ≥ 4.5:1 at EVERY debt level; dark keeps its old colours', () => {
+        for (let i = 0; i <= 100; i++) {
+            const c = debtColor(i, 100, true);
+            expect(ratioRgb(rgbOf(c.color.startsWith('#') ? `rgb(${hexRgb(c.color).join(',')})` : c.color), rgbOf(c.background)), `t=${i / 100}`).toBeGreaterThanOrEqual(4.5);
+            expect(c.background).toMatch(/^rgb\(/); // opaque on paper
+        }
+        expect(debtColor(100, 100)).toEqual({ background: 'rgba(220,38,38,0.92)', color: '#F8FAFC', fontWeight: 500 });
+        expect(debtColor(50, 100)).toEqual(debtColor(50, 100, false));
+    });
+
+    it('white brand logos invert on paper; sheets use the white level in light only', () => {
+        expect(css).toMatch(/:root:not\(\.dark\) \.kx-logo \{ filter: invert\(1\); \}/);
+        expect(layoutSrc).toMatch(/className="kx-logo h-12/);
+        expect(landingSrc).toContain('className="kx-logo h-9"');
+        expect(css).toMatch(/:root:not\(\.dark\) \.kx-scope\.bg-kx-sheet \{ background: var\(--kx-grain\) repeat, var\(--kx-sheet\); \}/);
+    });
+});

@@ -1,0 +1,69 @@
+:root,
+.dark {
+  /* "Noche con luz" (2026-11-12): surfaces separate by LUMINANCE (steps ≥ 1.14:1,
+     before 1.07–1.13 — everything read as one plane). WCAG guards: noche.test.ts */
+  --kx-bg: #020617;        /* level 0 · canvas — also the system bars, never changes */
+  --kx-surface: #111C33;   /* level 1 · panels */
+  --kx-surface-2: #1A2742; /* level 2 · the mission, what is in front */
+  --kx-raised: #22314F;    /* level 3 · sheets, controls, tracks */
+  --kx-sheet: #22314F;
+  --kx-line: #2C3D5E;
+  --kx-line-soft: rgba(255, 255, 255, 0.07);
+  --kx-ink: #F5F2EC;   /* blanco hueso */
+  --kx-ink-2: #AEB9CB;
+  --kx-ink-3: #8C9AB0;   /* approved #8A98AE gave 4.43:1 on level 3; +2 per channel = 4.55 */
+
+  --kx-amber: #F59E0B;        /* fills: stripe, buttons, bars */
+  --kx-amber-soft: #FBBF24;
+  --kx-amber-text: #FBBF24;   /* amber AS TEXT on dark surfaces */
+  --kx-on-amber: #1C1206;     /* ink ON amber (stripe, amber buttons): 5.8–11:1 */
+  --kx-halo: rgba(245, 158, 11, 0.16);
+  --kx-stripe: linear-gradient(100deg, #FDE68A 0%, #FBBF24 30%, #F59E0B 62%, #D97706 100%);
+
+  /* Stage triad — also separated by luminance so it reads without hue */
+  --kx-debt: #F87171;
+  --kx-debt-bar: #EF4444;
+  --kx-debt-chip-bg: rgba(239, 68, 68, 0.16);
+  --kx-debt-chip-ink: #FCA5A5;
+  --kx-debt-sec-bg: rgba(239, 68, 68, 0.06);
+  --kx-debt-sec-line: rgba(239, 68, 68, 0.35);
+
+  --kx-almost: #FBBF24;
+  --kx-almost-bar: #FBBF24;
+  --kx-almost-chip-bg: rgba(251, 191, 36, 0.16);
+  --kx-almost-chip-ink: #FDE68A;
+  --kx-almost-sec-bg: rgba(251, 191, 36, 0.06);
+  --kx-almost-sec-line: rgba(251, 191, 36, 0.35);
+
+  --kx-paid: #34D399;
+  --kx-paid-bar: #34D399;
+  --kx-paid-chip-bg: rgba(52, 211, 153, 0.16);
+  --kx-paid-chip-ink: #6EE7B7;
+  --kx-paid-sec-bg: rgba(52, 211, 153, 0.06);
+  --kx-paid-sec-line: rgba(52, 211, 153, 0.32);
+
+  --kx-warm: #FB923C;   /* PAGADA stamp / warm alert */
+  --kx-pay: #38BDF8;    /* paydays in the calendar — nowhere else */
+
+  /* Motion tokens — mirror of lib/motion.ts (the only allowed durations/curves) */
+  --kx-dur-fast: 120ms;
+  --kx-dur-base: 240ms;
+  --kx-dur-slow: 480ms;
+  --kx-dur-celebration: 700ms;
+  --kx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --kx-radius-card: 20px;
+  --kx-radius-row: 12px;
+  --kx-radius-pill: 999px;
+}
+
+:root, .dark {
+  /* Dark: the level's luminance does the separating; a 1px bright top edge catches
+     the light; the shadow only reinforces. */
+  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.09) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.55);
+  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.65);
+  --kx-elev-3: 0 1px 0 rgba(255, 255, 255, 0.13) inset, 0 -2px 6px rgba(0, 0, 0, 0.25), 0 -18px 48px -16px rgba(0, 0, 0, 0.7);
+  /* centred inside its box so it fades on every side (at -10% it drew a hard top edge) */
+  --kx-light: radial-gradient(90% 62% at 50% 42%, rgba(255, 247, 230, 0.055) 0%, rgba(255, 247, 230, 0.02) 45%, transparent 100%);
+  --kx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

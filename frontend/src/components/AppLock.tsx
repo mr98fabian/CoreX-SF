@@ -26,7 +26,7 @@ export function LockScreen({ es, onUnlock, onPassword }: { es: boolean; onUnlock
             className="kx-scope fixed inset-0 z-[100] flex items-center justify-center bg-kx-bg px-8 text-center">
             {/* The backdrop is always opaque; only the content fades in, so the app never shows through */}
             <div data-testid="app-lock-body" className={`flex flex-col items-center gap-8 ${reducedMotion() ? '' : 'animate-in fade-in duration-200'}`}>
-            <img src="/korex-logotipo.svg" alt="KoreX" className="h-10" />
+            <img src="/korex-logotipo.svg" alt="KoreX" className="kx-logo h-10" />
             <div className="space-y-2">
                 <p className="font-editorial text-[24px] font-[420] text-kx-ink">{es ? 'KoreX está bloqueado' : 'KoreX is locked'}</p>
                 <p className="mx-auto max-w-xs text-[13.5px] leading-relaxed text-kx-ink2">
