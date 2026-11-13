@@ -11,9 +11,12 @@ vi.mock('@/lib/api', () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a) }));
 vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'es', t: (k: string) => k }) }));
 vi.mock('@/features/auth/AuthContext', () => ({ useAuth: () => ({ isDemo: false }) }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock('@/hooks/useEffectivePlan', () => ({ useEffectivePlan: () => ({ loading: false, paid: true }) }));
+vi.mock('@/hooks/usePageTitle', () => ({ usePageTitle: () => undefined }));
 
 import { ConnectAI } from './ConnectAI';
-import { AI_INSTRUCTIONS, kitConfig, TOKEN_PLACEHOLDER } from '@/lib/aiKit';
+import IAGuidePage from '@/features/settings/IAGuidePage';
+import { AI_INSTRUCTIONS, FIRST_ACTIONS, FIRST_ACTIONS_PERMISSION, FIRST_ACTIONS_TRIGGER, KIT_TOKEN_SCOPES, kitConfig, TOKEN_PLACEHOLDER } from '@/lib/aiKit';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -48,7 +51,7 @@ async function renderConnect() {
 const PERSONAL = /mijo|fabi[aá]n|\bmuse\b/i;
 
 describe('Kit para tu IA', () => {
-    it('the kit shows only right after creating a token, never when listing tokens', async () => {
+    it('the kit with the real token shows only right after creating one; listing tokens never shows it', async () => {
         const el = await renderConnect();
         expect(el.textContent).toContain('Viejo');
         expect(el.querySelector('[data-testid="ai-kit"]')).toBeNull();
@@ -57,7 +60,10 @@ describe('Kit para tu IA', () => {
         await tick();
         const kit = el.querySelector('[data-testid="ai-kit"]')!;
         expect(kit).not.toBeNull();
-        expect(kit.querySelector('[data-testid="kit-once"]')!.textContent).toBe('Este kit solo se muestra ahora, igual que tu token. Guárdalo.');
+        const once = kit.querySelector('[data-testid="kit-once"]')!.textContent!;
+        expect(once).toContain('Tu token solo se muestra ahora');
+        expect(once).toContain('El kit lo vuelves a ver cuando quieras');
+        expect(once).not.toMatch(/kit solo se muestra/);
     });
 
     it('the copied configuration carries the created token; "Copiado" confirms', async () => {
@@ -77,7 +83,7 @@ describe('Kit para tu IA', () => {
 
     it('the tutorial version uses the <TU_TOKEN> placeholder', () => {
         expect(JSON.parse(kitConfig().split('\n\n')[0]).mcpServers.korex.env.KOREX_API_TOKEN).toBe(TOKEN_PLACEHOLDER);
-        expect(guideSrc).toContain('<AIKit es={es} />');
+        expect(guideSrc).toContain('<AIKit es={es} onNewToken={newToken} creating={creating} />');
     });
 
     it('instructions keep the house rules, neutral', () => {
@@ -114,5 +120,74 @@ describe('Guardián: sin nombres personales en lo que se envía a los usuarios',
         for (const [name, text] of [['IAGuidePage', guideSrc], ['aiKit', kitSrc], ['AI_INSTRUCTIONS', AI_INSTRUCTIONS], ['MCP INSTRUCTIONS', instructions]]) {
             expect(text, name).not.toMatch(PERSONAL);
         }
+    });
+});
+
+describe('Primera conexión: la checklist vive en el MCP y arranca el kit', () => {
+    const mcpInstructions = mcpSrc.slice(mcpSrc.indexOf('INSTRUCTIONS = """'), mcpSrc.indexOf('"""', mcpSrc.indexOf('INSTRUCTIONS = """') + 20));
+
+    it('the MCP INSTRUCTIONS carry the PRIMERA CONEXIÓN checklist word for word', () => {
+        expect(mcpInstructions).toContain('PRIMERA CONEXIÓN');
+        expect(mcpInstructions).toContain(FIRST_ACTIONS_TRIGGER);
+        FIRST_ACTIONS.forEach((a, i) => expect(mcpInstructions).toContain(`${i + 1}. ${a}`));
+        expect(mcpInstructions).toContain(FIRST_ACTIONS_PERMISSION);
+        // the three promises the mission asks for
+        expect(mcpInstructions).toMatch(/vía Plaid con el conector de finanzas de su propia plataforma/);
+        expect(mcpInstructions).toMatch(/nunca dentro de KoreX/);
+        expect(mcpInstructions).toMatch(/nunca pidiendo usuario, contraseña ni códigos del banco en el chat/);
+        expect(mcpInstructions).toMatch(/TODAS las cuentas/);
+        expect(mcpInstructions).toMatch(/qué quedó cargado, qué no y por qué/);
+        expect(mcpInstructions).toMatch(/Nunca lo dejes con KoreX en cero sin explicarle/);
+    });
+
+    it('the instructions the user pastes start with PASO 1 (the same checklist)', () => {
+        const sections = AI_INSTRUCTIONS.split('\n\n');
+        expect(sections[1].startsWith('PASO 1 · PRIMERAS ACCIONES DE TU ASISTENTE')).toBe(true);
+        FIRST_ACTIONS.forEach((a) => expect(sections[1]).toContain(a));
+    });
+
+    it('the kit opens with the first-actions block, before configuration and instructions', async () => {
+        const el = await renderConnect();
+        await act(async () => el.querySelector<HTMLButtonElement>('[data-testid="kit-toggle"]')!.click());
+        const kit = el.querySelector('[data-testid="ai-kit"]')!;
+        const order = [...kit.querySelectorAll('[data-testid^="kit-"]')].map((n) => n.getAttribute('data-testid'));
+        expect(order[0]).toBe('kit-first-actions');
+        expect(order.indexOf('kit-first-actions')).toBeLessThan(order.indexOf('kit-config'));
+        expect(kit.querySelector('[data-testid="kit-first-actions"]')!.textContent).toContain('Plaid');
+    });
+
+    it('Conecta tu IA shows the kit anytime with <TU_TOKEN>; one tap creates a token with load-accounts permission', async () => {
+        const el = await renderConnect();
+        await act(async () => el.querySelector<HTMLButtonElement>('[data-testid="kit-toggle"]')!.click());
+        expect(el.querySelector('[data-testid="kit-config"]')!.textContent).toContain(TOKEN_PLACEHOLDER);
+        expect(el.querySelector('[data-testid="kit-once"]')).toBeNull();
+        await act(async () => el.querySelector<HTMLButtonElement>('[data-testid="kit-new-token-btn"]')!.click());
+        await tick();
+        const post = apiFetch.mock.calls.find(([u, o]) => u === '/api/tokens' && o?.method === 'POST')!;
+        const scopes: string[] = JSON.parse(post[1].body).scopes;
+        expect(scopes).toEqual(KIT_TOKEN_SCOPES);
+        expect(scopes).toContain('write:accounts');
+        expect(scopes).not.toContain('write:payments');
+        expect(el.querySelector('[data-testid="kit-config"]')!.textContent).toContain(TOKEN);
+        expect(el.querySelector('[data-testid="kit-once"]')).not.toBeNull();
+    });
+});
+
+describe('Guía IA: el kit se ve sin acabar de crear un token', () => {
+    it('renders the full kit (checklist, <TU_TOKEN>, one-tap new token) on a fresh visit', async () => {
+        apiFetch.mockImplementation(async () => ({ token: TOKEN }));
+        host = document.createElement('div');
+        document.body.appendChild(host);
+        root = createRoot(host);
+        await act(async () => root.render(<MemoryRouter><IAGuidePage /></MemoryRouter>));
+        await tick();
+        const kit = host.querySelector('[data-testid="ai-kit"]')!;
+        expect(kit).not.toBeNull();
+        expect(kit.querySelector('[data-testid="kit-first-actions"]')).not.toBeNull();
+        expect(kit.querySelector('[data-testid="kit-config"]')!.textContent).toContain(TOKEN_PLACEHOLDER);
+        expect(kit.querySelector('[data-testid="kit-instructions"]')!.textContent).toContain('PASO 1');
+        await act(async () => kit.querySelector<HTMLButtonElement>('[data-testid="kit-new-token-btn"]')!.click());
+        await tick();
+        expect(host.querySelector('[data-testid="kit-config"]')!.textContent).toContain(TOKEN);
     });
 });
