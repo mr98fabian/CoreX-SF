@@ -236,8 +236,9 @@ async def get_customer_portal(user_id: str = Depends(get_current_user_id), sessi
 
 
 # ── Savings Estimate ─────────────────────────────────────────
-
-VELOCITY_ACCELERATION = 0.40
+# Only REAL figures: the engine's daily interest (velocity_engine.daily_interest) and the
+# user's own totals. Plan-vs-minimums savings live in GET /api/velocity/compare
+# (compare_paths); nothing here invents an acceleration factor.
 
 
 def _cents(x) -> float:
@@ -252,43 +253,23 @@ async def get_savings_estimate(user_id: str = Depends(get_current_user_id), sess
     accounts = session.exec(select(Account).where(Account.user_id == user_id, Account.type == "debt")).all()
 
     if not accounts:
-        empty = {"annual_savings": 0, "monthly_savings": 0, "daily_interest_burning": 0,
-                 "roi_days": 999, "years_without": 30, "years_with": 30,
-                 "total_interest_without": 0, "total_interest_with": 0}
         return {
             "has_data": False, "total_debt": 0, "daily_interest_all": 0,
-            "plans": {p: {**empty, "accounts_used": 0, "plan_cost_annual": PLAN_COSTS[p]} for p in PLAN_COSTS},
+            "plans": {p: {"accounts_used": 0, "daily_interest_burning": 0, "plan_cost_annual": PLAN_COSTS[p]} for p in PLAN_COSTS},
             "social_proof": {"total_accounts_monitored": 0, "total_debt_tracked": 0},
         }
 
-    sorted_accounts = sorted(accounts, key=lambda a: float(a.interest_rate or 0), reverse=True)
-    total_debt = sum(float(a.balance or 0) for a in sorted_accounts)
+    total_debt = sum(float(a.balance or 0) for a in accounts)
     # Engine, on the user's plan-limited set (same as dashboard / plan / logros)
     total_daily_interest = daily_interest(filter_active_debt_accounts(accounts, plan_limit))["total"]
 
     plans_result = {}
     for plan_name in PLAN_COSTS:
-        plan_accounts = sorted_accounts[:PLAN_LIMITS[plan_name]]
-        n_used = len(plan_accounts)
-        annual_interest_without = sum(float(a.balance or 0) * float(a.interest_rate or 0) / 100 for a in plan_accounts)
-        annual_interest_with = annual_interest_without * (1 - VELOCITY_ACCELERATION)
-        annual_savings = annual_interest_without - annual_interest_with
-        plan_cost = PLAN_COSTS[plan_name]
-        roi_days = 0 if plan_cost == 0 else (round(plan_cost / annual_savings * 365) if annual_savings > 0 else 999)
-
-        avg_balance = sum(float(a.balance or 0) for a in plan_accounts) / max(n_used, 1)
-        avg_rate = sum(float(a.interest_rate or 0) for a in plan_accounts) / max(n_used, 1)
-        years_without = min(30, max(5, round(avg_balance / max(avg_rate * 100, 1))))
-        years_with = max(2, round(years_without * (1 - VELOCITY_ACCELERATION)))
-
-        plan_daily = daily_interest(filter_active_debt_accounts(accounts, PLAN_LIMITS[plan_name]))["total"]
+        used = filter_active_debt_accounts(accounts, PLAN_LIMITS[plan_name])
         plans_result[plan_name] = {
-            "accounts_used": n_used, "annual_savings": round(annual_savings, 2),
-            "monthly_savings": round(annual_savings / 12, 2), "daily_interest_burning": _cents(plan_daily),
-            "roi_days": roi_days, "plan_cost_annual": plan_cost,
-            "years_without": years_without, "years_with": years_with,
-            "total_interest_without": round(annual_interest_without * years_without),
-            "total_interest_with": round(annual_interest_with * years_with),
+            "accounts_used": len(used),
+            "daily_interest_burning": _cents(daily_interest(used)["total"]),
+            "plan_cost_annual": PLAN_COSTS[plan_name],
         }
 
     return {
