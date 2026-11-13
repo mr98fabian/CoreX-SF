@@ -148,7 +148,7 @@ export default function ActivityPage() {
             : (es ? 'Sin pagos esta semana: tu último movimiento está abajo.' : 'No payments this week: your latest activity is below.');
 
     return (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Actividad' : 'Activity'} greeting={es ? 'el registro vivo de tu dinero' : 'the live record of your money'} />
                 <AmberRule />

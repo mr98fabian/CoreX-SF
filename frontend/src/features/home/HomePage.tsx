@@ -74,7 +74,7 @@ export default function HomePage() {
             : (es ? 'Tu plan está en marcha: cada pago acerca el verde.' : 'Your plan is moving: every payment brings the green closer.');
 
     return (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <AmberStripe>
                 <BankHeader greeting={firstName ? (es ? `Hola, ${firstName}` : `Hi, ${firstName}`) : undefined} />
                 <div className="mt-auto pb-[18px]">

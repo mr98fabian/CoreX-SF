@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
+import { dismissKeyboard } from '@/lib/keyboard';
 
 /**
  * Hook to initialize Capacitor-specific behavior on native platforms.
@@ -32,8 +33,13 @@ export function useCapacitor() {
             }
         });
 
+        // Leaving the app (Home, app switcher, lock): close the keyboard WITH focus,
+        // so the view can never come back cut in half.
+        const pauseHandler = CapApp.addListener('pause', () => dismissKeyboard());
+
         return () => {
             backHandler.then(h => h.remove());
+            pauseHandler.then(h => h.remove());
         };
     }, [navigate]);
 }

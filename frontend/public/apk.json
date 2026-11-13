@@ -1,1 +1,1 @@
-{ "version_code": 3, "version_name": "1.2", "apk_url": "https://github.com/mr98fabian/CoreX-SF/releases/download/v1.2/korex.apk", "notas": "Login con Google vuelve a la app; barra y menú respetan el área segura" }
+{ "version_code": 4, "version_name": "1.3", "apk_url": "https://github.com/mr98fabian/CoreX-SF/releases/download/v1.3/korex.apk", "notas": "La app ya no se parte a la mitad con el teclado; la barra inferior queda siempre pegada abajo" }

@@ -60,7 +60,7 @@ export default function AnalyticsPage() {
     const retry = () => { setError(false); setData(null); fetchV2(); };
 
     const shell = (body: React.ReactNode) => (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Análisis' : 'Analysis'} greeting={es ? 'a dónde va tu dinero' : 'where your money goes'} />
                 <AmberRule />

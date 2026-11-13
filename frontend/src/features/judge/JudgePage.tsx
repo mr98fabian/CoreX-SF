@@ -57,7 +57,7 @@ export default function JudgePage() {
     const what = judged ? (judged.label ? `${judged.label} · ${formatMoney(judged.amount)}` : formatMoney(judged.amount)) : '';
 
     return (
-        <div className="kx-scope -m-4 min-h-full pb-28 md:-m-8 lg:pb-10">
+        <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Juez de compras' : 'Purchase judge'} greeting={es ? '¿cuánto te retrasa esta compra?' : 'how much does this purchase delay you?'} />
                 <AmberRule />
