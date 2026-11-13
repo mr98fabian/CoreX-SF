@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { AIKit } from '@/components/AIKit';
+import { createKitToken } from '@/lib/aiKit';
 
 /**
  * "Conecta tu IA" — personal API tokens for an AI assistant (MCP server in mcp/).
@@ -48,6 +49,7 @@ export function ConnectAI() {
     const [creating, setCreating] = useState(false);
     const [newToken, setNewToken] = useState<string | null>(null);
     const [copied, setCopied] = useState<'token' | null>(null);
+    const [showKit, setShowKit] = useState(false);
 
     // The lock is the server's answer (GET /api/tokens/access), never decided here
     const [access, setAccess] = useState<{ allowed: boolean; reason: string | null } | null>(null);
@@ -65,6 +67,19 @@ export function ConnectAI() {
 
     const toggle = (scope: string) =>
         setScopes((s) => (s.includes(scope) ? s.filter((x) => x !== scope) : [...s, scope]));
+
+    // One tap from the kit: new token with the kit's permissions, then the full kit with it
+    const createFromKit = async () => {
+        setCreating(true);
+        try {
+            setNewToken(await createKitToken());
+            load();
+        } catch {
+            toast({ title: es ? 'No se pudo crear el token' : "Couldn't create the token", variant: 'destructive' });
+        } finally {
+            setCreating(false);
+        }
+    };
 
     const create = async () => {
         setCreating(true);
@@ -149,7 +164,7 @@ export function ConnectAI() {
                                     </Button>
                                 </div>
                             </div>
-                            {/* Kit para tu IA: only here, right after creation, with the real token */}
+                            {/* Kit con el token real: solo ahora. El kit con <TU_TOKEN> se ve siempre abajo. */}
                             <AIKit token={newToken} es={es} onceNotice />
                             <Button variant="outline" onClick={() => setNewToken(null)}>
                                 {es ? 'Listo, ya lo guardé' : "Done, I've saved it"}
@@ -180,6 +195,12 @@ export function ConnectAI() {
                                 <KeyRound className="h-4 w-4 mr-1.5" />
                                 {es ? 'Crear token' : 'Create token'}
                             </Button>
+                            <div className="border-t border-[var(--kx-line-soft)] pt-4">
+                                <Button variant="outline" data-testid="kit-toggle" onClick={() => setShowKit((v) => !v)}>
+                                    {showKit ? (es ? 'Ocultar el kit para tu IA' : 'Hide the kit for your AI') : (es ? 'Ver el kit para tu IA' : 'See the kit for your AI')}
+                                </Button>
+                                {showKit && <div className="mt-4"><AIKit es={es} onNewToken={createFromKit} creating={creating} /></div>}
+                            </div>
                         </div>
                     )}
                 </CardContent>
