@@ -22,6 +22,8 @@ import { PlanCards } from '@/components/kx/PlanCards';
 import { fetchSubStatus, longDate, planLabel as planDisplayName, type SubStatus } from '@/lib/planLimits';
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFormatMoney } from "@/hooks/useFormatMoney";
+import { MoneyAmount } from "@/components/MoneyAmount";
+import { usePlanSavings } from "@/hooks/usePlanSavings";
 import { useAuth } from "@/features/auth/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { apiFetch, ApiError } from "@/lib/api";
@@ -66,19 +68,8 @@ const TECH_STACK = [
 interface SavingsData {
     has_data: boolean;
     total_debt: number;
+    /** velocity_engine.daily_interest (real); feeds the Interés Diario ticker */
     daily_interest_all: number;
-    plans: Record<string, {
-        accounts_used: number;
-        annual_savings: number;
-        monthly_savings: number;
-        daily_interest_burning: number;
-        roi_days: number;
-        plan_cost_annual: number;
-        years_without: number;
-        years_with: number;
-        total_interest_without: number;
-        total_interest_with: number;
-    }>;
     social_proof: {
         total_accounts_monitored: number;
         total_debt_tracked: number;
@@ -159,6 +150,7 @@ export default function SettingsPage() {
     const [activePlan, setActivePlan] = useState(() => localStorage.getItem('korex-plan') || 'starter');
     const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
     const [savingsData, setSavingsData] = useState<SavingsData | null>(null);
+    const planSavings = usePlanSavings();
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const { toast } = useToast();
@@ -937,29 +929,29 @@ export default function SettingsPage() {
                     </Card>
                 )}
 
-                {/* Without vs With KoreX Comparison */}
-                {sd?.has_data && sd.plans?.freedom && (
-                    <Card className="border-kx-line overflow-hidden">
+                {/* Minimums only vs your plan: REAL numbers (GET /api/velocity/compare, same as Inicio's chart) */}
+                {planSavings && (
+                    <Card className="border-kx-line overflow-hidden" data-testid="sub-compare">
                         <CardContent className="p-0">
                             <div className="grid grid-cols-2 divide-x divide-kx-line ">
                                 <div className="p-5 text-center bg-[color-mix(in_srgb,var(--kx-debt)_5%,transparent)]">
-                                    <p className="text-[10px] font-bold text-kx-debt uppercase tracking-wider mb-2">{t('sub.withoutKorex')}</p>
-                                    <p className="text-2xl font-black text-kx-debt">{sd.plans.freedom.years_without} {t('sub.years')}</p>
+                                    <p className="text-[10px] font-bold text-kx-debt uppercase tracking-wider mb-2">{language === 'es' ? 'Solo mínimos' : 'Minimums only'}</p>
+                                    <p className="text-2xl font-black text-kx-debt">{planSavings.minimumsCapped ? `${planSavings.minimumsYears}+` : planSavings.minimumsYears} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toPayOff')}</p>
-                                    <p className="text-sm font-bold text-kx-debt mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_without)}</p>
+                                    <p className="text-sm font-bold text-kx-debt mt-2"><MoneyAmount value={planSavings.minimumsInterest} /></p>
                                     <p className="text-[10px] text-kx-debt">{t('sub.totalInterest')}</p>
                                 </div>
                                 <div className="p-5 text-center bg-[color-mix(in_srgb,var(--kx-paid)_5%,transparent)]">
-                                    <p className="text-[10px] font-bold text-kx-paid uppercase tracking-wider mb-2">{t('sub.withKorex')}</p>
-                                    <p className="text-2xl font-black text-kx-paid">{sd.plans.freedom.years_with} {t('sub.years')}</p>
+                                    <p className="text-[10px] font-bold text-kx-paid uppercase tracking-wider mb-2">{language === 'es' ? 'Con tu plan' : 'With your plan'}</p>
+                                    <p className="text-2xl font-black text-kx-paid">{planSavings.planYears} {t('sub.years')}</p>
                                     <p className="text-xs text-muted-foreground mt-1">{t('sub.toFreedom')}</p>
-                                    <p className="text-sm font-bold text-kx-paid mt-2">{formatMoneyShort(sd.plans.freedom.total_interest_with)}</p>
+                                    <p className="text-sm font-bold text-kx-paid mt-2"><MoneyAmount value={planSavings.planInterest} /></p>
                                     <p className="text-[10px] text-kx-paid">{t('sub.totalInterest')}</p>
                                 </div>
                             </div>
                             <div className="bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] px-5 py-2.5 text-center border-t border-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)]">
                                 <span className="text-sm font-bold text-kx-paid">
-                                    💰 {t('sub.youKeep')} ${(sd.plans.freedom.total_interest_without - sd.plans.freedom.total_interest_with).toLocaleString()} {t('sub.goneToBank')}
+                                    {t('sub.youKeep')} <MoneyAmount value={planSavings.interest} /> {t('sub.goneToBank')} {language === 'es' ? '· Estimado.' : '· Estimate.'}
                                 </span>
                             </div>
                         </CardContent>

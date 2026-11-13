@@ -1,20 +1,20 @@
 /**
  * Upgrade pitch: one move, Gratis → KoreX Anual. Names and prices from lib/pricing.ts (the
- * only commercial source); the interest-savings estimate comes from the engine
- * (GET /api/subscriptions/savings-estimate, plans.freedom) and is labelled as an estimate.
+ * only commercial source). The savings line is REAL: the user's plan vs paying only the
+ * minimums (compare_paths, the same numbers as Inicio's chart), labelled as an estimate.
+ * No comparable data → no savings figure at all.
  * Opened from UpgradeNudge, AccountsPage, ActionPlanPage, Dashboard and Rankings.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
+import { MoneyAmount } from '@/components/MoneyAmount';
 import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID } from '@/lib/pricing';
-
-interface PlanSavings { annual_savings: number; roi_days: number; plan_cost_annual: number }
-interface SavingsEstimate { has_data: boolean; plans: Record<string, PlanSavings> }
+import { usePlanSavings } from '@/hooks/usePlanSavings';
 
 interface UpgradeModalProps {
     open: boolean;
@@ -31,17 +31,12 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
     const [upgrading, setUpgrading] = useState(false);
-    const [savings, setSavings] = useState<SavingsEstimate | null>(null);
     const free = COMMERCIAL_PLANS.starter;
     const paid = COMMERCIAL_PLANS[PAID_PLAN_ID];
     const paying = PAID_KEYS.has(currentPlan);
 
-    useEffect(() => {
-        if (!open) return;
-        apiFetch<SavingsEstimate>('/api/subscriptions/savings-estimate')
-            .then(setSavings)
-            .catch(() => setSavings(null)); // optional
-    }, [open]);
+    // Real plan-vs-minimums savings (null when there is nothing to compare)
+    const savings = usePlanSavings(open);
 
     const handleUpgrade = async () => {
         setUpgrading(true);
@@ -61,8 +56,6 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
         }
     };
 
-    const s = savings?.has_data ? savings.plans[PAID_PLAN_ID] : undefined;
-    const net = s ? s.annual_savings - s.plan_cost_annual : 0;
     const row = (ok: boolean, text: string) => (
         <li className="flex items-start gap-2 text-[13.5px] text-kx-ink2">
             {ok ? <Check size={15} strokeWidth={1.75} className="mt-0.5 flex-none text-kx-paid" /> : <X size={15} strokeWidth={1.75} className="mt-0.5 flex-none text-kx-ink3" />}
@@ -106,12 +99,11 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                             {row(true, es ? 'Tu IA conectada' : 'Your AI connected')}
                             {row(true, es ? 'Todo ilimitado' : 'Everything unlimited')}
                         </ul>
-                        {s && s.annual_savings > 0 && (
+                        {savings && (
                             <p data-testid="upgrade-estimate" className="mt-3 text-[12.5px] text-kx-ink2">
-                                {es ? 'Estimación: ' : 'Estimate: '}
-                                <span className="kx-num text-kx-paid">~{formatMoney(Math.round(s.annual_savings))}</span>
-                                {es ? ' al año en intereses' : ' a year in interest'}
-                                {net > 0 && (es ? `, ~${formatMoney(Math.round(net))} netos tras el plan.` : `, ~${formatMoney(Math.round(net))} net after the plan.`)}
+                                {es ? 'Con tu plan pagas ' : 'With your plan you pay '}
+                                <MoneyAmount value={savings.interest} className="text-kx-paid" />
+                                {es ? ' menos de interés que pagando solo el mínimo. Estimado.' : ' less interest than paying only the minimum. Estimate.'}
                             </p>
                         )}
                         <button type="button" onClick={handleUpgrade} disabled={paying || upgrading}
