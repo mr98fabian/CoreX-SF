@@ -106,7 +106,7 @@ export default function KxLanding() {
                             : 'It starts red and clears month by month, until the day everything turns green. KoreX tells you what to pay today to get there sooner.'}
                     </p>
                     <div className="mt-7 flex flex-wrap gap-3">
-                        <button onClick={() => setCalcOpen(true)} className="rounded-xl bg-kx-amber px-5 py-3 text-sm font-bold text-[#111418]">
+                        <button onClick={() => setCalcOpen(true)} className="rounded-xl bg-kx-amber px-5 py-3 text-sm font-bold text-kx-on-amber">
                             {es ? 'Calcula tu fecha gratis' : 'Calculate your date free'}
                         </button>
                         <button onClick={() => navigate('/login')} className="rounded-xl border border-kx-line px-5 py-3 text-sm font-semibold text-kx-ink">

@@ -147,7 +147,7 @@ export default function TermsOfServicePage() {
                             <div className="text-sm leading-relaxed whitespace-pre-line text-kx-ink2">
                                 {s.content.split('**').map((part, i) =>
                                     i % 2 === 1 ? (
-                                        <strong key={i} className="text-[#111418] ">{part}</strong>
+                                        <strong key={i} className="text-kx-ink ">{part}</strong>
                                     ) : (
                                         <span key={i}>{part}</span>
                                     )

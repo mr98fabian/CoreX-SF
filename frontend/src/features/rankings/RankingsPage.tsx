@@ -191,7 +191,7 @@ export default function RankingsPage() {
                                         ? 'Conviértete en VIP para ganar 2x XP por cada transacción registrada, acortar tu camino dramáticamente y agregar más cuentas simultáneas para un control financiero total.'
                                         : 'Go VIP to earn 2x XP per transaction, dramatically shorten your journey and add more simultaneous accounts for total financial control.'}
                                 </p>
-                                <button onClick={() => setShowUpgradeModal(true)} className="inline-flex items-center gap-1.5 bg-kx-amber text-[#111418] font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-lg ">
+                                <button onClick={() => setShowUpgradeModal(true)} className="inline-flex items-center gap-1.5 bg-kx-amber text-kx-on-amber font-bold text-xs px-4 py-2 rounded-lg transition-all shadow-lg ">
                                     <Crown size={12} />
                                     {es ? 'Ver planes VIP' : 'View VIP plans'}
                                 </button>

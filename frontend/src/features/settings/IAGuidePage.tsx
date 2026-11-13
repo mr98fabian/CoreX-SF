@@ -68,7 +68,7 @@ export default function IAGuidePage() {
                                 ))}
                             </ul>
                         </Section>
-                        <Link to="/dashboard/settings/plans" className="kx-press block rounded-2xl bg-kx-amber py-3.5 text-center text-[15px] font-bold text-[#111418]">
+                        <Link to="/dashboard/settings/plans" className="kx-press block rounded-2xl bg-kx-amber py-3.5 text-center text-[15px] font-bold text-kx-on-amber">
                             {es ? 'Ver planes' : 'See plans'}
                         </Link>
                     </div>
@@ -82,7 +82,7 @@ export default function IAGuidePage() {
                                 const [title, body] = es ? s.es : s.en;
                                 return (
                                     <li key={title} className="flex gap-3.5 rounded-[18px] border border-kx-line bg-kx-surface p-4 shadow-[var(--kx-elev-1)]">
-                                        <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-kx-amber text-[13px] font-bold text-[#111418]">{i + 1}</span>
+                                        <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-kx-amber text-[13px] font-bold text-kx-on-amber">{i + 1}</span>
                                         <span className="min-w-0">
                                             <span className="block text-[15px] font-semibold text-kx-ink">{title}</span>
                                             <span className="mt-1 block text-[13px] leading-relaxed text-kx-ink2">{body}</span>
@@ -100,7 +100,7 @@ export default function IAGuidePage() {
                         </Section>
                         {/* Same kit as Conecta tu IA, with <TU_TOKEN> for whoever created their token before */}
                         <AIKit es={es} />
-                        <Link to="/dashboard/settings#ia" className="kx-press block rounded-2xl bg-kx-amber py-3.5 text-center text-[15px] font-bold text-[#111418]">
+                        <Link to="/dashboard/settings#ia" className="kx-press block rounded-2xl bg-kx-amber py-3.5 text-center text-[15px] font-bold text-kx-on-amber">
                             {es ? 'Crear mi token' : 'Create my token'}
                         </Link>
                     </div>

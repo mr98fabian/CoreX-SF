@@ -52,7 +52,7 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel }: Props) {
                         </ul>
                         {hero && (
                             <button onClick={() => onChoose(p.id)} disabled={isCurrent || busy === p.id}
-                                className="kx-press mt-3.5 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-[#111418] disabled:opacity-50">
+                                className="kx-press mt-3.5 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber disabled:opacity-50">
                                 {isCurrent ? (es ? 'Tu plan actual' : 'Your current plan') : ctaLabel ? ctaLabel(p) : (es ? 'Empezar mes gratis' : 'Start free month')}
                             </button>
                         )}

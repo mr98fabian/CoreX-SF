@@ -365,7 +365,7 @@ export default function AccountsPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel className="border-kx-line hover:bg-kx-raised text-kx-ink ">{t("accounts.cancel")}</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleResetSystem} className="bg-kx-debt hover:bg-kx-debt text-[#111418] shadow-lg ">
+                                <AlertDialogAction onClick={handleResetSystem} className="bg-kx-debt hover:bg-kx-debt text-kx-on-amber shadow-lg ">
                                     {t("accounts.yesWipe")}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
@@ -764,7 +764,7 @@ export default function AccountsPage() {
                         </div>
                         <button
                             onClick={() => setShowUpgradeModal(true)}
-                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-kx-debt hover:bg-kx-debt text-[#111418] text-xs font-bold transition-all shadow-lg "
+                            className="flex items-center justify-center gap-1.5 w-full sm:w-auto sm:self-end px-4 py-2.5 sm:py-2 rounded-lg bg-kx-debt hover:bg-kx-debt text-kx-on-amber text-xs font-bold transition-all shadow-lg "
                         >
                             <Lock size={12} />
                             {t('upgrade.unlockAll')}
@@ -970,7 +970,7 @@ export default function AccountsPage() {
                                                     </Button>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
-                                                            <Button variant="outline" size="sm" className="flex-1 min-w-[96px] h-9 border-kx-debt text-kx-debt hover:bg-kx-debt hover:text-[#111418] hover:border-kx-debt transition-all font-medium">
+                                                            <Button variant="outline" size="sm" className="flex-1 min-w-[96px] h-9 border-kx-debt text-kx-debt hover:bg-kx-debt hover:text-kx-on-amber hover:border-kx-debt transition-all font-medium">
                                                                 {t("accounts.payOff")}
                                                             </Button>
                                                         </AlertDialogTrigger>
@@ -1107,7 +1107,7 @@ export default function AccountsPage() {
                         <AlertDialogCancel className="border-kx-line hover:bg-kx-raised text-kx-ink ">
                             {t("accounts.cancel")}
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={executeDeleteAccount} className="bg-kx-debt hover:bg-kx-debt text-[#111418] shadow-lg ">
+                        <AlertDialogAction onClick={executeDeleteAccount} className="bg-kx-debt hover:bg-kx-debt text-kx-on-amber shadow-lg ">
                             {t("accounts.delete")}
                         </AlertDialogAction>
                     </AlertDialogFooter>
@@ -1293,7 +1293,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                         <button
                             onClick={() => setOperation('add')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'add'
- ? (isDebt ? "bg-kx-debt text-[#111418] shadow-lg " : "bg-kx-paid text-[#111418] shadow-lg ")
+ ? (isDebt ? "bg-kx-debt text-kx-on-amber shadow-lg " : "bg-kx-paid text-kx-on-amber shadow-lg ")
  : "text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
  }`}
                         >
@@ -1302,7 +1302,7 @@ function ManualAdjustmentDialog({ account, onClose, onUpdate }: { account: Accou
                         <button
                             onClick={() => setOperation('subtract')}
                             className={`py-2.5 text-sm font-medium rounded-md transition-all ${operation === 'subtract'
- ? (isDebt ? "bg-kx-paid text-[#111418] shadow-lg " : "bg-kx-debt text-[#111418] shadow-lg ")
+ ? (isDebt ? "bg-kx-paid text-kx-on-amber shadow-lg " : "bg-kx-debt text-kx-on-amber shadow-lg ")
  : "text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
  }`}
                         >

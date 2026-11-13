@@ -9,17 +9,17 @@ const buttonVariants = cva(
         variants: {
             variant: {
                 // KoreX system (kx tokens). Amber = the primary action; slate for the rest.
-                default: "bg-kx-amber text-[#111418] hover:brightness-105 font-semibold",
+                default: "bg-kx-amber text-kx-on-amber hover:brightness-105 font-semibold",
                 // Red only means danger/error (destructive actions)
-                destructive: "bg-kx-debt text-[#111418] hover:brightness-105 font-semibold",
+                destructive: "bg-kx-debt text-kx-on-amber hover:brightness-105 font-semibold",
                 outline: "border border-kx-line bg-transparent text-kx-ink hover:bg-kx-raised",
                 secondary: "border border-kx-line bg-kx-raised text-kx-ink hover:bg-kx-surface",
                 ghost: "text-kx-ink hover:bg-kx-raised",
                 link: "text-kx-ink underline-offset-4 hover:underline",
                 // Legacy alias of the primary
-                premium: "bg-kx-amber text-[#111418] hover:brightness-105 font-semibold",
+                premium: "bg-kx-amber text-kx-on-amber hover:brightness-105 font-semibold",
                 // Green only for payment progress / paid
-                glow: "bg-kx-paid text-[#111418] hover:brightness-105 font-semibold",
+                glow: "bg-kx-paid text-kx-on-amber hover:brightness-105 font-semibold",
             },
             size: {
                 default: "h-10 px-4 py-2",

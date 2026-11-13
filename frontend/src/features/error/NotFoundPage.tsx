@@ -37,7 +37,7 @@ export default function NotFoundPage() {
             <div className="relative z-10 flex gap-4 mt-10">
                 <Link
                     to="/"
-                    className="px-6 py-3 bg-kx-amber text-[#111418] font-semibold rounded-lg transition-all duration-300 shadow-lg "
+                    className="px-6 py-3 bg-kx-amber text-kx-on-amber font-semibold rounded-lg transition-all duration-300 shadow-lg "
                 >
                     Go to Dashboard
                 </Link>

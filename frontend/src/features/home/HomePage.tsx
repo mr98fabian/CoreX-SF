@@ -14,7 +14,7 @@ import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useKxSummary } from '@/hooks/useKxSummary';
 import { MissionCard } from '@/components/kx/MissionCard';
-import { AmberStripe, BankHeader, HeroNumber, PaidStamp, Section, StatePhrase } from '@/components/kx';
+import { AmberStripe, BankHeader, HeroNumber, PaidStamp, Raccoon, Section, StatePhrase } from '@/components/kx';
 import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { DebtCalendar } from '@/components/kx/DebtCalendar';
@@ -75,14 +75,17 @@ export default function HomePage() {
 
     return (
         <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
-            <AmberStripe>
+            {/* The date, the greeting and "sesión protegida" sit on the night, above the stripe */}
+            <div className="px-6 pb-3 pt-4">
                 <BankHeader greeting={firstName ? (es ? `Hola, ${firstName}` : `Hi, ${firstName}`) : undefined} />
-                <div className="mt-auto pb-[18px]">
-                    <p className="text-[12.5px] text-kx-ink">{es ? 'Libre de deudas' : 'Debt-free'}</p>
-                    <p className="font-editorial text-[27px] font-[500] capitalize tracking-tight text-kx-ink">
+            </div>
+            <AmberStripe>
+                <div className="mt-auto max-w-[62%] pb-[46px]">
+                    <p className="text-[12.5px] font-medium">{es ? 'Libre de deudas' : 'Debt-free'}</p>
+                    <p className="font-editorial text-[27px] font-[500] capitalize tracking-tight">
                         {noDebt ? (es ? 'Hoy' : 'Today') : freedomLabel ?? (es ? 'Calculando…' : 'Calculating…')}
                     </p>
-                    <p className="text-[12.5px] text-kx-ink">{es ? 'al ritmo actual de tu plan (estimado)' : 'at your plan’s current pace (estimate)'}</p>
+                    <p className="text-[12.5px]">{es ? 'al ritmo actual de tu plan (estimado)' : 'at your plan’s current pace (estimate)'}</p>
                 </div>
             </AmberStripe>
 
@@ -90,6 +93,7 @@ export default function HomePage() {
                 <StatePhrase tone={s.counts.paid > 0 || noDebt ? 'paid' : 'amber'}>{phrase}</StatePhrase>
                 {justPaid.size > 0 && (
                     <p className="flex items-center gap-3 text-sm text-kx-ink2">
+                        <Raccoon moment="paid" />
                         <StampDrop drop><PaidStamp /></StampDrop>
                         {es ? `${s.staged.filter((a) => justPaid.has(a.id)).map((a) => a.name).join(', ')} llegó a $0.` : `${s.staged.filter((a) => justPaid.has(a.id)).map((a) => a.name).join(', ')} hit $0.`}
                     </p>
@@ -130,7 +134,7 @@ export default function HomePage() {
                             ))}
                         </div>
                         <button onClick={() => setShowDetail((v) => !v)} aria-expanded={showDetail}
-                            className="mt-4 w-full rounded-full border border-dashed border-[#263449] py-2.5 text-[13px] text-kx-ink3">
+                            className="mt-4 w-full rounded-full border border-dashed border-kx-line py-2.5 text-[13px] text-kx-ink3">
                             {showDetail ? (es ? 'Ocultar detalle' : 'Hide detail') : (es ? 'El detalle vive a un toque · ver' : 'Detail is one tap away · show')}
                         </button>
                         {showDetail && (
@@ -145,7 +149,7 @@ export default function HomePage() {
                 <LeagueBlock es={es} />
 
                 {s.debts.length === 0 && (
-                    <Link to="/dashboard/accounts" className="block rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-[#111418]">
+                    <Link to="/dashboard/accounts" className="block rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber">
                         {es ? 'Agregar mi primera deuda' : 'Add my first debt'}
                     </Link>
                 )}

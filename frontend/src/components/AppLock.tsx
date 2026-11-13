@@ -34,7 +34,7 @@ export function LockScreen({ es, onUnlock, onPassword }: { es: boolean; onUnlock
                 </p>
             </div>
             <button onClick={tryUnlock} disabled={busy} autoFocus
-                className="kx-press flex items-center gap-2.5 rounded-xl bg-kx-amber px-6 py-3.5 text-[15px] font-bold text-[#111418] disabled:opacity-60">
+                className="kx-press flex items-center gap-2.5 rounded-xl bg-kx-amber px-6 py-3.5 text-[15px] font-bold text-kx-on-amber disabled:opacity-60">
                 <Fingerprint className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />{es ? 'Usar huella' : 'Use fingerprint'}
             </button>
             {failed && <p role="alert" className="-mt-4 text-[13px] text-kx-debt">{es ? 'No se pudo verificar. Inténtalo otra vez.' : "Couldn't verify. Try again."}</p>}
