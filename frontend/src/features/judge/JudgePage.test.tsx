@@ -38,14 +38,14 @@ async function judge(amount: string, label = '') {
 const base = { message: 'English message that must never show', debug: { baseline_months: 20 } };
 
 describe('Juez de compras — veredicto', () => {
-    it('delay: hero in months, days, freedom month → month, "Tú decides." — no interest figure', async () => {
+    it('delay: hero in months, days, freedom month → month, the real interest delta, "Tú decides."', async () => {
         apiFetch.mockResolvedValue({ ...base, days_delayed: 60, months_delayed: 2, cost_in_interest: 84.5, freedom_date_baseline: '2027-06-01', freedom_date_impact: '2027-08-01' });
         const el = await judge('1500', 'Laptop');
         expect(apiFetch).toHaveBeenCalledWith('/api/simulator/time-cost', { method: 'POST', body: JSON.stringify({ amount: 1500 }) });
         const v = el.querySelector('[data-testid="verdict-delay"]')!;
         expect(v.textContent).toContain('+2 meses');
         expect(v.textContent).toContain('≈ +60 días');
-        expect(v.textContent).not.toMatch(/inter[eé]s|\$84\.50/);
+        expect(v.querySelector('[data-testid="verdict-interest"]')!.textContent).toBe(' y $84.50 más de interés');
         expect(el.textContent).toContain('Cifras estimadas con tus datos actuales.');
         expect(v.textContent).toMatch(/Tu libertad: junio de 2027 → agosto de 2027/);
         expect(v.textContent).toContain('Laptop · $1500.00');
@@ -59,10 +59,17 @@ describe('Juez de compras — veredicto', () => {
         expect(el.querySelector('[data-testid="verdict-delay"]')!.textContent).toMatch(/\+1 mes(?!es)/);
     });
 
+    it('no interest line when the delta is $0', async () => {
+        apiFetch.mockResolvedValue({ ...base, days_delayed: 30, months_delayed: 1, cost_in_interest: 0, freedom_date_baseline: '2027-01-01', freedom_date_impact: '2027-02-01' });
+        const el = await judge('100');
+        expect(el.querySelector('[data-testid="verdict-interest"]')).toBeNull();
+    });
+
     it('absorbed: delay 0 with debts', async () => {
         apiFetch.mockResolvedValue({ ...base, days_delayed: 0, months_delayed: 0, cost_in_interest: 3, freedom_date_baseline: '2027-06-01', freedom_date_impact: '2027-06-01' });
         const el = await judge('20');
         expect(el.querySelector('[data-testid="verdict-absorbed"]')!.textContent).toContain('Tu plan lo absorbe: $0 días extra.');
+        expect(el.querySelector('[data-testid="verdict-interest"]')!.textContent).toBe(' Pagas $3.00 más de interés.');
         expect(el.textContent).toContain('Tú decides.');
     });
 
@@ -77,6 +84,7 @@ describe('Juez de compras — veredicto', () => {
         const el = await judge('90000');
         expect(el.querySelector('[data-testid="verdict-broken"]')!.textContent).toContain('Esta compra rompe tu plan');
         expect(el.textContent).not.toMatch(/9999|999 meses/);
+        expect(el.querySelector('[data-testid="verdict-interest"]')).toBeNull(); // capped projection: no interest figure
         expect(verdictOf({ days_delayed: 0, months_delayed: 0, cost_in_interest: 0, freedom_date_baseline: '2076-01-01', freedom_date_impact: '2076-01-01', debug: { baseline_months: 600 } }).kind).toBe('broken');
     });
 
