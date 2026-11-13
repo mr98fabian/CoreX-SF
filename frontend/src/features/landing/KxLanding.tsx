@@ -84,7 +84,7 @@ export default function KxLanding() {
         <div className="kx-scope min-h-[100dvh]">
             {/* Top bar */}
             <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-                <img src="/korex-logotipo.svg" alt="KoreX" className="h-9" />
+                <img src="/korex-logotipo.svg" alt="KoreX" className="kx-logo h-9" />
                 <nav className="flex items-center gap-3 text-sm">
                     <button onClick={() => setLanguage(es ? 'en' : 'es')} className="rounded-full border border-kx-line px-3 py-1.5 text-xs font-semibold text-kx-ink2" aria-label={es ? 'Cambiar a inglés' : 'Switch to Spanish'}>
                         {es ? 'EN' : 'ES'}

@@ -64,7 +64,18 @@ export function debtOn(mo: CalendarMonth, day: number): number {
 }
 
 /** Red (high debt) → orange → yellow → green ($0), as in the approved preview. */
-export function debtColor(debt: number, maxDebt: number): { background: string; color: string; fontWeight: number } {
+const PAPER = [243, 239, 231]; // light --kx-bg #F3EFE7
+const lumOf = (c: number[]) => {
+    const f = (v: number) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+};
+const contrast = (a: number[], b: number[]) => { const [h, l] = [lumOf(a), lumOf(b)].sort((x, y) => y - x); return (h + 0.05) / (l + 0.05); };
+
+/** `light`: on paper the translucent reds turned pale and the white day numbers
+ *  vanished (1.05:1). There the band is composited OPAQUE over the paper and the
+ *  ink is whichever of near-black / white reads best (≥ 4.5:1 for every debt
+ *  level — guarded in styles/noche.test.ts). Dark is unchanged. */
+export function debtColor(debt: number, maxDebt: number, light = false): { background: string; color: string; fontWeight: number } {
     const t = maxDebt > 0 ? Math.max(0, Math.min(1, debt / maxDebt)) : 0;
     const stops: [number, number, number, number][] = [
         [0, 52, 211, 153], [0.3, 251, 191, 36], [0.55, 249, 115, 22], [0.8, 248, 113, 113], [1, 220, 38, 38],
@@ -80,6 +91,12 @@ export function debtColor(debt: number, maxDebt: number): { background: string; 
     const [r, g, b] = rgb;
     if (t <= 0.12) return { background: `rgb(${r},${g},${b})`, color: '#052E1B', fontWeight: 700 };
     if (t <= 0.38) return { background: `rgb(${r},${g},${b})`, color: '#3A2A02', fontWeight: 600 };
+    if (light) {
+        const a = 0.3 + 0.7 * t;
+        const comp = [r, g, b].map((v, i) => Math.round(v * a + PAPER[i] * (1 - a)));
+        const ink = contrast([15, 5, 5], comp) >= contrast([255, 255, 255], comp) ? '#0F0505' : '#FFFFFF';
+        return { background: `rgb(${comp.join(',')})`, color: ink, fontWeight: 500 };
+    }
     return { background: `rgba(${r},${g},${b},${(0.3 + 0.62 * t).toFixed(2)})`, color: '#F8FAFC', fontWeight: 500 };
 }
 

@@ -56,7 +56,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                     <img
                         src="/korex-isotipo.svg"
                         alt="KoreX"
-                        className="h-24 mx-auto opacity-50 drop-shadow-[0_0_40px_rgba(239,68,68,0.2)]"
+                        className="kx-logo h-24 mx-auto opacity-50 drop-shadow-[0_0_40px_rgba(239,68,68,0.2)]"
                     />
                 </div>
 
@@ -123,7 +123,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                     <img
                         src="/korex-logotipo.svg"
                         alt="KoreX"
-                        className="h-5 opacity-20"
+                        className="kx-logo h-5 opacity-20"
                     />
                 </div>
             </div>

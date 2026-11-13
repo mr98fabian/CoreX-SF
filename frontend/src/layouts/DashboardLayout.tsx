@@ -90,7 +90,7 @@ export default function DashboardLayout() {
                     <img
                         src="/korex-logotipo.svg"
                         alt="KoreX"
-                        className="h-12 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                        className="kx-logo h-12 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
                     />
                 </div>
                 {/* Close button — mobile only */}

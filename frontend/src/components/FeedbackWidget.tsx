@@ -18,10 +18,10 @@ interface SystemContext {
 
 // ─── Bilingual Labels ──────────────────────────────────────
 const REPORT_TYPES_I18N: { value: ReportType; icon: typeof Bug; labelEn: string; labelEs: string; color: string }[] = [
-    { value: 'bug', icon: Bug, labelEn: 'Bug', labelEs: 'Bug', color: 'text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
-    { value: 'feature', icon: Sparkles, labelEn: 'Feature', labelEs: 'Función', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' },
-    { value: 'ui', icon: Palette, labelEn: 'UI Issue', labelEs: 'Error UI', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
-    { value: 'other', icon: HelpCircle, labelEn: 'Other', labelEs: 'Otro', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20' },
+    { value: 'bug', icon: Bug, labelEn: 'Bug', labelEs: 'Bug', color: 'text-red-700 dark:text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
+    { value: 'feature', icon: Sparkles, labelEn: 'Feature', labelEs: 'Función', color: 'text-amber-800 dark:text-amber-400 bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' },
+    { value: 'ui', icon: Palette, labelEn: 'UI Issue', labelEs: 'Error UI', color: 'text-purple-700 dark:text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
+    { value: 'other', icon: HelpCircle, labelEn: 'Other', labelEs: 'Otro', color: 'text-blue-700 dark:text-blue-400 bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/20' },
 ];
 
 const PRIORITIES_I18N: { value: Priority; emoji: string; labelEn: string; labelEs: string }[] = [
@@ -184,7 +184,7 @@ export default function FeedbackWidget() {
                         </p>
                         <button
                             onClick={() => setIsOpen(false)}
-                            className="text-sm text-amber-500 hover:text-amber-400 font-medium transition-colors"
+                            className="text-sm text-amber-700 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 font-medium transition-colors"
                         >
                             {isEs ? 'Cerrar' : 'Close'}
                         </button>
@@ -195,7 +195,7 @@ export default function FeedbackWidget() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                                    <Bug size={16} className="text-amber-500" />
+                                    <Bug size={16} className="text-amber-700 dark:text-amber-500" />
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-semibold">{isEs ? 'Enviar Comentario' : 'Send Feedback'}</h3>
@@ -205,7 +205,7 @@ export default function FeedbackWidget() {
                             <button
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-slate-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                                className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-slate-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
                             >
                                 <X size={14} />
                             </button>
@@ -246,7 +246,7 @@ export default function FeedbackWidget() {
                                         className={cn(
                                             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200',
                                             priority === value
-                                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-500'
+                                                ? 'border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-500'
                                                 : 'border-gray-200 dark:border-white/5 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/[0.02]'
                                         )}
                                     >
@@ -269,7 +269,7 @@ export default function FeedbackWidget() {
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border transition-colors',
                                     'bg-gray-50 dark:bg-white/[0.03] border-gray-200 dark:border-white/5',
-                                    'placeholder:text-gray-400 dark:placeholder:text-slate-600',
+                                    'placeholder:text-gray-500 dark:placeholder:text-slate-600',
                                     'focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40'
                                 )}
                             />
@@ -287,14 +287,14 @@ export default function FeedbackWidget() {
                                 className={cn(
                                     'w-full px-3 py-2 rounded-xl text-sm border resize-none transition-colors',
                                     'bg-gray-50 dark:bg-white/[0.03] border-gray-200 dark:border-white/5',
-                                    'placeholder:text-gray-400 dark:placeholder:text-slate-600',
+                                    'placeholder:text-gray-500 dark:placeholder:text-slate-600',
                                     'focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/40'
                                 )}
                             />
                         </div>
 
                         {/* Context info (auto-captured) */}
-                        <div className="flex items-center gap-2 text-[10px] text-gray-400 dark:text-slate-600">
+                        <div className="flex items-center gap-2 text-[10px] text-gray-600 dark:text-slate-600">
                             <AlertTriangle size={10} />
                             {isEs
                                 ? 'La página, navegador e info del dispositivo se incluirán automáticamente.'

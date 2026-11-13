@@ -28,6 +28,7 @@ import { Link } from 'react-router-dom';
 import { daysIn, debtColor, debtOn, type CalendarMonth, type DayDetail } from '@/lib/calendarSeries';
 import { toDayDetail } from '@/lib/calendarEvents';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+import { useIsDark } from '@/contexts/ThemeContext';
 import { DaySheet } from './DaySheet';
 
 const MONTHS = {
@@ -53,6 +54,7 @@ const DOW_LONG = { es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'v
 export function DebtCalendar({ months, maxDebt, paydays, live, compact, example }: DebtCalendarProps) {
     const { language } = useLanguage();
     const es = language === 'es';
+    const light = !useIsDark();
     const { formatMoney } = useFormatMoney();
     // Projections are estimates: show them rounded to the dollar ("≈ $23,900"), never with cents
     const approx = (n: number) => formatMoney(Math.round(n)).replace(/[.,]00$/, '');
@@ -168,14 +170,14 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                     const real = week.filter((c) => c.day !== null);
                     const tone = (i: number) => {
                         const c = week[i].day !== null ? week[i] : (i < 3 ? real[0] : real[real.length - 1]);
-                        return c.free ? 'rgb(52,211,153)' : debtColor(c.debt, maxDebt).background;
+                        return c.free ? 'rgb(52,211,153)' : debtColor(c.debt, maxDebt, light).background;
                     };
                     const band = `linear-gradient(90deg, ${week.map((_c, i) => `${tone(i)} ${((i + 0.5) / 7 * 100).toFixed(1)}%`).join(', ')})`;
                     return (
                         <div key={w} role="row" className="kx-cal-cell grid grid-cols-7 border-t border-black/15 first:border-t-0" style={{ background: band }}>
                             {week.map((c, i) => {
                                 if (c.day === null) return <span key={i} role="gridcell" className="aspect-square border-l border-black/10 first:border-l-0" />;
-                                const ink = c.free ? { color: '#052E1B' } : { color: debtColor(c.debt, maxDebt).color };
+                                const ink = c.free ? { color: '#052E1B' } : { color: debtColor(c.debt, maxDebt, light).color };
                                 const isToday = c.day === today.getDate() && mo.month === today.getMonth() && mo.year === today.getFullYear();
                                 const date = new Date(mo.year, mo.month, c.day);
                                 const marks = [

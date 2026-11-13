@@ -16,7 +16,7 @@ export default function NotFoundPage() {
                 <img
                     src="/korex-isotipo.svg"
                     alt="KoreX Raccoon"
-                    className="h-32 mx-auto opacity-60 drop-shadow-[0_0_40px_rgba(251,191,36,0.2)]"
+                    className="kx-logo h-32 mx-auto opacity-60 drop-shadow-[0_0_40px_rgba(251,191,36,0.2)]"
                 />
             </div>
 
@@ -54,7 +54,7 @@ export default function NotFoundPage() {
                 <img
                     src="/korex-logotipo.svg"
                     alt="KoreX"
-                    className="h-5 opacity-20"
+                    className="kx-logo h-5 opacity-20"
                 />
             </div>
 

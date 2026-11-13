@@ -46,6 +46,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 
 // ─── Hook ───────────────────────────────────────────────────────────
+/** true unless the light theme is on; safe outside the provider (dark is the default). */
+export function useIsDark(): boolean {
+    const ctx = useContext(ThemeContext);
+    return ctx ? ctx.isDark : true;
+}
+
 export function useTheme(): ThemeContextType {
     const ctx = useContext(ThemeContext);
     if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
