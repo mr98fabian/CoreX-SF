@@ -27,11 +27,16 @@ class CutIn(BaseModel):
     cut_date: date
     reported_balance: Decimal = PField(ge=0, max_digits=14, decimal_places=2)
     source: Literal["operador-ia", "manual"] = "manual"
+    # The statement's own minimum and due date. Omitted = keep what was stored.
+    statement_minimum: Optional[Decimal] = PField(default=None, ge=0, max_digits=14, decimal_places=2)
+    statement_due_date: Optional[date] = None
 
 
 def _out(c: CutHistory) -> dict:
     return {"id": c.id, "account_id": c.account_id, "cut_date": c.cut_date.isoformat(),
-            "reported_balance": float(c.reported_balance), "was_zero": c.was_zero, "source": c.source}
+            "reported_balance": float(c.reported_balance), "was_zero": c.was_zero, "source": c.source,
+            "statement_minimum": float(c.statement_minimum) if c.statement_minimum is not None else None,
+            "statement_due_date": c.statement_due_date.isoformat() if c.statement_due_date else None}
 
 
 def streak(session, user_id: str) -> Optional[int]:
@@ -80,6 +85,10 @@ async def record_cut(body: CutIn, user_id: str = Depends(require_scope("write:ac
         cut.reported_balance = body.reported_balance
         cut.was_zero = body.reported_balance == 0
         cut.source = body.source
+        if body.statement_minimum is not None:
+            cut.statement_minimum = body.statement_minimum
+        if body.statement_due_date is not None:
+            cut.statement_due_date = body.statement_due_date
         session.add(cut)
         session.commit()
         session.refresh(cut)

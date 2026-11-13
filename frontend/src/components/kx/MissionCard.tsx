@@ -7,14 +7,14 @@
 import { MoneyAmount } from '@/components/MoneyAmount';
 import { Section } from '@/components/kx';
 
-export type MissionType = 'corte' | 'estado' | 'prestamo' | 'avalancha' | 'faltante';
+export type MissionType = 'corte' | 'estado' | 'minimo' | 'prestamo' | 'avalancha' | 'faltante';
 export interface DailyMission {
     tipo: MissionType;
     cuenta: string;
     monto: number;
     fecha_accion: string;
     fecha_evento: string;
-    obligacion?: 'corte' | 'estado' | 'prestamo';
+    obligacion?: 'corte' | 'estado' | 'minimo' | 'prestamo';
     copy?: string;
 }
 export interface MissionResult { mision: DailyMission | null; faltante?: DailyMission | null; reserva: number; ataque: number; objetivo: string | null }
@@ -33,8 +33,8 @@ export function MissionCard({ mission, faltante, es }: { mission: DailyMission; 
     const X = mission.cuenta;
     const $ = <b className="kx-num font-semibold text-kx-amber-soft"><MoneyAmount value={mission.monto} /></b>;
     const noun = (t?: string) => es
-        ? ({ corte: 'el corte', estado: 'el estado', prestamo: 'el pago' } as Record<string, string>)[t ?? ''] ?? ''
-        : ({ corte: 'the cut of', estado: 'the statement of', prestamo: 'the payment of' } as Record<string, string>)[t ?? ''] ?? '';
+        ? ({ corte: 'el corte', estado: 'el estado', minimo: 'el mínimo', prestamo: 'el pago' } as Record<string, string>)[t ?? ''] ?? ''
+        : ({ corte: 'the cut of', estado: 'the statement of', minimo: 'the minimum of', prestamo: 'the payment of' } as Record<string, string>)[t ?? ''] ?? '';
 
     const [title, body] = (() => {
         switch (mission.tipo) {
@@ -44,6 +44,9 @@ export function MissionCard({ mission, faltante, es }: { mission: DailyMission; 
             case 'estado': return es
                 ? [`Paga el estado de la ${X}`, <>{$} antes del {fmt(mission.fecha_evento)}.</>]
                 : [`Pay the ${X} statement`, <>{$} before {fmt(mission.fecha_evento)}.</>];
+            case 'minimo': return es
+                ? [`Paga el mínimo de la ${X}`, <>{$} antes del {fmt(mission.fecha_evento)}, según tu estado de cuenta.</>]
+                : [`Pay the ${X} minimum`, <>{$} before {fmt(mission.fecha_evento)}, per your statement.</>];
             case 'prestamo': return es
                 ? [`Reserva el pago de la ${X}`, <>{$} para el {fmt(mission.fecha_evento)}.</>]
                 : [`Set aside the ${X} payment`, <>{$} for {fmt(mission.fecha_evento)}.</>];

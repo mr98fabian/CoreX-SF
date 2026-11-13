@@ -257,6 +257,10 @@ class CutHistory(SQLModel, table=True):
     reported_balance: Decimal = Field(default=0, max_digits=14, decimal_places=2)
     was_zero: bool = Field(default=False)
     source: str = Field(default="manual", max_length=12)  # operador-ia | manual
+    # The statement's own minimum and its due date (Fase B, safety): the mission never
+    # sets aside less than this for the current cycle. None = not loaded.
+    statement_minimum: Optional[Decimal] = Field(default=None, max_digits=14, decimal_places=2)
+    statement_due_date: Optional[date] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

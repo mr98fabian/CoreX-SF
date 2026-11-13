@@ -343,6 +343,8 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
             due_day=a.due_day or None, closing_day=a.closing_day or None,
             last_cut_date=cut.cut_date if cut else None,
             last_cut_reported=Decimal(str(cut.reported_balance)) if cut else None, paid_since_cut=paid,
+            statement_minimum=Decimal(str(cut.statement_minimum)) if cut and cut.statement_minimum is not None else None,
+            statement_due=cut.statement_due_date if cut else None,
         ))
     incomes, expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),

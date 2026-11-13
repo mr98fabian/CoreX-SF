@@ -338,14 +338,21 @@ def korex_add_goal_savings(goal: str, amount: float) -> dict:
 
 
 @mcp.tool()
-def korex_record_cut(account: str, cut_date: str, reported_balance: float) -> dict:
+def korex_record_cut(account: str, cut_date: str, reported_balance: float,
+                     statement_minimum: Optional[float] = None, statement_due_date: Optional[str] = None) -> dict:
     """Record what a debt reported at its statement cut (Corte en Cero ritual). `account` = id or name of a DEBT,
-    `cut_date` = YYYY-MM-DD of the cut, `reported_balance` = the statement balance (0 = corte en cero). Recording
-    the same card and date again updates it. Only with a screenshot or the user's written confirmation.
-    Scope: write:accounts."""
+    `cut_date` = YYYY-MM-DD of the cut, `reported_balance` = the statement balance (0 = corte en cero).
+    `statement_minimum` and `statement_due_date` (YYYY-MM-DD) = the minimum payment and due date printed on that
+    statement: send them whenever the statement shows them — KoreX then never sets aside less than that minimum.
+    Recording the same card and date again updates it (omitted fields keep their value). Only with a screenshot
+    or the user's written confirmation. Scope: write:accounts."""
     acc = _resolve_account(account)
-    return _call("POST", "/api/cuts", {"account_id": acc["id"], "cut_date": cut_date,
-                                       "reported_balance": reported_balance, "source": "operador-ia"})
+    body = {"account_id": acc["id"], "cut_date": cut_date, "reported_balance": reported_balance, "source": "operador-ia"}
+    if statement_minimum is not None:
+        body["statement_minimum"] = statement_minimum
+    if statement_due_date is not None:
+        body["statement_due_date"] = statement_due_date
+    return _call("POST", "/api/cuts", body)
 
 
 if __name__ == "__main__":
