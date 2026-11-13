@@ -236,6 +236,13 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                     <Link to="/dashboard/subscriptions" className="font-semibold text-kx-amber">{es ? 'ponles fecha' : 'add a date'}</Link>
                 </p>
             )}
+            {live && !compact && (events?.deudas_sin_fecha?.length ?? 0) > 0 && (
+                <p className="mt-1.5 text-[12px] text-kx-ink3" data-testid="cal-debt-undated">
+                    {es ? `${events!.deudas_sin_fecha.join(', ')}: sin fecha de pago cargada, su mínimo no aparece en ningún día · `
+                        : `${events!.deudas_sin_fecha.join(', ')}: no payment date on file, its minimum is not shown on any day · `}
+                    <Link to="/dashboard/accounts/manage" className="font-semibold text-kx-amber">{es ? 'cargar fecha' : 'add a date'}</Link>
+                </p>
+            )}
             <p className="mt-2 text-[11px] text-kx-ink3">
                 {example
                     ? (es ? 'Datos de ejemplo. Las cifras son estimaciones ilustrativas.' : 'Example data. Figures are illustrative estimates.')

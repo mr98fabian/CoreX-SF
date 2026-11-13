@@ -507,7 +507,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
  ? 'bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] text-kx-debt'
  : 'bg-[color-mix(in_srgb,var(--kx-amber)_10%,transparent)] text-kx-amber'
  }`}>{item.interest_rate}% APR</span>
-                                                    <span>• {t('cashflow.dueDay')} {item.day_of_month}</span>
+                                                    <span data-testid="debt-due">• {item.day_of_month ? `${t('cashflow.dueDay')} ${item.day_of_month}` : t('cashflow.noDueDay')}</span>
                                                 </div>
                                                 {item.debt_balance !== undefined && (
                                                     <div className={`text-xs mt-1 ${isLocked ? 'text-kx-debt' : 'text-kx-amber'}`}>

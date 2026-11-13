@@ -41,7 +41,7 @@ def _debt_account(acc) -> DebtAccount:
     """Build a DebtAccount from an Account ORM row."""
     return DebtAccount(
         name=acc.name, balance=acc.balance, interest_rate=acc.interest_rate,
-        min_payment=acc.min_payment or Decimal("0"), due_day=acc.due_day or 15,
+        min_payment=acc.min_payment or Decimal("0"), due_day=acc.due_day or None,  # no date loaded = never billed (U-11)
         closing_day=acc.closing_day or 0, debt_subtype=acc.debt_subtype or "",
         credit_limit=acc.credit_limit or Decimal("0"),
     )
@@ -419,5 +419,6 @@ def calendar_month(session, user_id: str, year: int, month: int, plan_limit: int
         "total_mes_entra": sum((x["total_entra"] for x in days), Decimal("0")),
         "vacio": not any(x["marcas"]["payday"] or x["marcas"]["cobro"] for x in days),
         "suscripciones_sin_fecha": len(undated),
+        "deudas_sin_fecha": [a.name for a in debts if not a.due_day],  # U-11: counted, never painted
         "etiqueta": "estimado",
     }
