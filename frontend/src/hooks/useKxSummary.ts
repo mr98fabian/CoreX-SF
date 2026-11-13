@@ -87,6 +87,8 @@ export function useKxSummary() {
         queryClient.invalidateQueries({ queryKey: ['credit-panel'] }),
         // the calendar's events (server) move with every payment and attack too
         queryClient.invalidateQueries({ queryKey: [CALENDAR_KEY] }),
+        // Inicio's chart (hooks/useVelocityCompare COMPARE_KEY; literal to avoid an import cycle)
+        queryClient.invalidateQueries({ queryKey: ['velocity-compare'] }),
     ]), [queryClient]);
 
 

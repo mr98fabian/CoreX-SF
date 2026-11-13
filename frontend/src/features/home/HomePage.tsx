@@ -1,7 +1,7 @@
 /**
  * Inicio (Fase 6, approved v7): state phrase first → ONE hero number (total
  * debt) → amber stripe with the debt-free date → three named sections:
- * HOY (the only active signal), TU AVANCE (calendar heat map), TUS DEUDAS EN 3
+ * HOY (the only active signal), TU AVANCE (plan vs minimums chart), TUS DEUDAS EN 3
  * COLORES (tap a color → Cuentas filtered). Details (daily interest, APRs,
  * minimums) live one tap away.
  */
@@ -17,7 +17,8 @@ import { MissionCard } from '@/components/kx/MissionCard';
 import { AmberStripe, BankHeader, HeroNumber, PaidStamp, Raccoon, Section, StatePhrase } from '@/components/kx';
 import { StampDrop } from '@/components/kx/motion';
 import { useJustPaid } from '@/hooks/useJustPaid';
-import { DebtCalendar } from '@/components/kx/DebtCalendar';
+import { useVelocityCompare } from '@/hooks/useVelocityCompare';
+import { CompareChart } from './CompareChart';
 import { HouseModule } from './HouseModule';
 import { DailyInterestLine } from './DailyInterestLine';
 import { LeagueBlock } from './LeagueBlock';
@@ -33,6 +34,7 @@ export default function HomePage() {
     const { formatMoney } = useFormatMoney();
     const navigate = useNavigate();
     const s = useKxSummary();
+    const compare = useVelocityCompare();
     const [showDetail, setShowDetail] = useState(false);
     const justPaid = useJustPaid(s.staged);
     const names = es ? MONTHS_ES : MONTHS_EN;
@@ -106,12 +108,10 @@ export default function HomePage() {
                 {/* HOY — the single active signal: the server's mission, same as the Plan */}
                 {s.mission && <MissionCard mission={s.mission} faltante={s.faltante} es={es} />}
 
-                {/* TU AVANCE — the calendar (heat map here; full piece one tap away) */}
-                {!noDebt && (
-                    <Section tone="neutral" bare title={es ? 'Tu avance · el color es tu deuda' : 'Your progress · color is your debt'}
-                        action={<Link to="/dashboard/calendar" className="flex items-center text-xs font-semibold text-kx-amber">{es ? 'Ver calendario' : 'Open calendar'}<ChevronRight className="h-4 w-4" /></Link>}>
-                        <DebtCalendar compact live months={s.months} maxDebt={s.totalDebt} />
-                    </Section>
+                {/* TU AVANCE — plan vs minimums only (GET /api/velocity/compare; the full calendar is one tap away) */}
+                {!noDebt && compare.data && compare.data.estado !== 'sin_deudas' && (
+                    <CompareChart data={compare.data} es={es}
+                        action={<Link to="/dashboard/calendar" className="flex items-center text-xs font-semibold text-kx-amber">{es ? 'Ver calendario' : 'Open calendar'}<ChevronRight className="h-4 w-4" /></Link>} />
                 )}
 
                 {/* TUS DEUDAS EN 3 COLORES — tap filters Cuentas */}

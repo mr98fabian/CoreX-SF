@@ -239,26 +239,104 @@ def calculate_debt_free_date(
             "interest_saved": Decimal('0'),
             "velocity_interest": Decimal('0'),
         }
-    
-    # 1. Standard Strategy (Min Payments Only)
-    # Minimums only, recalculated from the balance each month (what a card bills)
-    standard_sim = simulate_freedom_path(debts, Decimal('0'), roll_freed_payments=False, recalc_minimums=True, start=start)
 
-    # 2. Velocity Strategy (Min + Extra, freed payments roll)
-    velocity_sim = simulate_freedom_path(debts, extra_monthly, start=start)
-    
-    months_saved = standard_sim["total_months"] - velocity_sim["total_months"]
-    interest_saved = Decimal(str(standard_sim["total_interest_paid"])) - Decimal(str(velocity_sim["total_interest_paid"]))
-    
+    # Both routes come from compare_paths (one run of each strategy)
+    c = compare_paths(debts, extra_monthly, start)
     return {
-        "standard_months": standard_sim["total_months"],
-        "velocity_months": velocity_sim["total_months"],
-        "standard_date": standard_sim["freedom_date"],
-        "velocity_date": velocity_sim["freedom_date"],
-        "months_saved": max(0, months_saved),
-        "interest_saved": max(Decimal('0'), interest_saved).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        "standard_months": c["minimos"]["meses"],
+        "velocity_months": c["plan"]["meses"],
+        "standard_date": c["minimos"]["fecha_libre"] or c["minimos"]["fecha_fin_simulada"],
+        "velocity_date": c["plan"]["fecha_libre"],
+        "months_saved": c["ahorro"]["meses"],
+        "interest_saved": c["ahorro"]["intereses"],
         # Interest still paid following the plan (same simulation; read by /api/logros)
-        "velocity_interest": Decimal(str(velocity_sim["total_interest_paid"])).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP),
+        "velocity_interest": c["plan"]["interes_total"],
+    }
+
+
+SIM_MAX_MONTHS = 600  # simulator cap (_simulate_freedom_path)
+COMPARE_MIN_DOMAIN = 24
+
+
+def _years(months: int) -> Decimal:
+    return (Decimal(months) / Decimal(12)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
+
+
+def _points(timeline: List[Dict], today_balance: Decimal, today: date, upto: Optional[int] = None) -> List[Dict]:
+    """Month 0 = today's balance; month i = the simulator's month-end balance i."""
+    pts = [{"mes": 0, "fecha": today.isoformat(), "saldo": float(today_balance)}]
+    for i, snap in enumerate(timeline[:upto] if upto is not None else timeline, start=1):
+        pts.append({"mes": i, "fecha": snap["date"], "saldo": snap["total_balance"]})
+    return pts
+
+
+def compare_paths(
+    debts: List[DebtAccount],
+    extra_monthly: Decimal = Decimal('0'),
+    start: Optional[date] = None,
+    fuente_aporte: Optional[str] = None,
+) -> Dict:
+    """Plan vs minimums only (the Inicio chart). Runs EACH strategy of
+    simulate_freedom_path once; calculate_debt_free_date reads from here.
+
+    - plan: minimum + extra, freed payments roll (the user's plan route)
+    - minimos: minimums only, revolving minimums recalculated from the balance
+      each month (what the bank asks), no roll
+    The client computes nothing: every number and state comes from here.
+    All figures are ESTIMATES.
+    """
+    today = start or date.today()
+    deuda_hoy = sum((Decimal(str(d.balance)) for d in debts if d.balance > 0), Decimal('0')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    base = {"etiqueta": "estimado", "deuda_hoy": deuda_hoy}
+    if deuda_hoy <= 0:
+        return {**base, "estado": "sin_deudas", "dominio_meses": 0, "plan": None, "minimos": None,
+                "ahorro": {"intereses": Decimal('0'), "meses": 0, "anios": Decimal('0'), "es_minimo": False}}
+
+    min_sim = simulate_freedom_path(debts, Decimal('0'), roll_freed_payments=False, recalc_minimums=True, start=start)
+    plan_sim = simulate_freedom_path(debts, extra_monthly, start=start)
+
+    q = lambda x: Decimal(str(x)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)  # noqa: E731
+    plan_tope = plan_sim["total_months"] >= SIM_MAX_MONTHS and plan_sim["timeline"][-1]["total_balance"] > 0
+    min_tope = min_sim["total_months"] >= SIM_MAX_MONTHS and min_sim["timeline"][-1]["total_balance"] > 0
+    dominio = max(COMPARE_MIN_DOMAIN, 2 * plan_sim["total_months"])
+    meses_ahorro = max(0, min_sim["total_months"] - plan_sim["total_months"])
+    # same quantization as before the refactor (difference first, then round)
+    intereses_ahorro = max(Decimal('0'), Decimal(str(min_sim["total_interest_paid"])) - Decimal(str(plan_sim["total_interest_paid"]))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    estado = "sin_ahorro" if meses_ahorro == 0 and intereses_ahorro == 0 else "ok"
+    return {
+        **base,
+        "estado": estado,
+        "dominio_meses": dominio,
+        "plan": {
+            "meses": plan_sim["total_months"],
+            "anios": _years(plan_sim["total_months"]),
+            "fecha_libre": None if plan_tope else plan_sim["freedom_date"],
+            "tope_simulador": plan_tope,
+            "interes_total": q(plan_sim["total_interest_paid"]),
+            "aporte_mensual": q(extra_monthly),
+            "fuente_aporte": fuente_aporte,
+            "puntos": _points(plan_sim["timeline"], deuda_hoy, today),
+        },
+        "minimos": {
+            "meses": min_sim["total_months"],
+            "anios": _years(min_sim["total_months"]),
+            "fecha_libre": None if min_tope else min_sim["freedom_date"],
+            # the last month the simulator reached (only for legacy standard_date; never shown)
+            "fecha_fin_simulada": min_sim["freedom_date"],
+            "anio_libre": None if min_tope else int(min_sim["freedom_date"][:4]),
+            "tope_simulador": min_tope,
+            "cortado": min_sim["total_months"] > dominio,
+            "interes_total": q(min_sim["total_interest_paid"]),
+            "puntos": _points(min_sim["timeline"], deuda_hoy, today, upto=dominio),
+        },
+        "ahorro": {
+            "intereses": intereses_ahorro,
+            "meses": meses_ahorro,
+            "anios": _years(meses_ahorro),
+            # minimums hit the simulator cap: the real saving is LARGER than this
+            "es_minimo": min_tope,
+        },
     }
 
 
