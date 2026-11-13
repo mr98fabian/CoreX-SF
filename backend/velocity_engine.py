@@ -80,7 +80,7 @@ class DebtAccount:
     balance: Decimal
     interest_rate: Decimal  # Annual APR as percentage (e.g., 24.99)
     min_payment: Decimal
-    due_day: int = 15
+    due_day: Optional[int] = None  # None = no payment date loaded: never billed on any day
     closing_day: int = 0  # Statement closing day (0 = not set)
     debt_subtype: str = ""  # credit_card, heloc, auto_loan, mortgage, etc.
     credit_limit: Decimal = Decimal('0')  # For revolving accounts
@@ -788,7 +788,7 @@ def generate_action_plan(
                 d for d in sim_debts
                 if d.balance > 0
                 and d.is_revolving
-                and d.due_day > 0
+                and (d.due_day or 0) > 0
                 and _days_until_due(d.due_day, current) <= 25
             ]
             # Sort: smallest balance first (kill the most cards possible)
@@ -1787,7 +1787,7 @@ def detect_float_kill_opportunities(
             continue
         if not debt.is_revolving:
             continue
-        if debt.due_day <= 0:
+        if (debt.due_day or 0) <= 0:
             continue
         
         days_left = _days_until_due(debt.due_day, today)
@@ -1849,11 +1849,11 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
     for debt in debts:
         if not debt.is_revolving:
             continue
-        if debt.closing_day <= 0 and debt.due_day <= 0:
+        if debt.closing_day <= 0 and (debt.due_day or 0) <= 0:
             continue
         
         closing_day = debt.closing_day
-        due_day = debt.due_day
+        due_day = debt.due_day or 0
         current_day = today.day
         
         # ── Calculate grace period length ──
@@ -1863,7 +1863,7 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
             else:
                 grace_days = (30 - closing_day) + due_day  # wraps month
         else:
-            grace_days = 25  # default assumption
+            grace_days = 25  # assumption, labelled estimado below
         
         # ── Determine current position in billing cycle ──
         if closing_day > 0:
@@ -1934,8 +1934,9 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
         intelligence.append({
             "name": debt.name,
             "closing_day": closing_day,
-            "due_day": due_day,
+            "due_day": due_day or None,
             "grace_period_days": grace_days,
+            "grace_period_estimado": not (closing_day > 0 and due_day > 0),
             "cycle_position": cycle_position,
             "days_until_close": days_until_close,
             "days_until_due": days_to_due,

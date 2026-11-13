@@ -49,7 +49,8 @@ async def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
                 "id": -acc.id, "user_id": user_id, "name": f"Deuda: {acc.name}",
                 "amount": float(account_plan_minimum(acc)),
                 "category": "expense", "frequency": "monthly",
-                "day_of_month": acc.due_day or 15, "day_of_week": None,
+                "day_of_month": acc.due_day or None, "day_of_week": None,
+                "sin_fecha": not acc.due_day,  # no payment date loaded: never painted on a made-up day
                 "date_specific_1": None, "date_specific_2": None, "month_of_year": None,
                 "is_variable": False, "is_debt_virtual": True,
                 "source_account_id": acc.id,
@@ -158,7 +159,7 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
                     events[d_str].append({"name": item.name, "amount": amt if item.category == "income" else -amt, "category": item.category})
             last_day = calendar.monthrange(d.year, d.month)[1]
             for acc in accounts:
-                if acc.type == "debt" and acc.balance > 0 and d.day == min(acc.due_day or 15, last_day):
+                if acc.type == "debt" and acc.balance > 0 and acc.due_day and d.day == min(acc.due_day, last_day):
                     events[d_str].append({"name": f"Deuda: {acc.name}", "amount": -float(account_plan_minimum(acc)), "category": "debt_payment"})
 
         balances: dict[str, float] = {today.isoformat(): liquid_cash}

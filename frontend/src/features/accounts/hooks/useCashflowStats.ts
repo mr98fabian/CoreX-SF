@@ -6,7 +6,7 @@ export interface CashflowItem {
     name: string;
     amount: number;
     category: 'income' | 'expense';
-    day_of_month: number;
+    day_of_month: number | null;
     frequency: string;
     is_variable: boolean;
     day_of_week?: number;

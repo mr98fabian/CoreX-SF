@@ -38,7 +38,7 @@ const busy = day(7, {
 });
 const EVENTS: CalendarMonthEvents = {
     mes: iso(1).slice(0, 7), dias: Array.from({ length: n }, (_, i) => (i + 1 === 7 ? busy : day(i + 1))),
-    total_mes_sale: 1677.11, total_mes_entra: 4500, vacio: false, suscripciones_sin_fecha: 2, etiqueta: 'estimado',
+    total_mes_sale: 1677.11, total_mes_entra: 4500, vacio: false, suscripciones_sin_fecha: 2, deudas_sin_fecha: [], etiqueta: 'estimado',
 };
 
 let host: HTMLDivElement | null = null;

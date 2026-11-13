@@ -42,6 +42,8 @@ import { useToast } from "@/components/ui/use-toast";
 const REVOLVING_SUBTYPES = ["credit_card", "heloc", "uil"];
 const inferInterestType = (subtype: string) => REVOLVING_SUBTYPES.includes(subtype) ? "revolving" : "fixed";
 
+const emptyToUndefined = (v: unknown) => (v === '' || v === null || v === undefined ? undefined : v);
+
 // Validation Schema
 const accountFormSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -50,8 +52,9 @@ const accountFormSchema = z.object({
     interest_rate: z.coerce.number().min(0).default(0),
     payment_frequency: z.enum(["monthly", "biweekly", "weekly"]).default("monthly"),
     min_payment: z.coerce.number().min(0).default(0),
-    due_day: z.coerce.number().min(1).max(31).optional(),
-    closing_day: z.coerce.number().min(1).max(31).optional(),
+    // Optional: empty = no date on file (never a made-up day, U-11)
+    due_day: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(31).optional()),
+    closing_day: z.preprocess(emptyToUndefined, z.coerce.number().int().min(1).max(31).optional()),
     credit_limit: z.coerce.number().min(0).optional(),
     // Loan Classification — interest_type is auto-inferred from debt_subtype
     debt_subtype: z.enum(["credit_card", "heloc", "uil", "auto_loan", "mortgage", "personal_loan", "student_loan"]).default("credit_card"),
@@ -121,8 +124,8 @@ export default function AccountsPage() {
             balance: 0,
             interest_rate: 0,
             min_payment: 0,
-            due_day: 1,
-            closing_day: 15,
+            due_day: undefined,
+            closing_day: undefined,
             payment_frequency: "monthly",
             debt_subtype: "credit_card",
         },
@@ -624,7 +627,7 @@ export default function AccountsPage() {
                                                         <FormItem>
                                                             <FormLabel className="text-kx-ink2 ">{t("accounts.closingDay")}</FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="15" {...field} className="bg-kx-surface border-kx-line text-kx-ink h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder="—" {...field} value={field.value ?? ''} className="bg-kx-surface border-kx-line text-kx-ink h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -635,9 +638,9 @@ export default function AccountsPage() {
                                                     name="due_day"
                                                     render={({ field }) => (
                                                         <FormItem>
-                                                            <FormLabel className="text-kx-ink2 ">{t("accounts.dueDay")}</FormLabel>
+                                                            <FormLabel className="text-kx-ink2 ">{t("accounts.dueDay")} <span className="text-kx-ink3 font-normal">({t("accounts.optional").toLowerCase()})</span></FormLabel>
                                                             <FormControl>
-                                                                <Input type="number" min="1" max="31" placeholder="1" {...field} className="bg-kx-surface border-kx-line text-kx-ink h-11" />
+                                                                <Input type="number" min="1" max="31" placeholder={t("accounts.dueDayPlaceholder")} {...field} value={field.value ?? ''} data-testid="due-day-input" className="bg-kx-surface border-kx-line text-kx-ink h-11" />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -946,7 +949,7 @@ export default function AccountsPage() {
                                                 </div>
                                                 <div>
                                                     <span className="block text-kx-ink3 uppercase text-[10px] font-bold tracking-wider mb-1">{t("accounts.dueDate")}</span>
-                                                    <span className="text-kx-ink font-mono text-sm">{t("accounts.day")} {acc.due_day}</span>
+                                                    <span className="text-kx-ink font-mono text-sm">{acc.due_day ? `${t("accounts.day")} ${acc.due_day}` : t("cashflow.noDueDay")}</span>
                                                 </div>
                                             </div>
 

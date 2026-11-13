@@ -34,6 +34,8 @@ export interface CalendarMonthEvents {
     total_mes_entra: number;
     vacio: boolean;
     suscripciones_sin_fecha: number;
+    /** debts with balance and no due_day: never painted on a made-up day (U-11) */
+    deudas_sin_fecha: string[];
     etiqueta: string;
 }
 
