@@ -167,7 +167,7 @@ export default function ActivityPage() {
                         <div className="flex flex-wrap gap-2" role="tablist" aria-label={es ? 'Filtrar actividad' : 'Filter activity'}>
                             {([['all', es ? 'Todo' : 'All'], ['payment', es ? 'Pagos' : 'Payments'], ['income', es ? 'Ingresos' : 'Income'], ['plan', es ? 'Plan' : 'Plan'], ['ai', es ? 'Tu IA' : 'Your AI']] as const).map(([id, label]) => (
                                 <button key={id} role="tab" aria-selected={filter === id} onClick={() => setFilter(id)}
-                                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${filter === id ? 'border-kx-amber bg-kx-amber text-[#111418]' : 'border-[#263449] bg-kx-surface text-kx-ink2'}`}>
+                                    className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold ${filter === id ? 'border-kx-amber bg-kx-amber text-kx-on-amber' : 'border-kx-line bg-kx-surface text-kx-ink2'}`}>
                                     {label}
                                 </button>
                             ))}

@@ -280,7 +280,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                                                 key={day}
                                                 type="button"
                                                 variant={newItem.day_of_week === idx ? "default" : "outline"}
-                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-kx-amber hover:bg-kx-amber text-[#111418] border-kx-amber' : 'bg-kx-raised border-kx-line text-kx-ink2 hover:text-kx-ink hover:bg-kx-surface'}`}
+                                                className={`h-9 w-9 p-0 ${newItem.day_of_week === idx ? 'bg-kx-amber hover:bg-kx-amber text-kx-on-amber border-kx-amber' : 'bg-kx-raised border-kx-line text-kx-ink2 hover:text-kx-ink hover:bg-kx-surface'}`}
                                                 onClick={() => setNewItem({ ...newItem, day_of_week: idx })}
                                             >
                                                 {day[0]}
@@ -548,7 +548,7 @@ export function CashflowManager({ refreshKey = 0, lockedIds = new Set<number>(),
                         <AlertDialogCancel className="border-kx-line hover:bg-kx-raised text-kx-ink ">
                             {t('accounts.cancel') || 'Cancelar'}
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteItem} className="bg-kx-debt hover:bg-kx-debt text-[#111418] shadow-lg ">
+                        <AlertDialogAction onClick={confirmDeleteItem} className="bg-kx-debt hover:bg-kx-debt text-kx-on-amber shadow-lg ">
                             {t('cashflow.deleteConfirmAction') || 'Sí, Eliminar'}
                         </AlertDialogAction>
                     </AlertDialogFooter>

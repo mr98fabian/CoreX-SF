@@ -127,7 +127,7 @@ export default function SettingsHome() {
                                 {grantText ?? (plan ? `${limitText} · ${plan.ai ? (es ? 'con IA conectada' : 'AI connected') : (es ? 'sin IA' : 'no AI')}` : (fallbackText ?? (es ? 'Cargando tu plan…' : 'Loading your plan…')))}
                             </p>
                         </div>
-                        {!status?.checkout_hidden && <Link to="/dashboard/settings/plans" className="flex-none rounded-xl bg-kx-amber px-3.5 py-2 text-xs font-bold text-[#111418]">
+                        {!status?.checkout_hidden && <Link to="/dashboard/settings/plans" className="flex-none rounded-xl bg-kx-amber px-3.5 py-2 text-xs font-bold text-kx-on-amber">
                             {plan?.id === 'starter' ? (es ? 'Ver planes' : 'See plans') : (es ? 'Cambiar' : 'Change')}
                         </Link>}
                     </div>

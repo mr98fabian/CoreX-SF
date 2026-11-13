@@ -1090,7 +1090,7 @@ export default function SettingsPage() {
                             <Button
                                 onClick={handleApplyPromo}
                                 disabled={!promoCode.trim() || promoStatus === 'loading'}
-                                className="bg-kx-amber text-[#111418] font-semibold px-6"
+                                className="bg-kx-amber text-kx-on-amber font-semibold px-6"
                             >
                                 {promoStatus === 'loading' ? (
                                     <RefreshCw size={14} className="animate-spin" />

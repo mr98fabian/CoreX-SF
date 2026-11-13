@@ -173,7 +173,7 @@ export default function GoalsPage() {
                                         <form onSubmit={submitSavings} className="mt-3 flex gap-2">
                                             <input autoFocus data-testid="savings-amount" type="number" inputMode="decimal" min="0" step="0.01" value={saving.amount} onChange={(e) => setSaving({ id: g.id, amount: e.target.value })}
                                                 placeholder="$0.00" className={`${input} kx-num`} />
-                                            <button type="submit" disabled={busy} className="kx-press flex-none rounded-xl bg-kx-amber px-4 text-sm font-bold text-[#111418]">{es ? 'Sumar' : 'Add'}</button>
+                                            <button type="submit" disabled={busy} className="kx-press flex-none rounded-xl bg-kx-amber px-4 text-sm font-bold text-kx-on-amber">{es ? 'Sumar' : 'Add'}</button>
                                         </form>
                                     ) : (
                                         <button data-testid="add-savings" onClick={() => setSaving({ id: g.id, amount: '' })} className="kx-press mt-3 text-[13px] font-semibold text-kx-amber">+ {es ? 'Registrar ahorro' : 'Record saving'}</button>
@@ -189,7 +189,7 @@ export default function GoalsPage() {
                         <p className="text-[14px] text-kx-ink">{es ? `¿Borrar la meta "${confirmDelete.name}"? No se puede deshacer.` : `Delete the goal "${confirmDelete.name}"? This can't be undone.`}</p>
                         <div className="mt-3 flex gap-2">
                             <button onClick={() => setConfirmDelete(null)} className="kx-press flex-1 rounded-xl border border-kx-line py-2.5 text-sm font-semibold text-kx-ink2">{es ? 'Cancelar' : 'Cancel'}</button>
-                            <button data-testid="confirm-delete-yes" onClick={doDelete} disabled={busy} className="kx-press flex-1 rounded-xl bg-kx-debt py-2.5 text-sm font-bold text-[#111418]">{es ? 'Borrar' : 'Delete'}</button>
+                            <button data-testid="confirm-delete-yes" onClick={doDelete} disabled={busy} className="kx-press flex-1 rounded-xl bg-kx-debt py-2.5 text-sm font-bold text-kx-on-amber">{es ? 'Borrar' : 'Delete'}</button>
                         </div>
                     </div>
                 )}

@@ -14,7 +14,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { apiFetch } from '@/lib/api';
 import { MoneyAmount } from '@/components/MoneyAmount';
-import { AmberRule, BankHeader, HeroNumber, Section } from '@/components/kx';
+import { AmberRule, BankHeader, HeroNumber, Raccoon, Section } from '@/components/kx';
 
 export interface AnalyticsV2 {
     estado: 'ok' | 'vacio';
@@ -88,6 +88,7 @@ export default function AnalyticsPage() {
         return shell(
             <Section tone="amber" title={es ? 'Tu análisis empieza con tus recurrentes' : 'Your analysis starts with your recurring items'}>
                 <div data-testid="analytics-empty" data-motivo={data.motivo ?? ''}>
+                    <Raccoon moment="empty" className="mb-2" />
                     <p className="text-sm text-kx-ink2">
                         {noItems
                             ? (es ? 'Carga tus ingresos y gastos fijos (sueldo, renta, luz, súper…) y KoreX te muestra a dónde va tu dinero cada mes.' : 'Add your income and fixed expenses (salary, rent, utilities, groceries…) and KoreX shows you where your money goes each month.')
@@ -95,7 +96,7 @@ export default function AnalyticsPage() {
                                 ? (es ? 'Ya tienes tu ingreso. Agrega tus gastos fijos (renta, luz, súper…) para ver a dónde se va.' : 'Your income is in. Add your fixed expenses (rent, utilities, groceries…) to see where it goes.')
                                 : (es ? 'Ya tienes gastos cargados. Agrega tu ingreso para ver cuánto te queda cada mes.' : 'Your expenses are in. Add your income to see what you keep each month.')}
                     </p>
-                    <Link to={CASHFLOW_ROUTE} data-testid="analytics-cta" className="mt-4 inline-flex items-center rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-[#111418]">
+                    <Link to={CASHFLOW_ROUTE} data-testid="analytics-cta" className="mt-4 inline-flex items-center rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-kx-on-amber">
                         {noItems ? (es ? 'Cargar mis recurrentes' : 'Add my recurring items') : noSpend ? (es ? 'Agregar mis gastos' : 'Add my expenses') : (es ? 'Agregar mi ingreso' : 'Add my income')}
                         <ChevronRight className="ml-1 h-4 w-4" />
                     </Link>
@@ -145,7 +146,7 @@ export default function AnalyticsPage() {
                                 <span className="kx-num text-kx-ink2"><MoneyAmount value={bar.monto} /></span>
                             </div>
                             <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-kx-raised">
-                                <div className="h-full rounded-full bg-kx-amber" style={{ width: `${Math.max(2, Math.min(100, bar.pct))}%` }} />
+                                <div className="kx-fill h-full rounded-full bg-kx-amber" style={{ width: `${Math.max(2, Math.min(100, bar.pct))}%` }} />
                             </div>
                         </li>
                     ))}

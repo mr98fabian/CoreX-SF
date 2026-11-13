@@ -460,7 +460,7 @@ export default function ActionPlanPage() {
                             </AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleConfirmExecute}
-                                className="bg-kx-paid hover:bg-kx-paid text-[#111418] border-0"
+                                className="bg-kx-paid hover:bg-kx-paid text-kx-on-amber border-0"
                             >
                                 <CheckCircle2 size={16} className="mr-1.5" />
                                 {t('actionPlan.yesExecuted')}
@@ -505,14 +505,14 @@ export default function ActionPlanPage() {
                             onClick={() => setMonthOffset(prev => Math.max(prev - 1, 0))}
                             disabled={monthOffset === 0}
                             aria-label={language === 'es' ? 'Mes anterior' : 'Previous month'}
-                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
+                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-kx-line bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
                         >
                             <ChevronLeft size={18} />
                         </button>
                         <div className="flex items-baseline gap-2">
                             <span className="font-editorial whitespace-nowrap text-[21px] leading-none text-kx-ink">{monthLabel}</span>
                             {monthOffset === 0 && (
-                                <span className="kx-tech rounded-sm bg-kx-amber px-1.5 text-[10px] font-bold uppercase leading-[16px] text-[#111418]">
+                                <span className="kx-tech rounded-sm bg-kx-amber px-1.5 text-[10px] font-bold uppercase leading-[16px] text-kx-on-amber">
                                     {t('actionPlan.current')}
                                 </span>
                             )}
@@ -521,7 +521,7 @@ export default function ActionPlanPage() {
                             onClick={() => setMonthOffset(prev => Math.min(prev + 1, 1))}
                             disabled={monthOffset >= 1}
                             aria-label={language === 'es' ? 'Mes siguiente' : 'Next month'}
-                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
+                            className="kx-press flex h-10 w-10 items-center justify-center rounded-full border border-kx-line bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber"
                         >
                             <ChevronRight size={18} />
                         </button>
@@ -581,7 +581,7 @@ export default function ActionPlanPage() {
                                         </span>
                                     );
                                     const todayMark = isToday && (
-                                        <span className="kx-tech rounded-sm bg-kx-amber px-1 text-[9px] font-bold uppercase leading-[14px] text-[#111418]">{t('actionPlan.today')}</span>
+                                        <span className="kx-tech rounded-sm bg-kx-amber px-1 text-[9px] font-bold uppercase leading-[14px] text-kx-on-amber">{t('actionPlan.today')}</span>
                                     );
                                     const impact = m.type === 'attack' && m.daily_interest_saved > 0 && (
                                         <>
@@ -597,7 +597,7 @@ export default function ActionPlanPage() {
                                             disabled={isExecuting}
                                             onClick={() => handleRequestExecute(m)}
                                             aria-label={t('actionPlan.tableExec')}
-                                            className={`kx-press flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber ${isToday ? 'bg-kx-amber text-[#111418]' : 'border border-[#263449] bg-kx-raised text-kx-ink2'}`}
+                                            className={`kx-press flex h-8 w-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber ${isToday ? 'bg-kx-amber text-kx-on-amber' : 'border border-kx-line bg-kx-raised text-kx-ink2'}`}
                                         >
                                             {isExecuting ? <Loader2 size={14} className="animate-spin" /> : <Play size={12} />}
                                         </button>
@@ -712,7 +712,7 @@ export default function ActionPlanPage() {
                                 <SlidersHorizontal size={14} strokeWidth={1.75} />
                                 {language === 'es' ? 'Filtros' : 'Filters'}
                                 {activeFilterCount > 0 && (
-                                    <span className="kx-num flex h-5 w-5 items-center justify-center rounded-full bg-kx-amber text-[10px] font-bold text-[#111418]">{activeFilterCount}</span>
+                                    <span className="kx-num flex h-5 w-5 items-center justify-center rounded-full bg-kx-amber text-[10px] font-bold text-kx-on-amber">{activeFilterCount}</span>
                                 )}
                             </button>
                         </div>

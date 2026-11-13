@@ -66,6 +66,10 @@ module.exports = {
                 kx: {
                     bg: "var(--kx-bg)",
                     surface: "var(--kx-surface)",
+                    surface2: "var(--kx-surface-2)",
+                    sheet: "var(--kx-sheet)",
+                    "on-amber": "var(--kx-on-amber)",
+                    "amber-text": "var(--kx-amber-text)",
                     raised: "var(--kx-raised)",
                     line: "var(--kx-line)",
                     ink: "var(--kx-ink)",

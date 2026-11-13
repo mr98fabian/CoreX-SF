@@ -58,7 +58,7 @@ export default function MoneyClockPage() {
                                 {es ? 'Para saber cuánto te sobra cada día, primero registra lo que ganas (y lo que gastas). Sin ingreso no hay cifra honesta que mostrar.'
                                     : "To know what's left each day, first record what you earn (and what you spend). Without income there's no honest figure to show."}
                             </p>
-                            <Link to="/dashboard/accounts/manage" className="kx-press mt-4 block rounded-2xl bg-kx-amber py-3 text-center text-[15px] font-bold text-[#111418]">
+                            <Link to="/dashboard/accounts/manage" className="kx-press mt-4 block rounded-2xl bg-kx-amber py-3 text-center text-[15px] font-bold text-kx-on-amber">
                                 {es ? 'Registrar mi ingreso' : 'Record my income'}
                             </Link>
                         </div>
@@ -81,7 +81,7 @@ export default function MoneyClockPage() {
                         <div role="tablist" aria-label={es ? 'Periodo' : 'Period'} className="grid grid-cols-4 gap-1 rounded-2xl border border-kx-line bg-kx-surface p-1">
                             {PERIODS.map((x) => (
                                 <button key={x.id} role="tab" aria-selected={period === x.id} data-testid={`period-${x.id}`} onClick={() => setPeriod(x.id)}
-                                    className={`kx-press rounded-xl py-2 text-[13px] font-semibold transition-colors ${period === x.id ? 'bg-kx-amber text-[#111418]' : 'text-kx-ink2 hover:text-kx-ink'}`}>
+                                    className={`kx-press rounded-xl py-2 text-[13px] font-semibold transition-colors ${period === x.id ? 'bg-kx-amber text-kx-on-amber' : 'text-kx-ink2 hover:text-kx-ink'}`}>
                                     {es ? x.es : x.en}
                                 </button>
                             ))}

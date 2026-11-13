@@ -324,7 +324,7 @@ export default function LoginPage() {
                         <button
                             onClick={() => switchView('signin')}
                             className="w-full py-3 rounded-xl font-semibold text-sm
-                                bg-kx-amber text-[#111418]
+                                bg-kx-amber text-kx-on-amber
                                   hover:shadow-lg 
                                 active:scale-[0.98] transition-all duration-300"
                         >
@@ -399,7 +399,7 @@ export default function LoginPage() {
                                     type="button"
                                     onClick={() => switchView(tab)}
                                     className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
- ? 'bg-kx-amber text-[#111418] shadow-md '
+ ? 'bg-kx-amber text-kx-on-amber shadow-md '
  : 'text-kx-ink2 hover:text-kx-ink'
  }`}
                                 >
@@ -594,7 +594,7 @@ export default function LoginPage() {
                             type="submit"
                             disabled={isSubmitting}
                             className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300
-                                bg-kx-amber text-[#111418]
+                                bg-kx-amber text-kx-on-amber
                                   hover:shadow-lg 
                                 active:scale-[0.98]
                                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"

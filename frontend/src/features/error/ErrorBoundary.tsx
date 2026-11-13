@@ -106,7 +106,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <div className="relative z-10 flex gap-4 mt-8">
                     <button
                         onClick={this.handleReload}
-                        className="px-6 py-3 bg-kx-amber text-[#111418] font-semibold rounded-lg transition-all duration-300 shadow-lg "
+                        className="px-6 py-3 bg-kx-amber text-kx-on-amber font-semibold rounded-lg transition-all duration-300 shadow-lg "
                     >
                         Ir al Inicio
                     </button>

@@ -21,18 +21,25 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
  */
 :root,
 .dark {
-  --kx-bg: #020617;
-  --kx-surface: #0F172A;
-  --kx-raised: #131E33;
-  --kx-line: #1E293B;
-  --kx-line-soft: rgba(255, 255, 255, 0.06);
-  --kx-ink: #F5F2EC;   /* blanco hueso: warm ink (2.5D, 2026-11); --kx-warm stays the stamp orange */
-  --kx-ink-2: #94A3B8;
-  --kx-ink-3: #77869D;  /* AA ≥ 4.5 on bg/surface/raised (was #64748B, 3.5–4.2) */
+  /* "Noche con luz" (2026-11-12): surfaces separate by LUMINANCE (steps ≥ 1.14:1,
+     before 1.07–1.13 — everything read as one plane). WCAG guards: noche.test.ts */
+  --kx-bg: #020617;        /* level 0 · canvas — also the system bars, never changes */
+  --kx-surface: #111C33;   /* level 1 · panels */
+  --kx-surface-2: #1A2742; /* level 2 · the mission, what is in front */
+  --kx-raised: #22314F;    /* level 3 · sheets, controls, tracks */
+  --kx-sheet: #22314F;
+  --kx-line: #2C3D5E;
+  --kx-line-soft: rgba(255, 255, 255, 0.07);
+  --kx-ink: #F5F2EC;   /* blanco hueso */
+  --kx-ink-2: #AEB9CB;
+  --kx-ink-3: #8C9AB0;   /* approved #8A98AE gave 4.43:1 on level 3; +2 per channel = 4.55 */
 
-  --kx-amber: #F59E0B;
+  --kx-amber: #F59E0B;        /* fills: stripe, buttons, bars */
   --kx-amber-soft: #FBBF24;
-  --kx-stripe: linear-gradient(100deg, #FDE68A 0%, #F59E0B 45%, #D97706 80%, #B45309 100%);
+  --kx-amber-text: #FBBF24;   /* amber AS TEXT on dark surfaces */
+  --kx-on-amber: #1C1206;     /* ink ON amber (stripe, amber buttons): 5.8–11:1 */
+  --kx-halo: rgba(245, 158, 11, 0.16);
+  --kx-stripe: linear-gradient(100deg, #FDE68A 0%, #FBBF24 30%, #F59E0B 62%, #D97706 100%);
 
   /* Stage triad — also separated by luminance so it reads without hue */
   --kx-debt: #F87171;
@@ -71,16 +78,20 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
   --kx-radius-pill: 999px;
 }
 
-/* Light theme: secondary, derived from the same system (same structure, stripe and stages) */
+/* Light theme: warm paper with its OWN tokens (not derived from the dark) */
 :root:not(.dark) .kx-scope {
-  --kx-bg: #F8FAFC;
+  --kx-bg: #F3EFE7;
   --kx-surface: #FFFFFF;
-  --kx-raised: #F1F5F9;
-  --kx-line: #E2E8F0;
-  --kx-line-soft: rgba(15, 23, 42, 0.07);
-  --kx-ink: #0F172A;
-  --kx-ink-2: #475569;
-  --kx-ink-3: #617188;  /* AA ≥ 4.5 (was 4.34 on raised) */
+  --kx-surface-2: #FBF8F2;
+  --kx-raised: #EFE9DD;    /* controls and tracks on paper */
+  --kx-sheet: #FFFFFF;
+  --kx-line: #DDD5C5;
+  --kx-line-soft: rgba(60, 40, 10, 0.08);
+  --kx-ink: #1B1F2A;
+  --kx-ink-2: #465061;
+  --kx-ink-3: #5F6876;
+  --kx-amber-text: #9A4A06;   /* #F59E0B as text on paper was 2.05:1 */
+  --kx-halo: rgba(245, 158, 11, 0.20);
   --kx-debt: #B91C1C;
   --kx-debt-chip-ink: #991B1B;
   --kx-almost: #A16207;
@@ -240,18 +251,23 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
    transform/opacity — the one documented exception is .kx-stage-bar `width`
    (one bar, once per data change: the green advances). */
 :root, .dark {
-  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.045) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.55);
-  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.65);
-  --kx-elev-3: 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 -2px 6px rgba(0, 0, 0, 0.25), 0 -18px 48px -16px rgba(0, 0, 0, 0.7);
-  --kx-light: radial-gradient(120% 70% at 50% -10%, rgba(255, 247, 230, 0.07) 0%, rgba(255, 247, 230, 0.025) 40%, transparent 70%);
+  /* Dark: the level's luminance does the separating; a 1px bright top edge catches
+     the light; the shadow only reinforces. */
+  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.09) inset, 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.55);
+  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 2px 4px rgba(0, 0, 0, 0.35), 0 14px 32px -12px rgba(0, 0, 0, 0.65);
+  --kx-elev-3: 0 1px 0 rgba(255, 255, 255, 0.13) inset, 0 -2px 6px rgba(0, 0, 0, 0.25), 0 -18px 48px -16px rgba(0, 0, 0, 0.7);
+  /* centred inside its box so it fades on every side (at -10% it drew a hard top edge) */
+  --kx-light: radial-gradient(90% 62% at 50% 42%, rgba(255, 247, 230, 0.055) 0%, rgba(255, 247, 230, 0.02) 45%, transparent 100%);
   --kx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 :root:not(.dark) .kx-scope {
-  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(15, 23, 42, 0.06), 0 6px 16px -8px rgba(15, 23, 42, 0.12);
-  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 2px 4px rgba(15, 23, 42, 0.06), 0 14px 30px -12px rgba(15, 23, 42, 0.16);
-  --kx-elev-3: 0 -2px 6px rgba(15, 23, 42, 0.05), 0 -16px 40px -16px rgba(15, 23, 42, 0.18);
-  --kx-light: radial-gradient(120% 70% at 50% -10%, rgba(255, 255, 255, 0.8) 0%, transparent 65%);
-  --kx-grain: none;
+  /* Light: a soft WARM shadow lifts the paper (brown-black, never blue-grey) */
+  --kx-elev-1: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 1px 2px rgba(60, 40, 10, 0.07), 0 8px 18px -10px rgba(60, 40, 10, 0.18);
+  --kx-elev-2: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 2px 4px rgba(60, 40, 10, 0.07), 0 16px 32px -14px rgba(60, 40, 10, 0.22);
+  --kx-elev-3: 0 -2px 6px rgba(60, 40, 10, 0.06), 0 -16px 40px -16px rgba(60, 40, 10, 0.22);
+  --kx-light: radial-gradient(90% 62% at 50% 42%, rgba(255, 255, 255, 0.7) 0%, transparent 100%);
+  /* paper grain on light too: dark specks instead of light ones */
+  --kx-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .24 0 0 0 0 .16 0 0 0 0 .04 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* The canvas carries the paper grain as a static background image (no fixed
@@ -303,4 +319,42 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
   .kx-lit::before { transform: none; animation: none; }
   .kx-page { animation: none; }
   .kx-sheet, .kx-sheet[data-state] { animation: none !important; }
+  .kx-fill { animation: none !important; }
+}
+
+
+/* ── Noche con luz (2026-11-12) ─────────────────────────────────────────── */
+/* Amber as TEXT always uses the text token (dark #FBBF24 · light #9A4A06): the
+   fill amber on paper was 2.05:1. Fills (bg-kx-amber) keep #F59E0B. */
+.kx-scope .text-kx-amber,
+.kx-scope .text-kx-amber-soft { color: var(--kx-amber-text); }
+/* Anything written ON amber uses the on-amber ink, in both themes */
+.kx-on-amber { color: var(--kx-on-amber); }
+
+/* The halo: a faint amber light behind the hero number, as if it came from the
+   stripe above. Static (no animation); sits under the content. */
+.kx-halo { position: relative; isolation: isolate; }
+.kx-halo::after {
+  content: "";
+  position: absolute;
+  inset: -44px -24px auto -24px;
+  height: 220px;
+  z-index: -1;
+  pointer-events: none;
+  /* centred on the number so it fades out on every side (no hard edge) */
+  background: radial-gradient(58% 52% at 26% 50%, var(--kx-halo) 0%, transparent 100%);
+}
+
+/* Bars fill when they enter the screen (transform only, once) */
+@keyframes kx-fill-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.kx-fill { transform-origin: left center; animation: kx-fill-in var(--kx-dur-slow) var(--kx-ease-out) both; }
+
+/* The raccoon mark (brand isotype), tinted with the current ink so it works on
+   night and on paper. Three moments only: empty state, paid, quiet day. */
+.kx-mascot {
+  display: inline-block;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: url(/korex-isotipo.svg) center / contain no-repeat;
+  mask: url(/korex-isotipo.svg) center / contain no-repeat;
 }

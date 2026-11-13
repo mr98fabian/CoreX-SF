@@ -430,7 +430,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                                 type="button"
                                 variant={cashflowForm.day_of_week === idx ? "default" : "outline"}
                                 className={`h-9 w-9 p-0 text-xs ${cashflowForm.day_of_week === idx
- ? 'bg-kx-amber hover:bg-kx-amber text-[#111418] border-kx-amber'
+ ? 'bg-kx-amber hover:bg-kx-amber text-kx-on-amber border-kx-amber'
  : 'bg-kx-bg border-kx-line text-kx-ink2 hover:text-kx-ink hover:bg-kx-surface'}`}
                                 onClick={() => setCashflowForm(prev => ({ ...prev, day_of_week: idx }))}
                             >
@@ -558,7 +558,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="w-20 h-20 rounded-2xl bg-kx-amber flex items-center justify-center shadow-[var(--kx-elev-2)]"
             >
-                <Rocket className="h-10 w-10 text-[#111418]" />
+                <Rocket className="h-10 w-10 text-kx-on-amber" />
             </motion.div>
 
             <div>
@@ -714,7 +714,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                     <Button
                         onClick={() => addCashflowItem(category)}
                         disabled={!cashflowForm.name || !cashflowForm.amount || isSubmitting}
-                        className="w-full h-10 gap-2 bg-kx-amber hover:brightness-105 text-[#111418]"
+                        className="w-full h-10 gap-2 bg-kx-amber hover:brightness-105 text-kx-on-amber"
                     >
                         <Plus size={16} />
                         {isSubmitting ? (language === 'es' ? 'Guardando...' : 'Saving...') : t('onboarding.addItem')}
@@ -919,7 +919,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 <Button
                     onClick={() => addAccount('debt')}
                     disabled={!accountForm.name || !accountForm.balance || isSubmitting}
-                    className="w-full h-10 gap-2 bg-kx-amber hover:bg-kx-amber text-[#111418]"
+                    className="w-full h-10 gap-2 bg-kx-amber hover:bg-kx-amber text-kx-on-amber"
                 >
                     <Plus size={16} />
                     {isSubmitting ? (language === 'es' ? 'Guardando...' : 'Saving...') : t('onboarding.addItem')}
@@ -1181,7 +1181,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                 className="w-20 h-20 rounded-full bg-kx-paid flex items-center justify-center shadow-[var(--kx-elev-2)]"
             >
-                <CheckCircle className="h-10 w-10 text-[#111418]" />
+                <CheckCircle className="h-10 w-10 text-kx-on-amber" />
             </motion.div>
 
             <div>
@@ -1278,7 +1278,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                         {steps.map((step, i) => (
                             <div key={i} className="flex flex-col items-center flex-1">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${i < currentStep
- ? 'bg-kx-amber text-[#111418]'
+ ? 'bg-kx-amber text-kx-on-amber'
  : i === currentStep
  ? 'bg-[color-mix(in_srgb,var(--kx-amber)_20%,transparent)] border-2 border-kx-amber text-kx-amber'
  : 'bg-kx-raised text-kx-ink2'
@@ -1342,7 +1342,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                                     goNext();
                                 }}
                                 disabled={!canProceed()}
-                                className="bg-kx-amber text-[#111418] gap-1 px-6 disabled:opacity-40"
+                                className="bg-kx-amber text-kx-on-amber gap-1 px-6 disabled:opacity-40"
                             >
                                 {currentStep === 0 ? t('onboarding.letsGo') : t('onboarding.continue')}
                                 <ChevronRight size={16} />
@@ -1351,7 +1351,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                             <Button
                                 onClick={handleFinish}
                                 disabled={isSubmitting}
-                                className="bg-kx-paid text-[#111418] gap-2 px-8"
+                                className="bg-kx-paid text-kx-on-amber gap-2 px-8"
                             >
                                 <Sparkles size={16} />
                                 {isSubmitting

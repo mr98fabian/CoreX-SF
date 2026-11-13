@@ -124,13 +124,13 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                     <div className="mt-3 flex items-center justify-between">
                         <button type="button" onClick={() => go(-1)} disabled={idx === 0}
                             aria-label={es ? 'Mes anterior' : 'Previous month'}
-                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-kx-line bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
                             <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
                         </button>
                         <p className="text-xl font-bold capitalize tracking-tight text-kx-ink" aria-live="polite">{monthName} {mo.year}</p>
                         <button type="button" onClick={() => go(1)} disabled={idx >= months.length - 1}
                             aria-label={es ? 'Mes siguiente' : 'Next month'}
-                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#263449] bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-kx-line bg-kx-raised text-kx-ink disabled:opacity-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-kx-amber">
                             <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
                         </button>
                     </div>
@@ -190,7 +190,7 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                                     <>
                                         <span className={cx('kx-num font-editorial', compact ? 'text-[13px]' : 'text-[16px]')} style={{ fontWeight: isToday ? 560 : 400 }}>{c.day}</span>
                                         {isToday && <span className="pointer-events-none absolute inset-[3px] rounded-[10px] ring-2 ring-kx-amber" aria-hidden="true" />}
-                                        {isToday && !compact && <span className="kx-tech pointer-events-none absolute left-1/2 top-[3px] -translate-x-1/2 rounded-sm bg-kx-amber px-1 text-[7.5px] font-bold leading-[11px] text-[#111418]" aria-hidden="true">{es ? 'HOY' : 'TODAY'}</span>}
+                                        {isToday && !compact && <span className="kx-tech pointer-events-none absolute left-1/2 top-[3px] -translate-x-1/2 rounded-sm bg-kx-amber px-1 text-[7.5px] font-bold leading-[11px] text-kx-on-amber" aria-hidden="true">{es ? 'HOY' : 'TODAY'}</span>}
                                         {c.free && <span className="absolute right-1 top-0.5 text-[10px] text-kx-amber" aria-hidden="true">★</span>}
                                         {c.cut && <span data-testid="cut-mark" className="pointer-events-none absolute left-1 top-0.5 text-[9px] leading-none text-kx-amber [text-shadow:0_0_2px_rgba(0,0,0,.7)]" aria-hidden="true">◆</span>}
                                         {c.charge && !compact && <span data-testid="charge-mark" className="absolute bottom-[5px] right-1.5 h-[2px] w-[6px] rounded-full bg-kx-ink2" aria-hidden="true" />}

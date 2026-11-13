@@ -115,7 +115,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                             </p>
                         )}
                         <button type="button" onClick={handleUpgrade} disabled={paying || upgrading}
-                            className="kx-press mt-4 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-[#111418] disabled:opacity-50">
+                            className="kx-press mt-4 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber disabled:opacity-50">
                             {paying ? (es ? 'Tu plan actual' : 'Your current plan') : upgrading ? t('upgrade.processing') : (es ? 'Empezar mes gratis' : 'Start free month')}
                         </button>
                     </div>

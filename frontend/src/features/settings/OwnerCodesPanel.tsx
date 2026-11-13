@@ -85,7 +85,7 @@ export function OwnerCodesPanel({ es }: { es: boolean }) {
                     </label>
                     <input aria-label={es ? 'Código personalizado' : 'Custom code'} value={custom} onChange={(e) => setCustom(e.target.value)}
                         placeholder={es ? 'Personalizado (opcional)' : 'Custom (optional)'} maxLength={60} className={`${field} w-48`} />
-                    <button type="button" onClick={create} disabled={busy} className="kx-press rounded-lg bg-kx-amber px-3 py-1.5 text-xs font-bold text-[#111418] disabled:opacity-60">
+                    <button type="button" onClick={create} disabled={busy} className="kx-press rounded-lg bg-kx-amber px-3 py-1.5 text-xs font-bold text-kx-on-amber disabled:opacity-60">
                         {es ? 'Crear código' : 'Create code'}
                     </button>
                 </div>

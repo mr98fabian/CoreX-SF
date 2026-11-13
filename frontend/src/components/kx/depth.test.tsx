@@ -39,7 +39,7 @@ describe('Profundidad 2.5D', () => {
     it('elevation tokens exist for both themes, shadows only (no colored glow)', () => {
         for (const n of [1, 2, 3]) expect(kxCss.match(new RegExp(`--kx-elev-${n}:`, 'g'))).toHaveLength(2);
         const shadows = kxCss.match(/--kx-elev-\d:[^;]+;/g)!.join(' ');
-        expect(shadows).not.toMatch(/rgba\((?!0, 0, 0|255, 255, 255|15, 23, 42)/); // black / white highlight / slate only
+        expect(shadows).not.toMatch(/rgba\((?!0, 0, 0|255, 255, 255|60, 40, 10)/); // black / white highlight / warm paper shadow (Noche con luz): never a coloured glow
     });
 
     it('elevation lives on containers, never on list rows; the hero carries the light', async () => {

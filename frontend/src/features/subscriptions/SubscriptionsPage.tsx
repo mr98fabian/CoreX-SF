@@ -125,7 +125,7 @@ export default function SubscriptionsPage() {
             </div>
 
             <Sheet open={!!draft} onOpenChange={(v) => !v && setDraft(null)}>
-                <SheetContent side="bottom" className="kx-scope max-h-[88dvh] overflow-y-auto rounded-t-3xl border-kx-line bg-kx-surface">
+                <SheetContent side="bottom" className="kx-scope max-h-[88dvh] overflow-y-auto rounded-t-3xl border-kx-line bg-kx-sheet">
                     {draft && (
                         <form className="mx-auto max-w-xl space-y-3.5 pb-4" onSubmit={(e) => { e.preventDefault(); if (valid) save.mutate(draft); }}>
                             <SheetHeader className="text-left">

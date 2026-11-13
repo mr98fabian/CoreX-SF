@@ -131,7 +131,7 @@ export function ConnectAI() {
                                         : (es ? 'Conectar tu IA viene con los planes de pago.' : 'Connecting your AI comes with paid plans.')}
                             </p>
                             {access.reason === 'free_plan' && (
-                                <Link to="/dashboard/settings/plans" className="inline-block rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-[#111418]">
+                                <Link to="/dashboard/settings/plans" className="inline-block rounded-xl bg-kx-amber px-4 py-2.5 text-sm font-bold text-kx-on-amber">
                                     {es ? 'Ver planes' : 'See plans'}
                                 </Link>
                             )}

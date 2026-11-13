@@ -226,7 +226,7 @@ export default function AttackPage() {
                 )}
 
                 {!loading && (
-                    <Link to="/dashboard/action-plan/full" className="block rounded-full border border-dashed border-[#263449] py-3 text-center text-[13px] text-kx-ink3">
+                    <Link to="/dashboard/action-plan/full" className="block rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
                         {es ? 'Simulación completa, ajustes del plan y otros métodos · ' : 'Full simulation, plan settings and other methods · '}<b className="font-semibold text-kx-ink2">{es ? 'abrir' : 'open'}</b>
                     </Link>
                 )}

@@ -194,7 +194,7 @@ export default function AccountsStagePage() {
                     </Section>
                 )}
 
-                <Link to="/dashboard/accounts/manage" className="block rounded-full border border-dashed border-[#263449] py-3 text-center text-[13px] text-kx-ink3">
+                <Link to="/dashboard/accounts/manage" className="block rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
                     {es ? 'Agregar o editar cuentas · ' : 'Add or edit accounts · '}<b className="font-semibold text-kx-ink2">{es ? 'abrir gestor' : 'open manager'}</b>
                 </Link>
             </div>

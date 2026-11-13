@@ -118,12 +118,12 @@ export default function DashboardLayout() {
                                 className="h-8 w-8 rounded-full ring-2 ring-kx-line "
                             />
                         ) : (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-kx-raised text-xs font-bold text-[#111418] ring-2 ring-kx-line ">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-kx-raised text-xs font-bold text-kx-ink ring-2 ring-kx-line ">
                                 {(user.email?.[0] || 'U').toUpperCase()}
                             </div>
                         )}
                         <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium text-[#111418] ">
+                            <p className="truncate text-xs font-medium text-kx-ink ">
                                 {user.user_metadata?.full_name || 'User'}
                             </p>
                             <p className="truncate text-[10px] text-kx-ink2 ">
@@ -198,7 +198,7 @@ export default function DashboardLayout() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
+                        className="text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
                     >
                         {isMobile ? (
                             <Menu size={20} strokeWidth={1.5} />
@@ -212,7 +212,7 @@ export default function DashboardLayout() {
                         variant="ghost"
                         size="icon"
                         onClick={toggleTheme}
-                        className="text-kx-ink3 hover:text-[#111418] hover:bg-kx-raised "
+                        className="text-kx-ink3 hover:text-kx-ink hover:bg-kx-raised "
                         title={isDark
                             ? (language === 'es' ? 'Cambiar a Modo Claro' : 'Switch to Light Mode')
                             : (language === 'es' ? 'Cambiar a Modo Oscuro' : 'Switch to Dark Mode')}

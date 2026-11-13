@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import type { DayDetail } from '@/lib/calendarSeries';
+import { Raccoon } from '@/components/kx';
 import { AccountLogo } from '@/components/AccountLogo';
 import { useAccountLogos } from '@/hooks/useAccounts';
 import { Link } from 'react-router-dom';
@@ -60,13 +61,13 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
     return (
         <Sheet open={!!detail} onOpenChange={(v) => !v && onClose()}>
             <SheetContent side="bottom"
-                className="kx-scope max-h-[86dvh] overflow-y-auto rounded-t-3xl border-kx-line bg-kx-surface data-[state=open]:duration-[480ms] data-[state=closed]:duration-[240ms]">
+                className="kx-scope max-h-[86dvh] overflow-y-auto rounded-t-3xl border-kx-line bg-kx-sheet data-[state=open]:duration-[480ms] data-[state=closed]:duration-[240ms]">
                 {detail && d && (
                     <div className="mx-auto max-w-xl space-y-5 pb-4">
                         <SheetHeader className="text-left">
                             <SheetTitle className="flex items-center gap-2.5 font-editorial text-[24px] font-[460] text-kx-ink">
                                 {es ? `${DAYS.es[d.getDay()]} ${d.getDate()} de ${MONTHS.es[d.getMonth()]}` : `${DAYS.en[d.getDay()]}, ${MONTHS.en[d.getMonth()]} ${d.getDate()}`}
-                                {isToday && <span className="kx-tech rounded bg-kx-amber px-1.5 py-0.5 text-[10px] font-bold text-[#111418]">{es ? 'HOY' : 'TODAY'}</span>}
+                                {isToday && <span className="kx-tech rounded bg-kx-amber px-1.5 py-0.5 text-[10px] font-bold text-kx-on-amber">{es ? 'HOY' : 'TODAY'}</span>}
                             </SheetTitle>
                             <SheetDescription className="text-kx-ink2">
                                 {es ? 'Proyección de tu deuda ese día: ' : 'Projected debt that day: '}
@@ -103,7 +104,10 @@ export function DaySheet({ detail, onClose, today }: { detail: DayDetail | null;
 
                         <div className="rounded-2xl border border-kx-line bg-kx-bg p-4">
                             {quiet ? (
-                                <p className="font-editorial text-[20px] text-kx-ink">{es ? 'Día tranquilo: no entra ni sale nada.' : 'Quiet day: nothing in, nothing out.'}</p>
+                                <p className="flex items-center gap-3 font-editorial text-[20px] text-kx-ink">
+                                    <Raccoon moment="quiet" />
+                                    {es ? 'Día tranquilo: no entra ni sale nada.' : 'Quiet day: nothing in, nothing out.'}
+                                </p>
                             ) : (
                                 <p className="text-[15px] leading-snug text-kx-ink2">
                                     {es ? 'Ese día entran ' : 'That day '}<b className="kx-num font-editorial text-[22px] font-[460] text-kx-pay">{formatMoney(detail.totalIn)}</b>

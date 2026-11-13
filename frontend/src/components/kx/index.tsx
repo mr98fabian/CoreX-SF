@@ -26,7 +26,7 @@ function StripeLight() {
 }
 
 // ── Amber stripe — the signature. Swept band from the approved v8 header. ──
-export function AmberStripe({ children, height = 158, className }: { children?: ReactNode; height?: number; className?: string }) {
+export function AmberStripe({ children, height = 150, className }: { children?: ReactNode; height?: number; className?: string }) {
     const ref = useStripeScroll<HTMLDivElement>();
     const still = prefersReducedMotion();
     return (
@@ -34,7 +34,7 @@ export function AmberStripe({ children, height = 158, className }: { children?: 
             <svg className="absolute inset-0 h-full w-full" viewBox="0 0 390 158" preserveAspectRatio="none" aria-hidden="true">
                 <defs>
                     <linearGradient id="kxStripe" x1="0" y1="0" x2="1" y2="0.55">
-                        <stop offset="0" stopColor="#B45309" />
+                        <stop offset="0" stopColor="#D97706" />
                         <stop offset="0.55" stopColor="#F59E0B" />
                         <stop offset="1" stopColor="#FBBF24" />
                     </linearGradient>
@@ -43,7 +43,8 @@ export function AmberStripe({ children, height = 158, className }: { children?: 
                 <path d="M0,146 C30,143 70,139 120,132 C210,120 300,92 390,52 L390,64 C300,104 215,130 128,141 C75,148 32,152 0,155 Z" fill="#FDE68A" opacity="0.35" />
             </svg>
             {!still && <StripeLight />}
-            <div className="relative z-[1] flex h-full flex-col">{children}</div>
+            {/* Everything written on the stripe uses the on-amber ink (5.8–11:1) */}
+            <div className="kx-on-amber relative z-[1] flex h-full flex-col" data-testid="stripe-content">{children}</div>
         </div>
     );
 }
@@ -97,7 +98,7 @@ export function HeroNumber({ label, amount, phrase }: { label: string; amount: n
         return <>{d}{c && <sup className="ml-0.5 align-super text-[23px] text-kx-ink3">.{c}</sup>}</>;
     };
     return (
-        <div className="kx-lit" data-kx-elev="2">
+        <div className="kx-lit kx-halo" data-kx-elev="2" data-testid="hero">
             <p className="kx-label">{label}</p>
             <p className="kx-hero-number mt-1.5 text-[52px] text-kx-ink">
                 <CountUp value={amount} format={render} label={formatMoney} />
@@ -132,9 +133,9 @@ export function StageChip({ stage, pct, suffix }: { stage: Stage; pct?: number |
 export function StageBar({ stage, pct }: { stage: Stage; pct: number | null }) {
     const width = pct == null ? 0 : Math.max(stage === 'paid' ? 100 : 3, Math.round(pct * 100));
     return (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar"
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-kx-raised" role="progressbar"
             aria-valuenow={pct == null ? undefined : Math.round(pct * 100)} aria-valuemin={0} aria-valuemax={100}>
-            <i className={cx('kx-stage-tint kx-stage-bar block h-full origin-left rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
+            <i className={cx('kx-stage-tint kx-stage-bar kx-fill block h-full origin-left rounded-full', BAR[stage])} style={{ width: `${width}%` }} />
         </div>
     );
 }
@@ -145,7 +146,7 @@ export function GoalBar({ pct, label }: { pct: number; label?: string }) {
     return (
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--kx-ink)_10%,transparent)]" role="progressbar"
             aria-label={label} aria-valuenow={v} aria-valuemin={0} aria-valuemax={100} data-testid="goal-bar">
-            <i className="block h-full origin-left rounded-full bg-kx-amber transition-[width] duration-[var(--kx-dur-base)]" style={{ width: `${v > 0 ? Math.max(3, v) : 0}%` }} />
+            <i className="kx-fill block h-full origin-left rounded-full bg-kx-amber transition-[width] duration-[var(--kx-dur-base)]" style={{ width: `${v > 0 ? Math.max(3, v) : 0}%` }} />
         </div>
     );
 }
@@ -168,7 +169,8 @@ const SEC: Record<Tone, { box: string; title: string }> = {
     paid: { box: 'bg-[var(--kx-paid-sec-bg)] border-[var(--kx-paid-sec-line)]', title: 'text-kx-paid' },
     support: { box: 'bg-kx-surface border-kx-line', title: 'text-kx-ink2' },
     neutral: { box: 'bg-kx-surface border-kx-line', title: 'text-kx-ink2' },
-    amber: { box: 'bg-[rgba(245,158,11,.07)] border-[rgba(245,158,11,.4)]', title: 'text-kx-amber-soft' },
+    // the mission sits one level up (level 2), ringed in amber
+    amber: { box: 'bg-kx-surface2 border-[color-mix(in_srgb,var(--kx-amber)_45%,transparent)]', title: 'text-kx-amber-soft' },
 };
 
 export function Section({ tone = 'neutral', title, children, className, action, bare = false }: {
@@ -223,7 +225,7 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
 }) {
     return (
         <button type={type} onClick={onClick} disabled={disabled}
-            className="kx-press block w-full rounded-xl bg-kx-amber px-4 py-3 text-center text-sm font-bold text-[#111418] hover:opacity-90 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kx-amber">
+            className="kx-press block w-full rounded-xl bg-kx-amber px-4 py-3 text-center text-sm font-bold text-kx-on-amber hover:opacity-90 disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kx-amber">
             {children}
         </button>
     );
@@ -241,7 +243,7 @@ export function TabBar() {
     useEffect(() => onKeyboardChange(setKeyboard), []);
     return (
         <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar" data-keyboard={keyboard ? 'open' : 'closed'}
-            className={cx('relative z-40 shrink-0 border-t border-[#131E33] bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden', keyboard ? 'hidden' : 'flex')}>
+            className={cx('relative z-40 shrink-0 border-t border-kx-line bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden', keyboard ? 'hidden' : 'flex')}>
             {NAV_PRIMARY.map(({ to, icon: Icon, labelKey }) => {
                 const active = isNavActive(pathname, to);
                 return (
@@ -295,4 +297,10 @@ export function SideNav({ onNavigate }: { onNavigate?: () => void }) {
             <AppMenuSection />
         </nav>
     );
+}
+
+/** The raccoon mark (brand isotype, tinted with the current ink). THREE moments
+ *  only — empty state, paid, quiet day — never decoration. */
+export function Raccoon({ moment, className }: { moment: 'empty' | 'paid' | 'quiet'; className?: string }) {
+    return <span aria-hidden="true" data-testid={`raccoon-${moment}`} className={cx('kx-mascot h-9 w-9 text-kx-amber', className)} />;
 }
