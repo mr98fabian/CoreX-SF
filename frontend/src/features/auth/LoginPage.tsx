@@ -3,6 +3,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LOGIN_COPY, type LoginCopy } from './loginCopy';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -13,13 +14,13 @@ interface Requirement {
     met: boolean;
 }
 
-function getPasswordRequirements(password: string): Requirement[] {
+function getPasswordRequirements(password: string, c: LoginCopy): Requirement[] {
     return [
-        { label: 'At least 6 characters', met: password.length >= 6 },
-        { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
-        { label: 'One lowercase letter', met: /[a-z]/.test(password) },
-        { label: 'One number', met: /\d/.test(password) },
-        { label: 'One special character (!@#$...)', met: /[^A-Za-z0-9]/.test(password) },
+        { label: c.reqLength, met: password.length >= 6 },
+        { label: c.reqUpper, met: /[A-Z]/.test(password) },
+        { label: c.reqLower, met: /[a-z]/.test(password) },
+        { label: c.reqNumber, met: /\d/.test(password) },
+        { label: c.reqSpecial, met: /[^A-Za-z0-9]/.test(password) },
     ];
 }
 
@@ -32,17 +33,17 @@ interface StrengthResult {
     color: string;
 }
 
-function getPasswordStrength(password: string): StrengthResult {
+function getPasswordStrength(password: string, c: LoginCopy): StrengthResult {
     if (!password) return { level: 'empty', score: 0, label: '', color: '' };
-    const reqs = getPasswordRequirements(password);
+    const reqs = getPasswordRequirements(password, c);
     const metCount = reqs.filter(r => r.met).length;
     const clamped = Math.max(1, Math.min(4, Math.ceil((metCount / reqs.length) * 4)));
 
     const map: Record<number, Omit<StrengthResult, 'score'>> = {
-        1: { level: 'weak', label: 'Weak', color: '#ef4444' },
-        2: { level: 'fair', label: 'Fair', color: '#f97316' },
-        3: { level: 'good', label: 'Good', color: '#eab308' },
-        4: { level: 'strong', label: 'Strong', color: '#22c55e' },
+        1: { level: 'weak', label: c.strength.weak, color: '#ef4444' },
+        2: { level: 'fair', label: c.strength.fair, color: '#f97316' },
+        3: { level: 'good', label: c.strength.good, color: '#eab308' },
+        4: { level: 'strong', label: c.strength.strong, color: '#22c55e' },
     };
     return { ...map[clamped], score: clamped };
 }
@@ -66,44 +67,45 @@ function validateForm(
         email: string; confirmEmail: string;
         password: string; confirmPassword: string;
         fullName: string; acceptedTerms: boolean;
-    }
+    },
+    c: LoginCopy,
 ): ValidationErrors {
     const errors: ValidationErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!fields.email.trim()) {
-        errors.email = 'Email is required';
+        errors.email = c.errEmailRequired;
     } else if (!emailRegex.test(fields.email)) {
-        errors.email = 'Invalid email format';
+        errors.email = c.errEmailFormat;
     }
 
     if (!fields.password) {
-        errors.password = 'Password is required';
+        errors.password = c.errPasswordRequired;
     } else if (fields.password.length < 6) {
-        errors.password = 'Minimum 6 characters';
+        errors.password = c.errPasswordMin;
     }
 
     if (mode === 'signup') {
         if (!fields.fullName.trim()) {
-            errors.fullName = 'Full name is required';
+            errors.fullName = c.errNameRequired;
         } else if (fields.fullName.trim().length < 2) {
-            errors.fullName = 'At least 2 characters';
+            errors.fullName = c.errNameMin;
         }
 
         if (!fields.confirmEmail.trim()) {
-            errors.confirmEmail = 'Please confirm your email';
+            errors.confirmEmail = c.errConfirmEmail;
         } else if (fields.confirmEmail !== fields.email) {
-            errors.confirmEmail = 'Emails do not match';
+            errors.confirmEmail = c.errEmailsMismatch;
         }
 
         if (!fields.confirmPassword) {
-            errors.confirmPassword = 'Please confirm your password';
+            errors.confirmPassword = c.errConfirmPassword;
         } else if (fields.confirmPassword !== fields.password) {
-            errors.confirmPassword = 'Passwords do not match';
+            errors.confirmPassword = c.errPasswordsMismatch;
         }
 
         if (!fields.acceptedTerms) {
-            errors.terms = 'You must accept the Terms & Conditions';
+            errors.terms = c.errTerms;
         }
     }
 
@@ -156,7 +158,8 @@ function FormInput({
 type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 
 export default function LoginPage() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const c = LOGIN_COPY[language === 'en' ? 'en' : 'es'];
     usePageTitle(t('nav.signIn'));
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword, signInAsDemo } = useAuth();
 
@@ -176,8 +179,8 @@ export default function LoginPage() {
     const [successMessage, setSuccessMessage] = useState('');
     const [fieldErrors, setFieldErrors] = useState<ValidationErrors>({});
 
-    const strength = useMemo(() => getPasswordStrength(password), [password]);
-    const requirements = useMemo(() => getPasswordRequirements(password), [password]);
+    const strength = useMemo(() => getPasswordStrength(password, c), [password, c]);
+    const requirements = useMemo(() => getPasswordRequirements(password, c), [password, c]);
 
     if (user && !loading) return <Navigate to="/dashboard" replace />;
 
@@ -202,15 +205,15 @@ export default function LoginPage() {
         // Forgot password flow
         if (view === 'forgot') {
             if (!email.trim()) {
-                setFieldErrors({ email: 'Email is required' });
+                setFieldErrors({ email: c.errEmailRequired });
                 return;
             }
             setIsSubmitting(true);
             try {
                 await resetPassword(email);
-                setSuccessMessage('Password reset email sent! Check your inbox.');
+                setSuccessMessage(c.resetSent);
             } catch (err: unknown) {
-                setError(err instanceof Error ? err.message : 'Failed to send reset email');
+                setError(err instanceof Error ? err.message : c.resetFailed);
             } finally {
                 setIsSubmitting(false);
             }
@@ -221,7 +224,7 @@ export default function LoginPage() {
         const mode = view === 'signin' ? 'signin' : 'signup';
         const errors = validateForm(mode, {
             email, confirmEmail, password, confirmPassword, fullName, acceptedTerms,
-        });
+        }, c);
         if (Object.keys(errors).length > 0) {
             setFieldErrors(errors);
             return;
@@ -239,11 +242,11 @@ export default function LoginPage() {
                 }
             }
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+            const message = err instanceof Error ? err.message : c.unexpected;
             if (message.includes('Invalid login credentials')) {
-                setError('Invalid email or password');
+                setError(c.invalidCredentials);
             } else if (message.includes('already registered')) {
-                setError('This email is already registered. Try signing in.');
+                setError(c.alreadyRegistered);
             } else {
                 setError(message);
             }
@@ -260,11 +263,11 @@ export default function LoginPage() {
         } catch (err) {
             const msg = err instanceof Error ? err.message : '';
             if (msg.includes('redirect') || msg.includes('callback')) {
-                setError('Redirect URL not whitelisted in Supabase. Add http://localhost:5173 to Authentication → URL Configuration.');
+                setError(c.googleRedirect);
             } else if (msg.includes('provider') || msg.includes('not enabled')) {
-                setError('Google OAuth not configured in Supabase dashboard.');
+                setError(c.googleNotConfigured);
             } else {
-                setError(msg || 'Google sign-in failed. Please try again.');
+                setError(msg || c.googleFailed);
             }
             setIsGoogleLoading(false);
         }
@@ -286,7 +289,7 @@ export default function LoginPage() {
                 },
             }).catch(() => { /* non-blocking — dashboard still loads with existing data */ });
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Demo mode failed');
+            setError(err instanceof Error ? err.message : c.demoFailed);
             setIsDemoLoading(false);
         }
     };
@@ -313,13 +316,13 @@ export default function LoginPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" className="animate-check-draw" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-kx-ink mb-2">Account Created!</h2>
+                        <h2 className="text-2xl font-bold text-kx-ink mb-2">{c.createdTitle}</h2>
                         <p className="text-kx-ink2 mb-2">
-                            We've sent a verification email to:
+                            {c.createdSent}
                         </p>
                         <p className="text-kx-amber font-mono text-sm mb-6 break-all">{email}</p>
                         <p className="text-kx-ink3 text-sm mb-8">
-                            Click the link in your email to activate your account, then come back to sign in.
+                            {c.createdHint}
                         </p>
                         <button
                             onClick={() => switchView('signin')}
@@ -328,7 +331,7 @@ export default function LoginPage() {
                                   hover:shadow-lg 
                                 active:scale-[0.98] transition-all duration-300"
                         >
-                            Go to Sign In
+                            {c.goToSignIn}
                         </button>
                     </div>
                 </div>
@@ -385,7 +388,7 @@ export default function LoginPage() {
                         alt="KoreX"
                         className="h-16 sm:h-20 mx-auto mb-2 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
                     />
-                    <p className="text-kx-ink2 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>Velocity Banking Intelligence Platform</p>
+                    <p className="text-kx-ink2 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>{c.tagline}</p>
                 </div>
 
                 {/* Card */}
@@ -403,7 +406,7 @@ export default function LoginPage() {
  : 'text-kx-ink2 hover:text-kx-ink'
  }`}
                                 >
-                                    {tab === 'signin' ? 'Sign In' : 'Create Account'}
+                                    {tab === 'signin' ? c.tabSignIn : c.tabSignUp}
                                 </button>
                             ))}
                         </div>
@@ -417,8 +420,8 @@ export default function LoginPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-bold text-kx-ink ">Reset Password</h2>
-                            <p className="text-kx-ink2 text-sm mt-1">Enter your email and we'll send a reset link</p>
+                            <h2 className="text-xl font-bold text-kx-ink ">{c.resetTitle}</h2>
+                            <p className="text-kx-ink2 text-sm mt-1">{c.resetLead}</p>
                         </div>
                     )}
 
@@ -439,26 +442,26 @@ export default function LoginPage() {
                         {/* Full Name — sign up */}
                         {view === 'signup' && (
                             <FormInput
-                                id="fullName" label="Full Name" value={fullName}
+                                id="fullName" label={c.fullName} value={fullName}
                                 onChange={(v) => { setFullName(v); clearFieldError('fullName'); }}
-                                placeholder="John Doe" error={fieldErrors.fullName}
+                                placeholder={c.fullNamePlaceholder} error={fieldErrors.fullName}
                             />
                         )}
 
                         {/* Email */}
                         <FormInput
-                            id="email" label="Email" type="email" value={email}
+                            id="email" label={c.email} type="email" value={email}
                             onChange={(v) => { setEmail(v); clearFieldError('email'); }}
-                            placeholder="you@example.com" error={fieldErrors.email}
+                            placeholder={c.emailPlaceholder} error={fieldErrors.email}
                             autoComplete="email"
                         />
 
                         {/* Confirm Email — sign up */}
                         {view === 'signup' && (
                             <FormInput
-                                id="confirmEmail" label="Confirm Email" type="email" value={confirmEmail}
+                                id="confirmEmail" label={c.confirmEmail} type="email" value={confirmEmail}
                                 onChange={(v) => { setConfirmEmail(v); clearFieldError('confirmEmail'); }}
-                                placeholder="you@example.com" error={fieldErrors.confirmEmail}
+                                placeholder={c.emailPlaceholder} error={fieldErrors.confirmEmail}
                                 autoComplete="off"
                             />
                         )}
@@ -467,7 +470,7 @@ export default function LoginPage() {
                         {view !== 'forgot' && (
                             <>
                                 <FormInput
-                                    id="password" label="Password"
+                                    id="password" label={c.password}
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(v) => { setPassword(v); clearFieldError('password'); }}
@@ -523,7 +526,7 @@ export default function LoginPage() {
                                 {/* Confirm Password — sign up */}
                                 {view === 'signup' && (
                                     <FormInput
-                                        id="confirmPassword" label="Confirm Password"
+                                        id="confirmPassword" label={c.confirmPassword}
                                         type={showConfirmPassword ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={(v) => { setConfirmPassword(v); clearFieldError('confirmPassword'); }}
@@ -541,7 +544,7 @@ export default function LoginPage() {
                             <div className="text-right">
                                 <button type="button" onClick={() => switchView('forgot')}
                                     className="text-sm text-kx-amber hover:text-kx-amber transition-colors">
-                                    Forgot password?
+                                    {c.forgot}
                                 </button>
                             </div>
                         )}
@@ -573,13 +576,13 @@ export default function LoginPage() {
                                         </div>
                                     </div>
                                     <span className="text-sm text-kx-ink2 leading-tight">
-                                        I agree to the{' '}
+                                        {c.agreePrefix}
                                         <Link to="/terms" target="_blank" className="text-kx-amber hover:text-kx-amber underline underline-offset-2">
-                                            Terms of Service
+                                            {c.terms}
                                         </Link>
-                                        {' '}and{' '}
+                                        {c.and}
                                         <Link to="/privacy" target="_blank" className="text-kx-amber hover:text-kx-amber underline underline-offset-2">
-                                            Privacy Policy
+                                            {c.privacy}
                                         </Link>
                                     </span>
                                 </label>
@@ -602,10 +605,10 @@ export default function LoginPage() {
                             {isSubmitting ? (
                                 <span className="inline-flex items-center gap-2">
                                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-kx-line border-t-transparent" />
-                                    {view === 'forgot' ? 'Sending...' : view === 'signup' ? 'Creating...' : 'Signing in...'}
+                                    {view === 'forgot' ? c.sending : view === 'signup' ? c.creating : c.signingIn}
                                 </span>
                             ) : (
-                                view === 'forgot' ? 'Send Reset Link' : view === 'signup' ? 'Create Account' : 'Sign In'
+                                view === 'forgot' ? c.sendReset : view === 'signup' ? c.createAccount : c.signIn
                             )}
                         </button>
 
@@ -613,7 +616,7 @@ export default function LoginPage() {
                         {view === 'forgot' && (
                             <button type="button" onClick={() => switchView('signin')}
                                 className="w-full text-sm text-kx-ink3 hover:text-kx-ink transition-colors py-2">
-                                ← Back to Sign In
+                                {c.backToSignIn}
                             </button>
                         )}
                     </form>
@@ -623,7 +626,7 @@ export default function LoginPage() {
                         <>
                             <div className="flex items-center gap-4 my-6">
                                 <div className="flex-1 h-px bg-kx-raised" />
-                                <span className="text-xs text-kx-ink3 uppercase tracking-wider">or</span>
+                                <span className="text-xs text-kx-ink3 uppercase tracking-wider">{c.or}</span>
                                 <div className="flex-1 h-px bg-kx-raised" />
                             </div>
                             <button
@@ -646,7 +649,7 @@ export default function LoginPage() {
                                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                                     </svg>
                                 )}
-                                Continue with Google
+                                {c.google}
                             </button>
 
                         </>
@@ -660,10 +663,10 @@ export default function LoginPage() {
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                             <path d="M7 11V7a5 5 0 0110 0v4" />
                         </svg>
-                        Secured by Supabase Auth • Google OAuth 2.0
+                        {c.secured}
                     </p>
                     <p className="text-xs text-kx-ink3 mt-2 flex items-center justify-center gap-1.5">
-                        KoreX Financial System v1.0
+                        {c.version}
                         <span className="text-kx-ink">·</span>
                         <button
                             type="button"
@@ -676,10 +679,10 @@ export default function LoginPage() {
                             {isDemoLoading ? (
                                 <span className="inline-flex items-center gap-1">
                                     <span className="h-3 w-3 animate-spin rounded-full border border-kx-amber border-t-transparent" />
-                                    Loading...
+                                    {c.loading}
                                 </span>
                             ) : (
-                                'Try Demo'
+                                c.tryDemo
                             )}
                         </button>
                     </p>
