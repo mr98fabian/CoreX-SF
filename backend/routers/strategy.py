@@ -32,7 +32,7 @@ from velocity_engine import (
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
     detect_float_kill_opportunities, get_closing_day_intelligence,
     get_hybrid_kill_target, detect_interest_rate_arbitrage, calculate_risky_opportunity,
-    DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE, mission_json,
+    DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE, mission_json, compare_paths,
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 
@@ -114,6 +114,22 @@ async def get_freedom_path(
         velocity = monthly_attack(get_cashflow_surplus(session, user_id, debts),
                                   Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
         return simulate_freedom_path(debts, velocity)
+
+
+@router.get("/velocity/compare")
+async def get_velocity_compare(
+    user_id: str = Depends(require_scope("read:plan")),
+    plan_limit: int | None = Depends(scoped_plan_limit),
+):
+    """Inicio chart: plan vs minimums only. Same extra as /velocity/freedom-path,
+    so plan.fecha_libre == freedom-path's date. Everything is computed in
+    velocity_engine.compare_paths — the client computes nothing."""
+    with request_session() as session:
+        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
+        debts = accounts_to_active_debt_objects(accounts, plan_limit)
+        surplus = get_cashflow_surplus(session, user_id, debts)
+        velocity = monthly_attack(surplus, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
+        return compare_paths(debts, velocity, fuente_aporte="excedente" if surplus is not None else "porcentaje_liquidez")
 
 
 @router.get("/velocity/simulate")

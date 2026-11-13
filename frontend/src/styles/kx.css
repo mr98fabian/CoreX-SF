@@ -370,3 +370,9 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
    404, legal). Light inverts them to black; dark keeps them white. Login stays
    on its own dark design and does not use .kx-logo. */
 :root:not(.dark) .kx-logo { filter: invert(1); }
+
+/* ── Inicio chart: the plan's stroke (2026-11-12) ──────────────────────── */
+/* Fill amber on night; the deeper #D97706 on paper (#F59E0B was 2.1:1 on white).
+   Contrast guarded in features/home/CompareChart.test.tsx. */
+.kx-scope { --kx-plan-line: #F59E0B; }
+:root:not(.dark) .kx-scope { --kx-plan-line: #D97706; }
