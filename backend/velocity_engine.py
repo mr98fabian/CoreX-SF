@@ -2411,6 +2411,18 @@ class MissionAccount:
     last_cut_date: Optional[date] = None       # most recent CutHistory.cut_date
     last_cut_reported: Optional[Decimal] = None
     paid_since_cut: Decimal = Decimal('0')     # payments recorded after that cut
+    statement_minimum: Optional[Decimal] = None  # that cut's statement minimum (None = not loaded)
+    statement_due: Optional[date] = None         # and its due date
+
+
+def statement_minimum_due(a: MissionAccount, today: date) -> Decimal:
+    """What is still owed of the current statement's MINIMUM: statement_minimum −
+    payments since that cut, capped at the balance. 0 when no statement minimum was
+    loaded, its due date passed, or it is already covered. Gate (Fase B, safety): the
+    mission never sets aside less than this for the cycle."""
+    if a.statement_minimum is None or a.statement_due is None or a.statement_due < today or a.balance <= 0:
+        return Decimal('0')
+    return max(Decimal('0'), min(a.statement_minimum - a.paid_since_cut, a.balance))
 
 
 def _day_in(year: int, month: int, day: int) -> date:
@@ -2452,6 +2464,7 @@ def _obligation(tipo: str, acc: MissionAccount, monto: Decimal, accion: date, ev
     copy = {
         "corte": f"Deja la {acc.name} en $0 — paga a más tardar el {_fecha_es(accion)} para que reporte $0 el {_fecha_es(evento)}",
         "estado": f"Paga el estado de la {acc.name} ({_usd(monto)}) antes del {_fecha_es(evento)}",
+        "minimo": f"Paga el mínimo de la {acc.name} ({_usd(monto)}) antes del {_fecha_es(evento)}, según tu estado de cuenta",
         "prestamo": f"Reserva el pago de la {acc.name} ({_usd(monto)}) para el {_fecha_es(evento)}",
     }[tipo]
     return {"tipo": tipo, "cuenta": acc.name, "monto": monto, "fecha_accion": accion, "fecha_evento": evento, "copy": copy}
@@ -2467,6 +2480,10 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
           this cycle: the full balance), due on due_day;
       (b) otherwise, before the next cut: the full balance so it reports $0,
           action date = cut − 2, event = cut.
+    - Cards with a loaded statement minimum still owed (statement_minimum_due):
+      the statement obligation never falls below it; with no statement obligation,
+      the minimum is its own obligation ("minimo") on the statement's due date, and
+      a cut in the same window reserves only the rest of the balance (no double count).
     """
     end = today + timedelta(days=window)
     out: List[Dict] = []
@@ -2479,6 +2496,7 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
                 if due < end:
                     out.append(_obligation("prestamo", a, min(a.min_payment, a.balance), due, due))
             continue
+        stmt_min = statement_minimum_due(a, today)
         if a.closing_day and a.due_day:
             last_close = _last_before(a.closing_day, today)
             stmt_due = _next_on_or_after(a.due_day, last_close + timedelta(days=1))
@@ -2488,23 +2506,29 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
                     pending = a.last_cut_reported - a.paid_since_cut
                 else:
                     pending = a.balance
-                pending = max(Decimal('0'), min(pending, a.balance))
+                pending = max(Decimal('0'), min(max(pending, stmt_min), a.balance))
                 if pending > 0:
                     out.append(_obligation("estado", a, pending, stmt_due, stmt_due))
                     continue
-        if a.closing_day:
+        rest = a.balance
+        if stmt_min > 0 and a.statement_due < end:
+            # reserve = max(engine minimum, statement minimum), both net of payments since the cut
+            amount = min(max(stmt_min, a.min_payment - a.paid_since_cut), a.balance)
+            out.append(_obligation("minimo", a, amount, a.statement_due, a.statement_due))
+            rest = a.balance - amount
+        if a.closing_day and rest > 0:
             cut = _next_on_or_after(a.closing_day, today)
             if cut < end:
-                out.append(_obligation("corte", a, a.balance, corte_action_date(cut, today), cut))
+                out.append(_obligation("corte", a, rest, corte_action_date(cut, today), cut))
     # Contractual due dates first: by event date, then hardness (a loan payment
     # or statement due beats a cut on the same day), then the bigger amount.
-    hardness = {"prestamo": 0, "estado": 0, "corte": 1}
+    hardness = {"prestamo": 0, "estado": 0, "minimo": 0, "corte": 1}
     out.sort(key=lambda o: (o["fecha_evento"], hardness[o["tipo"]], -o["monto"]))
     return out
 
 
 def _what(o: Dict) -> str:
-    noun = {"corte": "el corte", "estado": "el estado", "prestamo": "el pago"}[o["tipo"]]
+    noun = {"corte": "el corte", "estado": "el estado", "minimo": "el mínimo", "prestamo": "el pago"}[o["tipo"]]
     return f"{noun} de la {o['cuenta']} del {_fecha_es(o['fecha_evento'])}"
 
 
