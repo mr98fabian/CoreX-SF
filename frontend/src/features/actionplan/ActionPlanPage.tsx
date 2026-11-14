@@ -114,8 +114,6 @@ const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; ic
     min_payment: { bg: 'bg-kx-ink3', text: 'text-kx-ink2', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeMinPayment' },
     income: { bg: 'bg-kx-pay', text: 'text-kx-pay', border: 'border-kx-line', icon: <DollarSign size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeIncome' },
     expense: { bg: 'bg-kx-debt', text: 'text-kx-debt', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeExpense' },
-    float_kill: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeFloatKill' },
-    hybrid_kill: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeHybridKill' },
     velocity_chunk: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeVelocityChunk' },
 };
 

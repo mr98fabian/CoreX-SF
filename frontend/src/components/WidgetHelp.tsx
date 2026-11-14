@@ -199,8 +199,8 @@ const HELP_CONTENT: Record<string, HelpContent> = {
         description: 'When multiple options exist, this widget shows you the pros and cons of each attack strategy so you can choose wisely.',
         descriptionEs: 'Cuando existen múltiples opciones, este widget te muestra los pros y contras de cada estrategia de ataque para que elijas sabiamente.',
         bullets: [
-            { icon: '🎯', text: 'Option A: Highest APR first — eliminates the most interest', textEs: 'Opción A: Mayor APR primero — elimina el mayor interés' },
-            { icon: '🏔️', text: 'Option B: Smallest balance first — fastest emotional win', textEs: 'Opción B: Menor saldo primero — la victoria emocional más rápida' },
+            { icon: '🎯', text: 'Full attack: everything to your highest-APR debt (the avalanche) — eliminates the most interest', textEs: 'Ataque completo: todo a tu deuda de mayor APR (la avalancha) — elimina el mayor interés' },
+            { icon: '🛡️', text: 'Boost shield or balanced split: same target, less money now, more safety', textEs: 'Reforzar escudo o mitad y mitad: el mismo objetivo, menos dinero ahora, más seguridad' },
             { icon: '📊', text: 'Impact comparison: See days saved and interest prevented for each option', textEs: 'Comparación de impacto: Ve días ahorrados e interés prevenido por cada opción' },
             { icon: '✅', text: 'Select your preferred strategy and KoreX executes it', textEs: 'Selecciona tu estrategia preferida y KoreX la ejecuta' },
         ],

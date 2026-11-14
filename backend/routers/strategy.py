@@ -30,8 +30,8 @@ from velocity_engine import (
     CashflowTactical, VelocityWeapon, get_projections, get_velocity_target,
     get_peace_shield_status, calculate_safe_attack_equity, simulate_freedom_path, monthly_attack, attack_impact,
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
-    detect_float_kill_opportunities, get_closing_day_intelligence,
-    get_hybrid_kill_target, detect_interest_rate_arbitrage, calculate_risky_opportunity,
+    get_closing_day_intelligence,
+    detect_interest_rate_arbitrage, calculate_risky_opportunity,
     DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE, mission_json, compare_paths,
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
@@ -334,7 +334,6 @@ async def get_strategy_command_center(
         morning_briefing = None
         if target and attack_amount > 0:
             daily_interest = debt_daily_interest(target.balance, target.interest_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-            total_gap_cost = mission["gap_cost"]
             gap_debts = [{"name": g["name"], "shortfall": float(g["shortfall"]), "apr": float(g["apr"])} for g in mission["gap_debts"]]
             # Engine: amount capped at the debt balance / cash; days from the same simulation route
             impact = attack_impact(debt_accounts, target, attack_amount, liquid_cash,
@@ -344,10 +343,9 @@ async def get_strategy_command_center(
             interest_saved_monthly = impact["interest_saved_monthly"]
             days_accelerated = impact["days_accelerated"]
             freedom_hours = (interest_saved_monthly * Decimal('12') / Decimal('25')).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP)
-            reason = (f"Gap-First Strategy: ${float(total_gap_cost):,.2f}/mo covers interest gaps on {len(gap_debts)} debt(s). "
-                      f"Remaining ${float(effective_attack):,.2f} attacks {target.name} at {float(target.interest_rate)}% APR"
-                      if total_gap_cost > 0 else
-                      f"Highest APR at {float(target.interest_rate)}% — costs ${float(daily_interest)}/day in interest")
+            reason = f"Highest APR at {float(target.interest_rate)}% — costs ${float(daily_interest)}/day in interest"
+            if gap_debts:
+                reason += f". Warning: {len(gap_debts)} debt(s) grow because their minimum does not cover the interest"
             morning_briefing = {
                 "available_cash": float(liquid_cash), "attack_amount": float(attack_amount),
                 "shield_status": {"percentage": shield.get("fill_percentage", 0), "is_active": shield.get("is_active", False), "health": shield.get("health", "unknown")},
@@ -355,7 +353,8 @@ async def get_strategy_command_center(
                     "amount": float(effective_attack), "destination": target.name,
                     "destination_apr": float(target.interest_rate), "destination_balance": float(target.balance),
                     "daily_cost": float(daily_interest), "reason": reason,
-                    "gap_coverage": {"total_cost": float(total_gap_cost), "debts": gap_debts} if total_gap_cost > 0 else None,
+                    # debts whose minimum does not cover their interest: an alert, never paid ahead of the avalanche
+                    "growing_debts": gap_debts or None,
                 },
                 "impact": {"days_accelerated": days_accelerated, "interest_saved_monthly": float(interest_saved_monthly),
                            "freedom_hours_earned": float(freedom_hours)},
@@ -439,9 +438,7 @@ async def get_strategy_command_center(
             "streak": streak,
             "decision_options": decision_options,
             "debt_alerts": detect_debt_alerts(debt_accounts),
-            "float_kills": detect_float_kill_opportunities(debt_accounts, attack_amount),
             "closing_day_intelligence": get_closing_day_intelligence(debt_accounts),
-            "hybrid_kill_analysis": get_hybrid_kill_target(debt_accounts, attack_amount),
             "arbitrage_alerts": detect_interest_rate_arbitrage(
                 [{"name": acc.name, "balance": float(acc.balance), "apy": float(acc.apy) if acc.apy else 0.5}
                  for acc in funding_accounts(accounts)], debt_accounts),
