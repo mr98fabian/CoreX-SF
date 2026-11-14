@@ -7,7 +7,7 @@ from decimal import ROUND_HALF_UP, Decimal as D
 from pathlib import Path
 
 import velocity_engine as ve
-from velocity_engine import CashflowTactical, DebtAccount, compare_paths, generate_action_plan
+from velocity_engine import DebtAccount, compare_paths, generate_action_plan
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -64,20 +64,25 @@ def _replica(debts, extra, policy):
 
 
 def test_tactical_plan_attacks_only_the_highest_live_apr():
-    debts = [debt("Tarjeta chica", 120, 18, 35, due=8), debt("Tarjeta media", 900, 24, 35, due=10),
-             debt("La cara", 4000, 31, 120, due=20), debt("Préstamo", 6000, 12, 250, "personal_loan", due=15)]
-    plan = generate_action_plan(debts, [CashflowTactical("Nómina", D("3000"), 1, "income"),
-                                        CashflowTactical("Nómina", D("3000"), 15, "income")], D("1500"), shield_target=D("500"))
-    live = {d.name: d.balance for d in debts}
-    apr = {d.name: d.interest_rate for d in debts}
-    attacks = [m for m in plan if m["type"] == "attack"]
-    assert attacks, "the plan must attack with the surplus"
+    from datetime import timedelta
+    from velocity_engine import MissionAccount
+    start = date(2026, 12, 2)
+    accs = [MissionAccount(name="Tarjeta chica", balance=D("120"), interest_rate=D("18"), min_payment=D("35"), debt_subtype="credit_card", due_day=8),
+            MissionAccount(name="Tarjeta media", balance=D("900"), interest_rate=D("24"), min_payment=D("35"), debt_subtype="credit_card", due_day=10),
+            MissionAccount(name="La cara", balance=D("4000"), interest_rate=D("31"), min_payment=D("120"), debt_subtype="credit_card", due_day=20),
+            MissionAccount(name="Préstamo", balance=D("6000"), interest_rate=D("12"), min_payment=D("250"), debt_subtype="personal_loan", due_day=15)]
+    days = [start + timedelta(days=i) for i in range(100)]
+    incomes = [{"name": "Nómina", "amount": D("3000"), "dates": {x for x in days if x.day in (1, 15)}}]
+    plan = generate_action_plan(accs, incomes, [], D("1500"), shield_target=D("500"), start=start)
+    live = {a.name: a.balance for a in accs}
+    apr = {a.name: a.interest_rate for a in accs}
+    assert any(m["type"] == "attack" for m in plan), "the plan must attack with the surplus"
     for m in plan:
         assert m["type"] not in ("float_kill", "hybrid_kill")
         if m["type"] == "attack":
             top = max((n for n, b in live.items() if b > 0), key=lambda n: apr[n])
             assert m["destination"] == top, f"{m['date']}: attacked {m['destination']} while {top} ({apr[top]}%) was alive"
-        if m["type"] in ("attack", "min_payment") and m.get("destination") in live:
+        if m["type"] in ("attack", "min_payment", "obligation") and m.get("destination") in live:
             live[m["destination"]] = max(D(0), live[m["destination"]] - D(str(m["amount"])))
 
 

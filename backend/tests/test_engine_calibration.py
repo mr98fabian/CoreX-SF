@@ -85,7 +85,7 @@ def test_d4_tactical_gps_counts_cash_and_savings(client, monkeypatch):
     from routers import strategy
     seen = {}
     real = strategy.generate_action_plan
-    monkeypatch.setattr(strategy, "generate_action_plan", lambda debts, cf, cash, *a, **k: seen.setdefault("cash", cash) and real(debts, cf, cash, *a, **k))
+    monkeypatch.setattr(strategy, "generate_action_plan", lambda accs, inc, exp, cash, *a, **k: seen.setdefault("cash", cash) and real(accs, inc, exp, cash, *a, **k))
     uid = "c0c0c0c0-0000-4000-a000-00000000000d"
     app.dependency_overrides[get_current_user_id] = lambda: uid
     try:

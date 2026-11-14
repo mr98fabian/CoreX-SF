@@ -578,269 +578,146 @@ def generate_tactical_schedule(
 
 
 def generate_action_plan(
-    debts: List[DebtAccount],
-    cashflows: List[CashflowTactical],
-    checking_balance: Decimal,
-    funding_account_name: str = "Chase Cuenta",
+    accounts: List["MissionAccount"],
+    incomes: List[dict],
+    expenses: List[dict],
+    liquid_cash: Decimal,
+    funding_account_name: str = "Checking",
     shield_target: Decimal = DEFAULT_PEACE_SHIELD,
     weapons: Optional[List[VelocityWeapon]] = None,
+    start: Optional[date] = None,
+    days: int = 62,
 ) -> List[Dict]:
-    """
-    Generates a 2-month action plan by simulating day-by-day cashflow.
-    
-    Produces a chronological list of ALL financial events:
-    - Income arrivals
-    - Minimum payment due dates
-    - Attack opportunities (after income, when funds > shield)
-    
-    Each movement includes an impact estimate (daily_interest_saved, days_shortened).
-    """
-    today = date.today()
-    end_date = today + timedelta(days=62)  # ~2 months forward
-    
-    movements: List[Dict] = []
-    sim_balance = checking_balance
-    
-    # Clone debts so simulation doesn't mutate originals
-    sim_debts = [
-        DebtAccount(
-            name=d.name, balance=d.balance,
-            interest_rate=d.interest_rate,
-            min_payment=d.min_payment,
-            due_day=d.due_day,
-            debt_subtype=d.debt_subtype,
-            credit_limit=d.credit_limit,
-        ) for d in debts if d.balance > 0
-    ]
-    
-    # Clone weapons so simulation doesn't mutate originals
-    sim_weapons = [
-        VelocityWeapon(
-            name=w.name, balance=w.balance, credit_limit=w.credit_limit,
-            interest_rate=w.interest_rate, weapon_type=w.weapon_type,
-        ) for w in (weapons or [])
-        if w.available_credit > Decimal('500')  # Only weapons with meaningful credit
-    ]
-    
-    # Track which income days trigger chunk deployments (first income of each month)
-    chunk_deployed_months: set = set()
-    
-    # Sort by interest rate for avalanche attacks
-    sim_debts.sort(key=lambda x: x.interest_rate, reverse=True)
-    
-    # Track original balances for progress percentage
-    original_balances = {d.name: float(d.balance) for d in sim_debts}
-    
-    # Separate incomes and expenses from cashflows
-    incomes = [cf for cf in cashflows if cf.category == "income"]
-    
-    current = today
-    while current <= end_date:
-        day_num = current.day
-        display = current.strftime("%B %d, %Y")
-        iso = current.isoformat()
-        
-        # ─── 1. MIN PAYMENTS on due dates ───────────────────
-        for debt in sim_debts:
-            if debt.balance <= 0:
-                continue
-            if debt.due_day == day_num:
-                payment = min(debt.min_payment, debt.balance)
-                if payment > 0:
-                    bal_before = float(debt.balance)
-                    new_debt_bal = float(debt.balance - payment)
-                    new_fund_bal = float(sim_balance - payment)
-                    orig = original_balances.get(debt.name, bal_before)
-                    progress = round((1 - new_debt_bal / orig) * 100, 1) if orig > 0 else 100.0
-                    movements.append({
-                        "day": day_num,
-                        "date": iso,
-                        "display_date": display,
-                        "title": f"MIN PAYMENT: {debt.name}",
-                        "description": f"Minimum payment due for {debt.name}",
-                        "amount": float(payment),
-                        "type": "min_payment",
-                        "source": funding_account_name,
-                        "destination": debt.name,
-                        "daily_interest_saved": 0,
-                        "days_shortened": 0,
-                        "balance_before": bal_before,
-                        "balance_after": new_debt_bal,
-                        "total_interest_saved": 0,
-                        "funding_balance_after": new_fund_bal,
-                        "debt_progress_pct": progress,
-                    })
-                    sim_balance -= payment
-                    debt.balance -= payment
-        
-        # ─── 2. INCOME arrivals ─────────────────────────────
-        for inc in incomes:
-            if inc.day_of_month == day_num:
-                new_fund_bal = float(sim_balance + inc.amount)
-                movements.append({
-                    "day": day_num,
-                    "date": iso,
-                    "display_date": display,
-                    "title": f"INCOME: {inc.name}",
-                    "description": f"${float(inc.amount):,.2f} deposited to {funding_account_name}",
-                    "amount": float(inc.amount),
-                    "type": "income",
-                    "source": inc.name,
-                    "destination": funding_account_name,
-                    "daily_interest_saved": 0,
-                    "days_shortened": 0,
-                    "balance_before": 0,
-                    "balance_after": 0,
-                    "total_interest_saved": 0,
-                    "funding_balance_after": new_fund_bal,
-                    "debt_progress_pct": 0,
-                })
-                sim_balance += inc.amount
-        
-        # ─── 3. VELOCITY CHUNK — Phase 0 (credit line deployment) ──
-        # On income days, deploy chunks from low-APR weapons to high-APR debts
-        month_key = (current.year, current.month)
-        income_today = any(inc.day_of_month == day_num for inc in incomes)
-        
-        if sim_weapons and income_today and month_key not in chunk_deployed_months:
-            # One chunk deployment per month to keep it manageable
-            for weapon in sorted(sim_weapons, key=lambda w: w.interest_rate):
-                if weapon.available_credit < Decimal('500'):
-                    continue
-                
-                # Find best target: highest APR debt that's more expensive than weapon
-                eligible_targets = [
-                    d for d in sim_debts
-                    if d.balance > Decimal('0')
-                    and d.interest_rate > weapon.interest_rate
-                    and d.debt_subtype not in ('heloc', 'uil')  # Don't chunk weapon-to-weapon
-                ]
-                if not eligible_targets:
-                    continue
-                
-                target = max(eligible_targets, key=lambda d: d.interest_rate)
-                
-                # Calculate optimal chunk
-                chunk_amount = min(
-                    weapon.available_credit,
-                    target.balance,
-                    Decimal('15000'),  # Cap per chunk to manage risk
-                )
-                if chunk_amount < Decimal('500'):
-                    continue
-                
-                # Calculate arbitrage benefit
-                target_daily = target.interest_rate / Decimal('100') / Decimal('365')
-                weapon_daily = weapon.daily_rate
-                net_daily_savings = float(
-                    ((target_daily - weapon_daily) * chunk_amount)
-                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                )
-                annual_savings = round(net_daily_savings * 365, 2)
-                
-                bal_before = float(target.balance)
-                new_target_bal = float(target.balance - chunk_amount)
-                orig = original_balances.get(target.name, bal_before)
-                progress = round((1 - max(new_target_bal, 0) / orig) * 100, 1) if orig > 0 else 100.0
-                
-                movements.append({
-                    "day": day_num,
-                    "date": iso,
-                    "display_date": display,
-                    "title": f"⚡ VELOCITY CHUNK: {target.name}",
-                    "description": (
-                        f"Deploy ${float(chunk_amount):,.2f} from {weapon.name} ({float(weapon.interest_rate)}% APR) "
-                        f"→ {target.name} ({float(target.interest_rate)}% APR). "
-                        f"Net arbitrage: ${net_daily_savings}/day (${annual_savings}/yr)"
-                    ),
-                    "amount": float(chunk_amount),
-                    "type": "velocity_chunk",
-                    "source": weapon.name,
-                    "destination": target.name,
-                    "daily_interest_saved": net_daily_savings,
-                    "days_shortened": 0,
-                    "balance_before": bal_before,
-                    "balance_after": new_target_bal,
-                    "total_interest_saved": annual_savings,
-                    "funding_balance_after": float(sim_balance),  # Checking unchanged
-                    "debt_progress_pct": progress,
-                    "weapon_name": weapon.name,
-                    "weapon_apr": float(weapon.interest_rate),
-                    "target_apr": float(target.interest_rate),
-                    "arbitrage_spread": float(target.interest_rate - weapon.interest_rate),
-                })
-                
-                # Update simulation state
-                target.balance -= chunk_amount
-                weapon.balance += chunk_amount  # Weapon balance increases
-                chunk_deployed_months.add(month_key)
-                break  # One chunk per income event
-        
-        # ─── 4. ATTACK OPPORTUNITY — pure avalanche (U-13, owner's decision 2026-11-13) ───
-        # Every dollar above the shield goes to the highest-APR live debt. No phase may
-        # reorder payments by due date or by balance (the old Float/Hybrid Kill paid up to
-        # $218 more real interest on the owner's debts).
-        attack_funds = sim_balance - shield_target
-        if attack_funds > Decimal('10'):
-            remaining_ammo = attack_funds
+    """Tactical GPS (U-14): the daily mission, projected day by day over ~2 months.
 
-            # ── AVALANCHE (highest APR first) ──
-            if remaining_ammo > Decimal('10'):
-                remaining_debts = [d for d in sim_debts if d.balance > 0]
-                remaining_debts.sort(key=lambda x: x.interest_rate, reverse=True)
-                
-                for debt in remaining_debts:
-                    if remaining_ammo <= Decimal('10'):
-                        break
-                    if debt.balance <= 0:
-                        continue
-                    
-                    payment = min(remaining_ammo, debt.balance)
-                    
-                    daily_savings = float(
-                        (payment * (debt.interest_rate / Decimal('100')) / Decimal('365'))
-                        .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                    )
-                    total_daily_interest = float(
-                        (debt.balance * (debt.interest_rate / Decimal('100')) / Decimal('365'))
-                        .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                    )
-                    days_short = round(float(payment) / max(total_daily_interest, 0.01))
-                    
-                    is_payoff = payment >= debt.balance
-                    
-                    bal_before = float(debt.balance)
-                    new_debt_bal = float(debt.balance - payment)
-                    total_saved = round(daily_savings * days_short, 2)
-                    new_fund_bal = float(sim_balance - payment)
-                    orig = original_balances.get(debt.name, bal_before)
-                    progress = round((1 - max(new_debt_bal, 0) / orig) * 100, 1) if orig > 0 else 100.0
-                    
-                    movements.append({
-                        "day": day_num,
-                        "date": iso,
-                        "display_date": display,
-                        "title": f"PAY OFF: {debt.name}" if is_payoff else f"ATTACK: {debt.name}",
-                        "description": f"🎯 Pagar ${float(payment):,.2f} desde {funding_account_name} hacia {debt.name}",
-                        "amount": float(payment),
-                        "type": "attack",
-                        "source": funding_account_name,
-                        "destination": debt.name,
-                        "daily_interest_saved": daily_savings,
-                        "days_shortened": days_short,
-                        "balance_before": bal_before,
-                        "balance_after": new_debt_bal,
-                        "total_interest_saved": total_saved,
-                        "funding_balance_after": new_fund_bal,
-                        "debt_progress_pct": progress,
-                    })
-                    
-                    remaining_ammo -= payment
-                    sim_balance -= payment
-                    debt.balance -= payment
-        
-        current += timedelta(days=1)
-    
+    ONE source with the daily mission. For every simulated day d, with the balances
+    and cash the plan has reached:
+      1. get_daily_mission(state, cash, shield, incomes, expenses, today=d) decides —
+         obligations first (cuts to $0 at cut − 2, statements, loan payments, statement
+         minimums: mission_obligations / statement_cycle_minimum), then dated expenses
+         (the safe-equity projection), and only the LEFTOVER attacks, strict avalanche.
+      2. That day's flows happen: incomes, dated expenses, the obligations whose action
+         date is d (and plain minimums on due_day for debts the mission does not cover).
+      3. Then, and only then, the attack the mission allowed for d.
+    So if the mission says attack $0 today, the GPS never opens with an attack.
+    `incomes` / `expenses` are dated events ({"name", "amount", "dates"}) covering at
+    least [start, start + days + MISSION_WINDOW_DAYS) — helpers.dated_cashflow.
+    """
+    start = start or date.today()
+    cash = Decimal(str(liquid_cash))
+    state = [dataclasses.replace(a) for a in accounts if a.balance > 0]
+    original = {a.name: a.balance for a in state}
+    sim_weapons = [dataclasses.replace(w) for w in (weapons or []) if w.available_credit > Decimal('500')]
+    chunk_months: set = set()
+    movements: List[Dict] = []
+
+    def money(x: Decimal) -> float:
+        return float(Decimal(x).quantize(_CENT, rounding=ROUND_HALF_UP))
+
+    def move(d: date, title: str, description: str, amount: Decimal, kind: str, source: str, destination: str,
+             debt: Optional["MissionAccount"] = None, before: Optional[Decimal] = None, **extra) -> None:
+        after = debt.balance if debt is not None else None
+        orig = original.get(debt.name) if debt is not None else None
+        daily_saved = money(amount * debt.interest_rate / Decimal('100') / Decimal('365')) if debt is not None and kind == "attack" else 0
+        movements.append({
+            "day": d.day, "date": d.isoformat(), "display_date": d.strftime("%B %d, %Y"),
+            "title": title, "description": description, "amount": money(amount), "type": kind,
+            "source": source, "destination": destination,
+            "daily_interest_saved": daily_saved, "days_shortened": 0,
+            "balance_before": money(before) if before is not None else 0,
+            "balance_after": money(after) if after is not None else 0,
+            "total_interest_saved": 0, "funding_balance_after": money(cash),
+            "debt_progress_pct": round(float((1 - max(after, Decimal('0')) / orig) * 100), 1) if orig else 0,
+            "etiqueta": "estimado", **extra,
+        })
+
+    def pay(debt: "MissionAccount", amount: Decimal) -> Decimal:
+        nonlocal cash
+        paid = max(Decimal('0'), min(amount, debt.balance, max(cash, Decimal('0'))))  # never more than the cash
+        debt.balance -= paid
+        debt.paid_since_cut += paid  # a statement / cut paid down stays paid inside the cycle
+        cash -= paid
+        return paid
+
+    for offset in range(days + 1):
+        d = start + timedelta(days=offset)
+        # 1) the mission decides with the state at the start of the day (it already projects d's flows)
+        mission = get_daily_mission(state, cash, shield_target, incomes, expenses, today=d)
+        due_today = [o for o in mission["obligaciones"] if o["fecha_accion"] == d]
+        covered = {o["cuenta"] for o in mission["obligaciones"]}
+
+        # 2a) incomes
+        for inc in incomes:
+            if d in inc["dates"]:
+                cash += Decimal(str(inc["amount"]))
+                move(d, f"INCOME: {inc['name']}", f"{_usd(Decimal(str(inc['amount'])))} entran a {funding_account_name}",
+                     Decimal(str(inc["amount"])), "income", inc["name"], funding_account_name)
+        # 2b) dated expenses (rent, a move, subscriptions…)
+        for exp in expenses:
+            if d in exp["dates"]:
+                amt = Decimal(str(exp["amount"]))
+                cash -= amt
+                move(d, f"EXPENSE: {exp['name']}", f"{_usd(amt)} sale de {funding_account_name}", amt, "expense",
+                     funding_account_name, exp["name"])
+        # 2c) obligations of the cycle whose action date is today (cut to $0, statement, loan, minimum)
+        by_name = {a.name: a for a in state}
+        for o in due_today:
+            debt = by_name.get(o["cuenta"])
+            if debt is None or debt.balance <= 0:
+                continue
+            before = debt.balance
+            paid = pay(debt, o["monto"])
+            if paid > 0:
+                move(d, f"{o['tipo'].upper()}: {debt.name}", o["copy"], paid, "obligation", funding_account_name, debt.name,
+                     debt, before, obligacion=o["tipo"], fecha_evento=o["fecha_evento"].isoformat())
+            short = min(o["monto"], before) - paid
+            if short > 0:
+                move(d, f"FALTANTE: {debt.name}", f"Te faltan {_usd(short)} para cubrir {_what(o)}", short, "faltante",
+                     funding_account_name, debt.name, debt, debt.balance, obligacion=o["tipo"])
+        # 2d) plain minimum on due_day for debts the mission does not cover with an obligation
+        for debt in state:
+            if debt.balance > 0 and debt.name not in covered and debt.debt_subtype not in FIXED_SUBTYPES \
+                    and debt.due_day and d.day == debt.due_day:
+                before = debt.balance
+                minimum = debt.engine_minimum if debt.engine_minimum is not None else debt.min_payment
+                paid = pay(debt, minimum)
+                if paid > 0:
+                    move(d, f"MIN PAYMENT: {debt.name}", f"Pago mínimo de {debt.name}", paid, "min_payment",
+                         funding_account_name, debt.name, debt, before)
+
+        # 2e) velocity chunk (HELOC/UIL → highest APR above the weapon), once a month on an income day
+        if sim_weapons and (d.year, d.month) not in chunk_months and any(d in inc["dates"] for inc in incomes):
+            for weapon in sorted(sim_weapons, key=lambda w: w.interest_rate):
+                targets = [a for a in state if a.balance > 0 and a.interest_rate > weapon.interest_rate
+                           and a.debt_subtype not in ("heloc", "uil")]
+                if weapon.available_credit < Decimal('500') or not targets:
+                    continue
+                target = max(targets, key=lambda a: a.interest_rate)
+                chunk = min(weapon.available_credit, target.balance, Decimal('15000'))
+                if chunk < Decimal('500'):
+                    continue
+                before = target.balance
+                target.balance -= chunk
+                weapon.balance += chunk
+                spread = (target.interest_rate / Decimal('100') / Decimal('365') - weapon.daily_rate) * chunk
+                move(d, f"VELOCITY CHUNK: {target.name}",
+                     f"{_usd(chunk)} de {weapon.name} ({float(weapon.interest_rate)}% APR) → {target.name} ({float(target.interest_rate)}% APR)",
+                     chunk, "velocity_chunk", weapon.name, target.name, target, before,
+                     weapon_name=weapon.name, weapon_apr=float(weapon.interest_rate), target_apr=float(target.interest_rate),
+                     arbitrage_spread=float(target.interest_rate - weapon.interest_rate), net_daily_savings=money(spread))
+                chunk_months.add((d.year, d.month))
+                break
+
+        # 3) only the leftover the mission allowed attacks — strict avalanche (its target)
+        attack = min(mission["ataque"], max(Decimal('0'), cash))
+        target = next((a for a in state if a.name == mission["objetivo"] and a.balance > 0), None)
+        if attack > Decimal('10') and target is not None:
+            before = target.balance
+            paid = pay(target, attack)
+            move(d, f"{'PAY OFF' if target.balance <= 0 else 'ATTACK'}: {target.name}",
+                 f"Atacar la {target.name} con {_usd(paid)} desde {funding_account_name} (avalancha: el interés más alto)",
+                 paid, "attack", funding_account_name, target.name, target, before)
+
     return movements
 
 
@@ -1133,16 +1010,18 @@ def calculate_safe_attack_equity(
     debts: List[DebtAccount],
     days_buffer: int = 35, # Look ahead 1 month + buffer
     recurring_incomes: List[dict] = None,
-    recurring_expenses: List[dict] = None
+    recurring_expenses: List[dict] = None,
+    start_date: Optional[date] = None,
 ) -> Dict:
     """
     Calculates Available Equity based on the 'Lowest Low' projection.
+    start_date: first projected day (default today; the tactical plan projects from each simulated day).
     
     Rule: You can only spend what keeps you ABOVE the Shield at your lowest projected point.
     """
     # 1. Run Simulation
     projection = generate_projected_calendar(
-        start_date=date.today(),
+        start_date=start_date or date.today(),
         num_days=days_buffer,
         current_liquid_cash=liquid_cash,
         shield_target=shield_target,
@@ -2201,7 +2080,7 @@ def get_daily_mission(
     if recurring_incomes and target and liquid_cash > reserve:
         safe = calculate_safe_attack_equity(liquid_cash - reserve, shield_target, sim_debts, days_buffer=window,
                                             recurring_incomes=recurring_incomes,
-                                            recurring_expenses=recurring_expenses or [])["safe_equity"]
+                                            recurring_expenses=recurring_expenses or [], start_date=today)["safe_equity"]
         attack = max(Decimal('0'), min(safe, target.balance, liquid_cash - reserve))
         attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
 
