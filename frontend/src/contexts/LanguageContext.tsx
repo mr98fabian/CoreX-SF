@@ -304,6 +304,8 @@ const translations: Record<string, Record<Language, string>> = {
     "actionPlan.badgeAttack": { en: "Atk", es: "Atq" },
     "actionPlan.badgeShield": { en: "Shd", es: "Esc" },
     "actionPlan.badgeMinPayment": { en: "Min", es: "Mín" },
+    "actionPlan.badgeObligation": { en: "Due", es: "Corte" },
+    "actionPlan.badgeShortfall": { en: "Short", es: "Falta" },
     "actionPlan.badgeIncome": { en: "Inc", es: "Ing" },
     "actionPlan.badgeExpense": { en: "Tfr", es: "Trf" },
     "actionPlan.badgeVelocityChunk": { en: "Chunk", es: "Chunk" },

@@ -15,7 +15,7 @@ from schemas import MovementExecute, SimulatorRequest
 from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, get_cashflow_breakdown, funding_accounts,
-    build_daily_mission,
+    build_daily_mission, dated_cashflow, filter_active_debt_accounts, mission_accounts_for,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -27,7 +27,7 @@ from core_engine.calculators import calculate_minimum_payment
 
 from velocity_engine import debt_daily_interest
 from velocity_engine import (
-    CashflowTactical, VelocityWeapon, get_projections, get_velocity_target,
+    VelocityWeapon, get_projections, MISSION_WINDOW_DAYS, get_velocity_target,
     get_peace_shield_status, calculate_safe_attack_equity, simulate_freedom_path, monthly_attack, attack_impact,
     generate_action_plan, calculate_purchase_time_cost, detect_debt_alerts,
     get_closing_day_intelligence,
@@ -155,9 +155,7 @@ async def get_tactical_gps(
 ):
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        cashflows = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        cf_tactical = [CashflowTactical(name=cf.name, amount=cf.amount, day_of_month=cf.day_of_month, category=cf.category) for cf in cashflows]
 
         asset_accounts = funding_accounts(accounts)
         funding_name = asset_accounts[0].name if asset_accounts else "Checking"
@@ -171,9 +169,14 @@ async def get_tactical_gps(
             if acc.type == "debt" and acc.debt_subtype in ("heloc", "uil") and (acc.credit_limit or 0) > acc.balance
         ]
 
-        # All liquid cash (checking + savings + cash), not just "checking": a cash-only user simulated from $0
-        movements = generate_action_plan(debts, cf_tactical, Decimal(str(get_liquid_cash(accounts))),
-                                         funding_name, shield_target, weapons)
+        # U-14: the GPS is the daily mission projected day by day — same accounts (cuts, statements,
+        # statement minimums), same dated incomes/expenses, same shield. All liquid cash counts.
+        today = date.today()
+        horizon = 62
+        mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
+        incomes, expenses = dated_cashflow(session, user_id, today, horizon + 1 + MISSION_WINDOW_DAYS)
+        movements = generate_action_plan(mission_accounts, incomes, expenses, Decimal(str(get_liquid_cash(accounts))),
+                                         funding_name, shield_target, weapons, start=today, days=horizon)
         projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id),
                                       extra_monthly=get_cashflow_surplus(session, user_id, debts))
 

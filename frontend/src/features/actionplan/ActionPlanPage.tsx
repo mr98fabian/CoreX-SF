@@ -114,6 +114,8 @@ const TYPE_STYLES: Record<string, { bg: string; text: string; border: string; ic
     min_payment: { bg: 'bg-kx-ink3', text: 'text-kx-ink2', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeMinPayment' },
     income: { bg: 'bg-kx-pay', text: 'text-kx-pay', border: 'border-kx-line', icon: <DollarSign size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeIncome' },
     expense: { bg: 'bg-kx-debt', text: 'text-kx-debt', border: 'border-kx-line', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeExpense' },
+    obligation: { bg: 'bg-kx-ink3', text: 'text-kx-ink2', border: 'border-kx-line', icon: <Shield size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeObligation' },
+    faltante: { bg: 'bg-kx-debt', text: 'text-kx-debt', border: 'border-kx-debt', icon: <ArrowRightLeft size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeShortfall' },
     velocity_chunk: { bg: 'bg-kx-amber', text: 'text-kx-amber-soft', border: 'border-kx-amber', icon: <Zap size={14} strokeWidth={1.75} />, labelKey: 'actionPlan.badgeVelocityChunk' },
 };
 
@@ -299,7 +301,8 @@ export default function ActionPlanPage() {
     const summary = useMemo(() => {
         const attacks = filteredMovements.filter(m => m.type === 'attack');
         const shields = filteredMovements.filter(m => m.type === 'shield');
-        const mins = filteredMovements.filter(m => m.type === 'min_payment');
+        // committed payments: plain minimums AND the mission's obligations (cut to $0, statement, loan) — U-14
+        const mins = filteredMovements.filter(m => m.type === 'min_payment' || m.type === 'obligation');
         const incomes = filteredMovements.filter(m => m.type === 'income');
         const totalAttack = attacks.reduce((sum, m) => sum + m.amount, 0);
         const totalShield = shields.reduce((sum, m) => sum + m.amount, 0);

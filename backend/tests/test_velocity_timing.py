@@ -29,6 +29,21 @@ def _debt(name="Test Card", balance=5000, rate=24.99, min_pay=150, due=15):
     )
 
 
+def _plan(debts, cashflows, cash):
+    """U-14 adapter: DebtAccount → MissionAccount, monthly CashflowTactical → dated events."""
+    from datetime import timedelta
+    from velocity_engine import MissionAccount
+    start = date.today()
+    accs = [MissionAccount(name=d.name, balance=d.balance, interest_rate=d.interest_rate, min_payment=d.min_payment,
+                           debt_subtype=d.debt_subtype, due_day=d.due_day or None) for d in debts]
+    def ev(cf):
+        return {"name": cf.name, "amount": cf.amount,
+                "dates": {start + timedelta(days=i) for i in range(100) if (start + timedelta(days=i)).day == cf.day_of_month}}
+    incomes = [ev(c) for c in cashflows if c.category == "income"]
+    expenses = [ev(c) for c in cashflows if c.category != "income"]
+    return generate_action_plan(accs, incomes, expenses, cash, start=start)
+
+
 def _cashflow(name, amount, day, category="expense"):
     return CashflowTactical(
         name=name,
@@ -103,7 +118,7 @@ class TestActionPlanTiming:
             _cashflow("Salary", 8500, 1, "income"),
             _cashflow("Rent", 2000, 5, "expense"),
         ]
-        result = generate_action_plan(debts, cashflows, Decimal("5000"))
+        result = _plan(debts, cashflows, Decimal("5000"))
         assert isinstance(result, list)
         assert len(result) > 0, "Action plan should have at least 1 event"
 
@@ -111,7 +126,7 @@ class TestActionPlanTiming:
         """Each event should have date, title, amount, type."""
         debts = [_debt("Card", balance=5000, rate=24, min_pay=150, due=15)]
         cashflows = [_cashflow("Pay", 4000, 1, "income")]
-        result = generate_action_plan(debts, cashflows, Decimal("3000"))
+        result = _plan(debts, cashflows, Decimal("3000"))
 
         for event in result:
             assert "display_date" in event or "date" in event, f"Event missing date: {event}"
@@ -121,7 +136,7 @@ class TestActionPlanTiming:
         """Minimum payments should appear in the action plan."""
         debts = [_debt("Amex", balance=18500, rate=24.99, min_pay=450, due=5)]
         cashflows = [_cashflow("Income", 8500, 1, "income")]
-        result = generate_action_plan(debts, cashflows, Decimal("5000"))
+        result = _plan(debts, cashflows, Decimal("5000"))
 
         # Look for min payment events
         min_payment_events = [
