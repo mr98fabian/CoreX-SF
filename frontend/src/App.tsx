@@ -38,6 +38,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ApkUpdateBanner } from "@/components/ApkUpdateBanner";
+import { PlayPurchaseWatcher } from "@/components/PlayPurchaseWatcher";
 
 /** Inner shell — lives inside BrowserRouter so hooks like useNavigate work */
 function AppShell() {
@@ -52,6 +53,7 @@ function AppShell() {
       <LanguageProvider>
         <AuthProvider>
           <NotificationProvider>
+            <PlayPurchaseWatcher />
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
                 {/* Landing page — web only, redirects native/auth users */}

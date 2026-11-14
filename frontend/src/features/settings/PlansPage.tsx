@@ -3,6 +3,8 @@
  * two commercial plans — Gratis and KoreX Anual — from lib/pricing.ts. Checkout is the Lemon
  * Squeezy annual variant only (POST /api/subscriptions/checkout, plan=freedom, annual).
  * Founder or a current gift (checkout_hidden): state only, nothing to buy.
+ * Android build (lib/billing → google_play): Play Billing instead, with Play's localized price,
+ * "Restaurar compras" and "Gestionar en Google Play"; that branch never calls the Lemon checkout.
  */
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,6 +16,9 @@ import { AmberRule, BankHeader, StatePhrase } from '@/components/kx';
 import { PlanCards } from '@/components/kx/PlanCards';
 import { longDate, planLabel, type SubStatus } from '@/lib/planLimits';
 import { PAID_KEYS, PAID_PLAN_ID } from '@/lib/pricing';
+import { getBillingProvider } from '@/lib/billing';
+import { playButtonLabel, usePlayBilling } from '@/hooks/usePlayBilling';
+import { PlayStoreActions } from '@/components/PlayStoreActions';
 
 function stateLine(st: SubStatus, es: boolean): string {
     if (st.source === 'demo') return es ? 'Estás en la demo: todo abierto para probar, sin IA.' : "You're in the demo: everything open to try, no AI.";
@@ -25,7 +30,7 @@ function stateLine(st: SubStatus, es: boolean): string {
 }
 
 export default function PlansPage() {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const es = language === 'es';
     usePageTitle(es ? 'Planes' : 'Plans');
     const { toast } = useToast();
@@ -33,13 +38,17 @@ export default function PlansPage() {
     const [st, setSt] = useState<SubStatus | null>(null);
     const [busy, setBusy] = useState<string | null>(null);
 
-    useEffect(() => { apiFetch<SubStatus>('/api/subscriptions/status').then(setSt).catch(() => undefined); }, []);
+    const loadStatus = () => { apiFetch<SubStatus>('/api/subscriptions/status').then(setSt).catch(() => undefined); };
+    useEffect(loadStatus, []);
+    const onPlay = getBillingProvider() === 'google_play';
+    const play = usePlayBilling({ enabled: onPlay, onActivated: loadStatus });
 
     const choose = async () => {
         if (isDemo) {
             toast({ title: es ? 'Crea tu cuenta para elegir un plan' : 'Create your account to choose a plan' });
             return;
         }
+        if (onPlay) return play.buy(); // Google Play: no path to Lemon in the Android build
         setBusy(PAID_PLAN_ID);
         try {
             const { checkout_url } = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {
@@ -63,9 +72,14 @@ export default function PlansPage() {
                         {stateLine(st, es)}
                     </p>
                 )}
-                {!st?.checkout_hidden && (
+                {!st?.checkout_hidden && (onPlay ? (
+                    <PlanCards currentPlan={st?.plan} onChoose={choose} busy={play.phase !== 'idle' ? PAID_PLAN_ID : null}
+                        ctaLabel={() => playButtonLabel(play, t)}
+                        store={{ price: play.priceText, trialLine: play.trialLine, footer: t('billing.footer') }} />
+                ) : (
                     <PlanCards currentPlan={st?.plan} onChoose={choose} busy={busy} />
-                )}
+                ))}
+                {onPlay && !st?.checkout_hidden && <PlayStoreActions play={play} storeSource={st?.store_source} />}
             </div>
         </div>
     );

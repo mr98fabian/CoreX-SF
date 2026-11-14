@@ -13,9 +13,11 @@ interface Props {
     onChoose: (plan: PlanId) => void;
     busy?: string | null;
     ctaLabel?: (p: PlanView) => string;
+    /** Android build (Google Play): Play's localized price and trial instead of the USD figures */
+    store?: { price: string; trialLine: string | null; footer: string };
 }
 
-export function PlanCards({ currentPlan, onChoose, busy, ctaLabel }: Props) {
+export function PlanCards({ currentPlan, onChoose, busy, ctaLabel, store }: Props) {
     const { language } = useLanguage();
     const es = language === 'es';
     const { formatMoney } = useFormatMoney();
@@ -38,10 +40,11 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel }: Props) {
                         className={`relative rounded-[20px] border bg-kx-surface p-[18px] ${hero ? 'kx-elev-1 border-[rgba(245,158,11,.55)]' : 'border-kx-line'}`}>
                         <p className={`text-xs font-bold uppercase tracking-[.16em] ${hero ? 'text-kx-amber-soft' : 'text-kx-ink2'}`}>{p.name}</p>
                         <p className={`kx-num mt-1 font-light text-kx-ink ${hero ? 'text-[34px]' : 'text-[26px]'}`}>
-                            {formatMoney(p.annual)}
+                            {hero && store ? store.price : formatMoney(p.annual)}
                             {hero && <small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}</small>}
                         </p>
-                        {hero && p.trialDays > 0 && (
+                        {hero && store && store.trialLine && <p className="text-[13px] text-kx-ink">{store.trialLine}</p>}
+                        {hero && !store && p.trialDays > 0 && (
                             <p className="text-[13px] text-kx-ink">{es ? `1 mes gratis, luego ${formatMoney(p.annual)}/año` : `1 month free, then ${formatMoney(p.annual)}/yr`}</p>
                         )}
                         <ul className="mt-3 space-y-1.5 text-[13.5px] text-kx-ink2">
@@ -60,7 +63,7 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel }: Props) {
                     </div>
                 );
             })}
-            <p className="text-center text-xs text-kx-ink3">{es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.'}</p>
+            <p className="text-center text-xs text-kx-ink3">{store ? store.footer : (es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.')}</p>
         </div>
     );
 }
