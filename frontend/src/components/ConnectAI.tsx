@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { AIKit } from '@/components/AIKit';
-import { createKitToken } from '@/lib/aiKit';
+import { createKitToken, KIT_TOKEN_SCOPES } from '@/lib/aiKit';
 
 /**
  * "Conecta tu IA" — personal API tokens for an AI assistant (MCP server in mcp/).
@@ -27,7 +27,9 @@ const SCOPES: { scope: string; es: string; en: string }[] = [
     { scope: 'write:payments', es: 'Registrar pagos', en: 'Record payments' },
     { scope: 'write:accounts', es: 'Cuentas y metas', en: 'Accounts and goals' },
 ];
-const READ_ONLY = ['read:accounts', 'read:dashboard', 'read:plan', 'run:simulations'];
+// Defaults = the Kit IA one-tap token (lib/aiKit KIT_TOKEN_SCOPES): read everything + load accounts,
+// so PASO 1 (load every account) works. write:payments is NEVER ticked by default.
+const DEFAULT_SCOPES = KIT_TOKEN_SCOPES;
 
 interface ApiTokenRow {
     id: number;
@@ -45,7 +47,7 @@ export function ConnectAI() {
     const { toast } = useToast();
     const [tokens, setTokens] = useState<ApiTokenRow[]>([]);
     const [name, setName] = useState('');
-    const [scopes, setScopes] = useState<string[]>(READ_ONLY);
+    const [scopes, setScopes] = useState<string[]>(DEFAULT_SCOPES);
     const [creating, setCreating] = useState(false);
     const [newToken, setNewToken] = useState<string | null>(null);
     const [copied, setCopied] = useState<'token' | null>(null);

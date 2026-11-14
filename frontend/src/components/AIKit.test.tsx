@@ -191,3 +191,20 @@ describe('Guía IA: el kit se ve sin acabar de crear un token', () => {
         expect(host.querySelector('[data-testid="kit-config"]')!.textContent).toContain(TOKEN);
     });
 });
+
+describe('Conecta tu IA: the form starts with the Kit IA scopes', () => {
+    it('the ticked scopes are exactly KIT_TOKEN_SCOPES (write:accounts in, write:payments never)', async () => {
+        const el = await renderConnect();
+        const ticked = [...el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')]
+            .filter((c) => c.checked).map((c) => c.closest('label')!.textContent!.trim());
+        expect(ticked).toEqual(['Ver mis cuentas', 'Ver mi panel y ajustes', 'Ver mi plan de acción', 'Simular compras', 'Cuentas y metascambia datos']);
+        await act(async () => [...el.querySelectorAll('button')].find((b) => b.textContent?.includes('Crear token'))!.click());
+        await tick();
+        const post = apiFetch.mock.calls.find(([u, o]) => u === '/api/tokens' && o?.method === 'POST')!;
+        const scopes: string[] = JSON.parse(post[1].body).scopes;
+        expect([...scopes].sort()).toEqual([...KIT_TOKEN_SCOPES].sort());
+        expect(scopes).toContain('write:accounts');
+        expect(scopes).not.toContain('write:payments');
+        expect(KIT_TOKEN_SCOPES).not.toContain('write:payments');
+    });
+});
