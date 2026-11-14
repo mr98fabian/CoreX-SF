@@ -31,6 +31,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { ReferralProgram } from "@/components/ReferralProgram";
 import { ConnectAI } from "@/components/ConnectAI";
+import { getBillingProvider } from "@/lib/billing";
+import { playButtonLabel, usePlayBilling } from "@/hooks/usePlayBilling";
+import { PlayStoreActions } from "@/components/PlayStoreActions";
 
 // ─── Types ──────────────────────────────────────────────────────────
 type Section = "profile" | "appearance" | "notifications" | "data" | "subscription" | "ai" | "about";
@@ -154,6 +157,12 @@ export default function SettingsPage() {
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const { toast } = useToast();
+    // Android build: Google Play Billing; that branch never calls the Lemon checkout
+    const onPlay = getBillingProvider() === 'google_play';
+    const play = usePlayBilling({
+        enabled: onPlay,
+        onActivated: () => { fetchSubStatus().then((st) => { if (st) { setSubStatus(st); setActivePlan(st.plan); } }); },
+    });
 
     // Plan shown here is the server's, never just the cached localStorage value.
     // Coming back from Lemon Squeezy (?checkout=success) the webhook may land a few
@@ -963,6 +972,13 @@ export default function SettingsPage() {
                     <p data-testid="checkout-hidden" className="rounded-md border border-kx-line p-4 text-center text-sm text-kx-ink3">
                         {language === 'es' ? 'Incluido en tu acceso: no hay nada que comprar.' : 'Included in your access: nothing to buy.'}
                     </p>
+                ) : onPlay ? (
+                    <div className="kx-scope mx-auto max-w-xl space-y-4">
+                        <PlanCards currentPlan={currentPlan} busy={play.phase !== 'idle' ? PAID_PLAN_ID : null} onChoose={() => play.buy()}
+                            ctaLabel={() => playButtonLabel(play, t)}
+                            store={{ price: play.priceText, trialLine: play.trialLine, footer: t('billing.footer') }} />
+                        <PlayStoreActions play={play} storeSource={subStatus?.store_source} />
+                    </div>
                 ) : (
                     <div className="kx-scope mx-auto max-w-xl">
                         <PlanCards currentPlan={currentPlan} busy={upgrading} onChoose={async (planId) => {

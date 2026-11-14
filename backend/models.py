@@ -2,7 +2,7 @@ from typing import Optional, List
 from datetime import date, datetime
 from decimal import Decimal
 from sqlmodel import Field, SQLModel, Relationship, Column, JSON
-from sqlalchemy import Text, UniqueConstraint
+from sqlalchemy import String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
@@ -105,6 +105,10 @@ class Subscription(SQLModel, table=True):
     customer_portal_url: Optional[str] = Field(default=None)
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)
+    # Which store charges this row: lemon (web), google_play (Android), apple (future)
+    store_source: str = Field(default="lemon", sa_column=Column(String, nullable=False, server_default="lemon"))
+    # Play Billing purchase token, verified server-side (routers/google_play.py); one row per token
+    gp_purchase_token: Optional[str] = Field(default=None, sa_column=Column(String, nullable=True, unique=True, index=True))
 
 class UserSettings(SQLModel, table=True):
     __tablename__ = "user_settings"

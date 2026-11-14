@@ -88,6 +88,8 @@ export interface SubStatus {
     grant_ends_at?: string | null;
     checkout_hidden?: boolean;
     current_period_end?: string | null;
+    /** Which store charges the subscription row: lemon (web) or google_play (Android) */
+    store_source?: 'lemon' | 'google_play' | 'apple' | null;
 }
 
 /** GET /api/subscriptions/status — the server's resolver (code grants, Lemon, demo). */

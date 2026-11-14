@@ -224,6 +224,8 @@ async def get_subscription_status(user_id: str = Depends(get_current_user_id), s
         "customer_portal_url": sub.customer_portal_url if sub else None,
         "current_period_end": sub.current_period_end if sub else None,
         "ls_subscription_id": sub.ls_subscription_id if sub else None,
+        # which store charges the row (lemon | google_play): the app shows the right "manage" door
+        "store_source": sub.store_source if sub else None,
     }
 
 

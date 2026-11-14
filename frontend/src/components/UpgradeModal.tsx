@@ -4,6 +4,8 @@
  * minimums (compare_paths, the same numbers as Inicio's chart), labelled as an estimate.
  * No comparable data → no savings figure at all.
  * Opened from UpgradeNudge, AccountsPage, ActionPlanPage, Dashboard and Rankings.
+ * Android build (lib/billing → google_play): Play Billing with Play's localized price; that
+ * branch never calls the Lemon checkout.
  */
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -15,6 +17,9 @@ import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { MoneyAmount } from '@/components/MoneyAmount';
 import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID } from '@/lib/pricing';
 import { usePlanSavings } from '@/hooks/usePlanSavings';
+import { getBillingProvider } from '@/lib/billing';
+import { playButtonLabel, usePlayBilling } from '@/hooks/usePlayBilling';
+import { PlayStoreActions } from '@/components/PlayStoreActions';
 
 interface UpgradeModalProps {
     open: boolean;
@@ -37,8 +42,11 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
 
     // Real plan-vs-minimums savings (null when there is nothing to compare)
     const savings = usePlanSavings(open);
+    const onPlay = getBillingProvider() === 'google_play';
+    const play = usePlayBilling({ enabled: onPlay && open, onActivated: () => onOpenChange(false) });
 
     const handleUpgrade = async () => {
+        if (onPlay) return play.buy(); // Google Play: no path to Lemon in the Android build
         setUpgrading(true);
         try {
             const data = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {
@@ -91,9 +99,11 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                     <div data-testid="upgrade-paid" className="kx-elev-1 rounded-[20px] border border-[rgba(245,158,11,.55)] bg-kx-surface p-[18px]">
                         <p className="text-xs font-bold uppercase tracking-[.16em] text-kx-amber-soft">{es ? paid.name.es : paid.name.en}</p>
                         <p className="kx-num mt-1 text-[34px] font-light text-kx-ink">
-                            {formatMoney(paid.annual)}<small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}</small>
+                            {onPlay ? play.priceText : formatMoney(paid.annual)}<small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}</small>
                         </p>
-                        <p className="text-[13px] text-kx-ink">{es ? `1 mes gratis, luego ${formatMoney(paid.annual)}/año` : `1 month free, then ${formatMoney(paid.annual)}/yr`}</p>
+                        {onPlay
+                            ? play.trialLine && <p className="text-[13px] text-kx-ink">{play.trialLine}</p>
+                            : <p className="text-[13px] text-kx-ink">{es ? `1 mes gratis, luego ${formatMoney(paid.annual)}/año` : `1 month free, then ${formatMoney(paid.annual)}/yr`}</p>}
                         <ul className="mt-3 space-y-1.5">
                             {row(true, es ? 'Deudas ilimitadas' : 'Unlimited debts')}
                             {row(true, es ? 'Tu IA conectada' : 'Your AI connected')}
@@ -106,13 +116,14 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                                 {es ? ' menos de interés que pagando solo el mínimo. Estimado.' : ' less interest than paying only the minimum. Estimate.'}
                             </p>
                         )}
-                        <button type="button" onClick={handleUpgrade} disabled={paying || upgrading}
+                        <button type="button" onClick={handleUpgrade} disabled={paying || upgrading || (onPlay && play.phase !== 'idle')}
                             className="kx-press mt-4 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber disabled:opacity-50">
-                            {paying ? (es ? 'Tu plan actual' : 'Your current plan') : upgrading ? t('upgrade.processing') : (es ? 'Empezar mes gratis' : 'Start free month')}
+                            {paying ? (es ? 'Tu plan actual' : 'Your current plan') : onPlay ? playButtonLabel(play, t) : upgrading ? t('upgrade.processing') : (es ? 'Empezar mes gratis' : 'Start free month')}
                         </button>
+                        {onPlay && <div className="mt-3"><PlayStoreActions play={play} /></div>}
                     </div>
                 </div>
-                <p className="px-6 pb-6 text-center text-xs text-kx-ink3">{es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.'}</p>
+                <p className="px-6 pb-6 text-center text-xs text-kx-ink3">{onPlay ? t('billing.footer') : (es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.')}</p>
             </DialogContent>
         </Dialog>
     );
