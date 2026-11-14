@@ -313,22 +313,19 @@ def dated_cashflow(session, user_id: str, start, days: int):
     return incomes, expenses
 
 
-def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None):
-    """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
-    Callers (dashboard, command-center) only serialize the result."""
-    from datetime import date as _date
+def mission_accounts_for(session, user_id: str, debts, today=None) -> list:
+    """Debts as the mission sees them (last cut, payments since it, statement minimum).
+    ONE builder for the daily mission and the Calendar, so both read the same cycle."""
     from sqlmodel import select
-    from models import CashflowItem, CutHistory, Transaction
-    from velocity_engine import MissionAccount, MISSION_WINDOW_DAYS, get_daily_mission
-    today = today or _date.today()
-    debts = filter_active_debt_accounts(accounts, plan_limit)
+    from models import CutHistory, Transaction
+    from velocity_engine import MissionAccount
     ids = [a.id for a in debts if a.id is not None]
     last_cut = {}
     if ids:
         for c in session.exec(select(CutHistory).where(CutHistory.user_id == user_id, CutHistory.account_id.in_(ids))
                               .order_by(CutHistory.cut_date.desc())).all():
             last_cut.setdefault(c.account_id, c)
-    mission_accounts = []
+    out = []
     for a in debts:
         cut = last_cut.get(a.id)
         paid = Decimal("0")
@@ -337,7 +334,7 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
                                                          Transaction.date > cut.cut_date.isoformat())).all()
             # manual payments AND confirmed attacks ("Debt Payment") both reduce the statement
             paid = sum((abs(Decimal(str(t.amount))) for t in txs if is_payment_category(t.category)), Decimal("0"))
-        mission_accounts.append(MissionAccount(
+        out.append(MissionAccount(
             name=a.name, balance=Decimal(str(a.balance)), interest_rate=Decimal(str(a.interest_rate or 0)),
             min_payment=Decimal(str(a.min_payment or 0)), debt_subtype=a.debt_subtype or "",
             due_day=a.due_day or None, closing_day=a.closing_day or None,
@@ -345,7 +342,18 @@ def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None 
             last_cut_reported=Decimal(str(cut.reported_balance)) if cut else None, paid_since_cut=paid,
             statement_minimum=Decimal(str(cut.statement_minimum)) if cut and cut.statement_minimum is not None else None,
             statement_due=cut.statement_due_date if cut else None,
+            engine_minimum=account_plan_minimum(a),
         ))
+    return out
+
+
+def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None):
+    """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
+    Callers (dashboard, command-center) only serialize the result."""
+    from datetime import date as _date
+    from velocity_engine import MISSION_WINDOW_DAYS, get_daily_mission
+    today = today or _date.today()
+    mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
     incomes, expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
                              incomes, expenses, today=today)
@@ -367,14 +375,15 @@ def calendar_month(session, user_id: str, year: int, month: int, plan_limit: int
     """Events of one month for the Calendar, built with THE SAME functions as the
     daily mission (one source, so the calendar and the mission never disagree):
       - incomes / bills / dated subscriptions → dated_cashflow (duplicates once)
-      - minimums → account_plan_minimum on due_day
+      - minimums → account_plan_minimum on due_day; with a statement minimum still owed, the
+        mission's own number (statement_cycle_minimum) on the statement's due date
       - cuts → closing_day, with velocity_engine.corte_action_date
     Subscriptions without next_charge_date are not painted (no invented day) but counted."""
     import calendar as _cal
     from datetime import date as _date
     from sqlmodel import select
     from models import Account
-    from velocity_engine import corte_action_date
+    from velocity_engine import corte_action_date, statement_cycle_minimum
     today = today or _date.today()
     n = _cal.monthrange(year, month)[1]
     start = _date(year, month, 1)
@@ -384,6 +393,9 @@ def calendar_month(session, user_id: str, year: int, month: int, plan_limit: int
     debts = [a for a in filter_active_debt_accounts(accounts, plan_limit) if a.balance > 0]
     data = load_cashflow_inputs(session, user_id)
     undated = [s for s in data["active_subs"] if not s.next_charge_date]
+    # Same cycle data and same function as the daily mission (statement minimum vs engine)
+    cycle = mission_accounts_for(session, user_id, debts, today)
+    cycle_min = {a.id: v for a, ma in zip(debts, cycle) if (v := statement_cycle_minimum(ma, today)) > 0}
     q = lambda x: Decimal(x).quantize(Decimal("0.01"))  # noqa: E731
     days = []
     for d in range(1, n + 1):
@@ -397,8 +409,13 @@ def calendar_month(session, user_id: str, year: int, month: int, plan_limit: int
             if row["tipo"] == "suscripcion":
                 row.update({"id": e.get("id"), "logo_url": e.get("logo_url"), "cuenta": names.get(e.get("account_id"))})
             cobros.append(row)
-        for a in debts:
-            if a.due_day and d == min(a.due_day, n):
+        for a, ma in zip(debts, cycle):
+            stmt = cycle_min.get(a.id)
+            if stmt is not None and ma.statement_due.year == year and ma.statement_due.month == month:
+                # this month's bill IS the statement's: the mission's number, on the statement's date
+                if d == ma.statement_due.day:
+                    cobros.append({"nombre": a.name, "monto": stmt, "tipo": "minimo", "fuente": "estado"})
+            elif a.due_day and d == min(a.due_day, n):
                 m = account_plan_minimum(a)
                 if m > 0:
                     cobros.append({"nombre": a.name, "monto": m, "tipo": "minimo"})
