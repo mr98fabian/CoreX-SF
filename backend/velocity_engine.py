@@ -2377,6 +2377,7 @@ class MissionAccount:
     paid_since_cut: Decimal = Decimal('0')     # payments recorded after that cut
     statement_minimum: Optional[Decimal] = None  # that cut's statement minimum (None = not loaded)
     statement_due: Optional[date] = None         # and its due date
+    engine_minimum: Optional[Decimal] = None     # plan_minimum capped (what screens charge); None = min_payment
 
 
 def statement_minimum_due(a: MissionAccount, today: date) -> Decimal:
@@ -2387,6 +2388,18 @@ def statement_minimum_due(a: MissionAccount, today: date) -> Decimal:
     if a.statement_minimum is None or a.statement_due is None or a.statement_due < today or a.balance <= 0:
         return Decimal('0')
     return max(Decimal('0'), min(a.statement_minimum - a.paid_since_cut, a.balance))
+
+
+def statement_cycle_minimum(a: MissionAccount, today: date) -> Decimal:
+    """THE minimum of the current statement's cycle, shared by the daily mission and the
+    Calendar (one source): max(engine minimum, statement minimum), both net of payments
+    since the cut, capped at the balance. 0 when no statement minimum is still owed —
+    then each surface keeps the engine minimum, as before."""
+    owed = statement_minimum_due(a, today)
+    if owed <= 0:
+        return Decimal('0')
+    engine = a.engine_minimum if a.engine_minimum is not None else a.min_payment
+    return min(max(owed, engine - a.paid_since_cut), a.balance)
 
 
 def _day_in(year: int, month: int, day: int) -> date:
@@ -2476,8 +2489,7 @@ def mission_obligations(accounts: List[MissionAccount], today: date, window: int
                     continue
         rest = a.balance
         if stmt_min > 0 and a.statement_due < end:
-            # reserve = max(engine minimum, statement minimum), both net of payments since the cut
-            amount = min(max(stmt_min, a.min_payment - a.paid_since_cut), a.balance)
+            amount = statement_cycle_minimum(a, today)  # same number the Calendar paints
             out.append(_obligation("minimo", a, amount, a.statement_due, a.statement_due))
             rest = a.balance - amount
         if a.closing_day and rest > 0:
