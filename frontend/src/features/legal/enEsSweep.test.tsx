@@ -101,6 +101,12 @@ describe('render in Spanish (default) and English', () => {
         expect(sec('es', 'storage')).toContain('Solo nuestro backend accede a la base de datos');
         expect(sec('en', 'storage')).not.toContain('database policies ensure users can only access their own data');
         expect(sec('es', 'storage')).not.toContain('políticas de la base de datos que garantizan');
+        // security measures (section 8): RLS without policies + revoked permissions, backend isolation
+        expect(sec('en', 'security-measures')).toContain('Row-Level Security enabled on all tables with no access policies');
+        expect(sec('es', 'security-measures')).toContain('Row-Level Security activado en todas las tablas sin políticas de acceso');
+        expect(sec('en', 'security-measures')).not.toContain('Row-Level Security policies on all user data tables');
+        expect(sec('es', 'security-measures')).not.toContain('Políticas de Row-Level Security en todas');
+        expect([PRIVACY_COPY.en.effectiveDate, PRIVACY_COPY.es.effectiveDate]).toEqual(['November 13, 2026', '13 de noviembre de 2026']);
         // providers: Railway and Lemon Squeezy, same "• **Name** — role" format
         for (const l of ['es', 'en'] as const) {
             const providers = sec(l, 'sharing').split('\n').filter((line) => line.startsWith('• **'));

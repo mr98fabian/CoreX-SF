@@ -20,7 +20,7 @@ const en: LegalCopy = {
     pageTitle: 'Privacy Policy',
     back: 'Back to Login',
     effective: 'Effective Date:',
-    effectiveDate: 'February 14, 2026',
+    effectiveDate: 'November 13, 2026',
     intro: 'Your privacy is important to us. This Privacy Policy explains what information KoreX System collects, how we use it, and your rights regarding your data. We are committed to protecting your financial information.',
     toc: 'Table of Contents',
     footer: (year) => `KoreX Financial System — © ${year} All rights reserved.`,
@@ -64,7 +64,7 @@ const en: LegalCopy = {
         {
             id: 'security-measures',
             title: '8. Security Measures',
-            content: `We implement the following security measures:\n• Encrypted database connections (SSL/TLS).\n• Row-Level Security policies on all user data tables.\n• Secure password hashing via Supabase Auth (bcrypt).\n• JWT token-based authentication with expiration.\n• CORS restrictions to prevent unauthorized API access.\n• Regular security reviews and dependency updates.`,
+            content: `We implement the following security measures:\n• Encrypted database connections (SSL/TLS).\n• Row-Level Security enabled on all tables with no access policies, and table permissions revoked for the public roles; isolation between users is enforced by our backend.\n• Secure password hashing via Supabase Auth (bcrypt).\n• JWT token-based authentication with expiration.\n• CORS restrictions to prevent unauthorized API access.\n• Regular security reviews and dependency updates.`,
         },
         {
             id: 'children',
@@ -93,7 +93,7 @@ const es: LegalCopy = {
     pageTitle: 'Política de Privacidad',
     back: 'Volver al inicio de sesión',
     effective: 'Fecha de entrada en vigor:',
-    effectiveDate: '14 de febrero de 2026',
+    effectiveDate: '13 de noviembre de 2026',
     intro: 'Tu privacidad es importante para nosotros. Esta Política de Privacidad explica qué información recopila KoreX System, cómo la usamos y cuáles son tus derechos sobre tus datos. Estamos comprometidos con proteger tu información financiera.',
     toc: 'Índice',
     footer: (year) => `KoreX Financial System — © ${year} Todos los derechos reservados.`,
@@ -137,7 +137,7 @@ const es: LegalCopy = {
         {
             id: 'security-measures',
             title: '8. Medidas de seguridad',
-            content: `Aplicamos las siguientes medidas de seguridad:\n• Conexiones cifradas a la base de datos (SSL/TLS).\n• Políticas de Row-Level Security en todas las tablas con datos de usuarios.\n• Hash seguro de contraseñas mediante Supabase Auth (bcrypt).\n• Autenticación basada en tokens JWT con caducidad.\n• Restricciones CORS para impedir el acceso no autorizado a la API.\n• Revisiones de seguridad y actualizaciones de dependencias periódicas.`,
+            content: `Aplicamos las siguientes medidas de seguridad:\n• Conexiones cifradas a la base de datos (SSL/TLS).\n• Row-Level Security activado en todas las tablas sin políticas de acceso, y permisos sobre las tablas revocados para los roles públicos; el aislamiento entre usuarios lo aplica nuestro backend.\n• Hash seguro de contraseñas mediante Supabase Auth (bcrypt).\n• Autenticación basada en tokens JWT con caducidad.\n• Restricciones CORS para impedir el acceso no autorizado a la API.\n• Revisiones de seguridad y actualizaciones de dependencias periódicas.`,
         },
         {
             id: 'children',
