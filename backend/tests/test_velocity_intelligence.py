@@ -1,6 +1,7 @@
 """
 Unit tests for the 4 Intelligence Functions in velocity_engine.py.
-Tests: Float Kill, Closing Day Intelligence, Hybrid Kill, Interest Rate Arbitrage.
+Tests: Closing Day Intelligence, Interest Rate Arbitrage. (Float Kill and Hybrid Kill were removed
+with U-13, avalanche only: see test_strict_avalanche.py.)
 No database, no API — pure engine logic.
 """
 import sys, os
@@ -10,9 +11,7 @@ from decimal import Decimal
 from datetime import date, timedelta
 from velocity_engine import (
     DebtAccount,
-    detect_float_kill_opportunities,
     get_closing_day_intelligence,
-    get_hybrid_kill_target,
     detect_interest_rate_arbitrage,
 )
 
@@ -46,58 +45,6 @@ def _loan(name="Auto Loan", balance=15000, rate=6.5, min_pay=350, due=1):
         due_day=due,
         debt_subtype="auto_loan",
     )
-
-
-# ═══════════════════════════════════════════════════════════════
-# TEST CLASS: detect_float_kill_opportunities
-# ═══════════════════════════════════════════════════════════════
-
-class TestFloatKillOpportunities:
-    """Float Kill: Identifies revolving credit in grace period for priority attack."""
-
-    def test_killable_card_detected(self):
-        """A card with balance <= attack equity and due within grace window."""
-        card = _card("Chase Freedom", balance=500, due=date.today().day + 5 if date.today().day + 5 <= 28 else 5)
-        result = detect_float_kill_opportunities([card], Decimal("1000"))
-        assert len(result) > 0
-        killable = [r for r in result if r["can_kill"]]
-        assert len(killable) > 0
-        assert killable[0]["name"] == "Chase Freedom"
-
-    def test_non_revolving_excluded(self):
-        """Fixed loans (auto, mortgage) should NOT appear in float kills."""
-        loan = _loan("My Auto Loan", balance=500)
-        result = detect_float_kill_opportunities([loan], Decimal("1000"))
-        assert len(result) == 0
-
-    def test_insufficient_equity_not_killable(self):
-        """Card with balance > attack equity is still reported but not 'can_kill'."""
-        card = _card("Big Card", balance=5000, due=date.today().day + 3 if date.today().day + 3 <= 28 else 3)
-        result = detect_float_kill_opportunities([card], Decimal("1000"))
-        if len(result) > 0:
-            assert result[0]["can_kill"] is False
-
-    def test_empty_debts_returns_empty(self):
-        """No debts → no opportunities."""
-        result = detect_float_kill_opportunities([], Decimal("5000"))
-        assert result == []
-
-    def test_zero_equity_returns_no_killable(self):
-        """With zero attack equity, nothing should be killable."""
-        card = _card("Test", balance=100)
-        result = detect_float_kill_opportunities([card], Decimal("0"))
-        killable = [r for r in result if r["can_kill"]]
-        assert len(killable) == 0
-
-    def test_result_fields_present(self):
-        """Ensure all expected fields exist in the result dict."""
-        card = _card("Amex", balance=200, due=date.today().day + 10 if date.today().day + 10 <= 28 else 10)
-        result = detect_float_kill_opportunities([card], Decimal("500"))
-        if result:
-            entry = result[0]
-            expected_keys = {"name", "balance", "days_until_due", "daily_interest_at_risk",
-                             "monthly_interest_at_risk", "can_kill", "apr", "priority", "reason"}
-            assert expected_keys.issubset(entry.keys())
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -151,65 +98,6 @@ class TestClosingDayIntelligence:
         card = _card("Position Card", closing=15)
         result = get_closing_day_intelligence([card])
         assert result[0]["cycle_position"] in ("early", "mid_cycle", "pre_close", "close_week", "grace_period", "unknown")
-
-
-# ═══════════════════════════════════════════════════════════════
-# TEST CLASS: get_hybrid_kill_target
-# ═══════════════════════════════════════════════════════════════
-
-class TestHybridKillTarget:
-    """Hybrid Kill: Determines if eliminating a small debt beats pure avalanche."""
-
-    def test_recommends_hybrid_when_beneficial(self):
-        """Small debt with high min_payment freed should trigger hybrid."""
-        # Small card: $500 balance, $100/mo min payment, 18% APR
-        small = _card("Small Card", balance=500, min_pay=100, rate=18)
-        # Big card: $10000 balance, $200/mo, 22% APR (avalanche target)
-        big = _card("Big Card", balance=10000, min_pay=200, rate=22)
-        result = get_hybrid_kill_target([small, big], Decimal("600"))
-        # Should recommend hybrid: killing small frees $100/mo
-        if result and result["strategy"] == "hybrid_kill":
-            assert result["kill_target_name"] == "Small Card"
-            assert result["freed_min_payment"] == 100.0
-
-    def test_recommends_avalanche_when_better(self):
-        """When avalanche clearly wins, should recommend pure avalanche."""
-        # Small card: $500 balance, $25/mo min, 5% APR
-        small = _card("Low Rate Card", balance=500, min_pay=25, rate=5)
-        # Big card: $10000, $200/mo, 29.99% APR
-        big = _card("Monster Card", balance=10000, min_pay=200, rate=29.99)
-        result = get_hybrid_kill_target([small, big], Decimal("600"))
-        if result:
-            assert result["strategy"] in ("hybrid_kill", "avalanche")
-
-    def test_single_debt_returns_avalanche(self):
-        """With only one debt, hybrid makes no sense."""
-        card = _card("Solo Card", balance=5000, rate=20)
-        result = get_hybrid_kill_target([card], Decimal("1000"))
-        # Should return avalanche or None  
-        if result:
-            assert result["strategy"] == "avalanche"
-
-    def test_no_debts_returns_none(self):
-        """No debts → None."""
-        result = get_hybrid_kill_target([], Decimal("1000"))
-        assert result is None
-
-    def test_zero_equity_returns_none(self):
-        """With zero attack equity, can't kill anything."""
-        debts = [_card("A", balance=500), _card("B", balance=3000)]
-        result = get_hybrid_kill_target(debts, Decimal("0"))
-        # Should return None since zero equity
-        assert result is None
-
-    def test_result_has_reasoning(self):
-        """Result should include a human-readable reasoning string."""
-        small = _card("Tiny", balance=200, min_pay=50, rate=15)
-        big = _card("Large", balance=8000, min_pay=180, rate=24)
-        result = get_hybrid_kill_target([small, big], Decimal("500"))
-        if result:
-            assert "reasoning" in result
-            assert len(result["reasoning"]) > 10
 
 
 # ═══════════════════════════════════════════════════════════════

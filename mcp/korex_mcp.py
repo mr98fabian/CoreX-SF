@@ -38,9 +38,8 @@ REGLAS DURAS
 EL MÉTODO DE LA CASA
 - Corte en cero: cada tarjeta debe reportar $0 en su fecha de corte.
 - Paga los estados completos al vencimiento: nada de saldo que genere interés.
-- Avalancha: el dinero extra va a la deuda de interés más alto.
+- Avalancha estricta: el dinero extra va SIEMPRE a la deuda de interés más alto. Nunca por vencimiento ni por saldo más chico (eso cuesta más interés real).
 - Desempate: intereses antes que score. Si dos caminos empatan, gana el que ahorra más interés.
-- Las tarjetas builder (para construir historial) quedan fuera de la avalancha: uso mínimo y pago total.
 
 RITMO
 - Brief corto: una idea por mensaje y una misión por mensaje.

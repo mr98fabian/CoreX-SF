@@ -125,7 +125,7 @@ def test_mcp_lists_the_new_tools_and_the_house_rules():
     for phrase in ("la mente de KoreX", "nombre que el usuario te dio", "Nunca muevas dinero real",
                    "Nunca prometas puntos de score", "Números solo de fuentes reales",
                    "SOLO con captura o confirmación escrita", "Corte en cero", "estados completos al vencimiento",
-                   "Avalancha", "intereses antes que score", "builder", "corte − 2", "día de pago",
+                   "Avalancha estricta", "intereses antes que score", "corte − 2", "día de pago",
                    "una misión por mensaje", "máximo 1 al día, 3 a la semana y 8 al mes", "21:30 a 07:00",
                    "`korex_logros`"):
         assert phrase in src, phrase

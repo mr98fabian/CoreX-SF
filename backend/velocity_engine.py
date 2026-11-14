@@ -377,7 +377,7 @@ def get_velocity_target(debts: List[DebtAccount]) -> Optional[DebtAccount]:
     Determine the highest-priority debt to attack (Velocity Target).
     
     Strategy: Target debt with highest APR first (Avalanche method).
-    Alternative strategies could include Snowball (lowest balance first).
+    The only strategy: avalanche (owner's decision 2026-11-13, U-13).
     """
     if not debts:
         return None
@@ -776,143 +776,15 @@ def generate_action_plan(
                 chunk_deployed_months.add(month_key)
                 break  # One chunk per income event
         
-        # ─── 4. ATTACK OPPORTUNITY — 3-Phase Priority ─────────
-        # Phase 1: Float Kill (revolving credit in grace period)
-        # Phase 2: Hybrid Kill (eliminate small debts for compound benefit)
-        # Phase 3: Avalanche (highest APR)
+        # ─── 4. ATTACK OPPORTUNITY — pure avalanche (U-13, owner's decision 2026-11-13) ───
+        # Every dollar above the shield goes to the highest-APR live debt. No phase may
+        # reorder payments by due date or by balance (the old Float/Hybrid Kill paid up to
+        # $218 more real interest on the owner's debts).
         attack_funds = sim_balance - shield_target
         if attack_funds > Decimal('10'):
             remaining_ammo = attack_funds
-            
-            # ── Phase 1: FLOAT KILLS (grace period priority) ──
-            revolving_due_soon = [
-                d for d in sim_debts
-                if d.balance > 0
-                and d.is_revolving
-                and (d.due_day or 0) > 0
-                and _days_until_due(d.due_day, current) <= 25
-            ]
-            # Sort: smallest balance first (kill the most cards possible)
-            revolving_due_soon.sort(key=lambda d: d.balance)
-            
-            for debt in revolving_due_soon:
-                if remaining_ammo <= Decimal('10'):
-                    break
-                if debt.balance <= 0:
-                    continue
-                
-                payment = min(remaining_ammo, debt.balance)
-                is_payoff = payment >= debt.balance
-                days_left = _days_until_due(debt.due_day, current)
-                
-                daily_savings = float(
-                    (payment * (debt.interest_rate / Decimal('100')) / Decimal('365'))
-                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                )
-                total_daily_interest = float(
-                    (debt.balance * (debt.interest_rate / Decimal('100')) / Decimal('365'))
-                    .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                )
-                days_short = round(float(payment) / max(total_daily_interest, 0.01))
-                
-                bal_before = float(debt.balance)
-                new_debt_bal = float(debt.balance - payment)
-                total_saved = round(daily_savings * days_short, 2)
-                new_fund_bal = float(sim_balance - payment)
-                orig = original_balances.get(debt.name, bal_before)
-                progress = round((1 - max(new_debt_bal, 0) / orig) * 100, 1) if orig > 0 else 100.0
-                
-                movements.append({
-                    "day": day_num,
-                    "date": iso,
-                    "display_date": display,
-                    "title": f"⚡ FLOAT KILL: {debt.name}" if is_payoff else f"⚡ FLOAT ATTACK: {debt.name}",
-                    "description": (
-                        f"🛡️ Grace period payment — due in {days_left} days. "
-                        f"Pay ${float(payment):,.2f} from {funding_account_name} to preserve 0% interest."
-                    ),
-                    "amount": float(payment),
-                    "type": "float_kill",
-                    "source": funding_account_name,
-                    "destination": debt.name,
-                    "daily_interest_saved": daily_savings,
-                    "days_shortened": days_short,
-                    "balance_before": bal_before,
-                    "balance_after": new_debt_bal,
-                    "total_interest_saved": total_saved,
-                    "funding_balance_after": new_fund_bal,
-                    "debt_progress_pct": progress,
-                })
-                
-                remaining_ammo -= payment
-                sim_balance -= payment
-                debt.balance -= payment
-            
-            # ── Phase 2: HYBRID KILL (eliminate small debts) ──
-            if remaining_ammo > Decimal('10'):
-                active_for_hybrid = [d for d in sim_debts if d.balance > 0]
-                if len(active_for_hybrid) > 1:
-                    avalanche_t = max(active_for_hybrid, key=lambda d: d.interest_rate)
-                    killable = [
-                        d for d in active_for_hybrid
-                        if d.balance <= remaining_ammo and d.name != avalanche_t.name
-                    ]
-                    
-                    for candidate in sorted(killable, key=lambda d: d.balance):
-                        # Quick check: does killing this beat pure avalanche?
-                        freed_min = candidate.min_payment
-                        leftover = remaining_ammo - candidate.balance
-                        partial_savings = leftover * avalanche_t.monthly_rate if leftover > 0 else Decimal('0')
-                        hybrid_benefit = (freed_min + partial_savings) * Decimal('12')
-                        
-                        avalanche_benefit = (remaining_ammo * avalanche_t.monthly_rate) * Decimal('12')
-                        
-                        if hybrid_benefit > avalanche_benefit:
-                            payment = candidate.balance
-                            
-                            daily_savings = float(
-                                (payment * (candidate.interest_rate / Decimal('100')) / Decimal('365'))
-                                .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                            )
-                            total_daily_interest = float(
-                                (candidate.balance * (candidate.interest_rate / Decimal('100')) / Decimal('365'))
-                                .quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-                            )
-                            days_short = round(float(payment) / max(total_daily_interest, 0.01))
-                            
-                            bal_before = float(candidate.balance)
-                            new_fund_bal = float(sim_balance - payment)
-                            orig = original_balances.get(candidate.name, bal_before)
-                            
-                            movements.append({
-                                "day": day_num,
-                                "date": iso,
-                                "display_date": display,
-                                "title": f"💡 HYBRID KILL: {candidate.name}",
-                                "description": (
-                                    f"Eliminate {candidate.name} (${float(payment):,.2f}) → "
-                                    f"frees ${float(freed_min):,.2f}/mo for future attacks. "
-                                    f"Advantage: ${float(hybrid_benefit - avalanche_benefit):,.2f} over 12mo."
-                                ),
-                                "amount": float(payment),
-                                "type": "hybrid_kill",
-                                "source": funding_account_name,
-                                "destination": candidate.name,
-                                "daily_interest_saved": daily_savings,
-                                "days_shortened": days_short,
-                                "balance_before": bal_before,
-                                "balance_after": 0,
-                                "total_interest_saved": round(daily_savings * days_short, 2),
-                                "funding_balance_after": new_fund_bal,
-                                "debt_progress_pct": 100.0,
-                            })
-                            
-                            remaining_ammo -= payment
-                            sim_balance -= payment
-                            candidate.balance = Decimal('0')
-                            break  # Only 1 hybrid kill per day
-            
-            # ── Phase 3: AVALANCHE (standard highest-APR attack) ──
+
+            # ── AVALANCHE (highest APR first) ──
             if remaining_ammo > Decimal('10'):
                 remaining_debts = [d for d in sim_debts if d.balance > 0]
                 remaining_debts.sort(key=lambda x: x.interest_rate, reverse=True)
@@ -1618,9 +1490,7 @@ def _simulate_freedom_path(
                  debt.balance = Decimal('0')
                  month_events.append(f"{debt.name} Paid Off")
 
-        # 3. Allocating Extra Cash — GAP-FIRST STRATEGY
-        # Step A: Cover interest shortfalls so no debt GROWS
-        # Step B: Attack highest APR with remaining extra (Avalanche)
+        # 3. Allocating Extra Cash — pure avalanche (highest APR first)
         active_debts = [d for d in sim_debts if d.balance > 0]
         
         if active_debts:
@@ -1628,31 +1498,7 @@ def _simulate_freedom_path(
             available_for_attack = extra_monthly_payment + (
                 sum((d.min_payment for d in sim_debts if d.balance <= 0), Decimal('0')) if roll_freed_payments else Decimal('0'))
             
-            # --- Step A: Cover interest gaps first ---
-            for debt in active_debts:
-                if available_for_attack <= 0:
-                    break
-                
-                # Calculate this month's interest (already accrued above)
-                monthly_interest = (debt.balance * debt.monthly_rate).quantize(
-                    Decimal('0.01'), rounding=ROUND_HALF_UP
-                )
-                
-                # The min_payment already reduced debt.balance above.
-                # But if min_payment < interest that was accrued, the debt grew.
-                # We calculate the original shortfall to see if we need to cover it.
-                shortfall = monthly_interest - debt.min_payment
-                
-                if shortfall > 0:
-                    gap_payment = min(shortfall, available_for_attack, debt.balance)
-                    debt.balance -= gap_payment
-                    available_for_attack -= gap_payment
-                    
-                    if debt.balance <= Decimal('0.01'):
-                        debt.balance = Decimal('0')
-                        month_events.append(f"{debt.name} Eliminated (gap covered)")
-            
-            # --- Step B: Avalanche with remaining extra ---
+            # --- Avalanche: all extra to the highest APR (U-13: no gap-first) ---
             active_debts = [d for d in sim_debts if d.balance > 0]
             active_debts.sort(key=lambda x: x.interest_rate, reverse=True)
             
@@ -1694,10 +1540,6 @@ def _simulate_freedom_path(
     }
 
 
-# ================================================================
-# FLOAT KILL — Grace Period Priority Attack
-# ================================================================
-
 def _days_until_due(due_day: int, ref: date = None) -> int:
     """Calculate days from ref (today) until the next due_day occurrence."""
     if ref is None:
@@ -1725,69 +1567,6 @@ def _days_until_due(due_day: int, ref: date = None) -> int:
         target = next_month.replace(day=min(due_day, last_day))
     
     return (target - ref).days
-
-
-def detect_float_kill_opportunities(
-    debts: List[DebtAccount],
-    attack_equity: Decimal,
-    grace_window_days: int = 25,
-) -> List[Dict]:
-    """
-    Identify credit cards in grace period that can be paid off with attack equity.
-    
-    Float Kill Logic:
-    1. Find revolving debts (credit cards / HELOCs) with a due_day
-    2. If days_until_due <= grace_window AND balance <= attack_equity → FLOAT KILL
-    3. Priority: smallest payable balance first (clear the most cards)
-    
-    Returns list of float kill opportunities sorted by priority.
-    """
-    opportunities = []
-    today = date.today()
-    
-    for debt in debts:
-        if debt.balance <= 0:
-            continue
-        if not debt.is_revolving:
-            continue
-        if (debt.due_day or 0) <= 0:
-            continue
-        
-        days_left = _days_until_due(debt.due_day, today)
-        
-        if days_left > grace_window_days:
-            continue
-        
-        # Calculate daily interest if NOT paid (cost of missing grace period)
-        daily_interest = (
-            debt.balance * (debt.interest_rate / Decimal('100')) / Decimal('365')
-        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        
-        # Monthly interest cost if grace period is lost
-        monthly_interest_cost = (daily_interest * Decimal('30')).quantize(
-            Decimal('0.01'), rounding=ROUND_HALF_UP
-        )
-        
-        can_kill = debt.balance <= attack_equity
-        
-        opportunities.append({
-            "name": debt.name,
-            "balance": float(debt.balance),
-            "days_until_due": days_left,
-            "daily_interest_at_risk": float(daily_interest),
-            "monthly_interest_at_risk": float(monthly_interest_cost),
-            "can_kill": can_kill,
-            "apr": float(debt.interest_rate),
-            "priority": 1 if can_kill else 2,
-            "reason": (
-                f"Pay ${float(debt.balance):,.2f} in {days_left} days to keep 0% grace period. "
-                f"Missing it costs ${float(monthly_interest_cost)}/mo in interest."
-            ),
-        })
-    
-    # Sort: killable first, then by balance ascending (smallest kills first)
-    opportunities.sort(key=lambda x: (x["priority"], x["balance"]))
-    return opportunities
 
 
 # ================================================================
@@ -1917,141 +1696,6 @@ def get_closing_day_intelligence(debts: List[DebtAccount]) -> List[Dict]:
         })
     
     return intelligence
-
-
-# ================================================================
-# HYBRID KILL — Snowball + Avalanche Optimization
-# ================================================================
-
-def get_hybrid_kill_target(
-    debts: List[DebtAccount],
-    attack_equity: Decimal,
-    lookahead_months: int = 12,
-) -> Optional[Dict]:
-    """
-    Checks if eliminating a small debt (snowball) yields better compound
-    returns than pure avalanche (highest APR).
-    
-    Logic:
-    1. Find the avalanche target (highest APR)
-    2. Find debts that can be FULLY ELIMINATED with the attack equity
-    3. For each killable debt, calculate: freed_min_payment × remaining_months
-    4. Compare: compound value of freed payment vs interest saved by avalanche
-    5. If hybrid wins → recommend killing the smaller debt first
-    
-    Returns the recommended target (may be avalanche or hybrid) with reasoning.
-    """
-    if not debts or attack_equity <= Decimal('0'):
-        return None
-    
-    active = [d for d in debts if d.balance > 0]
-    if not active:
-        return None
-    
-    # 1. Pure Avalanche Target
-    avalanche_target = max(active, key=lambda d: d.interest_rate)
-    
-    # Interest saved by paying attack_equity toward avalanche target
-    avalanche_payment = min(attack_equity, avalanche_target.balance)
-    avalanche_monthly_interest_saved = (
-        avalanche_payment * avalanche_target.monthly_rate
-    ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    
-    # Total avalanche benefit over lookahead period
-    avalanche_total_benefit = avalanche_monthly_interest_saved * Decimal(str(lookahead_months))
-    
-    # 2. Find killable debts (excluding avalanche target if it can also be killed)
-    killable = [
-        d for d in active
-        if d.balance <= attack_equity and d.name != avalanche_target.name
-    ]
-    
-    if not killable:
-        return {
-            "strategy": "avalanche",
-            "target_name": avalanche_target.name,
-            "target_balance": float(avalanche_target.balance),
-            "payment_amount": float(avalanche_payment),
-            "apr": float(avalanche_target.interest_rate),
-            "benefit_monthly": float(avalanche_monthly_interest_saved),
-            "benefit_total": float(avalanche_total_benefit),
-            "reasoning": (
-                f"No debts can be fully eliminated. Attack {avalanche_target.name} "
-                f"({float(avalanche_target.interest_rate)}% APR) — saves "
-                f"${float(avalanche_monthly_interest_saved)}/mo in interest."
-            ),
-        }
-    
-    # 3. Evaluate each killable debt
-    best_hybrid = None
-    best_hybrid_benefit = Decimal('0')
-    
-    for candidate in killable:
-        # Killing this debt frees up its min_payment every month
-        freed_payment = candidate.min_payment
-        
-        # Remaining equity after the kill goes to avalanche target
-        remaining_equity = attack_equity - candidate.balance
-        partial_avalanche_savings = (
-            remaining_equity * avalanche_target.monthly_rate
-        ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if remaining_equity > 0 else Decimal('0')
-        
-        # Compound benefit: freed payment accelerates ALL future months
-        # Each freed dollar compounds as additional attack power
-        hybrid_monthly_benefit = freed_payment + partial_avalanche_savings
-        hybrid_total_benefit = hybrid_monthly_benefit * Decimal(str(lookahead_months))
-        
-        if hybrid_total_benefit > best_hybrid_benefit:
-            best_hybrid_benefit = hybrid_total_benefit
-            best_hybrid = {
-                "kill_target": candidate,
-                "freed_payment": freed_payment,
-                "remaining_equity": remaining_equity,
-                "partial_avalanche_savings": partial_avalanche_savings,
-                "monthly_benefit": hybrid_monthly_benefit,
-                "total_benefit": hybrid_total_benefit,
-            }
-    
-    # 4. Compare strategies
-    if best_hybrid and best_hybrid_benefit > avalanche_total_benefit:
-        kill = best_hybrid["kill_target"]
-        return {
-            "strategy": "hybrid_kill",
-            "kill_target_name": kill.name,
-            "kill_target_balance": float(kill.balance),
-            "kill_target_apr": float(kill.interest_rate),
-            "freed_min_payment": float(best_hybrid["freed_payment"]),
-            "remaining_equity_to_avalanche": float(best_hybrid["remaining_equity"]),
-            "avalanche_target_name": avalanche_target.name,
-            "avalanche_target_apr": float(avalanche_target.interest_rate),
-            "benefit_monthly": float(best_hybrid["monthly_benefit"]),
-            "benefit_total": float(best_hybrid["total_benefit"]),
-            "avalanche_benefit_total": float(avalanche_total_benefit),
-            "advantage": float(best_hybrid_benefit - avalanche_total_benefit),
-            "reasoning": (
-                f"💡 HYBRID KILL: Pay off {kill.name} (${float(kill.balance):,.2f}) → "
-                f"frees ${float(best_hybrid['freed_payment']):,.2f}/mo. "
-                f"Then send remaining ${float(best_hybrid['remaining_equity']):,.2f} to "
-                f"{avalanche_target.name}. Net advantage: "
-                f"${float(best_hybrid_benefit - avalanche_total_benefit):,.2f} over {lookahead_months} months."
-            ),
-        }
-    
-    # Avalanche wins
-    return {
-        "strategy": "avalanche",
-        "target_name": avalanche_target.name,
-        "target_balance": float(avalanche_target.balance),
-        "payment_amount": float(avalanche_payment),
-        "apr": float(avalanche_target.interest_rate),
-        "benefit_monthly": float(avalanche_monthly_interest_saved),
-        "benefit_total": float(avalanche_total_benefit),
-        "reasoning": (
-            f"Pure avalanche is optimal. Attack {avalanche_target.name} "
-            f"({float(avalanche_target.interest_rate)}% APR) — saves "
-            f"${float(avalanche_monthly_interest_saved)}/mo in interest."
-        ),
-    }
 
 
 # ================================================================
@@ -2546,7 +2190,7 @@ def get_daily_mission(
         safe = calculate_safe_attack_equity(liquid_cash - reserve, shield_target, sim_debts, days_buffer=window,
                                             recurring_incomes=recurring_incomes,
                                             recurring_expenses=recurring_expenses or [])["safe_equity"]
-        attack = max(Decimal('0'), min(safe - gap_cost, target.balance, liquid_cash - reserve))
+        attack = max(Decimal('0'), min(safe, target.balance, liquid_cash - reserve))
         attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
 
     # The first obligation the cumulative cash cannot reach: a warning of its own
