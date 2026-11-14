@@ -21,6 +21,7 @@ import { FingerprintLockRow } from './FingerprintLockRow';
 import { SoundRow } from './SoundRow';
 import { CoachBlock } from './CoachBlock';
 import { HouseGoalRow } from './HouseGoalRow';
+import { ShieldGoalRow } from './ShieldGoalRow';
 import { OwnerCodesPanel } from './OwnerCodesPanel';
 import { longDate, planLabel, type SubStatus } from '@/lib/planLimits';
 
@@ -179,6 +180,7 @@ export default function SettingsHome() {
                 </Section>
 
                 <CoachBlock es={es} />
+                <ShieldGoalRow es={es} />
                 <HouseGoalRow es={es} />
 
                 {/* Conecta tu IA — locked or open per the server (GET /api/tokens/access) */}
