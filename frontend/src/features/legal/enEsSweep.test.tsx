@@ -92,6 +92,29 @@ describe('render in Spanish (default) and English', () => {
         expect(termsSections('es', 2026).find((s) => s.id === 'arbitration')!.content).toContain('American Arbitration Association (AAA)');
     });
 
+    it('privacy, legal accuracy (2026-11-13): real RLS architecture and every data provider, in both languages', () => {
+        const sec = (l: 'es' | 'en', id: string) => PRIVACY_COPY[l].sections.find((s) => s.id === id)!.content;
+        // storage: public access denied (RLS without policies + grants revoked), isolation done by the backend
+        expect(sec('en', 'storage')).toContain('direct public access to the database is denied');
+        expect(sec('en', 'storage')).toContain('Only our backend reaches the database, and it separates each user');
+        expect(sec('es', 'storage')).toContain('el acceso público directo a la base de datos está denegado');
+        expect(sec('es', 'storage')).toContain('Solo nuestro backend accede a la base de datos');
+        expect(sec('en', 'storage')).not.toContain('database policies ensure users can only access their own data');
+        expect(sec('es', 'storage')).not.toContain('políticas de la base de datos que garantizan');
+        // security measures (section 8): RLS without policies + revoked permissions, backend isolation
+        expect(sec('en', 'security-measures')).toContain('Row-Level Security enabled on all tables with no access policies');
+        expect(sec('es', 'security-measures')).toContain('Row-Level Security activado en todas las tablas sin políticas de acceso');
+        expect(sec('en', 'security-measures')).not.toContain('Row-Level Security policies on all user data tables');
+        expect(sec('es', 'security-measures')).not.toContain('Políticas de Row-Level Security en todas');
+        expect([PRIVACY_COPY.en.effectiveDate, PRIVACY_COPY.es.effectiveDate]).toEqual(['November 13, 2026', '13 de noviembre de 2026']);
+        // providers: Railway and Lemon Squeezy, same "• **Name** — role" format
+        for (const l of ['es', 'en'] as const) {
+            const providers = sec(l, 'sharing').split('\n').filter((line) => line.startsWith('• **'));
+            expect(providers.map((p) => p.match(/\*\*(.+?)\*\*/)![1])).toEqual(['Supabase', 'Google', 'Vercel', 'Railway', 'Lemon Squeezy']);
+            for (const p of providers) expect(p).toMatch(/^• \*\*[^*]+\*\* — .+\.$/);
+        }
+    });
+
     it('copy files: every key exists in both languages', () => {
         expect(Object.keys(LOGIN_COPY.es).sort()).toEqual(Object.keys(LOGIN_COPY.en).sort());
         expect(Object.keys(NOT_FOUND_COPY.es).sort()).toEqual(Object.keys(NOT_FOUND_COPY.en).sort());
