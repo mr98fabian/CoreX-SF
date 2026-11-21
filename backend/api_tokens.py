@@ -95,6 +95,9 @@ def _authenticate_token(raw: str, scope: str) -> ApiToken:
         row = session.exec(select(ApiToken).where(ApiToken.token_hash == hash_token(raw))).first()
         if not row or row.revoked_at is not None:
             raise HTTPException(status_code=401, detail="Invalid or revoked API token")
+        # OAuth access tokens expire; tokens created by hand have expires_at NULL and never do
+        if row.expires_at is not None and row.expires_at <= datetime.utcnow():
+            raise HTTPException(status_code=401, detail="Expired API token")
         if scope not in (row.scopes or []):
             raise HTTPException(status_code=403, detail=f"Token lacks scope {scope}")
         # Checked on every request, not only at creation: a cancelled/expired plan

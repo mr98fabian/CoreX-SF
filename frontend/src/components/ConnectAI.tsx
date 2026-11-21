@@ -38,10 +38,11 @@ interface ApiTokenRow {
     created_at: string;
     last_used_at: string | null;
     active: boolean;
+    source?: 'manual' | 'oauth';
 }
 
 export function ConnectAI() {
-    const { language } = useLanguage();
+    const { language, t: tr } = useLanguage();
     const es = language === 'es';
     const { isDemo } = useAuth();
     const { toast } = useToast();
@@ -223,7 +224,10 @@ export function ConnectAI() {
                         {active.map((t) => (
                             <div key={t.id} className="flex items-start justify-between gap-3 rounded-lg border border-kx-line p-3">
                                 <div className="space-y-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">{t.name}</p>
+                                    <p className="text-sm font-medium truncate">
+                                        {t.name}
+                                        {t.source === 'oauth' && <Badge variant="outline" className="ml-2 text-[10px]" data-testid="token-via-link">{tr('oauth.viaLink')}</Badge>}
+                                    </p>
                                     <p className="text-xs text-muted-foreground">{t.scopes.map(label).join(' · ')}</p>
                                     <p className="text-[11px] text-muted-foreground">
                                         {es ? 'Último uso: ' : 'Last used: '}

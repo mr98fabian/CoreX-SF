@@ -142,6 +142,60 @@ class ApiToken(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_used_at: Optional[datetime] = Field(default=None)
     revoked_at: Optional[datetime] = Field(default=None)
+    # OAuth (routers/oauth.py): NULL = never expires (every token created by hand);
+    # OAuth access tokens expire and are rotated by refresh.
+    expires_at: Optional[datetime] = Field(default=None)
+    source: str = Field(default="manual", sa_column=Column(String, nullable=False, server_default="manual"))  # manual | oauth
+
+
+class OAuthClient(SQLModel, table=True):
+    """An OAuth client registered through RFC 7591 (Claude, ChatGPT…). Public clients have
+    no secret; a confidential one keeps only sha256(secret)."""
+    __tablename__ = "oauth_clients"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    client_id: str = Field(index=True, unique=True, max_length=64)
+    client_name: str = Field(max_length=60)
+    client_metadata: dict = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
+    secret_hash: Optional[str] = Field(default=None, max_length=64)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class OAuthCode(SQLModel, table=True):
+    """Both short-lived authorize artefacts, hashed: kind='request' is the consent handle
+    (validated /oauth/authorize parameters, ≤10 min); kind='code' is the authorization code
+    (one use, ≤10 min, bound to client + user + redirect_uri + code_challenge + scopes)."""
+    __tablename__ = "oauth_codes"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    kind: str = Field(max_length=10)
+    token_hash: str = Field(index=True, unique=True, max_length=64)
+    client_id: str = Field(index=True, max_length=64)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=True))
+    redirect_uri: str
+    code_challenge: str = Field(max_length=128)
+    scopes: List[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    state: Optional[str] = Field(default=None)
+    resource: Optional[str] = Field(default=None)
+    expires_at: datetime
+    used_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class OAuthRefreshToken(SQLModel, table=True):
+    """Refresh tokens (sha256 only). One family per consent: every refresh rotates (the old
+    row gets replaced_by_id); presenting a rotated or revoked one revokes the whole family
+    and its ApiToken."""
+    __tablename__ = "oauth_refresh_tokens"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    token_hash: str = Field(index=True, unique=True, max_length=64)
+    client_id: str = Field(index=True, max_length=64)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    api_token_id: int = Field(index=True)
+    family_id: str = Field(index=True, max_length=64)
+    scopes: List[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    expires_at: datetime
+    revoked_at: Optional[datetime] = Field(default=None)
+    replaced_by_id: Optional[int] = Field(default=None)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ApiTokenAudit(SQLModel, table=True):
