@@ -2,7 +2,7 @@ from typing import Optional, List
 from datetime import date, datetime
 from decimal import Decimal
 from sqlmodel import Field, SQLModel, Relationship, Column, JSON
-from sqlalchemy import String, Text, UniqueConstraint
+from sqlalchemy import Boolean, String, Text, UniqueConstraint, true as sa_true
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
@@ -117,6 +117,35 @@ class UserSettings(SQLModel, table=True):
     onboarding_complete: bool = Field(default=False)
     shield_target: Decimal = Field(default=Decimal("1000.00"), max_digits=14, decimal_places=2)
     attack_percentage: Decimal = Field(default=Decimal("20"), max_digits=5, decimal_places=2)
+    # Push notices on the phone (push_engine.py). On by default; the engine always respects it.
+    push_enabled: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=sa_true()))
+
+
+class PushDevice(SQLModel, table=True):
+    """A phone that can receive the user's push notices (FCM token). dead_at = FCM said the token
+    is invalid: never used again."""
+    __tablename__ = "push_devices"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    fcm_token: str = Field(sa_column=Column(String(512), nullable=False, unique=True, index=True))
+    platform: str = Field(default="android", max_length=16)
+    timezone: str = Field(default="America/Chicago", max_length=64)  # IANA, as the phone reports it
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    last_seen_at: datetime = Field(default_factory=datetime.utcnow)
+    dead_at: Optional[datetime] = Field(default=None)
+
+
+class PushLog(SQLModel, table=True):
+    """Every push notice sent: the dedup (user, kind, key) and the 1-a-day cap (local_date)."""
+    __tablename__ = "push_log"
+    __table_args__ = (UniqueConstraint("user_id", "kind", "dedup_key", name="uq_push_log_user_kind_key"),)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    kind: str = Field(max_length=16)          # mision | corte | celebracion
+    dedup_key: str = Field(max_length=64)     # mission: the day; cut: account:cut date; celebration: account
+    local_date: date                          # the user's own day when it was sent
+    sent_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class TransactionCreate(SQLModel):

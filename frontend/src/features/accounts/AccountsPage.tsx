@@ -111,6 +111,16 @@ export default function AccountsPage() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [updatingAccount, setUpdatingAccount] = useState<Account | null>(null);
     const [deleteAccountTarget, setDeleteAccountTarget] = useState<Account | null>(null);
+    // ?account=<id> (a tapped "Corte en 2 días" notice): scroll to that card and outline it
+    const focusId = (() => {
+        const raw = new URLSearchParams(window.location.search).get('account');
+        return raw && /^\d+$/.test(raw) ? Number(raw) : null;
+    })();
+    useEffect(() => {
+        if (focusId === null || isLoading) return;
+        const id = window.setTimeout(() => document.getElementById(`account-${focusId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 150);
+        return () => window.clearTimeout(id);
+    }, [focusId, isLoading]);
     const [cashflowRefreshKey, setCashflowRefreshKey] = useState(0);
 
 
@@ -812,7 +822,9 @@ export default function AccountsPage() {
                                 return (
                                     <Card
                                         key={acc.id}
-                                        className={`glass-card group transition-all duration-500 bg-kx-surface relative ${isLocked
+                                        id={`account-${acc.id}`}
+                                        data-focused={focusId === acc.id || undefined}
+                                        className={`glass-card group transition-all duration-500 bg-kx-surface relative ${focusId === acc.id ? 'ring-2 ring-[var(--kx-amber)] ' : ''}${isLocked
  ? 'opacity-60 border-[color-mix(in_srgb,var(--kx-debt)_15%,transparent)] cursor-pointer'
  : 'hover:border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)]'
  }`}

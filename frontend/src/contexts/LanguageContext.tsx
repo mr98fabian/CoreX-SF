@@ -864,6 +864,14 @@ const translations: Record<string, Record<Language, string>> = {
     "oauth.demo": { es: "El demo es compartido: crea tu cuenta para conectar tu IA.", en: "The demo is shared: create your account to connect your AI." },
     "oauth.seePlans": { es: "Ver planes", en: "See plans" },
     "oauth.viaLink": { es: "conectado por enlace", en: "connected by link" },
+    // Push notices on the Android app (lib/push, components/PushSetup, components/PushToggleRow)
+    "push.preTitle": { es: "Avisos que sirven", en: "Notices that help" },
+    "push.preBody": { es: "Te avisamos antes de cada corte y con tu misión del día. Nada de spam.", en: "We let you know before each cut and with your mission of the day. No spam." },
+    "push.preYes": { es: "Activar avisos", en: "Turn on notices" },
+    "push.preNo": { es: "Ahora no", en: "Not now" },
+    "push.toggle": { es: "Avisos en el teléfono", en: "Notices on your phone" },
+    "push.toggleSub": { es: "Cortes, tu misión del día y deudas saldadas. Máximo uno al día.", en: "Cuts, your mission of the day and paid-off debts. At most one a day." },
+    "push.deniedSub": { es: "Están bloqueados en el sistema: toca para abrir los ajustes del teléfono.", en: "They're blocked in the system: tap to open your phone's settings." },
     // Mi Cuenta (features/settings/MyAccountPage) and /eliminar-cuenta (features/account/DeleteAccountInfoPage)
     "account.title": { es: "Mi Cuenta", en: "My Account" },
     "account.rowSub": { es: "Tu email, tu plan y eliminar la cuenta", en: "Your email, your plan and deleting the account" },

@@ -133,7 +133,7 @@ def health():
 
 # ── Register Routers ─────────────────────────────────────────
 ROUTERS = ["accounts", "cashflow", "dashboard", "strategy", "transactions",
-           "demo", "analytics", "subscriptions", "google_play", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock", "coach", "house", "goals", "cuts", "engagement", "codes", "admin", "calendar", "oauth", "account"]
+           "demo", "analytics", "subscriptions", "google_play", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock", "coach", "house", "goals", "cuts", "engagement", "codes", "admin", "calendar", "oauth", "account", "push"]
 for mod in ROUTERS:
     app.include_router(__import__(f"routers.{mod}", fromlist=["router"]).router)
 
@@ -141,3 +141,15 @@ for mod in ROUTERS:
 # /mcp answers 503 until MCP_REMOTE_ENABLED is set (see mcp_remote.py, routers/oauth.py)
 import mcp_remote  # noqa: E402
 mcp_remote.mount(app)
+
+
+# ── Push notices (push_engine.py): hourly, only when Firebase is configured ──
+@app.on_event("startup")
+async def start_push_loop():
+    import asyncio
+    import push_engine
+    if push_engine.configured():
+        app.state.push_task = asyncio.create_task(push_engine.loop())
+        logger.info("Push notices: hourly loop started")
+    else:
+        logger.info("Push notices: FIREBASE_SERVICE_ACCOUNT_JSON not set, nothing will be sent")

@@ -43,6 +43,7 @@ import { useCapacitor } from "@/hooks/useCapacitor";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ApkUpdateBanner } from "@/components/ApkUpdateBanner";
 import { PlayPurchaseWatcher } from "@/components/PlayPurchaseWatcher";
+import { PushSetup } from "@/components/PushSetup";
 
 /** Inner shell — lives inside BrowserRouter so hooks like useNavigate work */
 function AppShell() {
@@ -58,6 +59,7 @@ function AppShell() {
         <AuthProvider>
           <NotificationProvider>
             <PlayPurchaseWatcher />
+            <PushSetup />
             <Suspense fallback={<LoadingScreen />}>
               <Routes>
                 {/* Landing page — web only, redirects native/auth users */}

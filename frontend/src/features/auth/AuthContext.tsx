@@ -179,6 +179,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             seedDemoData().catch(() => { });
             return;
         }
+        // This phone stops receiving the user's push notices (needs the session, so first)
+        await import('@/lib/push').then((m) => m.clearPushToken()).catch(() => undefined);
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
     }, [isDemo]);
