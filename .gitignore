@@ -63,3 +63,5 @@ mcp/.venv/
 *.jks
 *.keystore
 keystore.properties
+# Firebase client config: local only (the Firebase service-account key goes to Railway, never here)
+google-services.json
