@@ -487,7 +487,7 @@ def test_local_stdio_server_still_starts_and_lists_the_21_tools():
 
 def test_one_head_and_the_migration_goes_up_and_down_clean():
     backend = ROOT / "backend"
-    assert ScriptDirectory.from_config(Config(str(backend / "alembic.ini"))).get_heads() == ["b7d2e9f4c3a1"]
+    assert len(ScriptDirectory.from_config(Config(str(backend / "alembic.ini"))).get_heads()) == 1  # newer migrations build on it
     path = next((backend / "alembic" / "versions").glob("b7d2e9f4c3a1_*.py"))
     spec = importlib.util.spec_from_file_location("mig_oauth", path)
     mig = importlib.util.module_from_spec(spec)

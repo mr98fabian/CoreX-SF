@@ -77,13 +77,13 @@ def _require_config() -> dict:
 _token_cache: dict = {}
 
 
-async def _access_token(info: dict) -> str:
-    cached = _token_cache.get(info["client_email"])
+async def _access_token(info: dict, scope: str = SCOPE) -> str:
+    cached = _token_cache.get((info["client_email"], scope))
     if cached and cached[1] > time.time() + 60:
         return cached[0]
     now = int(time.time())
     token_uri = info.get("token_uri") or "https://oauth2.googleapis.com/token"
-    assertion = jwt.encode({"iss": info["client_email"], "scope": SCOPE, "aud": token_uri, "iat": now, "exp": now + 3600},
+    assertion = jwt.encode({"iss": info["client_email"], "scope": scope, "aud": token_uri, "iat": now, "exp": now + 3600},
                            info["private_key"], algorithm="RS256")
     async with httpx.AsyncClient() as client:
         resp = await client.post(token_uri, timeout=15.0, data={
@@ -92,7 +92,7 @@ async def _access_token(info: dict) -> str:
         logger.error(f"Google OAuth token request failed: {resp.status_code}")
         raise HTTPException(status_code=502, detail="Google Play is unreachable. Try again.")
     body = resp.json()
-    _token_cache[info["client_email"]] = (body["access_token"], now + int(body.get("expires_in", 3600)))
+    _token_cache[(info["client_email"], scope)] = (body["access_token"], now + int(body.get("expires_in", 3600)))
     return body["access_token"]
 
 
