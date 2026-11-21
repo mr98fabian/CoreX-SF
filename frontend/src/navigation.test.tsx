@@ -49,7 +49,7 @@ describe('Navegación top-5', () => {
     });
 
     it('every live route has a menu entry or is declared internal-only', () => {
-        const INTERNAL_ONLY = new Set(['action-plan/full', 'accounts/manage', 'settings/plans', 'settings/ia', 'settings/advanced', 'panel']);
+        const INTERNAL_ONLY = new Set(['action-plan/full', 'accounts/manage', 'settings/plans', 'settings/ia', 'settings/advanced', 'settings/cuenta', 'panel']);
         const block = appSrc.slice(appSrc.indexOf('path="/dashboard"'));
         const children = [...block.matchAll(/<Route (index|path="([^"]+)")/g)].map((m) => (m[1] === 'index' ? '' : m[2]));
         expect(children.length).toBeGreaterThan(10);

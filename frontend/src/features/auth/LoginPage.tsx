@@ -161,6 +161,8 @@ type ViewState = 'signin' | 'signup' | 'forgot' | 'success';
 export default function LoginPage() {
     const { t, language } = useLanguage();
     const c = LOGIN_COPY[language === 'en' ? 'en' : 'es'];
+    // Back from Mi Cuenta → Eliminar para siempre (features/settings/MyAccountPage)
+    const accountDeleted = new URLSearchParams(window.location.search).get('cuenta') === 'eliminada';
     usePageTitle(t('nav.signIn'));
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword, signInAsDemo } = useAuth();
 
@@ -427,6 +429,11 @@ export default function LoginPage() {
                     )}
 
                     {/* Messages */}
+                    {accountDeleted && (
+                        <div data-testid="account-deleted" className="mb-4 px-4 py-3 rounded-lg border border-kx-line text-kx-ink text-sm">
+                            {t('account.deleted')}
+                        </div>
+                    )}
                     {successMessage && (
                         <div className="mb-4 px-4 py-3 rounded-lg bg-[color-mix(in_srgb,var(--kx-paid)_10%,transparent)] border border-[color-mix(in_srgb,var(--kx-paid)_20%,transparent)] text-kx-paid text-sm animate-slide-in">
                             {successMessage}

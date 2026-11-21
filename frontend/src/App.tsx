@@ -29,6 +29,8 @@ const PrivacyPolicyPage = lazy(() => import("@/features/legal/PrivacyPolicyPage"
 const NotFoundPage = lazy(() => import("@/features/error/NotFoundPage"));
 const ConsentPage = lazy(() => import("@/features/oauth/ConsentPage"));
 const ConectaPage = lazy(() => import("@/features/oauth/ConectaPage"));
+const MyAccountPage = lazy(() => import("@/features/settings/MyAccountPage"));
+const DeleteAccountInfoPage = lazy(() => import("@/features/account/DeleteAccountInfoPage"));
 import LoadingScreen from "@/components/LoadingScreen";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
@@ -68,6 +70,8 @@ function AppShell() {
                 {/* Connect an assistant by link (remote MCP + OAuth) */}
                 <Route path="/conecta" element={<ConectaPage />} />
                 <Route path="/oauth/consent" element={<ConsentPage />} />
+                {/* How to delete the account (the URL declared in Play Console) */}
+                <Route path="/eliminar-cuenta" element={<DeleteAccountInfoPage />} />
 
                 {/* Protected dashboard routes */}
                 <Route
@@ -94,6 +98,7 @@ function AppShell() {
                   <Route path="goals" element={<GoalsPage />} />
                   <Route path="settings" element={<SettingsHome />} />
                   <Route path="settings/plans" element={<PlansPage />} />
+                  <Route path="settings/cuenta" element={<MyAccountPage />} />
                   <Route path="settings/ia" element={<IAGuidePage />} />
                   <Route path="settings/advanced" element={<SettingsPage />} />
                 </Route>

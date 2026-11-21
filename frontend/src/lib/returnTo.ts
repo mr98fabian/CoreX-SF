@@ -1,9 +1,9 @@
 /**
- * Where to land after signing in. Only the OAuth consent screen can be a return target,
- * so this can never become an open redirect. Per-tab (sessionStorage), best effort.
+ * Where to land after signing in. Only the OAuth consent screen and the Mi Cuenta danger zone
+ * (from /eliminar-cuenta) can be return targets, so this can never become an open redirect. Per-tab (sessionStorage), best effort.
  */
 const KEY = 'korex-return-to';
-const ALLOWED = /^\/oauth\/consent\?request=[A-Za-z0-9_-]+$/;
+const ALLOWED = /^(\/oauth\/consent\?request=[A-Za-z0-9_-]+|\/dashboard\/settings\/cuenta#eliminar)$/;
 
 export function rememberReturnTo(path: string): void {
     if (!ALLOWED.test(path)) return;
