@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { ChevronRight, User, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket, GraduationCap, Sparkles } from 'lucide-react';
+import { ChevronRight, User, UserCog, Bell, ShieldCheck, CreditCard, LogOut, RefreshCw, Ticket, GraduationCap, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -69,7 +69,7 @@ function Row({ to, icon: Icon, title, sub, value }: { to: string; icon: typeof U
 }
 
 export default function SettingsHome() {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
     const es = language === 'es';
     usePageTitle(es ? 'Ajustes' : 'Settings');
     const { user, isDemo, signOut } = useAuth();
@@ -118,6 +118,7 @@ export default function SettingsHome() {
                 <Section tone="neutral" title={es ? 'Mi cuenta' : 'My account'}>
                     <Row to={advanced('profile')} icon={User} title={es ? 'Perfil' : 'Profile'} sub={user?.email ?? ''} />
                     <Row to={advanced('appearance')} icon={User} title={es ? 'Idioma y apariencia' : 'Language and appearance'} value={es ? 'Español' : 'English'} />
+                    <Row to="/dashboard/settings/cuenta" icon={UserCog} title={t('account.title')} sub={t('account.rowSub')} />
                 </Section>
 
                 <Section tone="amber" title={es ? 'Mi plan' : 'My plan'}>

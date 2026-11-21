@@ -150,4 +150,12 @@ async def get_current_user_id(authorization: Optional[str] = Header(None)) -> st
         return DEMO_USER_ID
 
     uid = _verify_locally(token)
-    return uid if uid else await _verify_remotely(token)
+    uid = uid if uid else await _verify_remotely(token)
+    if uid in DELETED_USERS:  # account deleted (routers/account.py): its still-unexpired JWT is dead too
+        raise HTTPException(status_code=401, detail="This account was deleted")
+    return uid
+
+
+# Users deleted in this process. Supabase stops their refresh tokens at once, but an access JWT
+# verified locally stays valid until it expires (≤ 1 h); this closes that window. Per process.
+DELETED_USERS: set[str] = set()
