@@ -11,7 +11,7 @@ const en: LegalCopy = {
     pageTitle: 'Terms of Service',
     back: 'Back to Login',
     effective: 'Effective Date:',
-    effectiveDate: 'February 19, 2026',
+    effectiveDate: 'November 14, 2026',
     toc: 'Table of Contents',
     footer: (year) => `KoreX Financial System — © ${year} Kontrolly Consulting LLC. All rights reserved.`,
     otherDoc: 'Privacy Policy',
@@ -22,7 +22,7 @@ const es: LegalCopy = {
     pageTitle: 'Términos del Servicio',
     back: 'Volver al inicio de sesión',
     effective: 'Fecha de entrada en vigor:',
-    effectiveDate: '19 de febrero de 2026',
+    effectiveDate: '14 de noviembre de 2026',
     toc: 'Índice',
     footer: (year) => `KoreX Financial System — © ${year} Kontrolly Consulting LLC. Todos los derechos reservados.`,
     otherDoc: 'Política de Privacidad',
@@ -69,7 +69,7 @@ export function termsSections(lang: 'es' | 'en', year: number) {
         {
             id: 'third-party',
             title: '8. Third-Party Services',
-            content: `The Service integrates with third-party providers including but not limited to:\n• **Google OAuth** — for authentication\n• **Supabase** — for data storage and authentication infrastructure\n• **LemonSqueezy** — for payment processing and subscription management\n\nWe are not responsible for the availability, security, privacy practices, or policies of these third-party services. Your use of these services is subject to their respective terms, conditions, and privacy policies. KoreX shall not be liable for any damages or losses arising from the use or unavailability of third-party services.`,
+            content: `The Service integrates with third-party providers including but not limited to:\n• **Google OAuth** — for authentication\n• **Supabase** — for data storage and authentication infrastructure\n• **LemonSqueezy** — for payment processing and subscription management\n• **Google Play** — for payment processing and subscription management in the Android app\n\nWe are not responsible for the availability, security, privacy practices, or policies of these third-party services. Your use of these services is subject to their respective terms, conditions, and privacy policies. KoreX shall not be liable for any damages or losses arising from the use or unavailability of third-party services.`,
         },
         {
             id: 'limitation',
@@ -161,7 +161,7 @@ export function termsSections(lang: 'es' | 'en', year: number) {
         {
             id: 'third-party',
             title: '8. Servicios de terceros',
-            content: `El Servicio se integra con proveedores externos, incluidos, entre otros:\n• **Google OAuth** — para la autenticación\n• **Supabase** — para el almacenamiento de datos y la infraestructura de autenticación\n• **LemonSqueezy** — para el procesamiento de pagos y la gestión de suscripciones\n\nNo somos responsables de la disponibilidad, la seguridad, las prácticas de privacidad ni las políticas de estos servicios de terceros. Tu uso de estos servicios está sujeto a sus respectivos términos, condiciones y políticas de privacidad. KoreX no será responsable de ningún daño o pérdida derivados del uso o de la falta de disponibilidad de servicios de terceros.`,
+            content: `El Servicio se integra con proveedores externos, incluidos, entre otros:\n• **Google OAuth** — para la autenticación\n• **Supabase** — para el almacenamiento de datos y la infraestructura de autenticación\n• **LemonSqueezy** — para el procesamiento de pagos y la gestión de suscripciones\n• **Google Play** — para el procesamiento de pagos y la gestión de suscripciones en la app de Android\n\nNo somos responsables de la disponibilidad, la seguridad, las prácticas de privacidad ni las políticas de estos servicios de terceros. Tu uso de estos servicios está sujeto a sus respectivos términos, condiciones y políticas de privacidad. KoreX no será responsable de ningún daño o pérdida derivados del uso o de la falta de disponibilidad de servicios de terceros.`,
         },
         {
             id: 'limitation',

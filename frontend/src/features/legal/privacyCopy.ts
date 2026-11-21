@@ -20,7 +20,7 @@ const en: LegalCopy = {
     pageTitle: 'Privacy Policy',
     back: 'Back to Login',
     effective: 'Effective Date:',
-    effectiveDate: 'November 13, 2026',
+    effectiveDate: 'November 14, 2026',
     intro: 'Your privacy is important to us. This Privacy Policy explains what information KoreX System collects, how we use it, and your rights regarding your data. We are committed to protecting your financial information.',
     toc: 'Table of Contents',
     footer: (year) => `KoreX Financial System — © ${year} All rights reserved.`,
@@ -44,7 +44,7 @@ const en: LegalCopy = {
         {
             id: 'sharing',
             title: '4. Third-Party Data Sharing',
-            content: `We do NOT sell, rent, or trade your personal information.\n\nYour data may be shared with the following third-party services solely for the purpose of providing the Service:\n\n• **Supabase** — database hosting and authentication infrastructure.\n• **Google** — OAuth authentication (only your public profile info: name, email, avatar).\n• **Vercel** — application hosting (no direct access to user data).\n• **Railway** — backend hosting (the API server that processes your data to provide the Service).\n• **Lemon Squeezy** — subscription payment processing (receives your account identifier, and your name and email when you subscribe; card details are entered in Lemon Squeezy's checkout, never in KoreX).\n\nWe may also disclose information if required by law, court order, or government regulation.`,
+            content: `We do NOT sell, rent, or trade your personal information.\n\nYour data may be shared with the following third-party services solely for the purpose of providing the Service:\n\n• **Supabase** — database hosting and authentication infrastructure.\n• **Google** — OAuth authentication (only your public profile info: name, email, avatar).\n• **Vercel** — application hosting (no direct access to user data).\n• **Railway** — backend hosting (the API server that processes your data to provide the Service).\n• **Lemon Squeezy** — subscription payment processing (receives your account identifier, and your name and email when you subscribe; card details are entered in Lemon Squeezy's checkout, never in KoreX).\n• **Google Play** — subscription payment processing in the Android app (receives your account identifier and verifies your purchase with Google; payment is processed by Google Play and your card details never reach KoreX).\n\nWe may also disclose information if required by law, court order, or government regulation.`,
         },
         {
             id: 'cookies',
@@ -93,7 +93,7 @@ const es: LegalCopy = {
     pageTitle: 'Política de Privacidad',
     back: 'Volver al inicio de sesión',
     effective: 'Fecha de entrada en vigor:',
-    effectiveDate: '13 de noviembre de 2026',
+    effectiveDate: '14 de noviembre de 2026',
     intro: 'Tu privacidad es importante para nosotros. Esta Política de Privacidad explica qué información recopila KoreX System, cómo la usamos y cuáles son tus derechos sobre tus datos. Estamos comprometidos con proteger tu información financiera.',
     toc: 'Índice',
     footer: (year) => `KoreX Financial System — © ${year} Todos los derechos reservados.`,
@@ -117,7 +117,7 @@ const es: LegalCopy = {
         {
             id: 'sharing',
             title: '4. Datos compartidos con terceros',
-            content: `NO vendemos, alquilamos ni intercambiamos tu información personal.\n\nTus datos pueden compartirse con los siguientes servicios de terceros únicamente con el fin de prestar el Servicio:\n\n• **Supabase** — alojamiento de la base de datos e infraestructura de autenticación.\n• **Google** — autenticación OAuth (solo la información pública de tu perfil: nombre, correo electrónico y avatar).\n• **Vercel** — alojamiento de la aplicación (sin acceso directo a los datos de los usuarios).\n• **Railway** — alojamiento del backend (el servidor de la API que procesa tus datos para prestar el Servicio).\n• **Lemon Squeezy** — procesamiento de los pagos de suscripción (recibe el identificador de tu cuenta y, cuando te suscribes, tu nombre y correo electrónico; los datos de tu tarjeta se ingresan en el checkout de Lemon Squeezy, nunca en KoreX).\n\nTambién podemos divulgar información si así lo exige la ley, una orden judicial o una regulación gubernamental.`,
+            content: `NO vendemos, alquilamos ni intercambiamos tu información personal.\n\nTus datos pueden compartirse con los siguientes servicios de terceros únicamente con el fin de prestar el Servicio:\n\n• **Supabase** — alojamiento de la base de datos e infraestructura de autenticación.\n• **Google** — autenticación OAuth (solo la información pública de tu perfil: nombre, correo electrónico y avatar).\n• **Vercel** — alojamiento de la aplicación (sin acceso directo a los datos de los usuarios).\n• **Railway** — alojamiento del backend (el servidor de la API que procesa tus datos para prestar el Servicio).\n• **Lemon Squeezy** — procesamiento de los pagos de suscripción (recibe el identificador de tu cuenta y, cuando te suscribes, tu nombre y correo electrónico; los datos de tu tarjeta se ingresan en el checkout de Lemon Squeezy, nunca en KoreX).\n• **Google Play** — procesamiento de los pagos de suscripción en la app de Android (recibe el identificador de tu cuenta y verifica tu compra con Google; el pago lo procesa Google Play y los datos de tu tarjeta nunca llegan a KoreX).\n\nTambién podemos divulgar información si así lo exige la ley, una orden judicial o una regulación gubernamental.`,
         },
         {
             id: 'cookies',

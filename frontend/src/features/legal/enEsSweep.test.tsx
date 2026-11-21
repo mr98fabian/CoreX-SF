@@ -106,11 +106,12 @@ describe('render in Spanish (default) and English', () => {
         expect(sec('es', 'security-measures')).toContain('Row-Level Security activado en todas las tablas sin políticas de acceso');
         expect(sec('en', 'security-measures')).not.toContain('Row-Level Security policies on all user data tables');
         expect(sec('es', 'security-measures')).not.toContain('Políticas de Row-Level Security en todas');
-        expect([PRIVACY_COPY.en.effectiveDate, PRIVACY_COPY.es.effectiveDate]).toEqual(['November 13, 2026', '13 de noviembre de 2026']);
-        // providers: Railway and Lemon Squeezy, same "• **Name** — role" format
+        // 2026-11-14: Google Play named as the Android app's payment processor
+        expect([PRIVACY_COPY.en.effectiveDate, PRIVACY_COPY.es.effectiveDate]).toEqual(['November 14, 2026', '14 de noviembre de 2026']);
+        // providers: Railway, Lemon Squeezy (web) and Google Play (Android), same "• **Name** — role" format
         for (const l of ['es', 'en'] as const) {
             const providers = sec(l, 'sharing').split('\n').filter((line) => line.startsWith('• **'));
-            expect(providers.map((p) => p.match(/\*\*(.+?)\*\*/)![1])).toEqual(['Supabase', 'Google', 'Vercel', 'Railway', 'Lemon Squeezy']);
+            expect(providers.map((p) => p.match(/\*\*(.+?)\*\*/)![1])).toEqual(['Supabase', 'Google', 'Vercel', 'Railway', 'Lemon Squeezy', 'Google Play']);
             for (const p of providers) expect(p).toMatch(/^• \*\*[^*]+\*\* — .+\.$/);
         }
     });
