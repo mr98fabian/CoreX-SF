@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { Bot, Copy, Check, KeyRound, Lock, ShieldCheck, Trash2 } from 'lucide-react';
+import { Bot, Copy, Check, KeyRound, Link2, Lock, ShieldCheck, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { MCP_REMOTE_URL } from '@/lib/backendUrl';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -14,9 +15,10 @@ import { AIKit } from '@/components/AIKit';
 import { createKitToken, KIT_TOKEN_SCOPES } from '@/lib/aiKit';
 
 /**
- * "Conecta tu IA" — personal API tokens for an AI assistant (MCP server in mcp/).
- * The plain token comes back exactly once from POST /api/tokens and lives only
- * in this component's state until the user leaves the screen.
+ * "Conecta tu IA". Main path: connect by link (the remote MCP + OAuth, from the phone, nothing
+ * to copy but the URL). Advanced path, collapsed: personal API tokens for the local MCP
+ * (mcp/), unchanged — the plain token comes back exactly once from POST /api/tokens and
+ * lives only in this component's state until the user leaves the screen.
  */
 
 const SCOPES: { scope: string; es: string; en: string }[] = [
@@ -51,8 +53,9 @@ export function ConnectAI() {
     const [scopes, setScopes] = useState<string[]>(DEFAULT_SCOPES);
     const [creating, setCreating] = useState(false);
     const [newToken, setNewToken] = useState<string | null>(null);
-    const [copied, setCopied] = useState<'token' | null>(null);
+    const [copied, setCopied] = useState<'token' | 'url' | null>(null);
     const [showKit, setShowKit] = useState(false);
+    const [advancedOpen, setAdvancedOpen] = useState(false); // the token path starts collapsed
 
     // The lock is the server's answer (GET /api/tokens/access), never decided here
     const [access, setAccess] = useState<{ allowed: boolean; reason: string | null } | null>(null);
@@ -76,6 +79,7 @@ export function ConnectAI() {
         setCreating(true);
         try {
             setNewToken(await createKitToken());
+            setAdvancedOpen(true);
             load();
         } catch {
             toast({ title: es ? 'No se pudo crear el token' : "Couldn't create the token", variant: 'destructive' });
@@ -92,6 +96,7 @@ export function ConnectAI() {
                 body: JSON.stringify({ name: name.trim() || 'Mi asistente', scopes }),
             });
             setNewToken(res.token);
+            setAdvancedOpen(true);
             setName('');
             load();
         } catch {
@@ -107,7 +112,7 @@ export function ConnectAI() {
         load();
     };
 
-    const copy = async (text: string, what: 'token') => {
+    const copy = async (text: string, what: 'token' | 'url') => {
         try {
             await navigator.clipboard.writeText(text);
             setCopied(what);
@@ -154,7 +159,45 @@ export function ConnectAI() {
                                 </Link>
                             )}
                         </div>
-                    ) : newToken ? (
+                    ) : (
+                        <div className="space-y-5">
+                            {/* Main path: connect by link, from the phone (same 3 steps as /conecta) */}
+                            <section data-testid="link-path" className="space-y-4 rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] p-4">
+                                <div className="flex items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-kx-amber" />
+                                    <p className="text-sm font-semibold text-kx-ink">{tr('connect.link.title')}</p>
+                                    <Badge variant="outline" className="ml-auto text-[10px]">{tr('connect.link.recommended')}</Badge>
+                                </div>
+                                <p className="text-sm text-kx-ink2">{tr('connect.link.what')}</p>
+                                <ol data-testid="link-steps" className="space-y-2">
+                                    {[tr('conecta.step1'), tr('conecta.step2'), tr('conecta.step3')].map((step, i) => (
+                                        <li key={i} className="flex items-start gap-2.5 text-sm text-kx-ink">
+                                            <span className="kx-num flex h-6 w-6 flex-none items-center justify-center rounded-full bg-kx-amber text-xs font-bold text-kx-on-amber">{i + 1}</span>
+                                            <span className="pt-0.5">{step}</span>
+                                        </li>
+                                    ))}
+                                </ol>
+                                <div className="flex items-center gap-2">
+                                    <code data-testid="link-url" className="min-w-0 flex-1 break-all rounded-lg bg-black/40 px-3 py-2.5 font-mono text-xs text-kx-ink select-all">{MCP_REMOTE_URL}</code>
+                                    <Button data-testid="link-copy" variant="premium" className="h-11 flex-none" onClick={() => copy(MCP_REMOTE_URL, 'url')}>
+                                        {copied === 'url' ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                                        {copied === 'url' ? tr('conecta.copied') : tr('conecta.copy')}
+                                    </Button>
+                                </div>
+                                <Link to="/conecta" data-testid="link-full" className="inline-block text-sm font-semibold text-kx-amber underline-offset-2 hover:underline">
+                                    {tr('connect.link.full')}
+                                </Link>
+                            </section>
+
+                            {/* Advanced path, collapsed: the token kit for the local MCP, exactly as before */}
+                            <details data-testid="advanced-token" open={advancedOpen}
+                                onToggle={(e) => setAdvancedOpen((e.currentTarget as HTMLDetailsElement).open)}
+                                className="rounded-xl border border-kx-line">
+                                <summary className="cursor-pointer select-none px-4 py-3.5 text-sm font-semibold text-kx-ink2">
+                                    {tr('connect.advanced.title')}
+                                </summary>
+                                <div className="border-t border-[var(--kx-line-soft)] p-4">
+                    {newToken ? (
                         <div className="space-y-4">
                             <div className="rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] p-4 space-y-3">
                                 <p className="text-sm font-semibold text-kx-amber">
@@ -204,6 +247,10 @@ export function ConnectAI() {
                                 </Button>
                                 {showKit && <div className="mt-4"><AIKit es={es} onNewToken={createFromKit} creating={creating} /></div>}
                             </div>
+                        </div>
+                    )}
+                                </div>
+                            </details>
                         </div>
                     )}
                 </CardContent>

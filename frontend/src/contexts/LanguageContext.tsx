@@ -864,6 +864,12 @@ const translations: Record<string, Record<Language, string>> = {
     "oauth.demo": { es: "El demo es compartido: crea tu cuenta para conectar tu IA.", en: "The demo is shared: create your account to connect your AI." },
     "oauth.seePlans": { es: "Ver planes", en: "See plans" },
     "oauth.viaLink": { es: "conectado por enlace", en: "connected by link" },
+    // Ajustes → Conecta tu IA (components/ConnectAI): link first, token kit as the advanced option
+    "connect.link.title": { es: "Conectar por enlace", en: "Connect by link" },
+    "connect.link.recommended": { es: "Recomendado", en: "Recommended" },
+    "connect.link.what": { es: "Conecta el asistente que ya usas, desde el teléfono. Sin computadora y sin tokens que copiar.", en: "Connect the assistant you already use, from your phone. No computer and no tokens to copy." },
+    "connect.link.full": { es: "Ver la explicación completa", en: "See the full explanation" },
+    "connect.advanced.title": { es: "Opción avanzada: conectar con token (computadora)", en: "Advanced option: connect with a token (computer)" },
     // /conecta — the page anyone gets to connect their assistant
     "conecta.title": { es: "Conecta KoreX a tu asistente", en: "Connect KoreX to your assistant" },
     "conecta.lead": { es: "Tres pasos, desde el teléfono. Sin instalar nada.", en: "Three steps, from your phone. Nothing to install." },

@@ -1,15 +1,50 @@
 # KoreX MCP server
 
-Lets an AI assistant (Claude Desktop, Claude Code, any MCP client) work with **your** KoreX:
-read your accounts and plan, record payments, run simulations. It only sees your data, only
-with the permissions you gave the token, and stops working the moment you revoke it.
+Lets an AI assistant (any MCP client) work with **your** KoreX: read your accounts and plan,
+run simulations, load your accounts and goals. It only sees your data, only with the
+permissions you approved, and stops working the moment you revoke it.
 
-## 1. Create a token
-KoreX → **Configuración → Conecta tu IA** → name it, tick the permissions, **Crear**.
-Copy the token right away: it is shown only once (KoreX stores only its hash).
+There are two ways to connect. Both expose the same tools and the same instructions.
 
-## 2. Install
-Requires Python 3.10+.
+## Recommended: connect by link (remote, from your phone)
+
+No computer, no Python, no token to copy. Your assistant connects to the KoreX server over
+the internet and asks you to approve it.
+
+1. Open your assistant and add a custom connector (MCP server) with this URL:
+
+   ```
+   https://corex-sf-production.up.railway.app/mcp
+   ```
+
+2. Your assistant opens KoreX: sign in with your KoreX account.
+3. Review what it asks for and tap **Autorizar**. Then ask it: *¿cuál es mi plan de pagos?*
+
+The same steps, for anyone: **korexf.com/conecta**.
+
+How it works (OAuth 2.1, KoreX's own authorization server — `backend/routers/oauth.py`):
+- The assistant discovers KoreX's endpoints (`/.well-known/oauth-protected-resource`,
+  `/.well-known/oauth-authorization-server`), registers itself (dynamic client registration)
+  and sends you to the consent screen with PKCE (S256).
+- When you approve, it gets an access token (1 hour, rotated with a refresh token). That
+  token is a normal KoreX API token: hashed, rate limited (60/min), every write audited, and
+  checked against your paid plan on every call.
+- It can only get the Kit IA permissions: see your accounts, dashboard and plan, run
+  simulations, load accounts and goals. **It can never record payments or move money.**
+- The connection shows up in KoreX → **Ajustes → Conecta tu IA** as *conectado por enlace*;
+  **Revocar** there ends it immediately.
+
+## Advanced: local server with a token (computer)
+
+The same server running on your machine over stdio, authorized with a personal token.
+
+### 1. Create a token
+KoreX → **Ajustes → Conecta tu IA → Opción avanzada: conectar con token (computadora)** →
+name it, tick the permissions, **Crear token**. Copy it right away: it is shown only once
+(KoreX stores only its hash).
+
+### 2. Install
+Requires Python 3.10+ and a copy of the KoreX repository.
 
 ```bash
 cd mcp
@@ -17,9 +52,9 @@ python -m venv .venv
 .venv/bin/pip install -r requirements.txt        # Windows: .venv\Scripts\pip install -r requirements.txt
 ```
 
-## 3. Connect your client
+### 3. Connect your client
 
-**Claude Desktop** — `claude_desktop_config.json`:
+**Desktop clients with a JSON config** (e.g. `claude_desktop_config.json`):
 
 ```json
 {
@@ -50,7 +85,7 @@ Optional: `KOREX_API_URL` (default `https://corex-sf-production.up.railway.app`;
 | `list_accounts` | Your accounts with balance, APR, minimum payment | `read:accounts` |
 | `get_dashboard_summary` | Dashboard totals and projections (estimates) | `read:dashboard` |
 | `get_action_plan` | Which debt to attack next, freedom dates (estimates) | `read:plan` |
-| `register_payment` | Record a payment `{account (id or name), amount, date?}` | `write:payments` |
+| `register_payment` | Record a payment `{account (id or name), amount, date?}` — never available when connected by link | `write:payments` |
 | `add_account` | Add `{name, type, balance, interest_rate, min_payment}` | `write:accounts` |
 | `update_account` | Correct an account: only the fields you pass `{account, name?, balance?, interest_rate?, min_payment?, ...}` | `write:accounts` |
 | `delete_account` | Delete an account and its transactions `{account, confirm}`; asks for confirmation first | `write:accounts` |
@@ -61,8 +96,8 @@ Optional: `KOREX_API_URL` (default `https://corex-sf-production.up.railway.app`;
 | `get_settings` | Your app settings | `read:dashboard` |
 
 ## Security
-- The token acts only on its owner's data; the server derives the user from the token.
-- Missing permission → 403; revoked token → 401; limit 60 requests/minute per token.
-- Every write made with a token is recorded in an audit log (token, action, date).
-- Keep the token out of repos and chats. If it leaks, revoke it in KoreX and create a new one.
+- Access acts only on its owner's data; the server derives the user from the token.
+- Missing permission → 403; revoked or expired → 401; limit 60 requests/minute per token.
+- Every write is recorded in an audit log (connection, action, date).
+- Keep tokens out of repos and chats. If one leaks, revoke it in KoreX and create a new one.
 - All figures returned are estimates, not financial advice.
