@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { Bot, Copy, Check, KeyRound, Lock, ShieldCheck, Trash2 } from 'lucide-react';
+import { Bot, Copy, Check, KeyRound, Link2, Lock, ShieldCheck, Trash2 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
+import { MCP_REMOTE_URL } from '@/lib/backendUrl';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -14,9 +15,10 @@ import { AIKit } from '@/components/AIKit';
 import { createKitToken, KIT_TOKEN_SCOPES } from '@/lib/aiKit';
 
 /**
- * "Conecta tu IA" — personal API tokens for an AI assistant (MCP server in mcp/).
- * The plain token comes back exactly once from POST /api/tokens and lives only
- * in this component's state until the user leaves the screen.
+ * "Conecta tu IA". Main path: connect by link (the remote MCP + OAuth, from the phone, nothing
+ * to copy but the URL). Advanced path, collapsed: personal API tokens for the local MCP
+ * (mcp/), unchanged — the plain token comes back exactly once from POST /api/tokens and
+ * lives only in this component's state until the user leaves the screen.
  */
 
 const SCOPES: { scope: string; es: string; en: string }[] = [
@@ -51,8 +53,9 @@ export function ConnectAI() {
     const [scopes, setScopes] = useState<string[]>(DEFAULT_SCOPES);
     const [creating, setCreating] = useState(false);
     const [newToken, setNewToken] = useState<string | null>(null);
-    const [copied, setCopied] = useState<'token' | null>(null);
+    const [copied, setCopied] = useState<'token' | 'url' | null>(null);
     const [showKit, setShowKit] = useState(false);
+    const [advancedOpen, setAdvancedOpen] = useState(false); // the token path starts collapsed
 
     // The lock is the server's answer (GET /api/tokens/access), never decided here
     const [access, setAccess] = useState<{ allowed: boolean; reason: string | null } | null>(null);
@@ -76,6 +79,7 @@ export function ConnectAI() {
         setCreating(true);
         try {
             setNewToken(await createKitToken());
+            setAdvancedOpen(true);
             load();
         } catch {
             toast({ title: es ? 'No se pudo crear el token' : "Couldn't create the token", variant: 'destructive' });
@@ -92,6 +96,7 @@ export function ConnectAI() {
                 body: JSON.stringify({ name: name.trim() || 'Mi asistente', scopes }),
             });
             setNewToken(res.token);
+            setAdvancedOpen(true);
             setName('');
             load();
         } catch {
@@ -107,7 +112,7 @@ export function ConnectAI() {
         load();
     };
 
-    const copy = async (text: string, what: 'token') => {
+    const copy = async (text: string, what: 'token' | 'url') => {
         try {
             await navigator.clipboard.writeText(text);
             setCopied(what);
@@ -120,6 +125,7 @@ export function ConnectAI() {
         return s ? (es ? s.es : s.en) : scope;
     };
     const active = tokens.filter((t) => t.active);
+    const linked = active.filter((t) => t.source === 'oauth'); // the same rows the list shows
 
     return (
         <div className="space-y-6">
@@ -154,7 +160,62 @@ export function ConnectAI() {
                                 </Link>
                             )}
                         </div>
-                    ) : newToken ? (
+                    ) : (
+                        <div className="space-y-5">
+                            {/* Main path, open: connect by link (remote MCP + OAuth), from the phone */}
+                            <section data-testid="link-path" className="space-y-4 rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] p-4">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Link2 className="h-4 w-4 text-kx-amber" />
+                                    <p className="text-sm font-semibold text-kx-ink">{tr('connect.link.title')}</p>
+                                    {linked.length > 0 && (
+                                        <Badge data-testid="link-connected" variant="outline" className="ml-auto border-[color-mix(in_srgb,var(--kx-paid)_40%,transparent)] text-[10px] text-kx-paid">
+                                            <Check className="mr-1 h-3 w-3" />{tr('connect.link.connected')}
+                                        </Badge>
+                                    )}
+                                </div>
+                                <ol data-testid="link-steps" className="space-y-3">
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="kx-num flex h-6 w-6 flex-none items-center justify-center rounded-full bg-kx-amber text-xs font-bold text-kx-on-amber">1</span>
+                                        <div className="space-y-0.5 pt-0.5">
+                                            <p className="text-sm font-semibold text-kx-ink">{tr('connect.link.step1')}</p>
+                                            <p className="text-xs text-kx-ink2">{tr('connect.link.step1Hint')}</p>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="kx-num flex h-6 w-6 flex-none items-center justify-center rounded-full bg-kx-amber text-xs font-bold text-kx-on-amber">2</span>
+                                        <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+                                            <p className="text-sm font-semibold text-kx-ink">{tr('connect.link.step2')}</p>
+                                            <div className="flex items-center gap-2">
+                                                <code data-testid="link-url" className="min-w-0 flex-1 break-all rounded-lg bg-black/40 px-3 py-2.5 font-mono text-xs text-kx-ink select-all">{MCP_REMOTE_URL}</code>
+                                                <Button data-testid="link-copy" variant="premium" className="h-11 flex-none" onClick={() => copy(MCP_REMOTE_URL, 'url')}>
+                                                    {copied === 'url' ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+                                                    {copied === 'url' ? tr('conecta.copied') : tr('conecta.copy')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-2.5">
+                                        <span className="kx-num flex h-6 w-6 flex-none items-center justify-center rounded-full bg-kx-amber text-xs font-bold text-kx-on-amber">3</span>
+                                        <p className="pt-0.5 text-sm font-semibold text-kx-ink">{tr('connect.link.step3')}</p>
+                                    </li>
+                                </ol>
+                                <p data-testid="link-benefit" className="text-sm text-kx-ink">{tr('connect.link.benefit')}</p>
+                                <p data-testid="link-safety" className="flex items-start gap-2 text-xs text-kx-ink2">
+                                    <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none text-kx-paid" />{tr('connect.link.safety')}
+                                </p>
+                            </section>
+
+                            {/* Advanced options, collapsed, at the end: the token kit for the local MCP and the
+                                list of connections with Revocar, exactly as before (only moved) */}
+                            <details data-testid="advanced-token" open={advancedOpen}
+                                onToggle={(e) => setAdvancedOpen((e.currentTarget as HTMLDetailsElement).open)}
+                                className="rounded-xl border border-kx-line">
+                                <summary className="cursor-pointer select-none px-4 py-3.5 text-sm font-semibold text-kx-ink2">
+                                    {tr('connect.advanced.title')}
+                                </summary>
+                                <div className="space-y-5 border-t border-[var(--kx-line-soft)] p-4">
+                                    <p className="text-sm text-kx-ink2">{tr('connect.advanced.context')}</p>
+                    {newToken ? (
                         <div className="space-y-4">
                             <div className="rounded-xl border border-[color-mix(in_srgb,var(--kx-amber)_30%,transparent)] bg-[color-mix(in_srgb,var(--kx-amber)_5%,transparent)] p-4 space-y-3">
                                 <p className="text-sm font-semibold text-kx-amber">
@@ -177,7 +238,7 @@ export function ConnectAI() {
                         <div className="space-y-4">
                             <div className="space-y-1.5">
                                 <Label htmlFor="ai-token-name">{es ? 'Nombre' : 'Name'}</Label>
-                                <Input id="ai-token-name" maxLength={60} placeholder={es ? 'Ej. Claude en mi laptop' : 'e.g. Claude on my laptop'}
+                                <Input id="ai-token-name" maxLength={60} placeholder={es ? 'Ej. Mi asistente en la laptop' : 'e.g. My assistant on my laptop'}
                                     value={name} onChange={(e) => setName(e.target.value)} />
                             </div>
                             <div className="space-y-2">
@@ -206,43 +267,41 @@ export function ConnectAI() {
                             </div>
                         </div>
                     )}
+                                    <div data-testid="active-tokens" className="space-y-3 border-t border-[var(--kx-line-soft)] pt-4">
+                                        <p className="flex items-center gap-2 text-sm font-semibold text-kx-ink">
+                                            <ShieldCheck className="h-4 w-4 text-kx-paid" />
+                                            {es ? 'Tokens activos' : 'Active tokens'}
+                                        </p>
+                                        {active.length === 0 && (
+                                            <p className="text-sm text-muted-foreground">{es ? 'Ninguna IA tiene acceso ahora mismo.' : 'No AI has access right now.'}</p>
+                                        )}
+                                        {active.map((t) => (
+                                            <div key={t.id} className="flex items-start justify-between gap-3 rounded-lg border border-kx-line p-3">
+                                                <div className="space-y-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        {t.name}
+                                                        {t.source === 'oauth' && <Badge variant="outline" className="ml-2 text-[10px]" data-testid="token-via-link">{tr('oauth.viaLink')}</Badge>}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">{t.scopes.map(label).join(' · ')}</p>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {es ? 'Último uso: ' : 'Last used: '}
+                                                        {t.last_used_at ? new Date(`${t.last_used_at}Z`).toLocaleString(es ? 'es-ES' : 'en-US') : (es ? 'nunca' : 'never')}
+                                                    </p>
+                                                </div>
+                                                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] shrink-0" onClick={() => revoke(t.id)}>
+                                                    <Trash2 className="h-4 w-4 mr-1" />
+                                                    {es ? 'Revocar' : 'Revoke'}
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
-            {!locked && (
-                <Card className="border-kx-line bg-kx-surface dark:bg-black/50">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-base">
-                            <ShieldCheck className="h-5 w-5 text-kx-paid" />
-                            {es ? 'Tokens activos' : 'Active tokens'}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {active.length === 0 && (
-                            <p className="text-sm text-muted-foreground">{es ? 'Ninguna IA tiene acceso ahora mismo.' : 'No AI has access right now.'}</p>
-                        )}
-                        {active.map((t) => (
-                            <div key={t.id} className="flex items-start justify-between gap-3 rounded-lg border border-kx-line p-3">
-                                <div className="space-y-1 min-w-0">
-                                    <p className="text-sm font-medium truncate">
-                                        {t.name}
-                                        {t.source === 'oauth' && <Badge variant="outline" className="ml-2 text-[10px]" data-testid="token-via-link">{tr('oauth.viaLink')}</Badge>}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">{t.scopes.map(label).join(' · ')}</p>
-                                    <p className="text-[11px] text-muted-foreground">
-                                        {es ? 'Último uso: ' : 'Last used: '}
-                                        {t.last_used_at ? new Date(`${t.last_used_at}Z`).toLocaleString(es ? 'es-ES' : 'en-US') : (es ? 'nunca' : 'never')}
-                                    </p>
-                                </div>
-                                <Button size="sm" variant="outline" className="border-[color-mix(in_srgb,var(--kx-debt)_30%,transparent)] text-kx-debt hover:bg-[color-mix(in_srgb,var(--kx-debt)_10%,transparent)] shrink-0" onClick={() => revoke(t.id)}>
-                                    <Trash2 className="h-4 w-4 mr-1" />
-                                    {es ? 'Revocar' : 'Revoke'}
-                                </Button>
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
         </div>
     );
 }
