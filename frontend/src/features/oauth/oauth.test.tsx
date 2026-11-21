@@ -88,7 +88,7 @@ describe('Consent screen', () => {
         await click('consent-authorize');
         expect(apiFetch).toHaveBeenCalledWith('/api/oauth/consent/approve', { method: 'POST', body: JSON.stringify({ request: 'handle_123' }) });
         expect(assign).toHaveBeenCalledWith('https://claude.ai/api/mcp/auth_callback?code=abc&state=s');
-        expect(byId('consent-done')!.textContent).toBe('¡Listo! Volvé a tu asistente y preguntale: ¿cuál es mi plan de pagos?');
+        expect(byId('consent-done')!.textContent).toBe('¡Listo! Vuelve a tu asistente y pregúntale: ¿cuál es mi plan de pagos?');
     });
 
     it('Cancelar denies it', async () => {
@@ -134,7 +134,7 @@ describe('/conecta', () => {
         Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
         await render(<ConectaPage />, '/conecta');
         const steps = [...byId('conecta-steps')!.querySelectorAll('li')].map((li) => li.querySelector('p')!.textContent);
-        expect(steps).toEqual(['Abrí tu asistente (Claude).', 'Agregá KoreX con este enlace.', 'Tocá Autorizar.']);
+        expect(steps).toEqual(['Abre tu asistente.', 'Agrega KoreX con este enlace.', 'Toca Autorizar.']);
         expect(byId('conecta-url')!.textContent).toBe('https://corex-sf-production.up.railway.app/mcp');
         expect(document.body.textContent).not.toMatch(/kx_|token/i);
         await click('conecta-copy');
