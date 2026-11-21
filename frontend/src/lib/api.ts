@@ -6,6 +6,8 @@ import { Capacitor } from '@capacitor/core';
 // - Capacitor (native app): connect directly to Railway (no Vercel proxy available)
 // - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
 const RAILWAY_URL = 'https://corex-sf-production.up.railway.app';
+/** The remote MCP (backend/mcp_remote.py): what a user pastes as a custom connector. Not a secret. */
+export const MCP_REMOTE_URL = `${RAILWAY_URL}/mcp`;
 
 export const API_BASE = import.meta.env.DEV
     ? (import.meta.env.VITE_API_URL ?? 'http://localhost:8001')

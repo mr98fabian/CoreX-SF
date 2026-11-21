@@ -8,6 +8,7 @@
 import { Navigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '@/features/auth/AuthContext';
+import { returnToOr } from '@/lib/returnTo';
 import LandingPage from './KxLanding';
 
 export default function LandingGate() {
@@ -21,9 +22,9 @@ export default function LandingGate() {
     // Wait for auth check to complete before deciding
     if (loading) return null;
 
-    // Already logged in → go to dashboard
+    // Already logged in → go to dashboard (or back to an assistant's consent after Google sign-in)
     if (user) {
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to={returnToOr('/dashboard')} replace />;
     }
 
     // Web + unauthenticated → show the scrollytelling

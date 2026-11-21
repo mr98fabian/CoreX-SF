@@ -32,6 +32,7 @@ def _public(t: ApiToken) -> dict:
         "id": t.id, "name": t.name, "scopes": t.scopes,
         "created_at": t.created_at, "last_used_at": t.last_used_at, "revoked_at": t.revoked_at,
         "active": t.revoked_at is None,
+        "source": t.source,  # manual | oauth (connected by link from the AI's app)
     }
 
 

@@ -27,6 +27,8 @@ const LoginPage = lazy(() => import("@/features/auth/LoginPage"));
 const TermsOfServicePage = lazy(() => import("@/features/legal/TermsOfServicePage"));
 const PrivacyPolicyPage = lazy(() => import("@/features/legal/PrivacyPolicyPage"));
 const NotFoundPage = lazy(() => import("@/features/error/NotFoundPage"));
+const ConsentPage = lazy(() => import("@/features/oauth/ConsentPage"));
+const ConectaPage = lazy(() => import("@/features/oauth/ConectaPage"));
 import LoadingScreen from "@/components/LoadingScreen";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import ProtectedRoute from "@/features/auth/ProtectedRoute";
@@ -63,6 +65,9 @@ function AppShell() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/terms" element={<TermsOfServicePage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                {/* Connect an assistant by link (remote MCP + OAuth) */}
+                <Route path="/conecta" element={<ConectaPage />} />
+                <Route path="/oauth/consent" element={<ConsentPage />} />
 
                 {/* Protected dashboard routes */}
                 <Route

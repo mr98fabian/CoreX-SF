@@ -133,6 +133,11 @@ def health():
 
 # ── Register Routers ─────────────────────────────────────────
 ROUTERS = ["accounts", "cashflow", "dashboard", "strategy", "transactions",
-           "demo", "analytics", "subscriptions", "google_play", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock", "coach", "house", "goals", "cuts", "engagement", "codes", "admin", "calendar"]
+           "demo", "analytics", "subscriptions", "google_play", "notifications", "settings_api", "public", "tokens", "sync", "recurring", "webauthn_lock", "coach", "house", "goals", "cuts", "engagement", "codes", "admin", "calendar", "oauth"]
 for mod in ROUTERS:
     app.include_router(__import__(f"routers.{mod}", fromlist=["router"]).router)
+
+# ── Remote MCP (Streamable HTTP + OAuth) ─────────────────────
+# /mcp answers 503 until MCP_REMOTE_ENABLED is set (see mcp_remote.py, routers/oauth.py)
+import mcp_remote  # noqa: E402
+mcp_remote.mount(app)

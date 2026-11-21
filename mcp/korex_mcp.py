@@ -11,8 +11,9 @@ with the token, and the API enforces the token's scopes (403 if missing).
 The token is never printed or returned to the model.
 """
 import os
+from contextvars import ContextVar
 from datetime import date as _date
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -58,13 +59,20 @@ class KorexError(Exception):
     pass
 
 
+# The remote server (backend/mcp_remote.py) reuses these same tools over Streamable HTTP and
+# sets this per call: it sends the request with the token the user authorized by OAuth.
+# Unset (this stdio server) = the KOREX_API_TOKEN / KOREX_API_URL path below, unchanged.
+REMOTE_SEND: ContextVar[Optional[Callable[[str, str, Optional[dict]], httpx.Response]]] = ContextVar("korex_remote_send", default=None)
+
+
 def _call(method: str, path: str, json: Optional[dict] = None) -> Any:
+    send = REMOTE_SEND.get()
     token = os.getenv("KOREX_API_TOKEN", "")
-    if not token.startswith("kx_"):
+    if send is None and not token.startswith("kx_"):
         raise KorexError("KOREX_API_TOKEN is missing or not a KoreX token (kx_...).")
     try:
-        r = httpx.request(method, f"{API_URL}{path}", json=json, timeout=30,
-                          headers={"Authorization": f"Bearer {token}"})
+        r = send(method, path, json) if send is not None else httpx.request(
+            method, f"{API_URL}{path}", json=json, timeout=30, headers={"Authorization": f"Bearer {token}"})
     except httpx.HTTPError as e:
         raise KorexError(f"KoreX API unreachable: {e.__class__.__name__}") from None
     if r.status_code == 401:

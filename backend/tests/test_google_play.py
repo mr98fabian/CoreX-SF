@@ -253,7 +253,7 @@ def test_rtdn_never_touches_a_lemon_row(client, google):
 
 def test_one_head_and_the_migration_goes_up_and_down_clean():
     heads = ScriptDirectory.from_config(Config(str(BACKEND / "alembic.ini"))).get_heads()
-    assert heads == ["a3f6c8e2d1b9"]
+    assert len(heads) == 1  # a single head (the newest migration may build on a3f6c8e2d1b9)
     path = next((BACKEND / "alembic" / "versions").glob("a3f6c8e2d1b9_*.py"))
     spec = importlib.util.spec_from_file_location("mig_play", path)
     mig = importlib.util.module_from_spec(spec)

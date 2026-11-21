@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Navigate, Link } from 'react-router-dom';
+import { returnToOr } from '@/lib/returnTo';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -182,7 +183,7 @@ export default function LoginPage() {
     const strength = useMemo(() => getPasswordStrength(password, c), [password, c]);
     const requirements = useMemo(() => getPasswordRequirements(password, c), [password, c]);
 
-    if (user && !loading) return <Navigate to="/dashboard" replace />;
+    if (user && !loading) return <Navigate to={returnToOr('/dashboard')} replace />; // back to an assistant's consent if one sent us
 
     const clearForm = () => {
         setEmail(''); setConfirmEmail('');
