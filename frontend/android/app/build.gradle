@@ -1,6 +1,19 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
+// Google Play upload key (Play App Signing): read from a LOCAL, never-committed keystore.properties
+// (see ../keystore.properties.example). Path: $KOREX_KEYSTORE_PROPERTIES, else android/keystore.properties.
+def uploadKeyProps = new Properties()
+def uploadKeyFile = System.getenv('KOREX_KEYSTORE_PROPERTIES') ? file(System.getenv('KOREX_KEYSTORE_PROPERTIES')) : rootProject.file('keystore.properties')
+if (uploadKeyFile.exists()) {
+    uploadKeyFile.withInputStream { uploadKeyProps.load(it) }
+}
+// Only a Play build (-PplayUpload) signs with the upload key; the sideloaded APKs keep the debug key
+def playUpload = project.hasProperty('playUpload')
+if (playUpload && !uploadKeyFile.exists()) {
+    throw new GradleException("-PplayUpload needs keystore.properties (set KOREX_KEYSTORE_PROPERTIES or create android/keystore.properties)")
+}
+
 android {
     namespace = "com.korexf.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,8 +21,8 @@ android {
         applicationId "com.korexf.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName "1.0.6"
+        versionCode 8
+        versionName "1.0.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,11 +30,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (uploadKeyFile.exists()) {
+                storeFile file(uploadKeyProps['storeFile'])
+                storePassword uploadKeyProps['storePassword']
+                keyAlias uploadKeyProps['keyAlias']
+                keyPassword uploadKeyProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
-            // v1 was signed with the machine's ~/.android/debug.keystore: every
-            // release must keep the SAME key or Android forces an uninstall.
-            signingConfig signingConfigs.debug
+            // Sideloaded APKs: v1 was signed with the machine's ~/.android/debug.keystore and every
+            // APK must keep the SAME key or Android forces an uninstall. The Play bundle
+            // (./gradlew bundleRelease -PplayUpload) is signed with the upload key instead.
+            signingConfig playUpload ? signingConfigs.release : signingConfigs.debug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

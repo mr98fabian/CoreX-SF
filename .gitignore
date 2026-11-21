@@ -58,3 +58,8 @@ backend/uvicorn*.log.err
 
 # MCP server local venv
 mcp/.venv/
+
+# Signing keys and their passwords never enter the repo (the Play upload key lives outside the clone)
+*.jks
+*.keystore
+keystore.properties
