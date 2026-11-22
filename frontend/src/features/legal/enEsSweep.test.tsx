@@ -52,7 +52,8 @@ afterEach(() => {
 // Terms of art and proper names kept in English inside the Spanish legal text on purpose
 const KEPT_IN_ENGLISH = [/"AS IS"/g, /"AS AVAILABLE"/g, /Consumer Arbitration Rules/g, /American Arbitration Association/g,
     /Digital Millennium Copyright Act/g, /small claims court/g, /Kontrolly Consulting LLC/g, /KoreX Financial System( v1\.0)?/g,
-    /KoreX System/g, /Supabase Auth/g, /Google OAuth( 2\.0)?/g, /Row-Level Security/g, /Peace Shield/g, /data brokers/g, /goodwill/g, /managers/gi];
+    /KoreX System/g, /Supabase Auth/g, /Google OAuth( 2\.0)?/g, /Row-Level Security/g, /Peace Shield/g, /data brokers/g, /goodwill/g, /managers/gi,
+    /merchant of record/g]; // legal term the MoR clause keeps in English, in parentheses
 const ENGLISH = /\b(the|and|your|you|with|of|to|is|are|we|our|not|please|sign in|password|account|back|go|page|terms|privacy|policy|effective|contents|rights reserved)\b/i;
 function englishLeft(text: string) {
     let t = text;
@@ -108,10 +109,10 @@ describe('render in Spanish (default) and English', () => {
         expect(sec('es', 'security-measures')).not.toContain('Políticas de Row-Level Security en todas');
         // 2026-11-14: Google Play named as the Android app's payment processor
         expect([PRIVACY_COPY.en.effectiveDate, PRIVACY_COPY.es.effectiveDate]).toEqual(['November 14, 2026', '14 de noviembre de 2026']);
-        // providers: Railway, Lemon Squeezy (web) and Google Play (Android), same "• **Name** — role" format
+        // providers: Railway, Stripe (web, merchant of record) and Google Play (Android), same "• **Name** — role" format
         for (const l of ['es', 'en'] as const) {
             const providers = sec(l, 'sharing').split('\n').filter((line) => line.startsWith('• **'));
-            expect(providers.map((p) => p.match(/\*\*(.+?)\*\*/)![1])).toEqual(['Supabase', 'Google', 'Vercel', 'Railway', 'Lemon Squeezy', 'Google Play']);
+            expect(providers.map((p) => p.match(/\*\*(.+?)\*\*/)![1])).toEqual(['Supabase', 'Google', 'Vercel', 'Railway', 'Stripe', 'Google Play']);
             for (const p of providers) expect(p).toMatch(/^• \*\*[^*]+\*\* — .+\.$/);
         }
     });
@@ -154,5 +155,21 @@ describe('guardian: no hardcoded visible English in the four swept files', () =>
         const bad = strip(`<p className="x">Go Back</p>\nsetError('Invalid email or password');`);
         expect([...bad.matchAll(/>([^<>{}]+)</g)].map((m) => m[1]).some((t) => WORDS.test(t))).toBe(true);
         expect(WORDS.test('Invalid email or password')).toBe(true);
+    });
+});
+
+describe('web payments: Stripe as merchant of record (misión 2026-11-22-legal-stripe-mor)', () => {
+    const ES = 'Las compras realizadas en nuestro sitio web se procesan a través de Stripe, que actúa como vendedor registrado (merchant of record): Stripe procesa tu pago y se encarga de los impuestos aplicables a la venta';
+    const EN = 'Purchases made on our website are processed through Stripe, which acts as the merchant of record: Stripe processes your payment and handles the taxes applicable to the sale';
+    const all = (l: 'es' | 'en') => [...PRIVACY_COPY[l].sections, ...termsSections(l, 2026)].map((s) => s.content).join('\n');
+
+    it('both legal pages carry the MoR sentence in both languages, and no Lemon Squeezy left', () => {
+        for (const l of ['es', 'en'] as const) expect(all(l).toLowerCase()).not.toContain('lemon');
+        expect(all('es').toLowerCase().split(ES.toLowerCase()).length - 1).toBe(2); // Privacidad + Términos
+        expect(all('en').toLowerCase().split(EN.toLowerCase()).length - 1).toBe(2);
+    });
+
+    it('Google Play stays the Android payment path, untouched', () => {
+        for (const l of ['es', 'en'] as const) expect(all(l)).toContain('**Google Play**');
     });
 });
