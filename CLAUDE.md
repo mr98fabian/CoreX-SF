@@ -76,3 +76,5 @@ Se activan solos por contexto; también con `/nombre`.
 | `frontend-design` | Ejecutar la dirección de marca con más audacia (plugin oficial) |
 
 Notas de ideas sin procesar: `docs/raw/` (ver su README).
+
+Sistema de misiones: antes de ejecutar cualquier misión, lee `misiones/INSTRUCCIONES.md` y `misiones/cola.md`.
