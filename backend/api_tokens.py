@@ -24,6 +24,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from sqlmodel import Session, select
 
 import database
@@ -123,7 +124,7 @@ def require_scope(scope: str):
     async def dependency(request: Request, authorization: Optional[str] = Header(None)):
         raw = (authorization or "").removeprefix("Bearer ").strip()
         if raw.startswith(API_TOKEN_PREFIX):
-            token = _authenticate_token(raw, scope)
+            token = await run_in_threadpool(_authenticate_token, raw, scope)  # sync DB: off the event loop
             request.state.auth_user_id = token.user_id
             holder = {"summary": None}
             ctx = _audit_holder.set(holder)

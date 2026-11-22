@@ -325,13 +325,20 @@ def mission_accounts_for(session, user_id: str, debts, today=None) -> list:
         for c in session.exec(select(CutHistory).where(CutHistory.user_id == user_id, CutHistory.account_id.in_(ids))
                               .order_by(CutHistory.cut_date.desc())).all():
             last_cut.setdefault(c.account_id, c)
+    # ONE query for the payments of every debt since its cut (was one per debt: N round trips to the DB)
+    txs_by_account: dict = {}
+    if last_cut:
+        since = min(c.cut_date for c in last_cut.values()).isoformat()
+        for t in session.exec(select(Transaction).where(Transaction.user_id == user_id,
+                                                        Transaction.account_id.in_(list(last_cut)),
+                                                        Transaction.date > since)).all():
+            txs_by_account.setdefault(t.account_id, []).append(t)
     out = []
     for a in debts:
         cut = last_cut.get(a.id)
         paid = Decimal("0")
         if cut:
-            txs = session.exec(select(Transaction).where(Transaction.user_id == user_id, Transaction.account_id == a.id,
-                                                         Transaction.date > cut.cut_date.isoformat())).all()
+            txs = [t for t in txs_by_account.get(a.id, []) if t.date > cut.cut_date.isoformat()]
             # manual payments AND confirmed attacks ("Debt Payment") both reduce the statement
             paid = sum((abs(Decimal(str(t.amount))) for t in txs if is_payment_category(t.category)), Decimal("0"))
         out.append(MissionAccount(
@@ -347,15 +354,20 @@ def mission_accounts_for(session, user_id: str, debts, today=None) -> list:
     return out
 
 
-def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None):
+def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None,
+                        cashflow=None, shield_target=None):
     """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
-    Callers (dashboard, command-center) only serialize the result."""
+    Callers (dashboard, command-center) only serialize the result. A caller that already
+    loaded `cashflow` (dated_cashflow for today and MISSION_WINDOW_DAYS) or `shield_target`
+    in this request passes them, so the same rows are not fetched twice."""
     from datetime import date as _date
     from velocity_engine import MISSION_WINDOW_DAYS, get_daily_mission
     today = today or _date.today()
     mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
-    incomes, expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
-    return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), get_shield_target(session, user_id),
+    incomes, expenses = cashflow if cashflow is not None else dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
+    if shield_target is None:
+        shield_target = get_shield_target(session, user_id)
+    return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), shield_target,
                              incomes, expenses, today=today)
 
 

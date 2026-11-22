@@ -26,7 +26,7 @@ def _json(v):
 
 
 @router.get("/events")
-async def calendar_events(
+def calendar_events(
     month: str = Query(default=None, description="YYYY-MM (default: current month)"),
     user_id: str = Depends(require_scope("read:dashboard")),
     plan_limit: int | None = Depends(scoped_plan_limit),

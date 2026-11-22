@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api", tags=["cashflow"])
 # ── Monthly summary (Reloj de dinero, Cuentas) ───────────────
 
 @router.get("/cashflow/summary")
-async def get_cashflow_summary(
+def get_cashflow_summary(
     user_id: str = Depends(require_scope("read:dashboard")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
@@ -38,7 +38,7 @@ async def get_cashflow_summary(
 # ── Cashflow Item CRUD ───────────────────────────────────────
 
 @router.get("/cashflow")
-async def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
+def get_cashflow(user_id: str = Depends(require_scope("read:dashboard"))):
     with request_session() as session:
         result = [item.model_dump() for item in
                   session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()]
@@ -68,7 +68,7 @@ def _check_own_account(session, account_id, user_id):
 
 
 @router.post("/cashflow", response_model=CashflowItem)
-async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_scope("write:payments"))):
+def create_cashflow(item: CashflowItem, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         item.user_id = user_id
         item.id = None  # never let the client pick (or collide with) a primary key
@@ -81,7 +81,7 @@ async def create_cashflow(item: CashflowItem, user_id: str = Depends(require_sco
 
 
 @router.put("/cashflow/{id}", response_model=CashflowItem)
-async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(require_scope("write:payments"))):
+def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
@@ -102,7 +102,7 @@ async def update_cashflow(id: int, data: CashflowUpdate, user_id: str = Depends(
 
 
 @router.delete("/cashflow/{id}")
-async def delete_cashflow(id: int, user_id: str = Depends(require_scope("write:payments"))):
+def delete_cashflow(id: int, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         item = session.exec(select(CashflowItem).where(CashflowItem.id == id, CashflowItem.user_id == user_id)).first()
         if not item:
@@ -135,7 +135,7 @@ def _item_triggers(item: CashflowItem, d: date, epoch: date = date(2024, 1, 1)) 
 # ── Projection ───────────────────────────────────────────────
 
 @router.get("/cashflow/projection")
-async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_current_user_id)):
+def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_current_user_id)):
     months = max(1, min(months, 12))
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -190,14 +190,14 @@ async def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_cu
 
 
 @router.post("/cashflow/auto-execute")
-async def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
+def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
     return {"executed": [], "count": 0, "date": date.today().isoformat()}
 
 
 # ── Recurring Confirmation System ────────────────────────────
 
 @router.get("/cashflow/due-today")
-async def get_due_today(user_id: str = Depends(get_current_user_id)):
+def get_due_today(user_id: str = Depends(get_current_user_id)):
     today, today_str, now = date.today(), date.today().isoformat(), dt.now()
     with request_session() as session:
         due_items = []
@@ -224,7 +224,7 @@ async def get_due_today(user_id: str = Depends(get_current_user_id)):
 
 
 @router.post("/cashflow/{item_id}/confirm")
-async def confirm_recurring(item_id: int, body: dict, user_id: str = Depends(get_current_user_id)):
+def confirm_recurring(item_id: int, body: dict, user_id: str = Depends(get_current_user_id)):
     actual = body.get("actual_amount")
     if actual is None:
         raise HTTPException(status_code=400, detail="actual_amount is required")
@@ -275,7 +275,7 @@ async def confirm_recurring(item_id: int, body: dict, user_id: str = Depends(get
 
 
 @router.post("/cashflow/{item_id}/snooze")
-async def snooze_recurring(item_id: int, body: dict, user_id: str = Depends(get_current_user_id)):
+def snooze_recurring(item_id: int, body: dict, user_id: str = Depends(get_current_user_id)):
     mode = body.get("mode", "2h")
     now = dt.now()
     if mode == "2h":

@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import date, timedelta
+import copy
 
 from database import engine
 from database import request_session
@@ -32,7 +33,7 @@ def _cents(x: Decimal) -> float:
 
 
 @router.get("/dashboard")
-async def get_dashboard_metrics(
+def get_dashboard_metrics(
     user_id: str = Depends(require_scope("read:dashboard")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
@@ -68,15 +69,18 @@ async def get_dashboard_metrics(
 
         # Real recurring incomes/expenses, any frequency, income by is_income
         # (never an invented salary: no income on record = nothing comes in)
-        real_incomes, real_expenses = dated_cashflow(session, user_id, date.today(), MISSION_WINDOW_DAYS)
+        today = date.today()
+        real_incomes, real_expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
         safety_data = calculate_safe_attack_equity(
             liquid_cash, shield_target, debt_objects,
-            recurring_incomes=real_incomes, recurring_expenses=real_expenses,
+            recurring_incomes=copy.deepcopy(real_incomes), recurring_expenses=copy.deepcopy(real_expenses),
         )
 
         # Same mission as the Plan (velocity_engine.get_daily_mission): the
-        # "safe" surplus is what is left after the cycle's obligations
-        mission = build_daily_mission(session, user_id, accounts, plan_limit)
+        # "safe" surplus is what is left after the cycle's obligations.
+        # Same cashflow and shield already loaded above (no second round trip).
+        mission = build_daily_mission(session, user_id, accounts, plan_limit, today=today,
+                                      cashflow=(real_incomes, real_expenses), shield_target=shield_target)
         attack_equity = mission["ataque"]
         reserved_for_bills = mission["reserva"]
 
@@ -317,7 +321,7 @@ async def get_dashboard_metrics(
 
 
 @router.get("/dashboard/cashflow_monitor")
-async def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income", user_id: str = Depends(get_current_user_id)):
+def get_dashboard_monitor(timeframe: str = "monthly", type: str = "income", user_id: str = Depends(get_current_user_id)):
     """
     Calculate total cashflow (Income or Expense) for a specific timeframe.
     Timeframes: 'daily' (Today), 'weekly' (7d), 'monthly' (30d), 'annual' (365d).

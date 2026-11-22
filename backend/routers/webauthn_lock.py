@@ -77,13 +77,13 @@ class VerifyBody(BaseModel):
 
 
 @router.get("/status")
-async def status(user_id: str = Depends(get_current_user_id)):
+def status(user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         return {"registered": len(_creds(session, user_id)) > 0}
 
 
 @router.post("/register/options")
-async def register_options(origin: Optional[str] = Header(None), user_id: str = Depends(get_current_user_id)):
+def register_options(origin: Optional[str] = Header(None), user_id: str = Depends(get_current_user_id)):
     _, rp_id = _origin_and_rp(origin)
     with request_session() as session:
         opts = generate_registration_options(
@@ -100,7 +100,7 @@ async def register_options(origin: Optional[str] = Header(None), user_id: str = 
 
 
 @router.post("/register/verify")
-async def register_verify(body: VerifyBody, origin: Optional[str] = Header(None),
+def register_verify(body: VerifyBody, origin: Optional[str] = Header(None),
                           user_id: str = Depends(get_current_user_id)):
     o, rp_id = _origin_and_rp(origin)
     with request_session() as session:
@@ -117,7 +117,7 @@ async def register_verify(body: VerifyBody, origin: Optional[str] = Header(None)
 
 
 @router.post("/auth/options")
-async def auth_options(origin: Optional[str] = Header(None), user_id: str = Depends(get_current_user_id)):
+def auth_options(origin: Optional[str] = Header(None), user_id: str = Depends(get_current_user_id)):
     _, rp_id = _origin_and_rp(origin)
     with request_session() as session:
         creds = _creds(session, user_id)
@@ -131,7 +131,7 @@ async def auth_options(origin: Optional[str] = Header(None), user_id: str = Depe
 
 
 @router.post("/auth/verify")
-async def auth_verify(body: VerifyBody, origin: Optional[str] = Header(None),
+def auth_verify(body: VerifyBody, origin: Optional[str] = Header(None),
                       user_id: str = Depends(get_current_user_id)):
     o, rp_id = _origin_and_rp(origin)
     with request_session() as session:
@@ -155,7 +155,7 @@ async def auth_verify(body: VerifyBody, origin: Optional[str] = Header(None),
 
 
 @router.delete("/credentials/{credential_id}")
-async def remove_credential(credential_id: str, user_id: str = Depends(get_current_user_id)):
+def remove_credential(credential_id: str, user_id: str = Depends(get_current_user_id)):
     """Turning the lock off on a device forgets that device's fingerprint (other devices keep theirs)."""
     with request_session() as session:
         for c in session.exec(select(WebAuthnCredential).where(WebAuthnCredential.user_id == user_id,

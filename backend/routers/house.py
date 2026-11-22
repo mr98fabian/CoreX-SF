@@ -82,14 +82,14 @@ def _view(session, user_id: str, g: HouseGoal) -> dict:
 
 
 @router.get("/house-goal")
-async def get_house_goal(user_id: str = Depends(require_scope("read:dashboard"))):
+def get_house_goal(user_id: str = Depends(require_scope("read:dashboard"))):
     with request_session() as session:
         g = session.exec(select(HouseGoal).where(HouseGoal.user_id == user_id)).first()
         return _view(session, user_id, g) if g else {"active": False}
 
 
 @router.put("/house-goal")
-async def put_house_goal(body: HouseGoalIn, user_id: str = Depends(require_scope("write:accounts"))):
+def put_house_goal(body: HouseGoalIn, user_id: str = Depends(require_scope("write:accounts"))):
     data = body.model_dump()
     with request_session() as session:
         g = session.exec(select(HouseGoal).where(HouseGoal.user_id == user_id)).first() or HouseGoal(user_id=user_id, **data)

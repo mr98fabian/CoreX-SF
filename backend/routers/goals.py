@@ -75,7 +75,7 @@ def _own(session, user_id: str, goal_id: int) -> Goal:
 
 
 @router.get("/goals")
-async def list_goals(user_id: str = Depends(require_scope("read:dashboard"))):
+def list_goals(user_id: str = Depends(require_scope("read:dashboard"))):
     with request_session() as session:
         goals = session.exec(select(Goal).where(Goal.user_id == user_id).order_by(Goal.created_at)).all()
         return {"goals": [_view(g) for g in goals],
@@ -83,7 +83,7 @@ async def list_goals(user_id: str = Depends(require_scope("read:dashboard"))):
 
 
 @router.post("/goals", status_code=201)
-async def create_goal(body: GoalIn, user_id: str = Depends(require_scope("write:accounts"))):
+def create_goal(body: GoalIn, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         g = Goal(user_id=user_id, **body.model_dump())
         session.add(g)
@@ -94,7 +94,7 @@ async def create_goal(body: GoalIn, user_id: str = Depends(require_scope("write:
 
 
 @router.patch("/goals/{goal_id}")
-async def edit_goal(goal_id: int, body: GoalPatch, user_id: str = Depends(require_scope("write:accounts"))):
+def edit_goal(goal_id: int, body: GoalPatch, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         g = _own(session, user_id, goal_id)
         for k, v in body.model_dump(exclude_unset=True).items():
@@ -108,7 +108,7 @@ async def edit_goal(goal_id: int, body: GoalPatch, user_id: str = Depends(requir
 
 
 @router.delete("/goals/{goal_id}")
-async def delete_goal(goal_id: int, user_id: str = Depends(require_scope("write:accounts"))):
+def delete_goal(goal_id: int, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         g = _own(session, user_id, goal_id)
         name = g.name
@@ -119,7 +119,7 @@ async def delete_goal(goal_id: int, user_id: str = Depends(require_scope("write:
 
 
 @router.post("/goals/{goal_id}/add-savings")
-async def add_savings(goal_id: int, body: SavingsIn, user_id: str = Depends(require_scope("write:accounts"))):
+def add_savings(goal_id: int, body: SavingsIn, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         g = _own(session, user_id, goal_id)
         g.saved_amount = Decimal(g.saved_amount) + body.amount

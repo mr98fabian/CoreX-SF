@@ -140,13 +140,13 @@ def _run_seed(user_id: str, dataset: dict):
 
 
 @router.post("/demo/seed")
-async def seed_demo(user_id: str = Depends(get_current_user_id)):
+def seed_demo(user_id: str = Depends(get_current_user_id)):
     """Load the relatable demo persona (what "Try Demo" shows)."""
     return _run_seed(user_id, MARIA)
 
 
 @router.post("/dev/seed-stress-test")
-async def seed_stress_test(user_id: str = Depends(get_current_user_id)):
+def seed_stress_test(user_id: str = Depends(get_current_user_id)):
     """Load the $1M+ stress dataset. Development only: 404 everywhere else."""
     if not IS_DEV:
         raise HTTPException(status_code=404, detail="Not Found")

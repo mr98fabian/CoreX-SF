@@ -57,13 +57,13 @@ class CoachPatch(BaseModel):
 
 
 @router.get("/coach-profile")
-async def get_coach_profile(user_id: str = Depends(require_scope("read:dashboard"))):
+def get_coach_profile(user_id: str = Depends(require_scope("read:dashboard"))):
     with request_session() as session:
         return _out(_profile(session, user_id))
 
 
 @router.patch("/coach-profile")
-async def patch_coach_profile(body: CoachPatch, user_id: str = Depends(require_scope("write:accounts"))):
+def patch_coach_profile(body: CoachPatch, user_id: str = Depends(require_scope("write:accounts"))):
     sent = body.model_dump(exclude_unset=True)
     with request_session() as session:
         p = _profile(session, user_id)
@@ -94,7 +94,7 @@ def _money(x) -> float:
 
 
 @router.get("/logros")
-async def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
+def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
                      plan_limit: int | None = Depends(scoped_plan_limit)):
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()

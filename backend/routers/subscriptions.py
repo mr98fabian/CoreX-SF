@@ -208,7 +208,7 @@ async def handle_webhook(request: Request, session: Session = Depends(get_sessio
 # ── Status ───────────────────────────────────────────────────
 
 @router.get("/status")
-async def get_subscription_status(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
+def get_subscription_status(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
     ent = entitlement(session, user_id)  # grants first: a founder with no subscriptions row is NOT starter
     sub = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
     limit = PLAN_LIMITS.get(ent["plan"])
@@ -230,7 +230,7 @@ async def get_subscription_status(user_id: str = Depends(get_current_user_id), s
 
 
 @router.post("/portal")
-async def get_customer_portal(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
+def get_customer_portal(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session)):
     sub = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
     if not sub or not sub.customer_portal_url:
         raise HTTPException(status_code=404, detail="No active subscription found")
@@ -249,7 +249,7 @@ def _cents(x) -> float:
 
 
 @router.get("/savings-estimate")
-async def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session),
+def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: Session = Depends(get_session),
                                plan_limit: Optional[int] = Depends(effective_plan_limit)):
     from models import Account
     accounts = session.exec(select(Account).where(Account.user_id == user_id, Account.type == "debt")).all()

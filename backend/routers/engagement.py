@@ -157,7 +157,7 @@ def leave_leagues(session, user_id: str, today: date) -> None:
 
 
 @router.post("/engagement/checkin")
-async def checkin(user_id: str = Depends(get_current_user_id)):
+def checkin(user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         new = award(session, user_id, "checkin")
         session.commit()
@@ -165,7 +165,7 @@ async def checkin(user_id: str = Depends(get_current_user_id)):
 
 
 @router.get("/ranking")
-async def ranking(user_id: str = Depends(get_current_user_id)):
+def ranking(user_id: str = Depends(get_current_user_id)):
     today = date.today()
     with request_session() as session:
         checkins = set(session.exec(select(EngagementPoint.date).where(
