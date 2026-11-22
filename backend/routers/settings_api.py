@@ -37,7 +37,7 @@ def _get_or_create(session: Session, user_id: str) -> UserSettings:
 
 
 @router.get("/settings")
-async def get_settings(user_id: str = Depends(require_scope("read:dashboard"))):
+def get_settings(user_id: str = Depends(require_scope("read:dashboard"))):
     with Session(engine) as session:
         settings = _get_or_create(session, user_id)
         return {
@@ -46,7 +46,7 @@ async def get_settings(user_id: str = Depends(require_scope("read:dashboard"))):
 
 
 @router.patch("/settings")
-async def update_settings(body: SettingsUpdate, user_id: str = Depends(get_current_user_id)):
+def update_settings(body: SettingsUpdate, user_id: str = Depends(get_current_user_id)):
     with Session(engine) as session:
         settings = _get_or_create(session, user_id)
         if body.onboarding_complete is not None:

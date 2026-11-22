@@ -93,13 +93,13 @@ def _create_tx_record(session, tx: TransactionCreate, user_id: str, manual: bool
 
 
 @router.post("/transactions")
-async def create_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
+def create_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         return _create_tx_record(session, tx, user_id)
 
 
 @router.post("/transactions/manual")
-async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
+def create_manual_transaction(tx: TransactionCreate, user_id: str = Depends(require_scope("write:payments"))):
     with request_session() as session:
         return _create_tx_record(session, tx, user_id, manual=True)
 
@@ -107,7 +107,7 @@ async def create_manual_transaction(tx: TransactionCreate, user_id: str = Depend
 # ── Transaction Queries ──────────────────────────────────────
 
 @router.get("/accounts/{account_id}/transactions", response_model=List[Transaction])
-async def get_account_transactions(account_id: int, user_id: str = Depends(get_current_user_id)):
+def get_account_transactions(account_id: int, user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         if not session.exec(select(Account).where(Account.id == account_id, Account.user_id == user_id)).first():
             raise HTTPException(status_code=404, detail="Account not found")
@@ -118,7 +118,7 @@ async def get_account_transactions(account_id: int, user_id: str = Depends(get_c
 
 
 @router.get("/transactions/recent", response_model=List[Transaction])
-async def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_current_user_id)):
+def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         return session.exec(
             select(Transaction).where(Transaction.user_id == user_id)
@@ -127,7 +127,7 @@ async def get_recent_transactions(limit: int = 10, user_id: str = Depends(get_cu
 
 
 @router.get("/transactions/all")
-async def get_all_transactions(
+def get_all_transactions(
     account_id: int = None, category: str = None, date_from: str = None,
     date_to: str = None, search: str = None, limit: int = 100, offset: int = 0,
     user_id: str = Depends(get_current_user_id),
@@ -200,7 +200,7 @@ def api_get_plaid_accounts():
 
 
 @router.post("/plaid/import_accounts")
-async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id)):
+def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id)):
     token = plaid_tokens.get("current")
     if not token:
         raise HTTPException(status_code=400, detail="No bank linked. Connect a bank first.")
@@ -235,7 +235,7 @@ async def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id))
 
 
 @router.post("/plaid/sync_transactions")
-async def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(get_current_user_id)):
+def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(get_current_user_id)):
     result = _plaid_call("sync_transactions", data.access_token)
     counts = {"added": 0, "skipped": 0}
 

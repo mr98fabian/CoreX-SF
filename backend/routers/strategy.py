@@ -44,7 +44,7 @@ router = APIRouter(prefix="/api", tags=["strategy"])
 # ── Peace Shield ─────────────────────────────────────────────
 
 @router.get("/peace-shield")
-async def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
+def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         shield_target = get_shield_target(session, user_id)
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
@@ -89,7 +89,7 @@ def update_attack_percentage(data: dict, user_id: str = Depends(get_current_user
 # ── Velocity Projections ─────────────────────────────────────
 
 @router.get("/velocity/projections")
-async def get_velocity_projections(
+def get_velocity_projections(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
@@ -104,7 +104,7 @@ async def get_velocity_projections(
 
 
 @router.get("/velocity/freedom-path")
-async def get_freedom_path(
+def get_freedom_path(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
@@ -117,7 +117,7 @@ async def get_freedom_path(
 
 
 @router.get("/velocity/compare")
-async def get_velocity_compare(
+def get_velocity_compare(
     user_id: str = Depends(require_scope("read:plan")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
@@ -133,7 +133,7 @@ async def get_velocity_compare(
 
 
 @router.get("/velocity/simulate")
-async def get_simulation(
+def get_simulation(
     extra_cash: float,
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
@@ -149,7 +149,7 @@ async def get_simulation(
 # ── Tactical GPS & Execution ─────────────────────────────────
 
 @router.get("/strategy/tactical-gps")
-async def get_tactical_gps(
+def get_tactical_gps(
     user_id: str = Depends(require_scope("read:plan")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
@@ -195,7 +195,7 @@ async def get_tactical_gps(
 
 
 @router.post("/strategy/execute")
-async def execute_movement(data: MovementExecute, user_id: str = Depends(get_current_user_id)):
+def execute_movement(data: MovementExecute, user_id: str = Depends(get_current_user_id)):
     import logging
     logger = logging.getLogger("korex.execute")
 
@@ -272,7 +272,7 @@ async def execute_movement(data: MovementExecute, user_id: str = Depends(get_cur
 
 
 @router.get("/strategy/executed-logs")
-async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
+def get_executed_logs(user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         return session.exec(select(MovementLog).where(MovementLog.user_id == user_id)).all()
 
@@ -280,7 +280,7 @@ async def get_executed_logs(user_id: str = Depends(get_current_user_id)):
 # ── Purchase Simulator ───────────────────────────────────────
 
 @router.post("/simulator/time-cost")
-async def simulate_purchase_cost(
+def simulate_purchase_cost(
     req: SimulatorRequest,
     user_id: str = Depends(require_scope("run:simulations")),
     plan_limit: int | None = Depends(scoped_plan_limit),
@@ -297,7 +297,7 @@ async def simulate_purchase_cost(
 # ── Transaction Classifier ───────────────────────────────────
 
 @router.get("/transactions/classified")
-async def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_current_user_id)):
+def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         txs = session.exec(select(Transaction).where(Transaction.user_id == user_id)
                           .order_by(Transaction.date.desc()).limit(limit)).all()
@@ -306,7 +306,7 @@ async def get_classified_transactions(limit: int = 50, user_id: str = Depends(ge
 
 
 @router.get("/cashflow/summary")
-async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
+def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         txs = session.exec(select(Transaction).where(Transaction.user_id == user_id)
                           .order_by(Transaction.date.desc()).limit(100)).all()
@@ -318,7 +318,7 @@ async def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id))
 # ── Strategy Command Center ──────────────────────────────────
 
 @router.get("/strategy/command-center")
-async def get_strategy_command_center(
+def get_strategy_command_center(
     user_id: str = Depends(get_current_user_id),
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
@@ -329,7 +329,7 @@ async def get_strategy_command_center(
         liquid_cash = Decimal(str(get_liquid_cash(accounts)))
         shield = get_peace_shield_status(liquid_cash, shield_target)
         # One source with Inicio: obligations first, attack = what is left (engine)
-        mission = build_daily_mission(session, user_id, accounts, plan_limit)
+        mission = build_daily_mission(session, user_id, accounts, plan_limit, shield_target=shield_target)
         attack_amount = mission["ataque"]
         target = next((d for d in debt_accounts if d.name == mission["objetivo"]), None)
 

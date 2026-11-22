@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
 
 @router.get("/upcoming")
-async def get_upcoming_payments(
+def get_upcoming_payments(
     days: int = 7,
     user_id: str = Depends(get_current_user_id),
     session: Session = Depends(get_session),
@@ -77,7 +77,7 @@ async def get_upcoming_payments(
 
 
 @router.get("/summary")
-async def get_notification_summary(
+def get_notification_summary(
     user_id: str = Depends(get_current_user_id),
     session: Session = Depends(get_session),
 ):

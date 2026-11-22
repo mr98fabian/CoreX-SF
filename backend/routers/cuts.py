@@ -70,7 +70,7 @@ def account_streaks(cuts: list[CutHistory]) -> dict[int, int]:
 
 
 @router.post("/cuts")
-async def record_cut(body: CutIn, user_id: str = Depends(require_scope("write:accounts"))):
+def record_cut(body: CutIn, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         acc = session.exec(select(Account).where(Account.id == body.account_id, Account.user_id == user_id)).first()
         if not acc:
@@ -103,7 +103,7 @@ async def record_cut(body: CutIn, user_id: str = Depends(require_scope("write:ac
 
 
 @router.get("/cuts")
-async def list_cuts(account_id: Optional[int] = None, user_id: str = Depends(require_scope("read:accounts"))):
+def list_cuts(account_id: Optional[int] = None, user_id: str = Depends(require_scope("read:accounts"))):
     with request_session() as session:
         q = select(CutHistory).where(CutHistory.user_id == user_id)
         if account_id is not None:

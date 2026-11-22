@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
 @router.get("/spending-by-category")
-async def spending_by_category(
+def spending_by_category(
     months: int = 3,
     user_id: str = Depends(get_current_user_id),
 ):
@@ -49,7 +49,7 @@ async def spending_by_category(
 
 
 @router.get("/monthly-trend")
-async def monthly_trend(
+def monthly_trend(
     months: int = 6,
     user_id: str = Depends(get_current_user_id),
 ):
@@ -89,7 +89,7 @@ async def monthly_trend(
 
 
 @router.get("/summary")
-async def analytics_summary(
+def analytics_summary(
     user_id: str = Depends(get_current_user_id),
 ):
     """
@@ -136,7 +136,7 @@ _C = Decimal("0.01")
 
 
 @router.get("/v2")
-async def analytics_v2(
+def analytics_v2(
     user_id: str = Depends(require_scope("read:dashboard")),
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):

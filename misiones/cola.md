@@ -5,7 +5,7 @@ aprueba merges.
 ## CoreX-SF (la app)
 | # | Misión | Estado | Nota |
 |---|--------|--------|------|
-| 0 | Limpieza completa y optimización de rendimiento | pendiente | PRIORIDAD ALTA: app lenta en producción; archivo `misiones/2026-11-22-limpieza-optimizacion.md` |
+| 0 | Limpieza completa y optimización de rendimiento | completada | PRIORIDAD ALTA: app lenta en producción; archivo `misiones/2026-11-22-limpieza-optimizacion.md` |
 | 1 | Textos legales: Lemon Squeezy → Stripe Managed Payments (ES/EN) | pendiente | Prompt de Mijo ya escrito (mision-legal-stripe-mor) |
 | 2 | Push: plantillas en inglés según idioma del dispositivo | pendiente | Hoy el copy de push es solo ES |
 | 3 | Kit IA: neutralizar la marca en `lib/aiKit.ts` | pendiente | Opcional |

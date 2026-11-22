@@ -47,7 +47,7 @@ def _autofill_minimum(acc: Account) -> None:
 
 
 @router.get("/accounts")
-async def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
+def get_accounts(user_id: str = Depends(require_scope("read:accounts"))):
     with request_session() as session:
         return [_out(a) for a in session.exec(select(Account).where(Account.user_id == user_id)).all()]
 
@@ -61,7 +61,7 @@ def _money(x):
 
 
 @router.get("/accounts/credit-panel")
-async def get_credit_panel(user_id: str = Depends(require_scope("read:accounts")),
+def get_credit_panel(user_id: str = Depends(require_scope("read:accounts")),
                            plan_limit: int | None = Depends(scoped_plan_limit)):
     """Panel de crédito: totals and utilization of the user's credit cards.
     Only debt_subtype='credit_card'; plan-locked cards (same set the engine
@@ -85,7 +85,7 @@ async def get_credit_panel(user_id: str = Depends(require_scope("read:accounts")
 
 
 @router.post("/accounts")
-async def create_account(account: Account, user_id: str = Depends(require_scope("write:accounts"))):
+def create_account(account: Account, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         account.user_id = user_id
         account.id = None  # never let the client pick (or collide with) a primary key
@@ -104,7 +104,7 @@ DECIMAL_FIELDS = {"balance", "interest_rate", "min_payment", "credit_limit"}
 
 
 @router.put("/accounts/{id}")
-async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(require_scope("write:accounts"))):
+def update_account(id: int, data: AccountUpdate, user_id: str = Depends(require_scope("write:accounts"))):
     with request_session() as session:
         # Ownership checked in the query: someone else's account is a plain 404
         account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
@@ -130,7 +130,7 @@ async def update_account(id: int, data: AccountUpdate, user_id: str = Depends(re
 
 
 @router.patch("/accounts/{id}/balance")
-async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = Depends(get_current_user_id)):
+def update_account_balance(id: int, data: BalanceUpdate, user_id: str = Depends(get_current_user_id)):
     with request_session() as session:
         account = session.exec(select(Account).where(Account.id == id, Account.user_id == user_id)).first()
         if not account:
@@ -149,7 +149,7 @@ async def update_account_balance(id: int, data: BalanceUpdate, user_id: str = De
 
 
 @router.delete("/accounts/{id}")
-async def delete_account(id: int, user_id: str = Depends(require_scope("write:accounts"))):
+def delete_account(id: int, user_id: str = Depends(require_scope("write:accounts"))):
     """Delete one of the user's accounts in a single transaction:
     - transactions of the account → deleted (they have no meaning without it);
     - movement_log rows verified against those transactions → kept as history,
@@ -187,7 +187,7 @@ async def delete_account(id: int, user_id: str = Depends(require_scope("write:ac
 
 
 @router.delete("/accounts")
-async def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
+def delete_all_accounts(user_id: str = Depends(get_current_user_id)):
     """HARD RESET: Wipe all user's financial data for a fresh start.
 
     Clears: accounts, transactions, movement logs, cashflow items, onboarding state.
