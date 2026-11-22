@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { returnToOr } from '@/lib/returnTo';
+import { preloadDashboard } from '@/lib/preloadRoutes';
 import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -164,6 +165,7 @@ export default function LoginPage() {
     // Back from Mi Cuenta → Eliminar para siempre (features/settings/MyAccountPage)
     const accountDeleted = new URLSearchParams(window.location.search).get('cuenta') === 'eliminada';
     usePageTitle(t('nav.signIn'));
+    useEffect(preloadDashboard, []); // the panel's code is ready by the time sign-in succeeds
     const { user, loading, signInWithGoogle, signInWithPassword, signUp, resetPassword, signInAsDemo } = useAuth();
 
     const [view, setView] = useState<ViewState>('signin');
