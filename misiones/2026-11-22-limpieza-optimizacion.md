@@ -81,7 +81,7 @@ de impacto, y al final la misma medición para probar la mejora (antes/después)
   **Estimación (no medida) para prod tras el deploy:** dashboard ≈ 678 − 3×55 ≈ 0.5 s en servidor y el
   panel completo ≈ la llamada más lenta (~0.6–0.8 s) en vez de la suma (~2.9 s). El criterio
   "`/api/dashboard` < ~800 ms" está cumplido en local y debe re-medirse en prod tras el merge con
-  `scratchpad perf/pt.py` (mismo método); hasta entonces es una estimación.
+  el mismo método (token demo, mediana de 5, `X-Process-Time`); hasta entonces es una estimación.
 - **Limpieza hecha (qué se borró y cómo se probó que estaba muerto):** `components/ui/chart.tsx`,
   `components/ui/progress.tsx`, `components/ui/tooltip.tsx`, `lib/database.types.ts` (cero referencias
   en `git grep` de ruta y nombre en todo el repo) y las dependencias `sonner`,
