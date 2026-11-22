@@ -1,6 +1,6 @@
 # Misión: Integración de Stripe Managed Payments (checkout web)
 - **ID:** 2026-11-22-integracion-stripe
-- **Estado:** en-curso
+- **Estado:** en-auditoria
 - **Rama:** feat/integracion-stripe
 - **Repo:** CoreX-SF
 - **Origen:** deuda técnica de la Misión 1. Por dentro, el checkout web sigue siendo Lemon Squeezy,
@@ -49,7 +49,84 @@ los impuestos. Google Play Billing (Android) NO se toca.
 - Ninguna llave real en el repo, en el chat ni en el Reporte.
 - Merge a main: lo ordena Fabian tras la auditoría de Mijo.
 ## Reporte (lo llena Claude al ejecutar)
-- **Fecha:**
-- **Rama y commit:**
-- **Verificaciones corridas y resultado:**
+- **Fecha:** 2026-11-22
+- **Rama y commit:** `feat/integracion-stripe`: backend en 2b12a65, frontend en 8fc9e53; este reporte va
+  en el commit de cabeza de la rama. Base: main 69ede62 (incluye la misión 1).
+- **Puerta previa (cuenta Stripe):** **no verificada.** Desde aquí no tengo acceso a la cuenta de
+  KONTROLLY CONSULTING GROUP LLC ni a sus llaves (por diseño: solo se cargan en Railway). Todo se
+  construyó contra la API de Stripe y se probó con la API simulada. No se creó ninguna sesión real de
+  prueba en Stripe porque eso exige una llave `sk_test_…`, y esa llave no puede pasar por el chat ni por
+  el repo. Pasos para Fabian, en el panel de Stripe y en Railway:
+  1. En Stripe: activar Managed Payments y pasar la revisión de elegibilidad (producto digital y
+     automatizado, venta directa).
+  2. Crear el producto «KoreX Anual» con un tax code **elegible para Managed Payments** (por ejemplo,
+     SaaS `txcd_10103001`) y un precio recurrente anual de USD 100.
+  3. Crear un webhook a `https://corex-sf-production.up.railway.app/api/subscriptions/webhook` con los
+     eventos `checkout.session.completed`, `customer.subscription.created`,
+     `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed` e
+     `invoice.paid`.
+  4. En Railway: cargar `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` y `STRIPE_PRICE_FREEDOM_ANNUAL`
+     (primero las de modo prueba) y luego borrar las `LEMONSQUEEZY_*` y `LS_VARIANT_*`. La publishable
+     key no hace falta: el checkout es la página alojada por Stripe, sin Stripe.js.
+  5. Prueba en modo test: comprar con la tarjeta 4242 4242 4242 4242 desde korexf.com → Planes; luego
+     comprobar `store_source=stripe` y el plan en `/api/subscriptions/status`, y cancelar desde Link.
+- **Qué se construyó:**
+  - `POST /api/subscriptions/checkout` crea la Checkout Session (`mode=subscription`,
+    `managed_payments[enabled]=true`, `Stripe-Version: 2025-03-31.basil`, el único precio vendido,
+    `client_reference_id` y `metadata.user_id`) y devuelve `checkout_url`. Es el mismo contrato que ya
+    usan UpgradeModal y PlansPage, así que no cambia nada visible. Sin `automatic_tax`, que Managed
+    Payments no admite porque Stripe gestiona los impuestos.
+  - `POST /api/subscriptions/webhook` verifica `Stripe-Signature` (HMAC-SHA256 sobre `t.body`, con 5
+    minutos de tolerancia contra repeticiones) y maneja estos eventos:
+    - `checkout.session.completed`: lee la suscripción en Stripe; si no puede, responde 500 y Stripe
+      reintenta.
+    - `customer.subscription.*`: estados `trialing→on_trial`, `active`, `past_due`; con cancelación
+      programada, `cancelled` hasta el fin del periodo; `canceled`/`unpaid`/`incomplete_expired` →
+      `expired` y plan starter.
+    - `invoice.payment_failed` → `past_due`; `invoice.paid` → vuelve a `active`.
+    - Orden e idempotencia por `event.created`. Un evento de una suscripción vieja no pisa a la nueva,
+      y un fin de Stripe nunca toca una fila de Google Play.
+  - Falla cerrado: 503 sin `STRIPE_SECRET_KEY`, sin el precio o sin `STRIPE_WEBHOOK_SECRET`.
+  - La gestión de la suscripción (cancelar, cambiar tarjeta) va por Link (`https://app.link.com`), como
+    indica la documentación de Managed Payments; `/portal` devuelve ese enlace.
+  - Migración **d2f7b3c9e4a6**: `store_source` pasa de `lemon` a `stripe` en las filas y en el server
+    default. Se probó subida y bajada en una DB de prueba.
+  - CSP: `js.stripe.com` (script), `api.stripe.com` (connect), `checkout.stripe.com` y `js.stripe.com`
+    (frame).
+  - Frontend: `BillingProvider` y `store_source` pasan a `'stripe'`, más los comentarios de los archivos
+    tocados.
+- **Verificaciones corridas y resultado:** pytest **612 passed** (desde `backend/`, como CI). Son 31 tests de facturación web en
+  `test_billing.py`:
+  - firma válida, inválida, ausente o malformada, repetida (antigua) y sin secreto;
+  - alta, prueba, renovación, cancelación al fin de periodo, borrado, pago fallido y recuperado,
+    `checkout.session.completed`;
+  - duplicados, eventos viejos, re-suscripción, precio desconocido, fila de Play;
+  - checkout: 503, 400, 502, y que la sesión sea managed payments, anual y con la prueba;
+  - precio y prueba iguales a los de `pricing.ts`, y la migración.
+  Además: vitest **54 archivos / 330 tests passed**; `eslint --max-warnings 0` sin errores;
+  `npm run build` OK; `alembic heads` = **1** (`d2f7b3c9e4a6`). Los tests de Google Play/RTDN pasan; en
+  ellos solo cambió una etiqueta (la fila web ahora dice `stripe`, antes `lemon`), no su lógica.
 - **Desviaciones o dudas:**
+  - **Prueba gratis: 30 días, no 7.** La misión dice 7 días, pero lo que hoy ve el usuario en la web es
+    `TRIAL_DAYS = 30` (`frontend/src/lib/pricing.ts`, «30 días gratis» en la tarjeta del plan). Como
+    «No tocar precios ni prueba» y lo que se cobra debe coincidir con lo que se muestra (FTC), el
+    checkout usa 30 días: `TRIAL_DAYS` en el backend, con un test que lo ata a `pricing.ts`. **Fabian
+    decide:** si son 7, hay que cambiar ambas constantes en un mismo commit.
+  - No está documentado si Managed Payments admite `subscription_data[trial_period_days]`: se usa el
+    parámetro estándar de Billing y hay que confirmarlo en la prueba en modo test.
+  - Las páginas de Managed Payments solo listan los eventos `checkout.session.*`. Los eventos
+    `customer.subscription.*` e `invoice.*` son los estándar de Billing y se asumen; también hay que
+    confirmarlos en la prueba en modo test.
+  - Las columnas `ls_subscription_id` / `ls_customer_id` conservan su nombre y guardan los ids de
+    Stripe; renombrarlas sería otra migración sin beneficio funcional.
+  - Las filas que estaban como `lemon` pasan a `stripe` con sus ids viejos de Lemon; el webhook de Stripe
+    no las toca. Como la cuenta de Lemon fue rechazada, no se esperan suscriptores reales de Lemon.
+- **Restos de «lemon» (`grep -ri lemon frontend/src backend/`), ninguno en código funcional:**
+  - Migración histórica `a3f6c8e2d1b9` (docstring y server default original) y la constante
+    `PREVIOUS_WEB_STORE = 'lemon'` del downgrade de `d2f7b3c9e4a6`.
+  - Tests: `test_billing.py` (docstring y la tabla de prueba de la migración), `test_google_play.py`
+    (docstring y la prueba de la migración histórica), `enEsSweep.test.tsx` (comprueba que no quede
+    Lemon en los textos legales).
+  - Comentarios en archivos que esta misión no toca (se reportan, no se persiguen): `plan_guard.py:42,54`,
+    `routers/account.py:14`, `routers/google_play.py:6,10,36,136,164,291` (Google Play no se toca),
+    `PlayStoreActions.tsx:3`, `useEffectivePlan.ts:9`.
