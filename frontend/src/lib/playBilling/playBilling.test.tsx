@@ -1,7 +1,7 @@
 /**
  * Google Play Billing in the Android build. GUARDIAN: in native Android no screen ever calls
- * /api/subscriptions/checkout, opens a window or renders a Lemon URL (Play policy: violating
- * this gets the app rejected). On the web the Lemon flow stays exactly as it was.
+ * /api/subscriptions/checkout, opens a window or renders a web-checkout (Stripe) URL (Play policy:
+ * violating this gets the app rejected). On the web the Stripe flow stays exactly as it was.
  */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { act, type ReactNode } from 'react';
@@ -76,7 +76,7 @@ beforeEach(() => {
     apiFetch.mockImplementation(async (url: string) => {
         if (url === '/api/subscriptions/status') return status;
         if (url === '/api/subscriptions/google/verify') return { granted: true, status: 'active', plan: 'freedom', current_period_end: null, acknowledged: true, store_source: 'google_play' };
-        if (url === '/api/subscriptions/checkout') return { checkout_url: 'https://korex.lemonsqueezy.com/checkout/x' };
+        if (url === '/api/subscriptions/checkout') return { checkout_url: 'https://checkout.stripe.com/c/pay/cs_test_x' };
         if (url === '/api/subscriptions/savings-estimate') return { has_data: false, total_debt: 0, daily_interest_all: 0, plans: {}, social_proof: { total_accounts_monitored: 0, total_debt_tracked: 0 } };
         if (url === '/api/velocity/compare') throw new Error('none');
         return {};
@@ -92,19 +92,19 @@ afterEach(() => {
     window.history.pushState({}, '', '/');
 });
 
-function expectNoLemonPath() {
+function expectNoWebCheckoutPath() {
     expect(calls('/api/subscriptions/checkout')).toHaveLength(0);
     expect(window.open).not.toHaveBeenCalled();
-    expect(document.body.innerHTML.toLowerCase()).not.toMatch(/lemonsqueezy|lemon squeezy/);
+    expect(document.body.innerHTML.toLowerCase()).not.toMatch(/checkout\.stripe\.com|cs_test_x/);
 }
 
 describe('getBillingProvider', () => {
     it('is google_play only in the native Android build', () => {
         expect(getBillingProvider()).toBe('google_play');
         env.platform = 'ios';
-        expect(getBillingProvider()).toBe('lemon');
+        expect(getBillingProvider()).toBe('stripe');
         env.native = false; env.platform = 'web';
-        expect(getBillingProvider()).toBe('lemon');
+        expect(getBillingProvider()).toBe('stripe');
     });
 });
 
@@ -122,7 +122,7 @@ describe('Android build: Play Billing', () => {
         expect(calls('/api/subscriptions/status').length).toBeGreaterThan(0); // refetched after granting
         expect(toast).toHaveBeenCalledWith({ title: 'billing.active' });
         expect(plugin.acknowledge).not.toHaveBeenCalled(); // the server acknowledged
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
     });
 
     it('the app acknowledges only as backup, when the server granted but could not', async () => {
@@ -140,7 +140,7 @@ describe('Android build: Play Billing', () => {
         await click(buttonWith('billing.start'));
         expect(toast).toHaveBeenCalledWith({ title: 'billing.canceled', description: 'billing.canceledDesc' });
         expect(calls('/api/subscriptions/google/verify')).toHaveLength(0);
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
     });
 
     it('Restaurar compras verifies every active token and refetches the status', async () => {
@@ -151,26 +151,26 @@ describe('Android build: Play Billing', () => {
         expect(tokens).toEqual(['tok-1', 'tok-2']);
         expect(toast).toHaveBeenCalledWith({ title: 'billing.restored' });
         expect(calls('/api/subscriptions/status').length).toBeGreaterThanOrEqual(2);
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
     });
 
-    it('a Google Play subscription shows "Gestionar en Google Play" (Play\'s page), never a Lemon portal', async () => {
+    it('a Google Play subscription shows "Gestionar en Google Play" (Play\'s page), never the web store\'s', async () => {
         status = { ...status, plan: 'freedom', source: 'subscription', store_source: 'google_play' };
         await render(<PlansPage />);
         const manage = byTestId('play-manage') as HTMLAnchorElement;
         expect(manage.textContent).toBe('billing.manage');
         expect(manage.href).toBe(PLAY_MANAGE_URL);
         expect(PLAY_MANAGE_URL).toBe('https://play.google.com/store/account/subscriptions?package=com.korexf.app&sku=korex_annual');
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
     });
 
-    it('GUARDIAN: PlansPage and the Settings subscription tab buy through Play, never the Lemon checkout', async () => {
+    it('GUARDIAN: PlansPage and the Settings subscription tab buy through Play, never the web (Stripe) checkout', async () => {
         await render(<PlansPage />);
         expect(document.body.textContent).toContain('MX$1,799.00');
         expect(document.body.textContent).not.toContain('Precios en USD');
         await click(buttonWith('billing.start'));
         expect(plugin.purchase).toHaveBeenCalledTimes(1);
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
         act(() => root!.unmount()); root = null; document.body.replaceChildren();
 
         window.history.pushState({}, '', '/dashboard/settings?section=subscription');
@@ -178,7 +178,7 @@ describe('Android build: Play Billing', () => {
         expect(byTestId('play-store-actions')).toBeTruthy();
         await click(buttonWith('billing.start'));
         expect(plugin.purchase).toHaveBeenCalledTimes(2);
-        expectNoLemonPath();
+        expectNoWebCheckoutPath();
     });
 
     it('founder / gift (checkout_hidden): nothing is sold, not even through Play', async () => {
@@ -189,10 +189,10 @@ describe('Android build: Play Billing', () => {
     });
 });
 
-describe('Web: Lemon unchanged', () => {
+describe('Web: Stripe checkout', () => {
     beforeEach(() => { env.native = false; env.platform = 'web'; });
 
-    it('UpgradeModal keeps the USD price and opens the Lemon checkout; Play is never touched', async () => {
+    it('UpgradeModal keeps the USD price and opens the Stripe checkout; Play is never touched', async () => {
         await render(<UpgradeModal open onOpenChange={() => undefined} />);
         const card = byTestId('upgrade-paid')!;
         expect(card.textContent).toContain('$100.00');
@@ -201,12 +201,12 @@ describe('Web: Lemon unchanged', () => {
         expect(byTestId('play-store-actions')).toBeNull();
         await click(buttonWith('Empezar mes gratis'));
         expect(calls('/api/subscriptions/checkout')).toHaveLength(1);
-        expect(window.open).toHaveBeenCalledWith('https://korex.lemonsqueezy.com/checkout/x', '_blank');
+        expect(window.open).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/cs_test_x', '_blank');
         expect(plugin.getProductDetails).not.toHaveBeenCalled();
         expect(plugin.purchase).not.toHaveBeenCalled();
     });
 
-    it('PlansPage on the web has no Play buttons and keeps the Lemon checkout', async () => {
+    it('PlansPage on the web has no Play buttons and keeps the Stripe checkout', async () => {
         await render(<PlansPage />);
         expect(byTestId('play-store-actions')).toBeNull();
         expect(document.body.textContent).toContain('Precios en USD');

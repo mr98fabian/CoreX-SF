@@ -158,7 +158,7 @@ export default function SettingsPage() {
     const [interestTick, setInterestTick] = useState(0);
     const [upgrading, setUpgrading] = useState<string | null>(null);
     const { toast } = useToast();
-    // Android build: Google Play Billing; that branch never calls the Lemon checkout
+    // Android build: Google Play Billing; that branch never calls the web (Stripe) checkout
     const onPlay = getBillingProvider() === 'google_play';
     const play = usePlayBilling({
         enabled: onPlay,
@@ -166,7 +166,7 @@ export default function SettingsPage() {
     });
 
     // Plan shown here is the server's, never just the cached localStorage value.
-    // Coming back from Lemon Squeezy (?checkout=success) the webhook may land a few
+    // Coming back from Stripe Checkout (?checkout=success) the webhook may land a few
     // seconds after the redirect, so poll briefly until the paid plan appears.
     useEffect(() => {
         const fromCheckout = new URLSearchParams(window.location.search).get('checkout') === 'success';

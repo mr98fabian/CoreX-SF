@@ -1,8 +1,8 @@
 /**
  * The ONLY commercial source: what KoreX sells, with names and prices. Every surface that
  * shows a price (landing, Plans page, upgrade modal, legacy settings) reads from here.
- * Must match the Lemon Squeezy variant behind LS_VARIANT_FREEDOM_ANNUAL and backend
- * PLAN_COSTS. Internal plan keys (velocity, accelerator…) still exist for limits and
+ * Must match the Stripe price behind STRIPE_PRICE_FREEDOM_ANNUAL and backend
+ * PLAN_COSTS / TRIAL_DAYS (routers/subscriptions.py). Internal plan keys (velocity, accelerator…) still exist for limits and
  * existing subscribers, but are never sold or priced.
  */
 export type CommercialPlanId = 'starter' | 'freedom';

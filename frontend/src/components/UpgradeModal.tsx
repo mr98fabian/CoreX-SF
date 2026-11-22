@@ -5,7 +5,7 @@
  * No comparable data → no savings figure at all.
  * Opened from UpgradeNudge, AccountsPage, ActionPlanPage, Dashboard and Rankings.
  * Android build (lib/billing → google_play): Play Billing with Play's localized price; that
- * branch never calls the Lemon checkout.
+ * branch never calls the web (Stripe) checkout.
  */
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -46,7 +46,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
     const play = usePlayBilling({ enabled: onPlay && open, onActivated: () => onOpenChange(false) });
 
     const handleUpgrade = async () => {
-        if (onPlay) return play.buy(); // Google Play: no path to Lemon in the Android build
+        if (onPlay) return play.buy(); // Google Play: no path to the web checkout in the Android build
         setUpgrading(true);
         try {
             const data = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {
@@ -54,7 +54,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                 body: JSON.stringify({ plan: PAID_PLAN_ID, billing_cycle: 'annual' }),
             });
             if (!data.checkout_url) throw new Error('No checkout URL returned');
-            window.open(data.checkout_url, '_blank'); // Lemon Squeezy hosted checkout
+            window.open(data.checkout_url, '_blank'); // Stripe-hosted checkout (Managed Payments)
             toast({ title: t('upgrade.checkoutOpened'), description: t('upgrade.checkoutOpenedDesc') });
             onOpenChange(false);
         } catch {
