@@ -1,6 +1,6 @@
 # Misión: Textos legales: Lemon Squeezy → Stripe Managed Payments (ES/EN)
 - **ID:** 2026-11-22-legal-stripe-mor
-- **Estado:** en-auditoria
+- **Estado:** completada
 - **Rama:** feat/legal-stripe-mor
 - **Repo:** CoreX-SF
 ## Objetivo
