@@ -107,11 +107,10 @@ los impuestos. Google Play Billing (Android) NO se toca.
   `npm run build` OK; `alembic heads` = **1** (`d2f7b3c9e4a6`). Los tests de Google Play/RTDN pasan; en
   ellos solo cambió una etiqueta (la fila web ahora dice `stripe`, antes `lemon`), no su lógica.
 - **Desviaciones o dudas:**
-  - **Prueba gratis: 30 días, no 7.** La misión dice 7 días, pero lo que hoy ve el usuario en la web es
-    `TRIAL_DAYS = 30` (`frontend/src/lib/pricing.ts`, «30 días gratis» en la tarjeta del plan). Como
-    «No tocar precios ni prueba» y lo que se cobra debe coincidir con lo que se muestra (FTC), el
-    checkout usa 30 días: `TRIAL_DAYS` en el backend, con un test que lo ata a `pricing.ts`. **Fabian
-    decide:** si son 7, hay que cambiar ambas constantes en un mismo commit.
+  - **Prueba gratis: 7 días (decisión de Fabian, 2026-11-22).** Antes la web mostraba 30
+    (`TRIAL_DAYS = 30` en `pricing.ts`). Por orden de Fabian, `TRIAL_DAYS = 7` en `frontend/src/lib/pricing.ts`
+    y en `backend/routers/subscriptions.py`, en un mismo commit; la tarjeta del plan y el checkout
+    leen esa constante y un test ata ambas. Los textos legales no mencionan la duración.
   - No está documentado si Managed Payments admite `subscription_data[trial_period_days]`: se usa el
     parámetro estándar de Billing y hay que confirmarlo en la prueba en modo test.
   - Las páginas de Managed Payments solo listan los eventos `checkout.session.*`. Los eventos

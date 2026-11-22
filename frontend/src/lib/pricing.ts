@@ -18,7 +18,7 @@ export interface CommercialPlan {
 /** Sold only as an annual plan. Backend plan key: freedom. */
 export const PAID_PLAN_ID: CommercialPlanId = 'freedom';
 export const ANNUAL_PRICE = 100;
-export const TRIAL_DAYS = 30;
+export const TRIAL_DAYS = 7;
 
 export const COMMERCIAL_PLANS: Record<CommercialPlanId, CommercialPlan> = {
     starter: { id: 'starter', name: { es: 'Gratis', en: 'Free' }, annual: 0, trialDays: 0, ai: false },

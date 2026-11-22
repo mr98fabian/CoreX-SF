@@ -46,7 +46,7 @@ STORE = "stripe"
 PLAN_COSTS = {"starter": 0, "freedom": 100}
 # Free trial before the first charge — keep in sync with frontend lib/pricing.ts TRIAL_DAYS
 # (what the plan card promises is what the checkout gives).
-TRIAL_DAYS = 30
+TRIAL_DAYS = 7
 # The only thing checkout sells: the paid plan, annual, through this one Stripe price.
 SELLABLE = {("freedom", "annual"): "STRIPE_PRICE_FREEDOM_ANNUAL"}
 
