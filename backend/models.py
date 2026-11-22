@@ -105,8 +105,8 @@ class Subscription(SQLModel, table=True):
     customer_portal_url: Optional[str] = Field(default=None)
     created_at: Optional[str] = Field(default=None)
     updated_at: Optional[str] = Field(default=None)
-    # Which store charges this row: lemon (web), google_play (Android), apple (future)
-    store_source: str = Field(default="lemon", sa_column=Column(String, nullable=False, server_default="lemon"))
+    # Which store charges this row: stripe (web), google_play (Android), apple (future)
+    store_source: str = Field(default="stripe", sa_column=Column(String, nullable=False, server_default="stripe"))
     # Play Billing purchase token, verified server-side (routers/google_play.py); one row per token
     gp_purchase_token: Optional[str] = Field(default=None, sa_column=Column(String, nullable=True, unique=True, index=True))
 
@@ -395,7 +395,7 @@ class AccessCode(SQLModel, table=True):
 
 
 class AccessGrant(SQLModel, table=True):
-    """Entitlement granted by a code, independent from Lemon Squeezy's subscriptions
+    """Entitlement granted by a code, independent from the store-charged subscriptions
     row (which webhooks overwrite). ends_at None = permanent."""
     __tablename__ = "access_grants"
     __table_args__ = (UniqueConstraint("code_id", "user_id", name="uq_access_grant_code_user"),)

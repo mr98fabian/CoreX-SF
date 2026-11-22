@@ -30,7 +30,7 @@ def test_paid_user_mints_and_uses_a_token(client):
 def test_cancelled_user_loses_access_on_the_next_request(client):
     tok = make_token(client, A)
     assert client.get("/api/accounts", headers=bearer(tok)).status_code == 200
-    # Lemon Squeezy webhook: subscription expired → effective plan drops to Starter
+    # store webhook (Stripe / Play): subscription expired → effective plan drops to Starter
     set_plan(A, plan="starter", status="expired")
     assert client.get("/api/accounts", headers=bearer(tok)).status_code == 403
     # ...and an upgrade confirmed by the webhook opens it again, same token

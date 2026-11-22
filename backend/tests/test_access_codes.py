@@ -220,9 +220,7 @@ def test_apply_promo_is_gone(client, auth_headers):
 
 
 def test_founder_cannot_checkout(client, monkeypatch):
-    from routers import subscriptions
-    monkeypatch.setattr(subscriptions, "LS_API_KEY", "test")
-    monkeypatch.setattr(subscriptions, "LS_STORE_ID", "1")
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_test_placeholder")
     _, plain = make("founder")
     as_user(U1)
     client.post("/api/codes/redeem", json={"code": plain}, headers=H)

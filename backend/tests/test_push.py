@@ -286,7 +286,7 @@ def test_one_head_and_the_push_migration_goes_up_and_down():
     from alembic.operations import Operations
     from alembic.script import ScriptDirectory
     backend = Path(__file__).resolve().parents[1]
-    assert ScriptDirectory.from_config(Config(str(backend / "alembic.ini"))).get_heads() == ["c9a4f2e7b815"]
+    assert len(ScriptDirectory.from_config(Config(str(backend / "alembic.ini"))).get_heads()) == 1  # newer migrations build on c9a4f2e7b815
     spec = importlib.util.spec_from_file_location("mig_push", next((backend / "alembic" / "versions").glob("c9a4f2e7b815_*.py")))
     mig = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mig)

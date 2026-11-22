@@ -65,12 +65,12 @@ async def add_security_headers(request: Request, call_next):
     if not IS_DEV:
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://app.lemonsqueezy.com; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://js.stripe.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
-            "connect-src 'self' https://*.supabase.co https://api.lemonsqueezy.com https://*.plaid.com; "
-            "frame-src https://app.lemonsqueezy.com https://cdn.plaid.com;"
+            "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.plaid.com; "
+            "frame-src https://checkout.stripe.com https://js.stripe.com https://cdn.plaid.com;"
         )
     return response
 
