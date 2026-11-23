@@ -38,6 +38,7 @@ FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 DEFAULT_TZ = "America/Chicago"
 QUIET_FROM, QUIET_UNTIL = 22, 7      # 22:00–07:00 local: never
 MISSION_HOUR = 8
+ANDROID_CHANNEL = "korex_avisos"  # created by the app (MainActivity): "Avisos de KoreX", high importance
 PRIORITY = {"corte": 0, "mision": 1, "celebracion": 2}
 MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
              "noviembre", "diciembre"]
@@ -127,7 +128,8 @@ async def fcm_send(token: str, title: str, body: str, data: dict) -> str:
                              headers={"Authorization": f"Bearer {access}"},
                              json={"message": {"token": token, "notification": {"title": title, "body": body},
                                                "data": {k: str(v) for k, v in data.items()},
-                                               "android": {"priority": "high"}}})
+                                               "android": {"priority": "high",
+                                               "notification": {"channel_id": ANDROID_CHANNEL}}}})
     except Exception:
         return "error"
     if r.status_code == 200:

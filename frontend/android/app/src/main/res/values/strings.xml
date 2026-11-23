@@ -4,4 +4,8 @@
     <string name="title_activity_main">KoreX</string>
     <string name="package_name">com.korexf.app</string>
     <string name="custom_url_scheme">com.korexf.app</string>
+    <!-- Push notices channel (MainActivity creates it; backend push_engine sends to it) -->
+    <string name="push_channel_id" translatable="false">korex_avisos</string>
+    <string name="push_channel_name">Avisos de KoreX</string>
+    <string name="push_channel_description">Cortes de tarjeta, tu misión del día y deudas saldadas.</string>
 </resources>
