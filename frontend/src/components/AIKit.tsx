@@ -63,8 +63,8 @@ export function AIKit({ token, es, onceNotice = false, onNewToken, creating = fa
             </div>
 
             {block('config', es ? '2 · Configuración' : '2 · Configuration',
-                token ? (es ? 'Ya lleva tu token. Cambia <RUTA_DEL_MCP> por la carpeta mcp de KoreX en tu equipo.' : 'Your token is already in it. Replace <RUTA_DEL_MCP> with the KoreX mcp folder on your computer.')
-                    : (es ? 'Cambia <TU_TOKEN> por tu token kx_ y <RUTA_DEL_MCP> por la carpeta mcp de KoreX.' : 'Replace <TU_TOKEN> with your kx_ token and <RUTA_DEL_MCP> with the KoreX mcp folder.'),
+                token ? (es ? 'Ya lleva tu token. Pégalo en los ajustes MCP de tu asistente y cambia <RUTA_DEL_MCP> por la carpeta mcp de KoreX en tu equipo.' : 'Your token is already in it. Paste it into your assistant’s MCP settings and replace <RUTA_DEL_MCP> with the KoreX mcp folder on your computer.')
+                    : (es ? 'Pégalo en los ajustes MCP de tu asistente. Cambia <TU_TOKEN> por tu token kx_ y <RUTA_DEL_MCP> por la carpeta mcp de KoreX.' : 'Paste it into your assistant’s MCP settings. Replace <TU_TOKEN> with your kx_ token and <RUTA_DEL_MCP> with the KoreX mcp folder.'),
                 config)}
             {!token && onNewToken && (
                 <div data-testid="kit-new-token" className="space-y-1.5 rounded-lg border border-dashed border-kx-line p-3">

@@ -75,7 +75,10 @@ describe('Kit para tu IA', () => {
         const json = JSON.parse(copied.slice(0, copied.indexOf('\n\n')));
         expect(json.mcpServers.korex.env.KOREX_API_TOKEN).toBe(TOKEN);
         expect(json.mcpServers.korex.args[0]).toContain('<RUTA_DEL_MCP>');
-        expect(copied).toContain(`claude mcp add korex --env KOREX_API_TOKEN=${TOKEN}`);
+        expect(json.mcpServers.korex.command).toBe('<RUTA_DEL_MCP>/.venv/bin/python');
+        expect(json.mcpServers.korex.args).toEqual(['<RUTA_DEL_MCP>/korex_mcp.py']);
+        expect(copied).toContain('Abre los ajustes MCP de tu asistente');
+        expect(copied).not.toMatch(/claude|chatgpt|gemini|copilot|mcp add/i); // no assistant is a requirement
         expect(el.querySelector('[data-testid="copy-config"]')!.textContent).toBe('Copiado');
         await act(async () => el.querySelector<HTMLButtonElement>('[data-testid="copy-instructions"]')!.click());
         expect(writeText.mock.calls[1][0]).toBe(AI_INSTRUCTIONS);
