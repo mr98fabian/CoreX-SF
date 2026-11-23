@@ -1073,6 +1073,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const setLanguage = (lang: Language) => {
         setLanguageState(lang);
         localStorage.setItem("korex-language", lang);
+        // Push notices follow the app's language (lazy: no Capacitor code on the shared path)
+        void import("@/lib/push").then((m) => m.syncPushLanguage()).catch(() => undefined);
     };
 
     const t = (key: string): string => {

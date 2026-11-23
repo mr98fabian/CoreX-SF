@@ -37,7 +37,7 @@ vi.mock('@/features/auth/AuthContext', () => ({ useAuth: () => auth }));
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { PushSetup } from './PushSetup';
 import { PushToggleRow } from './PushToggleRow';
-import { clearPushToken, routeFor } from '@/lib/push';
+import { clearPushToken, routeFor, syncPushLanguage } from '@/lib/push';
 import langSrc from '@/contexts/LanguageContext.tsx?raw';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -93,6 +93,19 @@ describe('pre-permission screen', () => {
         expect(byId('push-pre')).toBeNull();
     });
 
+    it('the app language travels with the token, and switching it re-registers the phone', async () => {
+        localStorage.setItem('korex-language', 'en');
+        await render(<PushSetup />);
+        await act(async () => byId('push-pre-yes')!.click());
+        await settle();
+        expect(JSON.parse(posts()[0][1].body).language).toBe('en');
+        localStorage.setItem('korex-language', 'es');
+        await act(async () => { await syncPushLanguage(); });
+        const last = posts()[posts().length - 1];
+        expect(JSON.parse(last[1].body)).toMatchObject({ token: 'fcm-token-xyz', language: 'es' });
+        localStorage.removeItem('korex-language');
+    });
+
     it('"Activar avisos" asks the system and registers the token with the phone\'s time zone', async () => {
         await render(<PushSetup />);
         await act(async () => byId('push-pre-yes')!.click());
@@ -103,6 +116,7 @@ describe('pre-permission screen', () => {
         expect(body.token).toBe('fcm-token-xyz');
         expect(body.platform).toBe('android');
         expect(typeof body.timezone).toBe('string');
+        expect(body.language).toBe('es'); // Spanish unless the app is in English
         unmount();
         await render(<PushSetup />); // answered once: no second screen
         expect(byId('push-pre')).toBeNull();
