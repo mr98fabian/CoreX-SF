@@ -55,3 +55,5 @@ En la auditoría se verificó el funcionamiento del push, NO su acabado visual. 
     consola.
   - El nombre del canal va en español también para usuarios en inglés, como pide la misión. Se
     podría añadir `values-en/strings.xml` si se quiere.
+  - **Decisión de Fabian (2026-11-22):** se acepta la misión sin las capturas reales; la prueba en
+    teléfono físico queda pendiente fuera de esta misión.
