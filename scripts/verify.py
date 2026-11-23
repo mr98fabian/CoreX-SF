@@ -119,6 +119,11 @@ def run(name: str, cmd: list[str], cwd: Path) -> tuple[bool, str, float]:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):  # Windows consoles default to cp1252
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     hook = "--hook" in sys.argv
     if hook:
         try:
@@ -140,7 +145,9 @@ def main() -> int:
         ok, out, secs = run(name, cmd, cwd)
         print(f"verify: {name} {'OK' if ok else 'FALLA'} ({secs:.0f}s)", file=sys.stderr if not ok else sys.stdout)
         if not ok:
-            tail = "\n".join(out.strip().splitlines()[-TAIL:])
+            lines = out.strip().splitlines()
+            key = [ln for ln in lines if ln.startswith(("FAILED", "ERROR", "×", "✗", "error"))][:15]
+            tail = "\n".join(key + ["…"] + lines[-TAIL:] if key else lines[-TAIL:])
             (tolerated if name in allowed else failed).append((name, tail))
 
     for name, _ in tolerated:
