@@ -10,8 +10,10 @@ Cuando Fabian diga "corre la misión X":
 5. Actualiza el estado en el archivo de la misión y en `misiones/cola.md`:
    `pendiente → en-curso → en-auditoria` (nunca `completada`: eso lo marca Mijo tras
    auditar, con orden de Fabian).
-6. Haz push de la rama y de los archivos de misión actualizados. **NUNCA hagas merge
-   a `main`**: el merge espera la auditoría de Mijo y la orden de Fabian.
+6. Haz push de la rama y de los archivos de misión actualizados y **abre un PR hacia
+   `main`**. Los merges son por PR: Claude abre el PR, Mijo audita y Fabian aprueba y
+   fusiona. **NUNCA hagas merge a `main`** por tu cuenta. `main` está protegida: el PR
+   solo se puede fusionar con los checks de CI (`backend` y `frontend`) en verde.
 7. Si la misión toca migraciones (Alembic): verifica UN solo head (`alembic heads` == 1)
    antes de darla por lista y anótalo en el reporte.
 Reglas fijas de la casa:
@@ -21,3 +23,4 @@ Reglas fijas de la casa:
 - Sin comparaciones con competidores en marketing. El enemigo de marca es EL BANCO.
 - Nada de secretos en el repo: ni llaves, ni tokens, ni datos bancarios o fiscales.
 - Mejoras solo hacia adelante: no rehacer trabajo ya aprobado sin orden expresa.
+- **Regla de oro: todo error que se repita se convierte en test o en bloqueo automático.**
