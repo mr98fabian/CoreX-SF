@@ -15,7 +15,7 @@ import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { MoneyAmount } from '@/components/MoneyAmount';
-import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID } from '@/lib/pricing';
+import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID, TRIAL_DAYS } from '@/lib/pricing';
 import { usePlanSavings } from '@/hooks/usePlanSavings';
 import { getBillingProvider } from '@/lib/billing';
 import { playButtonLabel, usePlayBilling } from '@/hooks/usePlayBilling';
@@ -103,7 +103,7 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                         </p>
                         {onPlay
                             ? play.trialLine && <p className="text-[13px] text-kx-ink">{play.trialLine}</p>
-                            : <p className="text-[13px] text-kx-ink">{es ? `1 mes gratis, luego ${formatMoney(paid.annual)}/año` : `1 month free, then ${formatMoney(paid.annual)}/yr`}</p>}
+                            : <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(paid.annual)}/año` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(paid.annual)}/yr`}</p>}
                         <ul className="mt-3 space-y-1.5">
                             {row(true, es ? 'Deudas ilimitadas' : 'Unlimited debts')}
                             {row(true, es ? 'Tu IA conectada' : 'Your AI connected')}
@@ -118,12 +118,12 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                         )}
                         <button type="button" onClick={handleUpgrade} disabled={paying || upgrading || (onPlay && play.phase !== 'idle')}
                             className="kx-press mt-4 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber disabled:opacity-50">
-                            {paying ? (es ? 'Tu plan actual' : 'Your current plan') : onPlay ? playButtonLabel(play, t) : upgrading ? t('upgrade.processing') : (es ? 'Empezar mes gratis' : 'Start free month')}
+                            {paying ? (es ? 'Tu plan actual' : 'Your current plan') : onPlay ? playButtonLabel(play, t) : upgrading ? t('upgrade.processing') : (es ? 'Empezar prueba gratis' : 'Start free trial')}
                         </button>
                         {onPlay && <div className="mt-3"><PlayStoreActions play={play} /></div>}
                     </div>
                 </div>
-                <p className="px-6 pb-6 text-center text-xs text-kx-ink3">{onPlay ? t('billing.footer') : (es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.')}</p>
+                <p className="px-6 pb-6 text-center text-xs text-kx-ink3">{onPlay ? t('billing.footer') : (es ? `Cancela durante los ${TRIAL_DAYS} días gratis y no se cobra nada. Precios en USD.` : `Cancel during the ${TRIAL_DAYS}-day free trial and nothing is charged. Prices in USD.`)}</p>
             </DialogContent>
         </Dialog>
     );

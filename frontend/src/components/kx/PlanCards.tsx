@@ -6,7 +6,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePlans, type PlanId, type PlanView } from '@/lib/plans';
-import { PAID_KEYS } from '@/lib/pricing';
+import { PAID_KEYS, TRIAL_DAYS } from '@/lib/pricing';
 
 interface Props {
     currentPlan?: string;
@@ -45,7 +45,7 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel, store }: Prop
                         </p>
                         {hero && store && store.trialLine && <p className="text-[13px] text-kx-ink">{store.trialLine}</p>}
                         {hero && !store && p.trialDays > 0 && (
-                            <p className="text-[13px] text-kx-ink">{es ? `1 mes gratis, luego ${formatMoney(p.annual)}/año` : `1 month free, then ${formatMoney(p.annual)}/yr`}</p>
+                            <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(p.annual)}/año` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(p.annual)}/yr`}</p>
                         )}
                         <ul className="mt-3 space-y-1.5 text-[13.5px] text-kx-ink2">
                             <li className="flex gap-2">{tick}{p.debtLimit == null ? (es ? 'Deudas ilimitadas' : 'Unlimited debts') : (es ? `Hasta ${p.debtLimit} deudas` : `Up to ${p.debtLimit} debts`)}</li>
@@ -56,14 +56,14 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel, store }: Prop
                         {hero && (
                             <button onClick={() => onChoose(p.id)} disabled={isCurrent || busy === p.id}
                                 className="kx-press mt-3.5 block w-full rounded-xl bg-kx-amber py-3 text-center text-sm font-bold text-kx-on-amber disabled:opacity-50">
-                                {isCurrent ? (es ? 'Tu plan actual' : 'Your current plan') : ctaLabel ? ctaLabel(p) : (es ? 'Empezar mes gratis' : 'Start free month')}
+                                {isCurrent ? (es ? 'Tu plan actual' : 'Your current plan') : ctaLabel ? ctaLabel(p) : (es ? 'Empezar prueba gratis' : 'Start free trial')}
                             </button>
                         )}
                         {!hero && isCurrent && <p className="mt-3 text-center text-xs text-kx-ink3">{es ? 'Tu plan actual' : 'Your current plan'}</p>}
                     </div>
                 );
             })}
-            <p className="text-center text-xs text-kx-ink3">{store ? store.footer : (es ? 'Cancela durante el mes gratis y no se cobra nada. Precios en USD.' : 'Cancel during the free month and nothing is charged. Prices in USD.')}</p>
+            <p className="text-center text-xs text-kx-ink3">{store ? store.footer : (es ? `Cancela durante los ${TRIAL_DAYS} días gratis y no se cobra nada. Precios en USD.` : `Cancel during the ${TRIAL_DAYS}-day free trial and nothing is charged. Prices in USD.`)}</p>
         </div>
     );
 }
