@@ -6,7 +6,7 @@ Uses Decimal for precision as per project standards.
 """
 from decimal import Decimal, ROUND_HALF_UP, ROUND_CEILING
 from datetime import date, timedelta
-from typing import List, Dict, Optional
+from typing import Callable, List, Dict, Optional
 import dataclasses
 from dataclasses import dataclass
 
@@ -1288,14 +1288,22 @@ def simulate_freedom_path(
     import time as _time
     key = _sim_key(debts, extra_monthly_payment, roll_freed_payments, recalc_minimums, start)
     now = _time.monotonic()
+    return copy.deepcopy(_simulate_cached(key, now, debts, extra_monthly_payment, roll_freed_payments,
+                                          recalc_minimums, start)[0])
+
+
+def _simulate_cached(key, now, debts, extra, roll, recalc, start):
+    """(result, flows) from the memo, or a fresh run stored in it. Flows are tuples of
+    Decimals (immutable): safe to share without a copy."""
     hit = _sim_cache.get(key)
     if hit and now - hit[0] < _SIM_TTL_S:
-        return copy.deepcopy(hit[1])
-    result = _simulate_freedom_path(debts, extra_monthly_payment, roll_freed_payments, recalc_minimums, start)
+        return hit[1], hit[2]
+    flows: list = []
+    result = _simulate_freedom_path(debts, extra, roll, recalc, start, flows=flows)
     if len(_sim_cache) >= _SIM_MAX:
         _sim_cache.clear()
-    _sim_cache[key] = (now, result)
-    return copy.deepcopy(result)
+    _sim_cache[key] = (now, result, flows)
+    return result, flows
 
 
 def _simulate_freedom_path(
@@ -1304,6 +1312,7 @@ def _simulate_freedom_path(
     roll_freed_payments: bool = True,
     recalc_minimums: bool = False,
     start: Optional[date] = None,
+    flows: Optional[list] = None,
 ) -> Dict:
     """
     Simulates the journey to zero debt month-by-month.
@@ -1315,6 +1324,11 @@ def _simulate_freedom_path(
     Baseline route (roll_freed_payments=False, recalc_minimums=True): minimums
     only, revolving minimums recalculated each month from the balance like a
     real card — the honest comparison.
+
+    flows (optional, for daily_series): one entry per simulated month,
+    (month_first_day, ((index, interest, minimum_paid, attack_paid), ...)), index into
+    the debts with balance > 0. They are balance DIFFERENCES (the 1-cent payoff snap
+    included), so replaying them reproduces each month's total_balance exactly.
     """
     # 1. Clone debts (keep the subtype: it decides fixed vs revolving minimums)
     sim_debts = [
@@ -1347,10 +1361,13 @@ def _simulate_freedom_path(
         month_str = current_date.strftime("%Y-%m")
         month_events = []
         monthly_interest_sum = Decimal('0')
-        
+        m_int = [Decimal('0')] * len(sim_debts)
+        m_min = [Decimal('0')] * len(sim_debts)
+        m_atk = [Decimal('0')] * len(sim_debts)
+
         # 2. Accrue Interest & Pay Minimums
-        # We assume we have enough cash for minimums. 
-        for debt in sim_debts:
+        # We assume we have enough cash for minimums.
+        for i, debt in enumerate(sim_debts):
             if debt.balance <= Decimal('0'):
                 continue
 
@@ -1363,11 +1380,14 @@ def _simulate_freedom_path(
             total_interest_paid += interest
             
             payment = min(debt.balance, debt.min_payment)
+            before = debt.balance
             debt.balance -= payment
 
             if debt.balance <= Decimal('0.01'):
                  debt.balance = Decimal('0')
                  month_events.append(f"{debt.name} Paid Off")
+            m_int[i] = interest
+            m_min[i] = before - debt.balance
 
         # 3. Allocating Extra Cash — pure avalanche (highest APR first)
         active_debts = [d for d in sim_debts if d.balance > 0]
@@ -1384,14 +1404,16 @@ def _simulate_freedom_path(
             for debt in active_debts:
                 if available_for_attack <= 0:
                     break
-                
+
                 payment = min(debt.balance, available_for_attack)
+                before = debt.balance
                 debt.balance -= payment
                 available_for_attack -= payment
-                
+
                 if debt.balance <= Decimal('0.01'):
                     debt.balance = Decimal('0')
                     month_events.append(f"{debt.name} Eliminated")
+                m_atk[next(k for k, x in enumerate(sim_debts) if x is debt)] += before - debt.balance
         
         # 4. Snapshot
         total_balance = sum(d.balance for d in sim_debts)
@@ -1408,6 +1430,9 @@ def _simulate_freedom_path(
             "is_freedom_month": (total_balance <= 0)
         }
         timeline.append(snapshot)
+        if flows is not None:
+            flows.append((current_date, tuple(
+                (i, m_int[i], m_min[i], m_atk[i]) for i in range(len(sim_debts)) if m_int[i] or m_min[i] or m_atk[i])))
         months_elapsed += 1
 
     return {
@@ -1417,6 +1442,73 @@ def _simulate_freedom_path(
         "total_interest_paid": float(total_interest_paid),
         "total_months": months_elapsed
     }
+
+
+# ── Daily series (misión 2026-11-23-calendario-serie-diaria) ──
+# The calendar's red→green band, from the SAME flows as the monthly simulation
+# (nothing is re-simulated), each placed on its real day:
+#   interest → the statement cut (closing_day), never after the debt's first payment
+#   minimum  → the due day (due_day)
+#   attack   → the user's paydays that month, split evenly (the extra is the
+#              paydays' surplus); no payday on record → the month's last day
+#   no day loaded → the month's last day (conservative: no early credit)
+# In the current month, anything dated before `today` lands on `today`: the engine
+# starts from today's balances, so those events are not in them yet.
+# Each month's close is timeline[i].total_balance exactly, by construction.
+
+def _event_day(n: int, d: Optional[int]) -> int:
+    return min(int(d), n) if d and int(d) > 0 else n
+
+
+def daily_series(
+    debts: List[DebtAccount],
+    extra_monthly_payment: Decimal = Decimal('0'),
+    is_payday: Optional[Callable[[date], bool]] = None,
+    today: Optional[date] = None,
+) -> Dict:
+    """simulate_freedom_path (plan route) + "daily_series": step points
+    [{date: YYYY-MM-DD, total_balance}], the balance at the END of that day; a day not
+    listed keeps the previous point's value. Always listed: day 1 of the first month
+    (the starting total), every day that changes, and every month's last day.
+    Estimates, like the timeline."""
+    import calendar as _cal
+    import copy
+    import time as _time
+    today = today or date.today()
+    key = _sim_key(debts, extra_monthly_payment, True, False, today)
+    result, flows = _simulate_cached(key, _time.monotonic(), debts, extra_monthly_payment, True, False, today)
+    result = copy.deepcopy(result)
+    live = [d for d in debts if d.balance > 0]
+    balance = sum((d.balance for d in live), Decimal('0'))
+    cent = Decimal('0.01')
+    first = today.replace(day=1)
+    points = [{"date": first.isoformat(), "total_balance": float(balance)}]
+    for month, rows in flows:
+        n = _cal.monthrange(month.year, month.month)[1]
+        floor = today.day if month == first else 1
+        pays = [d for d in range(1, n + 1) if is_payday and is_payday(month.replace(day=d))] or [n]
+        delta: Dict[int, Decimal] = {}
+
+        def put(day: int, amount: Decimal):
+            if amount:
+                day = max(day, floor)
+                delta[day] = delta.get(day, Decimal('0')) + amount
+
+        for i, interest, minimum, attack in rows:
+            d = live[i]
+            due = _event_day(n, d.due_day)
+            paid_on = ([due] if minimum else []) + (pays if attack else [])
+            put(min([_event_day(n, d.closing_day)] + paid_on), interest)
+            put(due, -minimum)
+            if attack:
+                share = (attack / len(pays)).quantize(cent, rounding="ROUND_DOWN")  # remainder → last payday
+                for k, p in enumerate(pays):
+                    put(p, -(attack - share * (len(pays) - 1)) if k == len(pays) - 1 else -share)
+        for day in sorted(set(delta) | {n}):
+            balance += delta.get(day, Decimal('0'))
+            points.append({"date": month.replace(day=day).isoformat(), "total_balance": float(balance)})
+    result["daily_series"] = points
+    return result
 
 
 def _days_until_due(due_day: int, ref: date = None) -> int:

@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { onPlanWrite } from '@/lib/planEvents';
+import { invalidatePlanData } from '@/lib/planSync';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -11,6 +14,8 @@ const queryClient = new QueryClient({
 });
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
+    // Any plan write (payment, attack, account, cashflow, subscription…) refreshes the plan's data
+    useEffect(() => onPlanWrite(() => { void invalidatePlanData(queryClient); }), []);
     return (
         <QueryClientProvider client={queryClient}>
             {children}

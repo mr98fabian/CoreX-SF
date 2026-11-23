@@ -19,9 +19,8 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { ACTIVITY_KEY } from '@/hooks/useActivityData';
 import { buildMonths, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
-import { CALENDAR_KEY } from '@/lib/calendarEvents';
+import { KX_SUMMARY_KEY, invalidatePlanData } from '@/lib/planSync';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 import type { MissionResult } from '@/components/kx/MissionCard';
 
@@ -45,11 +44,12 @@ export interface KxAccount {
 
 interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number; mision?: MissionResult;
     interes_diario?: { periodos: Record<'dia' | 'semana' | 'mes' | 'anio', number> } }
-interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number }
+/** daily_series: the engine's daily step series (calendar band + exact $0 day); missing on an older server. */
+interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number; daily_series?: TimelinePoint[] }
 
 export interface StagedAccount extends KxAccount { stage: Stage; paid: number | null; bal: number }
 
-export const KX_SUMMARY_KEY = 'kx-summary';
+export { KX_SUMMARY_KEY };
 export const KX_SUMMARY_STALE_MS = 45_000;
 
 interface Summary { dashboard: Dashboard; accounts: KxAccount[]; path: FreedomPath; income: IncomeItem[] }
@@ -80,16 +80,8 @@ export function useKxSummary() {
         path: q.data?.path,
         income: q.data?.income ?? [],
     };
-    // A payment or a confirmed attack changes Actividad too: same events, same refresh
-    const load = useCallback(() => Promise.all([
-        queryClient.invalidateQueries({ queryKey: [KX_SUMMARY_KEY] }),
-        queryClient.invalidateQueries({ queryKey: [ACTIVITY_KEY] }),
-        queryClient.invalidateQueries({ queryKey: ['credit-panel'] }),
-        // the calendar's events (server) move with every payment and attack too
-        queryClient.invalidateQueries({ queryKey: [CALENDAR_KEY] }),
-        // Inicio's chart (hooks/useVelocityCompare COMPARE_KEY; literal to avoid an import cycle)
-        queryClient.invalidateQueries({ queryKey: ['velocity-compare'] }),
-    ]), [queryClient]);
+    // The same set every plan write refreshes (lib/planSync): summary, Actividad, calendar, chart…
+    const load = useCallback(() => invalidatePlanData(queryClient), [queryClient]);
 
 
     const data = q.data;
@@ -101,7 +93,7 @@ export function useKxSummary() {
         const debts = staged.filter((a) => a.type === 'debt');
         const counts = { debt: 0, almost: 0, paid: 0 } as Record<'debt' | 'almost' | 'paid', number>;
         for (const a of debts) if (a.stage !== 'support') counts[a.stage] += 1;
-        const months: CalendarMonth[] = buildMonths(data?.path?.timeline ?? [], totalDebt);
+        const months: CalendarMonth[] = buildMonths(data?.path?.timeline ?? [], totalDebt, new Date(), data?.path?.daily_series);
         const freedom = months.find((m) => m.zeroDay) ?? null;
         return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
             mission: data?.dashboard?.mision?.mision ?? null,

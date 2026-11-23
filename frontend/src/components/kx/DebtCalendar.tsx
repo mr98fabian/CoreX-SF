@@ -4,8 +4,8 @@
  * green at $0); ‹ › navigates month by month to the freedom month; paydays get
  * a blue dot; the $0 day gets a ★. Phrase first, then the month's hero number.
  *
- * Data: months from lib/calendarSeries (engine monthly series, days
- * interpolated — documented tech debt). `compact` = heat-map only, for Inicio.
+ * Data: months from lib/calendarSeries (the engine's daily series: each day and
+ * the $0 day as the engine projects them). `compact` = heat-map only, for Inicio.
  *
  * Anti-generic treatment (2026-11-05): the month is ONE painting — no boxes.
  * Each week is a band whose gradient runs through that week's days, bands sit

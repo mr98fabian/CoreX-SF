@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 // - Capacitor (native app): connect directly to Railway (no Vercel proxy available)
 // - Production web: empty string (Vercel proxies /api/* to Railway, same-origin)
 import { RAILWAY_URL } from './backendUrl';
+import { notifyPlanWrite } from './planEvents';
 export { MCP_REMOTE_URL } from './backendUrl';
 
 export const API_BASE = import.meta.env.DEV
@@ -117,7 +118,9 @@ export async function apiFetch<T = unknown>(
                 if (!error.isRetryable) throw error;
                 lastError = error;
             } else {
-                return response.json();
+                const body = await response.json();
+                notifyPlanWrite(url, options.method); // a plan write refreshes the plan's data (lib/planEvents)
+                return body;
             }
         } catch (err) {
             // Network errors (fetch threw) — retryable
