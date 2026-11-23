@@ -16,6 +16,7 @@ from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, get_cashflow_breakdown, funding_accounts,
     build_daily_mission, dated_cashflow, filter_active_debt_accounts, mission_accounts_for,
+    load_cashflow_inputs, payday_rule,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -33,6 +34,7 @@ from velocity_engine import (
     get_closing_day_intelligence,
     detect_interest_rate_arbitrage, calculate_risky_opportunity,
     DEFAULT_PEACE_SHIELD, DEFAULT_ATTACK_PERCENTAGE, mission_json, compare_paths,
+    daily_series, monthly_surplus,
 )
 from transaction_classifier import classify_batch, get_cashflow_summary
 
@@ -111,9 +113,12 @@ def get_freedom_path(
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        velocity = monthly_attack(get_cashflow_surplus(session, user_id, debts),
+        # Same surplus as get_cashflow_surplus, loaded once: its items also give the paydays
+        cf = load_cashflow_inputs(session, user_id)
+        velocity = monthly_attack(monthly_surplus(cf["tuples"], debts, cf["subscriptions"]),
                                   Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
-        return simulate_freedom_path(debts, velocity)
+        # Additive: the monthly contract as before + "daily_series" (the calendar's band)
+        return daily_series(debts, velocity, is_payday=payday_rule(cf["items"]))
 
 
 @router.get("/velocity/compare")
