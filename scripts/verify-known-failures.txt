@@ -1,0 +1,5 @@
+# Fallos PREEXISTENTES que scripts/verify.py tolera (avisa, no bloquea).
+# Una línea por check: <check>  # <misión-id>: dónde está la evidencia (Reporte de esa misión).
+# Checks: backend:pytest, backend:alembic-heads, frontend:vitest, frontend:eslint, frontend:build
+# Solo se añade una línea con la evidencia en el Reporte de que el fallo ya estaba en main, y se quita
+# en cuanto se arregla. Hoy: ninguno.
