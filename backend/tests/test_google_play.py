@@ -240,13 +240,13 @@ def test_rtdn_for_an_unknown_old_token_never_downgrades_the_current_row(client, 
     assert row().gp_purchase_token == TOKEN and plan_of() == "freedom"
 
 
-def test_rtdn_never_touches_a_lemon_row(client, google):
+def test_rtdn_never_touches_a_web_row(client, google):
     with Session(database.engine) as s:
         s.add(Subscription(user_id=USER, plan="freedom", status="active", ls_subscription_id="5001"))
         s.commit()
     google.tokens["gp"] = purchase("SUBSCRIPTION_STATE_EXPIRED", expiry="2020-01-01T00:00:00.000Z")
     push(client, 13, token="gp")
-    assert row().store_source == "lemon" and row().plan == "freedom"
+    assert row().store_source == "stripe" and row().plan == "freedom"  # web store (Stripe) row
 
 
 # ── migration ───────────────────────────────────────────────────────────────────────

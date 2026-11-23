@@ -149,7 +149,7 @@ describe('Mi Cuenta', () => {
         await click('delete-start');
         expect(byId('delete-store-warning')!.textContent).toBe('Eliminar tu cuenta NO cancela tu suscripción de Google Play. Cancélala en Play Store → Suscripciones para que no te sigan cobrando.');
         act(() => root.unmount()); document.body.removeChild(host!); host = null;
-        status = { ...status, store_source: 'lemon' };
+        status = { ...status, store_source: 'stripe' };
         await render('/dashboard/settings/cuenta');
         await click('delete-start');
         expect(byId('delete-store-warning')!.textContent).toContain('Facturación y cancelación');

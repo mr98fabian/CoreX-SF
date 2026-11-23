@@ -1,10 +1,10 @@
 /**
  * Planes (Ajustes › Mi plan): the user's state on top (GET /api/subscriptions/status) and the
- * two commercial plans — Gratis and KoreX Anual — from lib/pricing.ts. Checkout is the Lemon
- * Squeezy annual variant only (POST /api/subscriptions/checkout, plan=freedom, annual).
+ * two commercial plans — Gratis and KoreX Anual — from lib/pricing.ts. Checkout is the Stripe
+ * annual price only (POST /api/subscriptions/checkout, plan=freedom, annual).
  * Founder or a current gift (checkout_hidden): state only, nothing to buy.
  * Android build (lib/billing → google_play): Play Billing instead, with Play's localized price,
- * "Restaurar compras" and "Gestionar en Google Play"; that branch never calls the Lemon checkout.
+ * "Restaurar compras" and "Gestionar en Google Play"; that branch never calls the web (Stripe) checkout.
  */
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -48,7 +48,7 @@ export default function PlansPage() {
             toast({ title: es ? 'Crea tu cuenta para elegir un plan' : 'Create your account to choose a plan' });
             return;
         }
-        if (onPlay) return play.buy(); // Google Play: no path to Lemon in the Android build
+        if (onPlay) return play.buy(); // Google Play: no path to the web checkout in the Android build
         setBusy(PAID_PLAN_ID);
         try {
             const { checkout_url } = await apiFetch<{ checkout_url: string }>('/api/subscriptions/checkout', {

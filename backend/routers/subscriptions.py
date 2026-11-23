@@ -1,9 +1,20 @@
 """
-KoreX — Lemon Squeezy Subscription Router
+KoreX — web subscriptions with Stripe Managed Payments (Stripe is the merchant of record:
+it processes the payment and handles the taxes applicable to the sale).
+
+Checkout: POST /checkout creates a Stripe Checkout Session (mode=subscription, managed_payments)
+for the one plan sold — KoreX Anual — and returns its URL; the app opens it as before.
+Webhook: POST /webhook verifies the Stripe-Signature header (HMAC-SHA256 over "t.body", 5 min
+tolerance) and writes the SAME Subscription row the Google Play router writes (routers/google_play.py),
+with store_source="stripe". The Android build never reaches this checkout (lib/billing.ts).
+
+Config comes from env vars only (set in Railway, never in the repo): STRIPE_SECRET_KEY,
+STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_FREEDOM_ANNUAL. Missing → 503 (fail closed). The columns
+ls_subscription_id / ls_customer_id keep their historical names and hold the Stripe ids.
 """
-import os, hmac, hashlib, logging, json
+import os, hmac, hashlib, logging, json, time
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import APIRouter, Request, Depends, HTTPException
@@ -22,42 +33,34 @@ logger = logging.getLogger("korex.subscriptions")
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 
 # ── Config ───────────────────────────────────────────────────
-LS_API_KEY = os.getenv("LEMONSQUEEZY_API_KEY", "")
-LS_WEBHOOK_SECRET = os.getenv("LEMONSQUEEZY_WEBHOOK_SECRET", "")
-LS_STORE_ID = os.getenv("LEMONSQUEEZY_STORE_ID", "")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://korexf.com")
+STRIPE_API_BASE = "https://api.stripe.com/v1"
+STRIPE_API_VERSION = "2025-03-31.basil"  # Managed Payments needs basil or later
+# Managed Payments: customers manage (cancel, update card) their subscription in Link
+STRIPE_MANAGE_URL = "https://app.link.com"
+SIGNATURE_TOLERANCE_S = 300
+STORE = "stripe"
 
-PLAN_VARIANTS = {
-    "velocity":  {"monthly": os.getenv("LS_VARIANT_VELOCITY_MONTHLY", ""),  "annual": os.getenv("LS_VARIANT_VELOCITY_ANNUAL", "")},
-    "accelerator": {"monthly": os.getenv("LS_VARIANT_ACCELERATOR_MONTHLY", ""), "annual": os.getenv("LS_VARIANT_ACCELERATOR_ANNUAL", "")},
-    "freedom":   {"monthly": os.getenv("LS_VARIANT_FREEDOM_MONTHLY", ""),   "annual": os.getenv("LS_VARIANT_FREEDOM_ANNUAL", "")},
-}
-
-
-def _parse_legacy_variants(raw: str) -> dict:
-    """LS_LEGACY_VARIANTS="velocity:123,velocity:456,accelerator:789" — archived
-    variants existing subscribers may still be on. LS prices can't be edited,
-    so every price change archives variants; without this map those
-    subscribers would be downgraded on their next subscription_updated."""
-    out = {}
-    for pair in filter(None, (p.strip() for p in raw.split(","))):
-        plan, _, vid = pair.partition(":")
-        if plan.strip() and vid.strip():
-            out[vid.strip()] = plan.strip()
-    return out
-
-
-LEGACY_VARIANTS = _parse_legacy_variants(os.getenv("LS_LEGACY_VARIANTS", ""))
 # What is sold, annual USD — keep in sync with frontend lib/pricing.ts (the commercial source).
 # Retired tiers (velocity/accelerator) aren't sold, so they have no cost here.
 PLAN_COSTS = {"starter": 0, "freedom": 100}
-# The only thing checkout sells: the paid plan, annual, through this one LS variant.
-SELLABLE = {("freedom", "annual"): "LS_VARIANT_FREEDOM_ANNUAL"}
-LS_API_BASE = "https://api.lemonsqueezy.com/v1"
+# Free trial before the first charge — keep in sync with frontend lib/pricing.ts TRIAL_DAYS
+# (what the plan card promises is what the checkout gives).
+TRIAL_DAYS = 7
+# The only thing checkout sells: the paid plan, annual, through this one Stripe price.
+SELLABLE = {("freedom", "annual"): "STRIPE_PRICE_FREEDOM_ANNUAL"}
+
+# Stripe subscription status → the row vocabulary plan_guard.subscription_plan understands
+_GRANTING = {"trialing": "on_trial", "active": "active", "past_due": "past_due"}
+_ENDED = {"canceled", "unpaid", "incomplete_expired"}
 
 
-def _ls_headers() -> dict:
-    return {"Authorization": f"Bearer {LS_API_KEY}", "Accept": "application/vnd.api+json", "Content-Type": "application/vnd.api+json"}
+def _env(name: str) -> str:
+    return os.getenv(name, "").strip()  # read per request: Railway values, tests' monkeypatch
+
+
+def _stripe_headers() -> dict:
+    return {"Authorization": f"Bearer {_env('STRIPE_SECRET_KEY')}", "Stripe-Version": STRIPE_API_VERSION}
 
 
 # ── Checkout ─────────────────────────────────────────────────
@@ -77,132 +80,206 @@ async def create_checkout(body: CheckoutRequest, user_id: str = Depends(get_curr
     with request_session() as s:
         if entitlement(s, user_id)["plan"] == "founder":  # can't pay for what they already have
             raise HTTPException(status_code=409, detail="This account already has full access.")
-    if not LS_API_KEY or not LS_STORE_ID:
+    if not _env("STRIPE_SECRET_KEY"):
         raise HTTPException(status_code=503, detail="Payment system not configured. Contact support.")
 
     env_name = SELLABLE.get((body.plan, body.billing_cycle))
     if not env_name:
         raise HTTPException(status_code=400, detail="That plan isn't sold. KoreX Annual is the only paid plan.")
-    # Read at request time and never fall back to PLAN_VARIANTS/legacy variants: an old variant
-    # would charge a different price than the one shown.
-    variant_id = os.getenv(env_name, "").strip()
-    if not variant_id:
+    # Read at request time and never fall back to another price: it would charge a different
+    # amount than the one shown.
+    price_id = _env(env_name)
+    if not price_id:
         raise HTTPException(status_code=503, detail="The annual plan isn't available yet. Try again later.")
 
-    checkout_data = {"custom": {"user_id": user_id}}
-    if body.email: checkout_data["email"] = body.email
-    if body.name:  checkout_data["name"] = body.name
-
-    payload = {
-        "data": {
-            "type": "checkouts",
-            "attributes": {
-                "checkout_data": checkout_data,
-                "product_options": {"redirect_url": f"{FRONTEND_URL}/dashboard/settings?tab=subscription&checkout=success"},
-                "checkout_options": {"embed": False},
-            },
-            "relationships": {
-                "store":  {"data": {"type": "stores", "id": LS_STORE_ID}},
-                "variant": {"data": {"type": "variants", "id": variant_id}},
-            },
-        }
+    form = {
+        "mode": "subscription",
+        "line_items[0][price]": price_id,
+        "line_items[0][quantity]": "1",
+        "managed_payments[enabled]": "true",
+        "client_reference_id": user_id,
+        "metadata[user_id]": user_id,
+        "subscription_data[metadata][user_id]": user_id,  # every subscription event carries it
+        "success_url": f"{FRONTEND_URL}/dashboard/settings?tab=subscription&checkout=success",
+        "cancel_url": f"{FRONTEND_URL}/dashboard/settings?tab=subscription",
     }
+    if TRIAL_DAYS > 0:
+        form["subscription_data[trial_period_days]"] = str(TRIAL_DAYS)
+    if body.email:
+        form["customer_email"] = body.email
 
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.post(f"{LS_API_BASE}/checkouts", json=payload, headers=_ls_headers(), timeout=15.0)
-        if resp.status_code not in (200, 201):
-            logger.error(f"LS checkout failed: {resp.status_code} — {resp.text}")
+            resp = await client.post(f"{STRIPE_API_BASE}/checkout/sessions", data=form,
+                                     headers=_stripe_headers(), timeout=15.0)
+        if resp.status_code != 200:
+            err = (resp.json().get("error") or {}) if "json" in resp.headers.get("content-type", "") else {}
+            logger.error(f"Stripe checkout failed: {resp.status_code} type={err.get('type')} code={err.get('code')} "
+                         f"param={err.get('param')}")  # never the body: it may echo customer data
             raise HTTPException(status_code=502, detail="Failed to create checkout session. Please try again.")
-        checkout_url = resp.json()["data"]["attributes"]["url"]
+        checkout_url = resp.json()["url"]
         logger.info(f"Checkout created for user={user_id} plan={body.plan}/{body.billing_cycle}")
         return CheckoutResponse(checkout_url=checkout_url)
     except httpx.HTTPError as e:
-        logger.error(f"LS API connection error: {e}")
+        logger.error(f"Stripe API connection error: {type(e).__name__}")
         raise HTTPException(status_code=502, detail="Payment service unreachable.")
 
 
 # ── Webhook ──────────────────────────────────────────────────
 
+def verify_signature(raw_body: bytes, header: str, secret: str, now: Optional[float] = None) -> bool:
+    """Stripe-Signature: "t=<unix>,v1=<hex>[,v1=...]". Valid when some v1 equals
+    HMAC-SHA256(secret, "<t>.<body>") and t is within the tolerance (replays)."""
+    parts = [p.split("=", 1) for p in (header or "").split(",") if "=" in p]
+    ts = next((v for k, v in parts if k.strip() == "t"), None)
+    sigs = [v.strip() for k, v in parts if k.strip() == "v1"]
+    if not ts or not sigs:
+        return False
+    try:
+        if abs((now or time.time()) - int(ts)) > SIGNATURE_TOLERANCE_S:
+            return False
+    except ValueError:
+        return False
+    expected = hmac.new(secret.encode("utf-8"), f"{ts}.".encode("utf-8") + raw_body, hashlib.sha256).hexdigest()
+    return any(hmac.compare_digest(expected, s) for s in sigs)
+
+
+def _iso(epoch) -> Optional[str]:
+    if not epoch:
+        return None
+    return datetime.fromtimestamp(int(epoch), tz=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _period_end(sub: dict) -> Optional[str]:
+    # basil moved current_period_end to the subscription items; older payloads have it on top
+    items = (sub.get("items") or {}).get("data") or []
+    end = sub.get("current_period_end") or (items[0].get("current_period_end") if items else None)
+    if sub.get("status") == "trialing":
+        end = sub.get("trial_end") or end
+    if sub.get("cancel_at"):
+        end = sub.get("cancel_at")
+    return _iso(end)
+
+
+def _price_to_plan(sub: dict) -> Optional[str]:
+    items = (sub.get("items") or {}).get("data") or []
+    price = ((items[0].get("price") or {}).get("id") if items else None) or ""
+    return "freedom" if price and price == _env("STRIPE_PRICE_FREEDOM_ANNUAL") else None
+
+
+def _row_state(sub: dict, current_plan: Optional[str]) -> tuple[str, str]:
+    """(plan, status) for a Stripe subscription object. Never downgrades on an unknown price."""
+    st = sub.get("status") or ""
+    plan = _price_to_plan(sub) or current_plan or "starter"
+    if st in _ENDED:
+        return "starter", "expired"
+    if st in _GRANTING:
+        if sub.get("cancel_at_period_end") or sub.get("cancel_at"):
+            return plan, "cancelled"  # paid (or trial) until period end, then plan_guard drops it
+        return plan, _GRANTING[st]
+    return plan, st or "incomplete"  # incomplete, paused: no access (plan_guard)
+
+
+def _invoice_subscription(inv: dict) -> str:
+    sub = inv.get("subscription") or (((inv.get("parent") or {}).get("subscription_details") or {}).get("subscription"))
+    return str(sub or "")
+
+
+async def _fetch_subscription(sub_id: str) -> Optional[dict]:
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(f"{STRIPE_API_BASE}/subscriptions/{sub_id}", headers=_stripe_headers(), timeout=15.0)
+    return resp.json() if resp.status_code == 200 else None
+
+
+def _apply_subscription(session: Session, user_id: str, sub: dict, existing: Optional[Subscription],
+                        event_ts: Optional[str]) -> str:
+    sub_id = str(sub.get("id", ""))
+    # Ordering: Stripe retries and may deliver out of order — nothing older than what we stored
+    if existing and existing.ls_subscription_id == sub_id:
+        if event_ts and existing.updated_at and _parse_ts(event_ts) and _parse_ts(existing.updated_at) \
+                and _parse_ts(event_ts) < _parse_ts(existing.updated_at):
+            return "stale"
+    plan, status = _row_state(sub, existing.plan if existing else None)
+    # An old subscription ending must not clobber a newer one the user bought after it
+    if existing and existing.ls_subscription_id and existing.ls_subscription_id != sub_id and status == "expired":
+        return "old-subscription"
+    # ...nor a row another store charges now (Google Play): a Stripe end never touches it
+    if existing and existing.store_source != STORE and status not in ("on_trial", "active", "past_due", "cancelled"):
+        return "other-store"
+    _upsert_subscription(session, user_id, plan, status, sub_id, str(sub.get("customer") or ""),
+                         _period_end(sub), STRIPE_MANAGE_URL, STRIPE_MANAGE_URL, updated_at=event_ts)
+    logger.info(f"Subscription {sub.get('status')}: user={user_id} plan={plan} status={status}")
+    return "applied"
+
+
 @router.post("/webhook")
 async def handle_webhook(request: Request, session: Session = Depends(get_session)):
     raw_body = await request.body()
 
-    # Fail closed: without a secret we can't tell Lemon Squeezy from a forger.
-    # 503 (not 401) because it's our misconfiguration, and LS retries non-2xx
-    # deliveries, so no real event is lost once the secret is set.
-    if not LS_WEBHOOK_SECRET:
-        logger.error("LEMONSQUEEZY_WEBHOOK_SECRET is not set — rejecting webhook")
+    # Fail closed: without a secret we can't tell Stripe from a forger. 503 (not 401) because it's
+    # our misconfiguration, and Stripe retries non-2xx deliveries, so no event is lost once it's set.
+    secret = _env("STRIPE_WEBHOOK_SECRET")
+    if not secret:
+        logger.error("STRIPE_WEBHOOK_SECRET is not set — rejecting webhook")
         return JSONResponse(status_code=503, content={"error": "Webhook not configured"})
-    expected = hmac.new(LS_WEBHOOK_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(expected, request.headers.get("X-Signature", "")):
+    if not verify_signature(raw_body, request.headers.get("Stripe-Signature", ""), secret):
         logger.warning("Webhook signature mismatch")
         return JSONResponse(status_code=401, content={"error": "Invalid signature"})
 
     try:
-        payload = json.loads(raw_body)
+        event = json.loads(raw_body)
     except json.JSONDecodeError:
         return JSONResponse(status_code=400, content={"error": "Invalid JSON"})
 
-    meta = payload.get("meta", {})
-    data = payload.get("data", {})
-    event_name = meta.get("event_name", "")
-    attrs = data.get("attributes", {})
-    # Payment events carry a subscription *invoice*; everything else a subscription.
-    is_invoice = data.get("type") == "subscription-invoices"
-    ls_sub_id = str(attrs.get("subscription_id", "")) if is_invoice else str(data.get("id", ""))
-    user_id = meta.get("custom_data", {}).get("user_id")
-    logger.info(f"Webhook received: event={event_name} user_id={user_id} ls_sub={ls_sub_id}")
+    etype = event.get("type", "")
+    obj = (event.get("data") or {}).get("object") or {}
+    event_ts = _iso(event.get("created"))
 
-    existing = None
-    if user_id:
-        existing = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
-    elif ls_sub_id:
-        existing = session.exec(select(Subscription).where(Subscription.ls_subscription_id == ls_sub_id)).first()
-        user_id = existing.user_id if existing else None
-    if not user_id:
-        return JSONResponse(status_code=200, content={"ok": True, "warning": "no user_id"})
+    def find(user_id: Optional[str], sub_id: str) -> tuple[Optional[str], Optional[Subscription]]:
+        if user_id:
+            return user_id, session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
+        if sub_id:
+            row = session.exec(select(Subscription).where(Subscription.ls_subscription_id == sub_id)).first()
+            return (row.user_id if row else None), row
+        return None, None
 
-    # Idempotency + ordering: LS retries and may deliver out of order. Ignore any
-    # subscription event not newer than the state we already stored for it.
-    if not is_invoice and existing and existing.ls_subscription_id == ls_sub_id:
-        event_ts = _parse_ts(attrs.get("updated_at"))
-        stored_ts = _parse_ts(existing.updated_at)
-        if event_name == "subscription_created" or (event_ts and stored_ts and event_ts <= stored_ts):
-            logger.info(f"Stale/duplicate webhook ignored: event={event_name} user={user_id}")
-            return JSONResponse(status_code=200, content={"ok": True, "duplicate": True})
-
-    if event_name in ("subscription_created", "subscription_updated", "subscription_resumed",
-                      "subscription_unpaused", "subscription_paused", "subscription_cancelled",
-                      "subscription_expired"):
-        plan = _variant_to_plan(str(attrs.get("variant_id", "")))
-        if plan is None:  # unknown variant: never downgrade on a mapping gap
-            plan = existing.plan if existing else "starter"
-            logger.warning(f"Unknown LS variant {attrs.get('variant_id')} for user={user_id}; kept plan={plan}")
-        status = attrs.get("status") or "active"
-        period_end = attrs.get("ends_at") if status in ("cancelled", "expired") else attrs.get("renews_at")
-        if event_name == "subscription_expired" or status == "expired":
-            plan, status = "starter", "expired"
-        _upsert_subscription(session, user_id, plan, status, ls_sub_id,
-                             str(attrs.get("customer_id", "")), period_end,
-                             attrs.get("urls", {}).get("update_payment_method"),
-                             attrs.get("urls", {}).get("customer_portal"),
-                             updated_at=attrs.get("updated_at"))
-        logger.info(f"Subscription {event_name}: user={user_id} plan={plan} status={status}")
-    elif event_name == "subscription_payment_failed":
-        if existing:  # keep plan + subscription id; LS retries the charge (dunning)
+    if etype == "checkout.session.completed":
+        sub_id = str(obj.get("subscription") or "")
+        user_id, existing = find(obj.get("client_reference_id") or (obj.get("metadata") or {}).get("user_id"), sub_id)
+        if not user_id or not sub_id:
+            return JSONResponse(status_code=200, content={"ok": True, "warning": "no user_id"})
+        sub = await _fetch_subscription(sub_id) if _env("STRIPE_SECRET_KEY") else None
+        if sub is None:  # 500 → Stripe retries; the subscription events also carry the state
+            logger.error(f"Could not read subscription {sub_id} for user={user_id}")
+            return JSONResponse(status_code=500, content={"error": "Subscription not readable yet"})
+        result = _apply_subscription(session, user_id, sub, existing, event_ts)
+    elif etype.startswith("customer.subscription."):
+        sub_id = str(obj.get("id", ""))
+        user_id, existing = find((obj.get("metadata") or {}).get("user_id"), sub_id)
+        if not user_id:
+            return JSONResponse(status_code=200, content={"ok": True, "warning": "no user_id"})
+        if etype == "customer.subscription.trial_will_end":
+            return JSONResponse(status_code=200, content={"ok": True})  # Stripe emails the reminder
+        result = _apply_subscription(session, user_id, obj, existing, event_ts)
+    elif etype == "invoice.payment_failed":
+        user_id, existing = find(None, _invoice_subscription(obj))
+        if existing:  # keep plan + subscription id; Stripe retries the charge (dunning)
             existing.status = "past_due"
             session.add(existing); session.commit()
         logger.warning(f"Payment failed: user={user_id}")
-    elif event_name in ("subscription_payment_success", "subscription_payment_recovered"):
+        result = "past_due"
+    elif etype in ("invoice.paid", "invoice.payment_succeeded"):
+        user_id, existing = find(None, _invoice_subscription(obj))
         if existing and existing.status == "past_due":
             existing.status = "active"
             session.add(existing); session.commit()
             logger.info(f"Payment recovered, subscription reactivated: user={user_id}")
+        result = "paid"
     else:
-        logger.info(f"Unhandled webhook event: {event_name}")
+        logger.info(f"Unhandled webhook event: {etype}")
+        result = "ignored"
 
-    return JSONResponse(status_code=200, content={"ok": True})
+    return JSONResponse(status_code=200, content={"ok": True, "result": result})
 
 
 # ── Status ───────────────────────────────────────────────────
@@ -224,7 +301,7 @@ def get_subscription_status(user_id: str = Depends(get_current_user_id), session
         "customer_portal_url": sub.customer_portal_url if sub else None,
         "current_period_end": sub.current_period_end if sub else None,
         "ls_subscription_id": sub.ls_subscription_id if sub else None,
-        # which store charges the row (lemon | google_play): the app shows the right "manage" door
+        # which store charges the row (stripe | google_play): the app shows the right "manage" door
         "store_source": sub.store_source if sub else None,
     }
 
@@ -283,30 +360,23 @@ def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: S
 
 # ── Helpers ──────────────────────────────────────────────────
 
-def _variant_to_plan(variant_id: str) -> Optional[str]:
-    """Plan for a LS variant id (current or legacy); None if unknown."""
-    if not variant_id:
-        return None
-    for plan_name, variants in PLAN_VARIANTS.items():
-        if variant_id in (variants.get("monthly"), variants.get("annual")):
-            return plan_name
-    return LEGACY_VARIANTS.get(variant_id)
-
-
 def _upsert_subscription(
     session: Session, user_id: str, plan: str, status: str, ls_subscription_id: str,
     ls_customer_id: str = "", current_period_end: Optional[str] = None,
     update_payment_method_url: Optional[str] = None, customer_portal_url: Optional[str] = None,
     updated_at: Optional[str] = None,
 ):
+    """The web (Stripe) write of the one Subscription row per user. ls_subscription_id /
+    ls_customer_id hold the Stripe subscription / customer ids (historical column names)."""
     existing = session.exec(select(Subscription).where(Subscription.user_id == user_id)).first()
-    # updated_at keeps LS's own timestamp when we have it, so webhook ordering can be checked
+    # updated_at keeps the Stripe event's own timestamp when we have it, so ordering can be checked
     now = updated_at or datetime.utcnow().isoformat() + "Z"
     if existing:
         existing.plan = plan; existing.status = status; existing.ls_subscription_id = ls_subscription_id
         existing.ls_customer_id = ls_customer_id or existing.ls_customer_id
         existing.current_period_end = current_period_end or existing.current_period_end
         existing.updated_at = now
+        existing.store_source = STORE
         if update_payment_method_url: existing.update_payment_method_url = update_payment_method_url
         if customer_portal_url: existing.customer_portal_url = customer_portal_url
         session.add(existing)
@@ -315,6 +385,6 @@ def _upsert_subscription(
             user_id=user_id, plan=plan, status=status, ls_subscription_id=ls_subscription_id,
             ls_customer_id=ls_customer_id, current_period_end=current_period_end,
             update_payment_method_url=update_payment_method_url, customer_portal_url=customer_portal_url,
-            created_at=now, updated_at=now,
+            created_at=now, updated_at=now, store_source=STORE,
         ))
     session.commit()

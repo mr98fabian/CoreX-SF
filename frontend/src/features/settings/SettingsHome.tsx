@@ -86,8 +86,8 @@ export default function SettingsHome() {
         return () => window.clearTimeout(t);
     }, [location.hash]);
 
-    // Lemon Squeezy returns to /dashboard/settings?tab=subscription&checkout=success (backend
-    // redirect_url); the plan-sync + "payment received" logic lives in the advanced screen.
+    // Stripe Checkout returns to /dashboard/settings?tab=subscription&checkout=success (backend
+    // success_url); the plan-sync + "payment received" logic lives in the advanced screen.
     const returning = new URLSearchParams(location.search).get('checkout') === 'success';
 
     const plan = plans?.find((p) => p.id === (status?.plan === 'freedom-dev' ? 'freedom' : status?.plan));

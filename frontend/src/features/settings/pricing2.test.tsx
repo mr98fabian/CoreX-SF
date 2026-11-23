@@ -53,11 +53,11 @@ describe('Precios reales — 2 planes', () => {
         expect(el.textContent).not.toMatch(/Velocity|Accelerator/);
     });
 
-    it('commercial source: two plans, annual 100 with a 30-day trial', () => {
+    it('commercial source: two plans, annual 100 with a 7-day trial', () => {
         expect(Object.keys(COMMERCIAL_PLANS)).toEqual(['starter', 'freedom']);
         expect(ANNUAL_PRICE).toBe(100);
         expect(COMMERCIAL_PLANS.freedom.annual).toBe(100);
-        expect(TRIAL_DAYS).toBe(30);
+        expect(TRIAL_DAYS).toBe(7);
         expect(pricingSrc).not.toMatch(/9\.99|19\.99|29\.99|velocity:|accelerator:/);
     });
 

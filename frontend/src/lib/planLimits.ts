@@ -88,11 +88,11 @@ export interface SubStatus {
     grant_ends_at?: string | null;
     checkout_hidden?: boolean;
     current_period_end?: string | null;
-    /** Which store charges the subscription row: lemon (web) or google_play (Android) */
-    store_source?: 'lemon' | 'google_play' | 'apple' | null;
+    /** Which store charges the subscription row: stripe (web) or google_play (Android) */
+    store_source?: 'stripe' | 'google_play' | 'apple' | null;
 }
 
-/** GET /api/subscriptions/status — the server's resolver (code grants, Lemon, demo). */
+/** GET /api/subscriptions/status — the server's resolver (code grants, store subscription, demo). */
 export async function fetchSubStatus(): Promise<SubStatus | null> {
     try {
         const data = await apiFetch<SubStatus>('/api/subscriptions/status');

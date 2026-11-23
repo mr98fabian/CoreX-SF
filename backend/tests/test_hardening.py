@@ -1,8 +1,9 @@
 """Fase 2 hardening: no dev doors for real users, no tracebacks to clients,
-fail-closed Lemon Squeezy webhook."""
+fail-closed Stripe webhook."""
 import hashlib
 import hmac
 import json
+import time
 
 import pytest
 
@@ -64,30 +65,34 @@ def test_seed_failure_returns_generic_error(client, as_user, monkeypatch):
 
 # ── 3. Webhook fails closed ──────────────────────────────────
 
-BODY = json.dumps({"meta": {"event_name": "subscription_created",
-                            "custom_data": {"user_id": REAL_USER_ID}},
-                   "data": {"id": "1", "attributes": {"variant_id": "1"}}}).encode()
+BODY = json.dumps({"id": "evt_1", "type": "customer.subscription.created", "created": 1790000000,
+                   "data": {"object": {"id": "sub_1", "status": "active", "metadata": {"user_id": REAL_USER_ID},
+                                       "items": {"data": [{"price": {"id": "price_x"}}]}}}}).encode()
+
+
+def _sig(secret: bytes, body: bytes) -> str:
+    ts = int(time.time())
+    return f"t={ts},v1=" + hmac.new(secret, f"{ts}.".encode() + body, hashlib.sha256).hexdigest()
 
 
 def test_webhook_rejected_when_secret_missing(client, monkeypatch):
-    monkeypatch.setattr(subscriptions, "LS_WEBHOOK_SECRET", "")
-    r = client.post(WEBHOOK_URL, content=BODY, headers={"X-Signature": "anything"})
+    monkeypatch.delenv("STRIPE_WEBHOOK_SECRET", raising=False)
+    r = client.post(WEBHOOK_URL, content=BODY, headers={"Stripe-Signature": "t=1,v1=anything"})
     assert r.status_code == 503
 
 
 def test_webhook_rejected_with_invalid_signature(client, monkeypatch):
-    monkeypatch.setattr(subscriptions, "LS_WEBHOOK_SECRET", "test-secret")
-    r = client.post(WEBHOOK_URL, content=BODY, headers={"X-Signature": "deadbeef"})
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "test-secret")
+    r = client.post(WEBHOOK_URL, content=BODY, headers={"Stripe-Signature": "t=1,v1=deadbeef"})
     assert r.status_code == 401
 
 
 def test_webhook_rejected_without_signature(client, monkeypatch):
-    monkeypatch.setattr(subscriptions, "LS_WEBHOOK_SECRET", "test-secret")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "test-secret")
     assert client.post(WEBHOOK_URL, content=BODY).status_code == 401
 
 
 def test_webhook_accepted_with_valid_signature(client, monkeypatch):
-    monkeypatch.setattr(subscriptions, "LS_WEBHOOK_SECRET", "test-secret")
-    sig = hmac.new(b"test-secret", BODY, hashlib.sha256).hexdigest()
-    r = client.post(WEBHOOK_URL, content=BODY, headers={"X-Signature": sig})
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "test-secret")
+    r = client.post(WEBHOOK_URL, content=BODY, headers={"Stripe-Signature": _sig(b"test-secret", BODY)})
     assert r.status_code == 200
