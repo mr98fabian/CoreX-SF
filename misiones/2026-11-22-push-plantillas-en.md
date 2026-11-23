@@ -1,6 +1,6 @@
 # Misión: Push — plantillas en inglés según idioma del dispositivo
 - **ID:** 2026-11-22-push-plantillas-en
-- **Estado:** en-auditoria
+- **Estado:** completada
 - **Rama:** feat/push-en-y-pulido
 - **Repo:** CoreX-SF
 ## Objetivo

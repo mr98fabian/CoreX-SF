@@ -1,6 +1,6 @@
 # Misión: Push — pulido visual de notificaciones (Android)
 - **ID:** 2026-11-22-push-pulido-visual
-- **Estado:** en-auditoria
+- **Estado:** completada
 - **Rama:** feat/push-en-y-pulido
 - **Repo:** CoreX-SF
 ## Objetivo
