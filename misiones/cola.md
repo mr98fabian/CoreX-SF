@@ -11,7 +11,7 @@ aprueba merges.
 | 2b | Push: pulido visual de notificaciones (Android) | completada | Pedido de Fabian: elegantes y profesionales; misma rama `feat/push-en-y-pulido`; archivo `misiones/2026-11-22-push-pulido-visual.md` |
 | 3 | Kit IA: neutralizar la marca en `lib/aiKit.ts` | en-auditoria | Rama `chore/kit-ia-neutro`; archivo `misiones/2026-11-22-kit-ia-neutro.md` |
 | 4 | Correos de notificación transaccionales | pendiente | Cola original de lanzamiento |
-| 5 | Calendario que se actualiza solo (serie diaria real del motor) | en-curso | Rama `feat/calendario-serie-diaria`; archivo `misiones/2026-11-23-calendario-serie-diaria.md` |
+| 5 | Calendario que se actualiza solo (serie diaria real del motor) | en-auditoria | Rama `feat/calendario-serie-diaria`; archivo `misiones/2026-11-23-calendario-serie-diaria.md` |
 | 6 | Apple IAP (pagos iOS) | bloqueada | Espera inscripción Apple Developer + Mac |
 | 8 | Integración de Stripe Managed Payments (checkout web) | completada | Deuda de la misión 1: la compra web falla (Lemon rechazado); archivo `misiones/2026-11-22-integracion-stripe.md` |
 | 9 | Prueba de pagos demo de Stripe (teléfono virtual) | en-curso | Prueba de punta a punta de la misión 8 en modo test; archivo `misiones/2026-11-22-prueba-pagos-stripe.md` |
