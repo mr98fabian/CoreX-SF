@@ -922,7 +922,7 @@ const translations: Record<string, Record<Language, string>> = {
     "conecta.copied": { es: "Copiado", en: "Copied" },
     "conecta.after": { es: "Después de autorizar, pregúntale: ¿cuál es mi plan de pagos?", en: "After authorizing, ask it: what's my payment plan?" },
     // Google Play Billing (Android build): lib/playBilling, hooks/usePlayBilling
-    "billing.start": { es: "Empezar mes gratis", en: "Start free month" },
+    "billing.start": { es: "Empezar prueba gratis", en: "Start free trial" },
     "billing.subscribe": { es: "Suscribirme", en: "Subscribe" },
     "billing.buying": { es: "Comprando…", en: "Purchasing…" },
     "billing.verifying": { es: "Verificando tu compra…", en: "Verifying your purchase…" },

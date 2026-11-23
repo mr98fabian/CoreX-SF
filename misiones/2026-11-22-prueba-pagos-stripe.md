@@ -24,7 +24,19 @@ verificando firmas (verificado por Mijo). Stripe en Sandbox con el producto «Ko
 ## No tocar
 - Código (salvo orden). Ninguna contraseña ni llave en el Reporte ni en el repo.
 ## Reporte (lo llena Claude al ejecutar)
-- **Fecha:**
+- **Fecha:** 2026-11-22 (en curso)
 - **Resultado por paso:**
+  - Panel de Stripe (sandbox «New business», el que tiene el webhook «KoreX subscriptions webhook»
+    → Railway): 0 suscripciones, 0 entregas de webhook. En los logs no aparece ninguna sesión de
+    checkout, solo la creación del producto y del precio. Todavía no se ha hecho ninguna compra.
+  - La cuenta de Fabian ya tiene KoreX Anual: Planes muestra «Tu plan actual» y no tiene botón de
+    pago. Hace falta una cuenta sin plan (alias +stripe) para el paso 2.
 - **Dudas técnicas:**
 - **Errores:**
+  - **«1 mes gratis» en la web contra 7 días en el checkout** (FTC: lo mostrado ≠ lo cobrado). Vino del
+    cambio a `TRIAL_DAYS = 7` de la Misión 8. Las tarjetas de plan, el modal de compra y la landing
+    tenían el mes escrito a mano. Por orden de Fabian se corrige en `fix/prueba-7-dias-copy`
+    (b862fc5): el texto sale de `TRIAL_DAYS` y un test lo protege. Sin merge.
+  - El webhook está fijado a la API `2024-12-18.acacia` (más antigua que la `basil` del checkout).
+    El backend lee los dos formatos (`_period_end`, `_invoice_subscription`). Se confirma con la
+    primera entrega real.

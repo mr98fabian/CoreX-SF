@@ -5,6 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import upgradeSrc from '@/components/UpgradeModal.tsx?raw';
 import pricingSrc from '@/lib/pricing.ts?raw';
+import planCardsSrc from '@/components/kx/PlanCards.tsx?raw';
+import landingSrc from '@/features/landing/KxLanding.tsx?raw';
 
 const apiFetch = vi.fn();
 vi.mock('@/lib/api', () => ({ apiFetch: (...a: unknown[]) => apiFetch(...a), API_BASE: '' }));
@@ -51,6 +53,13 @@ describe('Precios reales — 2 planes', () => {
         expect(el.textContent).toContain('Plan pago activo');
         expect(el.textContent).not.toContain('Cargando tu plan');
         expect(el.textContent).not.toMatch(/Velocity|Accelerator/);
+    });
+
+    it('web trial copy comes from TRIAL_DAYS: no hard-coded month left (FTC: shown = charged)', () => {
+        for (const src of [upgradeSrc, planCardsSrc, landingSrc]) {
+            expect(src).not.toMatch(/1 mes gratis|mes gratis|month free|free month|1-month|1 mes de prueba/);
+            expect(src).toContain('TRIAL_DAYS');
+        }
     });
 
     it('commercial source: two plans, annual 100 with a 7-day trial', () => {
