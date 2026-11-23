@@ -1,6 +1,6 @@
 /**
  * Kit para tu IA: what the user pastes into their assistant after creating a kx_ token.
- * ONE source for the config (JSON + one-liner) and the house instructions, used by
+ * ONE source for the config (the standard mcpServers JSON) and the house instructions, used by
  * Conecta tu IA (with the real token, shown once) and by the tutorial (with a placeholder).
  * Neutral on purpose: no personal assistant names — each user names their own AI.
  */
@@ -12,19 +12,15 @@ export const MCP_PATH_PLACEHOLDER = '<RUTA_DEL_MCP>';
 const PY = `${MCP_PATH_PLACEHOLDER}/.venv/bin/python`;
 const SCRIPT = `${MCP_PATH_PLACEHOLDER}/korex_mcp.py`;
 
-/** mcpServers JSON for Claude Desktop (claude_desktop_config.json), token filled in. */
+/** The standard `mcpServers` JSON, token filled in: any assistant that speaks MCP takes it as is. */
 export function kitConfigJson(token: string = TOKEN_PLACEHOLDER): string {
     return JSON.stringify({ mcpServers: { korex: { command: PY, args: [SCRIPT], env: { KOREX_API_TOKEN: token } } } }, null, 2);
 }
 
-/** The one-line alternative for Claude Code. */
-export function kitConfigCommand(token: string = TOKEN_PLACEHOLDER): string {
-    return `claude mcp add korex --env KOREX_API_TOKEN=${token} -- ${PY} ${SCRIPT}`;
-}
-
-/** Both, as one copyable block. */
+/** The copyable block: the JSON plus the neutral steps (open your assistant's MCP settings, paste,
+ *  set the path). Names no assistant: each user connects the one they already use. */
 export function kitConfig(token: string = TOKEN_PLACEHOLDER): string {
-    return `${kitConfigJson(token)}\n\n# O, en Claude Code, en una sola línea:\n${kitConfigCommand(token)}\n\n# ${MCP_PATH_PLACEHOLDER} = la carpeta mcp de KoreX en tu equipo (en Windows: .venv/Scripts/python.exe)`;
+    return `${kitConfigJson(token)}\n\n# 1. Abre los ajustes MCP de tu asistente (servidores MCP / conectores).\n# 2. Pega este bloque en su sección "mcpServers".\n# 3. Cambia ${MCP_PATH_PLACEHOLDER} por la carpeta mcp de KoreX en tu equipo (en Windows: .venv/Scripts/python.exe).`;
 }
 
 /**

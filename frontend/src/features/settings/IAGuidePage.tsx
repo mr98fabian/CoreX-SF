@@ -27,8 +27,8 @@ const STEPS: Step[] = [
         en: ['Create your kx_ token', 'Settings → Connect your AI: name it, tick only the permissions you want to give, tap Create. The token starts with kx_ and is shown once: copy it right then. The kit below is always here, and if you lose the token you create a new one in one tap. Revoke it anytime and it stops working instantly.'],
     },
     {
-        es: ['Conecta tu IA (MCP)', 'Agrega el servidor KoreX (MCP) a tu asistente — Claude Desktop, Claude Code o cualquier cliente MCP — con tu token en KOREX_API_TOKEN. Solo ve tus datos y solo con los permisos de ese token.'],
-        en: ['Connect your AI (MCP)', 'Add the KoreX server (MCP) to your assistant — Claude Desktop, Claude Code or any MCP client — with your token in KOREX_API_TOKEN. It only sees your data, only with that token’s permissions.'],
+        es: ['Conecta tu IA (MCP)', 'Agrega el servidor KoreX (MCP) a tu asistente (cualquier asistente que hable MCP) con tu token en KOREX_API_TOKEN. Solo ve tus datos y solo con los permisos de ese token.'],
+        en: ['Connect your AI (MCP)', 'Add the KoreX server (MCP) to your assistant (any assistant that speaks MCP) with your token in KOREX_API_TOKEN. It only sees your data, only with that token’s permissions.'],
     },
     {
         es: ['Primera sincronización y primera misión', 'Al conectarse por primera vez te dice tus horas de sincronización. Después, una idea y una misión por mensaje: la primera suele ser revisar tu próximo corte.'],
