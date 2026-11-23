@@ -53,9 +53,9 @@ def login(uid):
     app.dependency_overrides[get_current_user_id] = lambda: uid
 
 
-def device(uid=U, token="tok-1", tz=TZ):
+def device(uid=U, token="tok-1", tz=TZ, language="es"):
     with Session(database.engine) as s:
-        s.add(PushDevice(user_id=uid, fcm_token=token, timezone=tz))
+        s.add(PushDevice(user_id=uid, fcm_token=token, timezone=tz, language=language))
         s.commit()
 
 
@@ -270,6 +270,89 @@ async def test_every_device_of_the_user_gets_the_one_push(fcm):
     card(closing=25)
     await run(9, fcm=fcm)
     assert sorted(m["token"] for m in fcm.sent) == ["phone-a", "tablet-b"] and len(logs()) == 1
+
+
+def test_the_device_reports_its_app_language(client, fcm):
+    login(U)
+    for sent, stored in (({}, "es"), ({"language": "en"}, "en"), ({"language": "en-US"}, "en"),
+                         ({"language": "ES"}, "es"), ({"language": "fr"}, "es"), ({"language": ""}, "es")):
+        assert client.post("/api/push/devices", json={"token": "fcm-token-lang", **sent}).status_code == 200
+        with Session(database.engine) as s:
+            assert s.exec(select(PushDevice).where(PushDevice.fcm_token == "fcm-token-lang")).one().language == stored, sent
+
+
+COPY = {
+    "corte": {
+        "es": ("Corte en 2 días", "Tu tarjeta Visa Oro corta el 25 de noviembre con saldo $430.00. Paga antes del corte y reporta limpio."),
+        "en": ("Statement in 2 days", "Your Visa Oro card closes on November 25 with a $430.00 balance. Pay before it closes and report clean."),
+    },
+    "mision": {
+        "es": ("Tu misión de hoy", "Paga $150.00 a Visa Oro. Es el movimiento de hoy."),
+        "en": ("Today's mission", "Pay $150.00 to Visa Oro. It's today's move."),
+    },
+    "celebracion": {
+        "es": ("¡Deuda saldada! 🎉", "Tarjeta chica llegó a $0. Una deuda menos."),
+        "en": ("Debt paid off! 🎉", "Tarjeta chica hit $0. One less debt."),
+    },
+}
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("language", ["es", "en"])
+@pytest.mark.parametrize("kind", ["corte", "mision", "celebracion"])
+async def test_each_kind_in_each_language(fcm, monkeypatch, kind, language):
+    device(language=language)
+    if kind == "corte":
+        card(closing=25)
+    elif kind == "mision":
+        mission(monkeypatch)
+    else:
+        paid_off()
+    await run(9 if kind == "corte" else 8, fcm=fcm)
+    assert [(m["title"], m["body"]) for m in fcm.sent] == [COPY[kind][language]]
+    assert [l.kind for l in logs()] == [kind]
+
+
+@pytest.mark.anyio
+async def test_each_phone_gets_its_own_language_and_the_cap_still_counts_once(fcm):
+    device(token="phone-es", language="es")
+    device(token="phone-en", language="en")
+    card(closing=25)
+    await run(9, fcm=fcm)
+    assert {m["token"]: m["title"] for m in fcm.sent} == {"phone-es": "Corte en 2 días", "phone-en": "Statement in 2 days"}
+    assert len(logs()) == 1
+
+
+def test_unknown_language_falls_back_to_spanish():
+    cand = {"kind": "celebracion", "vars": {"name": "Visa"}}
+    for lang in (None, "", "fr", "pt-BR"):
+        assert push_engine.render(cand, lang) == ("¡Deuda saldada! 🎉", "Visa llegó a $0. Una deuda menos.")
+    assert set(push_engine.TEMPLATES) == set(push_engine.PRIORITY)
+    assert all(set(t) == set(push_engine.LANGUAGES) for t in push_engine.TEMPLATES.values())
+
+
+def test_the_language_migration_goes_up_and_down():
+    import importlib.util
+    from pathlib import Path
+    import sqlalchemy as sa
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+    backend = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("mig_lang", next((backend / "alembic" / "versions").glob("e5a9c3f1b7d2_*.py")))
+    mig = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mig)
+    assert mig.down_revision == "d2f7b3c9e4a6"
+    engine = sa.create_engine("sqlite://")
+    with engine.begin() as conn:
+        conn.execute(sa.text("CREATE TABLE push_devices (id INTEGER PRIMARY KEY, fcm_token VARCHAR NOT NULL)"))
+        conn.execute(sa.text("INSERT INTO push_devices (fcm_token) VALUES ('t')"))
+        with Operations.context(MigrationContext.configure(conn)):
+            mig.upgrade()
+        assert conn.execute(sa.text("SELECT language FROM push_devices")).scalar() == "es"  # old phones: the copy they always got
+    with engine.begin() as conn:
+        with Operations.context(MigrationContext.configure(conn)):
+            mig.downgrade()
+        assert {c["name"] for c in sa.inspect(conn).get_columns("push_devices")} == {"id", "fcm_token"}
 
 
 def test_copy_has_no_assistant_brand():

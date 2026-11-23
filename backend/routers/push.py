@@ -22,6 +22,7 @@ class DeviceIn(BaseModel):
     token: str = PField(min_length=10, max_length=512)
     platform: str = PField(default="android", max_length=16)
     timezone: str = PField(default=push_engine.DEFAULT_TZ, max_length=64)
+    language: str = PField(default=push_engine.DEFAULT_LANGUAGE, max_length=16)  # app language; normalized to es | en
 
 
 class DeviceOut(BaseModel):
@@ -53,6 +54,7 @@ def register_device(body: DeviceIn, user_id: str = Depends(get_current_user_id))
             row = PushDevice(user_id=user_id, fcm_token=body.token, created_at=now)
         # a phone that changes hands (logout → other login) belongs to whoever registers it last
         row.user_id, row.platform, row.timezone = user_id, body.platform, body.timezone
+        row.language = push_engine.normalize_language(body.language)
         row.updated_at = row.last_seen_at = now
         row.dead_at = None
         s.add(row)

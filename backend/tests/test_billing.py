@@ -345,7 +345,7 @@ def test_one_head_and_the_stripe_migration_goes_up_and_down():
     from alembic.migration import MigrationContext
     from alembic.operations import Operations
     from alembic.script import ScriptDirectory
-    assert ScriptDirectory.from_config(Config(str(BACKEND / "alembic.ini"))).get_heads() == ["d2f7b3c9e4a6"]
+    assert len(ScriptDirectory.from_config(Config(str(BACKEND / "alembic.ini"))).get_heads()) == 1  # newer migrations build on d2f7b3c9e4a6
     spec = importlib.util.spec_from_file_location("mig_stripe", next((BACKEND / "alembic" / "versions").glob("d2f7b3c9e4a6_*.py")))
     mig = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mig)

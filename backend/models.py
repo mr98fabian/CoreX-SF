@@ -130,6 +130,7 @@ class PushDevice(SQLModel, table=True):
     fcm_token: str = Field(sa_column=Column(String(512), nullable=False, unique=True, index=True))
     platform: str = Field(default="android", max_length=16)
     timezone: str = Field(default="America/Chicago", max_length=64)  # IANA, as the phone reports it
+    language: str = Field(default="es", max_length=8)  # the app's language (es | en): push copy follows it
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_seen_at: datetime = Field(default_factory=datetime.utcnow)

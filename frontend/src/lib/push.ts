@@ -39,18 +39,34 @@ function timeZone(): string {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago'; } catch { return 'America/Chicago'; }
 }
 
+/** The app's language (LanguageContext stores it): the server writes each notice in it. */
+function appLanguage(): 'es' | 'en' {
+    return read('korex-language') === 'en' ? 'en' : 'es';
+}
+
+function registerDevice(token: string): Promise<unknown> {
+    return apiFetch('/api/push/devices', {
+        method: 'POST',
+        body: JSON.stringify({ token, platform: 'android', timezone: timeZone(), language: appLanguage() }),
+    }).catch(() => undefined);
+}
+
+/** The user switched the app's language: this phone's notices follow it right away. */
+export async function syncPushLanguage(): Promise<void> {
+    const token = read(TOKEN_KEY);
+    if (isAndroidApp() && token) await registerDevice(token);
+}
+
 let listening = false;
 
 /** With the permission granted: listen and register. Every app start re-registers, so a token
- * that changed (or a new time zone) reaches the server on its own. */
+ * that changed (or a new time zone or language) reaches the server on its own. */
 export async function startPush(): Promise<void> {
     if (!listening) {
         listening = true;
         await PushNotifications.addListener('registration', async (token: Token) => {
             write(TOKEN_KEY, token.value);
-            await apiFetch('/api/push/devices', {
-                method: 'POST', body: JSON.stringify({ token: token.value, platform: 'android', timezone: timeZone() }),
-            }).catch(() => undefined);
+            await registerDevice(token.value);
         });
     }
     await PushNotifications.register();

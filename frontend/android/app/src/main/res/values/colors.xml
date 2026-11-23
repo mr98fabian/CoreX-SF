@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand amber: accent of push notices (icon tint, app name) -->
+    <color name="korex_amber">#F59E0B</color>
+</resources>

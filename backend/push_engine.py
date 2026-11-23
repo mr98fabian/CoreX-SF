@@ -11,6 +11,9 @@ Anti-spam, always: at most 1 push per user per local day across every kind (prio
 corte > mision > celebracion); dedup by (user, kind, key); silence 22:00–07:00; tokens FCM calls
 invalid are marked dead and never used again; the user's on/off preference wins.
 
+Copy: TEMPLATES, one per kind in Spanish and English; each device gets the language its app
+reported when it registered (routers/push.py), Spanish when it reported none.
+
 Fail-closed: without FIREBASE_SERVICE_ACCOUNT_JSON nothing is sent (and nothing is recorded).
 """
 import asyncio
@@ -35,9 +38,30 @@ FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 DEFAULT_TZ = "America/Chicago"
 QUIET_FROM, QUIET_UNTIL = 22, 7      # 22:00–07:00 local: never
 MISSION_HOUR = 8
+ANDROID_CHANNEL = "korex_avisos"  # created by the app (MainActivity): "Avisos de KoreX", high importance
 PRIORITY = {"corte": 0, "mision": 1, "celebracion": 2}
 MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre",
              "noviembre", "diciembre"]
+MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+             "November", "December"]
+LANGUAGES = ("es", "en")
+DEFAULT_LANGUAGE = "es"
+
+# Copy per kind and language: same variables, same tone. {fecha} is rendered per language.
+TEMPLATES = {
+    "corte": {
+        "es": ("Corte en 2 días", "Tu tarjeta {name} corta el {fecha} con saldo {amount}. Paga antes del corte y reporta limpio."),
+        "en": ("Statement in 2 days", "Your {name} card closes on {fecha} with a {amount} balance. Pay before it closes and report clean."),
+    },
+    "mision": {
+        "es": ("Tu misión de hoy", "Paga {amount} a {account}. Es el movimiento de hoy."),
+        "en": ("Today's mission", "Pay {amount} to {account}. It's today's move."),
+    },
+    "celebracion": {
+        "es": ("¡Deuda saldada! 🎉", "{name} llegó a $0. Una deuda menos."),
+        "en": ("Debt paid off! 🎉", "{name} hit $0. One less debt."),
+    },
+}
 
 
 def service_account() -> Optional[dict]:
@@ -60,8 +84,26 @@ def _usd(x) -> str:
     return f"${Decimal(str(x)).quantize(Decimal('0.01')):,.2f}"
 
 
-def _fecha(d: date) -> str:
+def _fecha(d: date, language: str = DEFAULT_LANGUAGE) -> str:
+    if language == "en":
+        return f"{MONTHS_EN[d.month - 1]} {d.day}"
     return f"{d.day} de {MONTHS_ES[d.month - 1]}"
+
+
+def normalize_language(value: Optional[str]) -> str:
+    """'en', 'en-US', 'EN_gb' → 'en'; anything else (or nothing) → 'es'."""
+    code = (value or "").strip().lower().replace("_", "-").split("-")[0]
+    return code if code in LANGUAGES else DEFAULT_LANGUAGE
+
+
+def render(cand: dict, language: Optional[str]) -> tuple[str, str]:
+    """(title, body) of a candidate in the device's language; unknown or missing → Spanish."""
+    lang = normalize_language(language)
+    title, body = TEMPLATES[cand["kind"]][lang]
+    values = dict(cand["vars"])
+    if "fecha" in values:
+        values["fecha"] = _fecha(values["fecha"], lang)
+    return title, body.format(**values)
 
 
 def _tz(name: Optional[str]) -> ZoneInfo:
@@ -86,7 +128,8 @@ async def fcm_send(token: str, title: str, body: str, data: dict) -> str:
                              headers={"Authorization": f"Bearer {access}"},
                              json={"message": {"token": token, "notification": {"title": title, "body": body},
                                                "data": {k: str(v) for k, v in data.items()},
-                                               "android": {"priority": "high"}}})
+                                               "android": {"priority": "high",
+                                               "notification": {"channel_id": ANDROID_CHANNEL}}}})
     except Exception:
         return "error"
     if r.status_code == 200:
@@ -122,9 +165,8 @@ def candidates(s: Session, user_id: str, today: date, hour: int) -> list[dict]:
     in_two = today + timedelta(days=2)
     for a in debts:
         if a.closing_day and Decimal(str(a.balance or 0)) > 0 and _cut_date(int(a.closing_day), in_two):
-            out.append({"kind": "corte", "key": f"{a.id}:{in_two.isoformat()}", "title": "Corte en 2 días",
-                        "body": f"Tu tarjeta {a.name} corta el {_fecha(in_two)} con saldo {_usd(a.balance)}. "
-                                "Paga antes del corte y reporta limpio.",
+            out.append({"kind": "corte", "key": f"{a.id}:{in_two.isoformat()}",
+                        "vars": {"name": a.name, "fecha": in_two, "amount": _usd(a.balance)},
                         "data": {"route": "/dashboard/accounts/manage", "account_id": a.id}})
 
     if hour == MISSION_HOUR:
@@ -135,8 +177,8 @@ def candidates(s: Session, user_id: str, today: date, hour: int) -> list[dict]:
             mission = None
         if mission and mission.get("tipo") != "faltante" and Decimal(str(mission.get("monto") or 0)) > 0 \
                 and mission.get("fecha_accion", today) <= today:
-            out.append({"kind": "mision", "key": today.isoformat(), "title": "Tu misión de hoy",
-                        "body": f"Paga {_usd(mission['monto'])} a {mission['cuenta']}. Es el movimiento de hoy.",
+            out.append({"kind": "mision", "key": today.isoformat(),
+                        "vars": {"amount": _usd(mission["monto"]), "account": mission["cuenta"]},
                         "data": {"route": "/dashboard"}})
 
     if hour >= MISSION_HOUR:
@@ -147,8 +189,7 @@ def candidates(s: Session, user_id: str, today: date, hour: int) -> list[dict]:
             paid_recently = s.exec(select(Transaction.id).where(Transaction.user_id == user_id, Transaction.account_id == a.id,
                                                                Transaction.date >= since)).first()
             if paid_recently:
-                out.append({"kind": "celebracion", "key": str(a.id), "title": "¡Deuda saldada! 🎉",
-                            "body": f"{a.name} llegó a $0. Una deuda menos.", "data": {"route": "/dashboard/action-plan"}})
+                out.append({"kind": "celebracion", "key": str(a.id), "vars": {"name": a.name}, "data": {"route": "/dashboard/action-plan"}})
     return out
 
 
@@ -183,7 +224,8 @@ async def run_once(now: Optional[datetime] = None, send: Optional[Sender] = None
                     continue
                 delivered = False
                 for d in devs:
-                    result = await send(d.fcm_token, cand["title"], cand["body"], cand["data"])
+                    title, body = render(cand, d.language)  # each phone in its own app language
+                    result = await send(d.fcm_token, title, body, cand["data"])
                     if result == "ok":
                         delivered = True
                     elif result == "dead":
