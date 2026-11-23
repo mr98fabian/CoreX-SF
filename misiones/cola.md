@@ -9,7 +9,7 @@ aprueba merges.
 | 1 | Textos legales: Lemon Squeezy → Stripe Managed Payments (ES/EN) | completada | Prompt de Mijo ya escrito (mision-legal-stripe-mor) |
 | 2 | Push: plantillas en inglés según idioma del dispositivo | completada | Hoy el copy de push es solo ES; archivo `misiones/2026-11-22-push-plantillas-en.md` |
 | 2b | Push: pulido visual de notificaciones (Android) | completada | Pedido de Fabian: elegantes y profesionales; misma rama `feat/push-en-y-pulido`; archivo `misiones/2026-11-22-push-pulido-visual.md` |
-| 3 | Kit IA: neutralizar la marca en `lib/aiKit.ts` | en-curso | Rama `chore/kit-ia-neutro`; archivo `misiones/2026-11-22-kit-ia-neutro.md` |
+| 3 | Kit IA: neutralizar la marca en `lib/aiKit.ts` | en-auditoria | Rama `chore/kit-ia-neutro`; archivo `misiones/2026-11-22-kit-ia-neutro.md` |
 | 4 | Correos de notificación transaccionales | pendiente | Cola original de lanzamiento |
 | 5 | Calendario que se actualiza solo | pendiente | Cola original de lanzamiento |
 | 6 | Apple IAP (pagos iOS) | bloqueada | Espera inscripción Apple Developer + Mac |
