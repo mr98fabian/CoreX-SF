@@ -65,3 +65,6 @@ mcp/.venv/
 keystore.properties
 # Firebase client config: local only (the Firebase service-account key goes to Railway, never here)
 google-services.json
+
+# scripts/email_dry_run.py --html
+scripts/out/

@@ -32,6 +32,7 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { ReferralProgram } from "@/components/ReferralProgram";
 import { ConnectAI } from "@/components/ConnectAI";
 import { PushToggleRow } from "@/components/PushToggleRow";
+import { EmailToggleRow } from "@/components/EmailToggleRow";
 import { getBillingProvider } from "@/lib/billing";
 import { playButtonLabel, usePlayBilling } from "@/hooks/usePlayBilling";
 import { PlayStoreActions } from "@/components/PlayStoreActions";
@@ -528,6 +529,8 @@ export default function SettingsPage() {
                 <SectionHeader title={t("settings.notifications.title")} subtitle={t("settings.notifications.subtitle")} icon={<Bell className="h-5 w-5 text-kx-amber" />} />
                 {/* Android app: the real push notices (system permission + preference) */}
                 <PushToggleRow />
+                {/* Web and app: the same notices by e-mail (backend/email_engine.py) */}
+                <EmailToggleRow />
                 <Card className="border-kx-line bg-kx-surface ">
                     <CardContent className="pt-6 space-y-1">
                         {items.map((item, i) => (

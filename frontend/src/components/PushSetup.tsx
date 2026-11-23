@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { syncNoticeProfile } from '@/lib/noticeProfile';
 import { isAndroidApp, markPushAsked, onNoticeTap, pushAsked, pushPermission, requestPush, serverCanPush, startPush } from '@/lib/push';
 
 export function PushSetup() {
@@ -18,6 +19,11 @@ export function PushSetup() {
     const navigate = useNavigate();
     const [ask, setAsk] = useState(false);
     const signedIn = !!user && !isDemo;
+
+    // Every platform: the language and time zone notice e-mails are written in
+    useEffect(() => {
+        if (signedIn) void syncNoticeProfile();
+    }, [signedIn]);
 
     useEffect(() => {
         if (!isAndroidApp() || !signedIn) return;

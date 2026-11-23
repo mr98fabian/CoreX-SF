@@ -119,6 +119,11 @@ class UserSettings(SQLModel, table=True):
     attack_percentage: Decimal = Field(default=Decimal("20"), max_digits=5, decimal_places=2)
     # Push notices on the phone (push_engine.py). On by default; the engine always respects it.
     push_enabled: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=sa_true()))
+    # Notice e-mails (email_engine.py): the channel for whoever push doesn't reach. On by default.
+    email_enabled: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=sa_true()))
+    # The app's language and time zone, synced by the app (PUT /api/push/email): e-mail copy and quiet hours
+    language: str = Field(default="es", sa_column=Column(String(8), nullable=False, server_default="es"))
+    timezone: Optional[str] = Field(default=None, sa_column=Column(String(64), nullable=True))
 
 
 class PushDevice(SQLModel, table=True):
@@ -146,6 +151,21 @@ class PushLog(SQLModel, table=True):
     kind: str = Field(max_length=16)          # mision | corte | celebracion
     dedup_key: str = Field(max_length=64)     # mission: the day; cut: account:cut date; celebration: account
     local_date: date                          # the user's own day when it was sent
+    sent_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class EmailLog(SQLModel, table=True):
+    """Every notice e-mail attempt, mirror of push_log. status: sent | dry_run (count for the cap
+    and the dedup) | error (provider failed: kept for the record, retried next hour)."""
+    __tablename__ = "email_log"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[str] = Field(default=None, sa_column=Column(PG_UUID(as_uuid=False), index=True, nullable=False))
+    kind: str = Field(max_length=16)          # mision | corte | celebracion
+    dedup_key: str = Field(max_length=64)     # same keys as push_log
+    language: str = Field(default="es", max_length=8)
+    status: str = Field(max_length=16)
+    detail: Optional[str] = Field(default=None, max_length=200)  # provider error (never the address)
+    local_date: date
     sent_at: datetime = Field(default_factory=datetime.utcnow)
 
 

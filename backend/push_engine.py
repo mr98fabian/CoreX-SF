@@ -14,7 +14,11 @@ invalid are marked dead and never used again; the user's on/off preference wins.
 Copy: TEMPLATES, one per kind in Spanish and English; each device gets the language its app
 reported when it registered (routers/push.py), Spanish when it reported none.
 
-Fail-closed: without FIREBASE_SERVICE_ACCOUNT_JSON nothing is sent (and nothing is recorded).
+Fail-closed: without FIREBASE_SERVICE_ACCOUNT_JSON no push is sent (and nothing is recorded).
+
+E-mail (email_engine.py): whoever push did not cover gets the same notice by e-mail when
+user_settings.email_enabled; the 1-a-day cap, quiet hours and dedup count both channels.
+Without RESEND_API_KEY + EMAIL_FROM (and no EMAIL_DRY_RUN) the e-mail channel is skipped.
 """
 import asyncio
 import calendar
@@ -30,7 +34,9 @@ import httpx
 from sqlmodel import Session, select
 
 import database
-from models import Account, PushDevice, PushLog, Transaction, UserSettings
+import email_engine
+from auth import DEMO_USER_ID
+from models import Account, EmailLog, PushDevice, PushLog, Transaction, UserSettings
 
 logger = logging.getLogger("korex.push")
 
@@ -96,14 +102,19 @@ def normalize_language(value: Optional[str]) -> str:
     return code if code in LANGUAGES else DEFAULT_LANGUAGE
 
 
+def values_for(cand: dict, language: str) -> dict:
+    """The candidate's template variables, with the date written in `language`."""
+    values = dict(cand["vars"])
+    if "fecha" in values:
+        values["fecha"] = _fecha(values["fecha"], language)
+    return values
+
+
 def render(cand: dict, language: Optional[str]) -> tuple[str, str]:
     """(title, body) of a candidate in the device's language; unknown or missing → Spanish."""
     lang = normalize_language(language)
     title, body = TEMPLATES[cand["kind"]][lang]
-    values = dict(cand["vars"])
-    if "fecha" in values:
-        values["fecha"] = _fecha(values["fecha"], lang)
-    return title, body.format(**values)
+    return title, body.format(**values_for(cand, lang))
 
 
 def _tz(name: Optional[str]) -> ZoneInfo:
@@ -195,50 +206,106 @@ def candidates(s: Session, user_id: str, today: date, hour: int) -> list[dict]:
 
 # ── One hourly run ───────────────────────────────────────────────────────────────────
 
-async def run_once(now: Optional[datetime] = None, send: Optional[Sender] = None) -> dict:
-    if not configured():
+def _spent_today(s: Session, user_id: str, today: date) -> bool:
+    """The day's one notice is spent, whatever channel carried it."""
+    if s.exec(select(PushLog.id).where(PushLog.user_id == user_id, PushLog.local_date == today)).first():
+        return True
+    return s.exec(select(EmailLog.id).where(EmailLog.user_id == user_id, EmailLog.local_date == today,
+                                            EmailLog.status.in_(email_engine.COUNTED))).first() is not None
+
+
+def _already_notified(s: Session, user_id: str, cand: dict) -> bool:
+    """Dedup across channels: this (kind, key) already reached the user by push or e-mail."""
+    if s.exec(select(PushLog.id).where(PushLog.user_id == user_id, PushLog.kind == cand["kind"],
+                                       PushLog.dedup_key == cand["key"])).first():
+        return True
+    return s.exec(select(EmailLog.id).where(EmailLog.user_id == user_id, EmailLog.kind == cand["kind"],
+                                            EmailLog.dedup_key == cand["key"],
+                                            EmailLog.status.in_(email_engine.COUNTED))).first() is not None
+
+
+async def run_once(now: Optional[datetime] = None, send: Optional[Sender] = None,
+                   mail: Optional[email_engine.Mailer] = None,
+                   address: Optional[email_engine.AddressLookup] = None) -> dict:
+    """One evaluation of every user. Channel per user: push when they have a live phone and push
+    on; e-mail when email_enabled and push did not cover the notice. One notice a day in total."""
+    push_on, email_on = configured(), email_engine.active()
+    if not push_on and not email_on:
         return {"skipped": "not configured"}
     send = send or fcm_send
+    address = address or email_engine.auth_address
     now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    stats = {"sent": 0, "dead": 0, "users": 0}
+    stats = {"sent": 0, "dead": 0, "users": 0, "emailed": 0, "email_errors": 0}
     with Session(database.engine) as s:
-        devices = s.exec(select(PushDevice).where(PushDevice.dead_at == None)).all()  # noqa: E711
         by_user: dict[str, list[PushDevice]] = {}
-        for d in devices:
-            by_user.setdefault(d.user_id, []).append(d)
+        if push_on:
+            for d in s.exec(select(PushDevice).where(PushDevice.dead_at == None)).all():  # noqa: E711
+                by_user.setdefault(d.user_id, []).append(d)
+        if email_on:
+            for uid in s.exec(select(UserSettings.user_id).where(UserSettings.email_enabled == True)).all():  # noqa: E712
+                by_user.setdefault(uid, [])
         for user_id, devs in by_user.items():
+            if user_id == DEMO_USER_ID:
+                continue
             stats["users"] += 1
             settings = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
-            if settings is not None and not settings.push_enabled:
+            push_ok = push_on and bool(devs) and (settings is None or settings.push_enabled)
+            email_ok = email_on and settings is not None and settings.email_enabled
+            if not push_ok and not email_ok:
                 continue
-            latest = max(devs, key=lambda d: d.last_seen_at)
-            local = now.astimezone(_tz(latest.timezone))
+            tz_name = max(devs, key=lambda d: d.last_seen_at).timezone if devs else settings.timezone
+            local = now.astimezone(_tz(tz_name))
             today, hour = local.date(), local.hour
             if hour >= QUIET_FROM or hour < QUIET_UNTIL:
                 continue
-            if s.exec(select(PushLog.id).where(PushLog.user_id == user_id, PushLog.local_date == today)).first():
-                continue  # the day's one push is spent
+            if _spent_today(s, user_id, today):
+                continue  # the day's one notice is spent, by either channel
             for cand in sorted(candidates(s, user_id, today, hour), key=lambda c: PRIORITY[c["kind"]]):
-                if s.exec(select(PushLog.id).where(PushLog.user_id == user_id, PushLog.kind == cand["kind"],
-                                                   PushLog.dedup_key == cand["key"])).first():
+                if _already_notified(s, user_id, cand):
                     continue
                 delivered = False
-                for d in devs:
-                    title, body = render(cand, d.language)  # each phone in its own app language
-                    result = await send(d.fcm_token, title, body, cand["data"])
-                    if result == "ok":
-                        delivered = True
-                    elif result == "dead":
-                        d.dead_at = datetime.utcnow()
-                        s.add(d)
-                        stats["dead"] += 1
-                if delivered:
-                    s.add(PushLog(user_id=user_id, kind=cand["kind"], dedup_key=cand["key"], local_date=today))
-                    stats["sent"] += 1
+                if push_ok:
+                    for d in devs:
+                        title, body = render(cand, d.language)  # each phone in its own app language
+                        result = await send(d.fcm_token, title, body, cand["data"])
+                        if result == "ok":
+                            delivered = True
+                        elif result == "dead":
+                            d.dead_at = datetime.utcnow()
+                            s.add(d)
+                            stats["dead"] += 1
+                    if delivered:
+                        s.add(PushLog(user_id=user_id, kind=cand["kind"], dedup_key=cand["key"], local_date=today))
+                        stats["sent"] += 1
+                if not delivered and email_ok:
+                    await _email(s, user_id, cand, settings, today, stats, mail, address)
                 s.commit()
                 break  # one candidate per run: the top one (or a retry next hour)
-    logger.info(f"push run: {stats}")
+    logger.info(f"notice run: {stats}")
     return stats
+
+
+async def _email(s: Session, user_id: str, cand: dict, settings: UserSettings, today: date, stats: dict,
+                 mail: Optional[email_engine.Mailer], address: email_engine.AddressLookup) -> None:
+    """The e-mail channel for one candidate. Never raises: a provider error is an email_log row."""
+    lang = normalize_language(settings.language)
+    try:
+        to = None if email_engine.dry_run() else await address(user_id)
+        if not email_engine.dry_run() and not to:
+            stats.setdefault("no_address", 0)
+            stats["no_address"] += 1
+            return  # no known address: nothing to send, nothing to record
+        status, detail = await email_engine.deliver(cand["kind"], lang, values_for(cand, lang),
+                                                    cand["data"].get("route", "/dashboard"), to, mail)
+    except Exception as e:
+        status, detail = "error", f"engine: {type(e).__name__}"
+    s.add(EmailLog(user_id=user_id, kind=cand["kind"], dedup_key=cand["key"], language=lang,
+                   status=status, detail=detail, local_date=today))
+    if status == "error":
+        stats["email_errors"] += 1
+        logger.warning(f"email: {cand['kind']} failed ({detail})")
+    else:
+        stats["emailed"] += 1
 
 
 async def loop() -> None:
@@ -250,4 +317,4 @@ async def loop() -> None:
         try:
             await run_once()
         except Exception:
-            logger.exception("push run failed")
+            logger.exception("notice run failed")
