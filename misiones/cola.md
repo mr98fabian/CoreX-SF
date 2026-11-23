@@ -12,7 +12,7 @@ aprueba merges.
 | 4 | Correos de notificación transaccionales | pendiente | Cola original de lanzamiento |
 | 5 | Calendario que se actualiza solo | pendiente | Cola original de lanzamiento |
 | 6 | Apple IAP (pagos iOS) | bloqueada | Espera inscripción Apple Developer + Mac |
-| 8 | Integración de Stripe Managed Payments (checkout web) | en-auditoria | Deuda de la misión 1: la compra web falla (Lemon rechazado); archivo `misiones/2026-11-22-integracion-stripe.md` |
+| 8 | Integración de Stripe Managed Payments (checkout web) | completada | Deuda de la misión 1: la compra web falla (Lemon rechazado); archivo `misiones/2026-11-22-integracion-stripe.md` |
 ## Fase 2 — Equipo de agentes QA (SOLO con la app al 100%)
 Probador (Playwright, flujos reales tras cada deploy + smoke test diario), Revisor UX
 (reseña priorizada) y Regresión (flujos críticos tras cada merge). Los hallazgos entran

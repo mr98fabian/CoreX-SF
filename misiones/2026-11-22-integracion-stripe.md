@@ -1,6 +1,6 @@
 # Misión: Integración de Stripe Managed Payments (checkout web)
 - **ID:** 2026-11-22-integracion-stripe
-- **Estado:** en-auditoria
+- **Estado:** completada
 - **Rama:** feat/integracion-stripe
 - **Repo:** CoreX-SF
 - **Origen:** deuda técnica de la Misión 1. Por dentro, el checkout web sigue siendo Lemon Squeezy,
