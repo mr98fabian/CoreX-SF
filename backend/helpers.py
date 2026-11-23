@@ -271,6 +271,14 @@ def cashflow_events(items, start, days: int):
     return incomes, expenses
 
 
+
+def payday_rule(items):
+    """date -> True on a day any income item pays (the cashflow's own trigger rule,
+    as cashflow_events). velocity_engine.daily_series places the plan's attack there."""
+    from routers.cashflow import _item_triggers
+    incomes = [it for it in items if is_income_item(it)]
+    return lambda d: any(_item_triggers(it, d) for it in incomes)
+
 def subscription_occurs_on(sub, d) -> bool:
     """Backend port of frontend/src/lib/subscriptionOccurrences.ts (same rule as the
     calendar): only ACTIVE subscriptions with a next_charge_date occur.

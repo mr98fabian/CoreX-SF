@@ -1,12 +1,11 @@
 /**
- * Debt calendar series — turns the engine's MONTHLY projection
- * (GET /api/velocity/freedom-path → timeline[].total_balance at each month's
- * close) into per-day values for the calendar.
- *
- * TECH DEBT (Fase 6 report): the engine has no daily series, so days are
- * linearly interpolated between month closes, and the exact $0 day inside the
- * freedom month is estimated from the previous month's pace. Calibrating the
- * engine (daily series, real payday effects) is a separate mission.
+ * Debt calendar series — per-day projected total debt for the calendar, from
+ * GET /api/velocity/freedom-path:
+ *   daily_series  the engine's DAILY series (velocity_engine.daily_series): the
+ *                 plan's own flows on their real day (cut, due day, paydays). Each
+ *                 day's value and the $0 day are read, not computed here.
+ *   timeline      monthly closes. Only a fallback when daily_series is missing (an
+ *                 older server): days interpolated between closes, $0 day by pace.
  */
 
 export interface TimelinePoint { date: string; total_balance: number }
@@ -17,13 +16,18 @@ export interface CalendarMonth {
     start: number;          // projected total debt on day 1
     end: number;            // projected total debt at month close
     zeroDay: number | null; // day the debt reaches $0 (freedom month only)
+    days?: number[];        // daily series: balance at the end of each day (index = day − 1)
 }
 
 const key = (y: number, m: number) => `${y}-${String(m + 1).padStart(2, '0')}`;
 export const daysIn = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
+const money = (v: unknown) => Math.max(0, Number(v) || 0);
 
-/** Months from `today`'s month to the freedom month, plus one all-green month after it. */
-export function buildMonths(timeline: TimelinePoint[], currentDebt: number, today: Date = new Date()): CalendarMonth[] {
+/** Months from `today`'s month to the freedom month, plus one all-green month after it.
+ *  With `daily` (the engine's step series), every day is the engine's value. */
+export function buildMonths(timeline: TimelinePoint[], currentDebt: number, today: Date = new Date(),
+    daily?: TimelinePoint[] | null): CalendarMonth[] {
+    if (daily && daily.length) return monthsFromDaily(daily, today);
     const closes = new Map<string, number>();
     for (const p of timeline) {
         const [y, m] = p.date.split('-').map(Number);
@@ -52,8 +56,36 @@ export function buildMonths(timeline: TimelinePoint[], currentDebt: number, toda
     return out;
 }
 
+/** Step series → months. A listed date is that day's closing balance; an unlisted
+ *  day keeps the previous value. $0 day = the first day the series reaches 0. */
+function monthsFromDaily(daily: TimelinePoint[], today: Date): CalendarMonth[] {
+    const listed = new Map<string, number>();
+    for (const p of daily) listed.set(p.date.slice(0, 10), money(p.total_balance)); // a later point wins
+    let carry = money(daily[0].total_balance);
+    const out: CalendarMonth[] = [];
+    let y = today.getFullYear();
+    let m = today.getMonth();
+    for (let guard = 0; guard < 600; guard++) {
+        const start = carry;
+        const days: number[] = [];
+        let zeroDay: number | null = null;
+        for (let d = 1; d <= daysIn(y, m); d++) {
+            const v = listed.get(`${key(y, m)}-${String(d).padStart(2, '0')}`);
+            if (v !== undefined) carry = v;
+            if (zeroDay === null && carry <= 0 && (d === 1 ? start : days[d - 2]) > 0) zeroDay = d;
+            days.push(carry);
+        }
+        out.push({ year: y, month: m, start, end: carry, zeroDay, days });
+        if (start <= 0 && carry <= 0) break; // the all-green month after freedom
+        m += 1;
+        if (m > 11) { m = 0; y += 1; }
+    }
+    return out;
+}
+
 /** Projected total debt on `day` (1-based) of `mo`. */
 export function debtOn(mo: CalendarMonth, day: number): number {
+    if (mo.days) return mo.days[Math.min(mo.days.length, Math.max(1, day)) - 1];
     const n = daysIn(mo.year, mo.month);
     if (mo.zeroDay) {
         if (day >= mo.zeroDay) return 0;
@@ -154,7 +186,7 @@ export interface DaySub { id: number; name: string; amount: number; logo_url: st
 
 export interface DayDetail {
     date: Date;
-    projected: number;      // interpolated projection (label it "Proyección")
+    projected: number;      // the engine's daily projection (label it "Proyección")
     incoming: DayLine[];    // COBRAS: income that lands that day
     expenses: DayLine[];    // TE COBRAN: bills that day
     minimums: DayLine[];    // TE COBRAN: minimum payments due that day
