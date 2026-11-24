@@ -9,9 +9,11 @@ import { ACTIVITY_KEY } from '@/hooks/useActivityData';
 import { CALENDAR_KEY } from '@/lib/calendarEvents';
 
 export const KX_SUMMARY_KEY = 'kx-summary';
+export const COMMAND_CENTER_KEY = 'command-center'; // hooks/useCommandCenter (Plan de ataque)
 
 export const PLAN_QUERY_KEYS: readonly string[] = [
     KX_SUMMARY_KEY,     // dashboard + accounts + freedom-path (timeline + daily_series) + cashflow
+    COMMAND_CENTER_KEY, // today's attack, the avalanche route, the surplus line
     ACTIVITY_KEY,
     'credit-panel',
     CALENDAR_KEY,       // the calendar's events (server)

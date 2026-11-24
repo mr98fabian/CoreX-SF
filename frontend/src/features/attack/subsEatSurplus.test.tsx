@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'es', t: (k: string) => k }) }));
 vi.mock('@/components/ui/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
@@ -12,6 +13,9 @@ vi.mock('@/hooks/useKxSummary', () => ({
     useKxSummary: () => ({ loading: false, error: null, reload: vi.fn(), path: null, debts: [{ name: 'Visa', stage: 'debt' }], staged: [] }),
 }));
 vi.mock('@/lib/api', () => ({ apiFetch: vi.fn() }));
+vi.mock('@/features/auth/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u' } }) }));
+// a fresh cache per mount (useCommandCenter is React Query)
+const qc = () => new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
 import { apiFetch } from '@/lib/api';
 import AttackPage from './AttackPage';
@@ -22,8 +26,8 @@ let host: HTMLDivElement | null = null;
 let root: Root;
 async function render(node: React.ReactNode) {
     host = document.createElement('div'); document.body.appendChild(host); root = createRoot(host);
-    await act(async () => root.render(<MemoryRouter>{node}</MemoryRouter>));
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => root.render(<QueryClientProvider client={qc()}><MemoryRouter>{node}</MemoryRouter></QueryClientProvider>));
+    await act(async () => { for (let i = 0; i < 3; i++) await new Promise((r) => setTimeout(r, 0)); });
     return host;
 }
 afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChild(host); host = null; } });

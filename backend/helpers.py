@@ -91,6 +91,18 @@ def get_shield_target(session, user_id: str) -> Decimal:
     return Decimal(str(settings.shield_target)) if settings and settings.shield_target is not None else DEFAULT_PEACE_SHIELD
 
 
+def get_plan_settings(session, user_id: str) -> tuple:
+    """(shield_target, attack_percentage) from ONE user_settings read — same values as
+    get_shield_target and get_attack_percentage, for endpoints that need both."""
+    from sqlmodel import select
+    from models import UserSettings
+    from velocity_engine import DEFAULT_ATTACK_PERCENTAGE, DEFAULT_PEACE_SHIELD
+    st = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+    shield = Decimal(str(st.shield_target)) if st and st.shield_target is not None else DEFAULT_PEACE_SHIELD
+    attack = Decimal(str(st.attack_percentage)) if st and st.attack_percentage is not None else DEFAULT_ATTACK_PERCENTAGE
+    return shield, attack
+
+
 def get_attack_percentage(session, user_id: str) -> Decimal:
     """% of liquid cash attacked monthly — the single assumption behind every
     velocity banking projection (debt-free date, interest saved). Scoped per
@@ -140,12 +152,12 @@ def load_cashflow_inputs(session, user_id: str) -> dict:
     }
 
 
-def get_cashflow_breakdown(session, user_id: str, debts) -> dict:
+def get_cashflow_breakdown(session, user_id: str, debts, data: dict | None = None) -> dict:
     """Surplus with and without subscriptions, for the Plan's transparency line:
     when subscriptions take the whole surplus the UI says so (never a silent
-    'minimums only')."""
+    'minimums only'). `data`: load_cashflow_inputs already read in this request."""
     from velocity_engine import monthly_amount, monthly_surplus
-    data = load_cashflow_inputs(session, user_id)
+    data = data if data is not None else load_cashflow_inputs(session, user_id)
     surplus = monthly_surplus(data["tuples"], debts, data["subscriptions"])
     without = monthly_surplus(data["tuples"], debts)
     subs = sum((monthly_amount(a, f) for a, f in data["subscriptions"]), Decimal("0")).quantize(Decimal("0.01"))
@@ -301,14 +313,14 @@ def subscription_occurs_on(sub, d) -> bool:
     return d == a
 
 
-def dated_cashflow(session, user_id: str, start, days: int):
+def dated_cashflow(session, user_id: str, start, days: int, data: dict | None = None):
     """Dated incomes/expenses for the attack and the daily mission (safe equity):
     recurring items + charges of ACTIVE subscriptions that have a next_charge_date.
     A recurring item that duplicates a DATED subscription is dropped (the service
     is charged once, on the subscription's day); if the subscription has no date,
     the recurring item stays so the service is not lost from this path."""
     from datetime import timedelta
-    data = load_cashflow_inputs(session, user_id)
+    data = data if data is not None else load_cashflow_inputs(session, user_id)  # already read? pass it
     dated = [s for s in data["active_subs"] if s.next_charge_date]
     dated_names = {norm_name(s.name) for s in dated}
     dupe_ids = {id(i) for i in data["dupes"] if norm_name(i.name) in dated_names}

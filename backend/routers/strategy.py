@@ -16,7 +16,7 @@ from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, get_cashflow_breakdown, funding_accounts,
     build_daily_mission, dated_cashflow, filter_active_debt_accounts, mission_accounts_for,
-    load_cashflow_inputs, payday_rule,
+    load_cashflow_inputs, payday_rule, get_plan_settings,
 )
 from auth import get_current_user_id
 from api_tokens import require_scope
@@ -328,13 +328,20 @@ def get_strategy_command_center(
     plan_limit: int | None = Depends(effective_plan_limit),
 ):
     with request_session() as session:
+        # Each table is read ONCE per request (perf 2026-11-22, misión command-center-cache): in
+        # production every statement is a ~55 ms round trip. The rows travel as parameters to the
+        # same helpers, so the answer is the one they always gave (tests/test_command_center_perf.py).
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        shield_target = get_shield_target(session, user_id)
+        shield_target, attack_pct = get_plan_settings(session, user_id)
         debt_accounts = accounts_to_active_debt_objects(accounts, plan_limit)
+        cf_data = load_cashflow_inputs(session, user_id)
+        cf = get_cashflow_breakdown(session, user_id, debt_accounts, data=cf_data)
+        surplus = cf["surplus"]  # == get_cashflow_surplus (same tuples, same subscriptions)
         liquid_cash = Decimal(str(get_liquid_cash(accounts)))
         shield = get_peace_shield_status(liquid_cash, shield_target)
         # One source with Inicio: obligations first, attack = what is left (engine)
-        mission = build_daily_mission(session, user_id, accounts, plan_limit, shield_target=shield_target)
+        mission = build_daily_mission(session, user_id, accounts, plan_limit, shield_target=shield_target,
+                                      cashflow=dated_cashflow(session, user_id, date.today(), MISSION_WINDOW_DAYS, data=cf_data))
         attack_amount = mission["ataque"]
         target = next((d for d in debt_accounts if d.name == mission["objetivo"]), None)
 
@@ -345,8 +352,7 @@ def get_strategy_command_center(
             gap_debts = [{"name": g["name"], "shortfall": float(g["shortfall"]), "apr": float(g["apr"])} for g in mission["gap_debts"]]
             # Engine: amount capped at the debt balance / cash; days from the same simulation route
             impact = attack_impact(debt_accounts, target, attack_amount, liquid_cash,
-                                   monthly_attack(get_cashflow_surplus(session, user_id, debt_accounts),
-                                                  liquid_cash, get_attack_percentage(session, user_id)))
+                                   monthly_attack(surplus, liquid_cash, attack_pct))
             effective_attack = impact["amount"]
             interest_saved_monthly = impact["interest_saved_monthly"]
             days_accelerated = impact["days_accelerated"]
@@ -382,8 +388,7 @@ def get_strategy_command_center(
                 confidence_meter["explanation"] = f"Every $100 to {top.name} saves ${float(top.interest_rate)}/yr vs ${float(second.interest_rate)}/yr to {second.name}"
 
         # Freedom Counter
-        projections = get_projections(debt_accounts, liquid_cash, get_attack_percentage(session, user_id),
-                                      extra_monthly=get_cashflow_surplus(session, user_id, debt_accounts))
+        projections = get_projections(debt_accounts, liquid_cash, attack_pct, extra_monthly=surplus)
         std_date, vel_date = projections.get("standard_debt_free_date", "N/A"), projections.get("velocity_debt_free_date", "N/A")
         try:
             from datetime import datetime as _dt
@@ -434,7 +439,6 @@ def get_strategy_command_center(
             risky_opportunity = calculate_risky_opportunity(liquid_cash, shield_target, debt_accounts,
                                                             asset_accounts[0].name if asset_accounts else "Checking")
 
-        cf = get_cashflow_breakdown(session, user_id, debt_accounts)
         return {
             "excedente": {"mensual": float(cf["surplus"]) if cf["surplus"] is not None else None,
                           "suscripciones_mensuales": float(cf["subscriptions_monthly"]),
