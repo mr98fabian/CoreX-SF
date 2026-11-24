@@ -20,6 +20,14 @@ export const PAID_PLAN_ID: CommercialPlanId = 'freedom';
 export const ANNUAL_PRICE = 100;
 export const TRIAL_DAYS = 7;
 
+/**
+ * Web (Stripe Managed Payments) prices exclude sales tax: Stripe adds it per state on top of the
+ * base price (Misión 9: $100 base → $106.60 invoice). Every web price shown to people carries this
+ * qualifier. Google Play shows its own localized price and handles tax itself — never add it there.
+ */
+export const TAX_QUALIFIER = { es: '+ impuestos', en: '+ tax' } as const;
+export const taxNote = (es: boolean): string => (es ? TAX_QUALIFIER.es : TAX_QUALIFIER.en);
+
 export const COMMERCIAL_PLANS: Record<CommercialPlanId, CommercialPlan> = {
     starter: { id: 'starter', name: { es: 'Gratis', en: 'Free' }, annual: 0, trialDays: 0, ai: false },
     freedom: { id: 'freedom', name: { es: 'KoreX Anual', en: 'KoreX Annual' }, annual: ANNUAL_PRICE, trialDays: TRIAL_DAYS, ai: true },

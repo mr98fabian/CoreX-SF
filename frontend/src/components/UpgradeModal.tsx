@@ -15,7 +15,7 @@ import { apiFetch } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { MoneyAmount } from '@/components/MoneyAmount';
-import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID, TRIAL_DAYS } from '@/lib/pricing';
+import { COMMERCIAL_PLANS, PAID_KEYS, PAID_PLAN_ID, TRIAL_DAYS, taxNote } from '@/lib/pricing';
 import { usePlanSavings } from '@/hooks/usePlanSavings';
 import { getBillingProvider } from '@/lib/billing';
 import { playButtonLabel, usePlayBilling } from '@/hooks/usePlayBilling';
@@ -99,11 +99,11 @@ export default function UpgradeModal({ open, onOpenChange, reason, currentPlan =
                     <div data-testid="upgrade-paid" className="kx-elev-1 rounded-[20px] border border-[rgba(245,158,11,.55)] bg-kx-surface p-[18px]">
                         <p className="text-xs font-bold uppercase tracking-[.16em] text-kx-amber-soft">{es ? paid.name.es : paid.name.en}</p>
                         <p className="kx-num mt-1 text-[34px] font-light text-kx-ink">
-                            {onPlay ? play.priceText : formatMoney(paid.annual)}<small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}</small>
+                            {onPlay ? play.priceText : formatMoney(paid.annual)}<small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}{!onPlay && ` ${taxNote(es)}`}</small>
                         </p>
                         {onPlay
                             ? play.trialLine && <p className="text-[13px] text-kx-ink">{play.trialLine}</p>
-                            : <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(paid.annual)}/año` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(paid.annual)}/yr`}</p>}
+                            : <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(paid.annual)}/año ${taxNote(true)}` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(paid.annual)}/yr ${taxNote(false)}`}</p>}
                         <ul className="mt-3 space-y-1.5">
                             {row(true, es ? 'Deudas ilimitadas' : 'Unlimited debts')}
                             {row(true, es ? 'Tu IA conectada' : 'Your AI connected')}
