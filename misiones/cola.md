@@ -18,7 +18,7 @@ aprueba merges.
 | 9 | Prueba de pagos demo de Stripe (teléfono virtual) | en-curso | Prueba de punta a punta de la misión 8 en modo test; archivo `misiones/2026-11-22-prueba-pagos-stripe.md` |
 | 10 | CI en GitHub con bloqueo real de merge | en-auditoria | Rama `chore/ci-bloqueo`; archivo `misiones/2026-11-22-ci-bloqueo.md` |
 | 11 | Verificación en origen (aceptación antes del código + hook que bloquea) | en-auditoria | Rama `chore/verificacion-origen`; archivo `misiones/2026-11-22-verificacion-origen.md` |
-| 12 | Fase 2: equipo de agentes QA (Probador, Revisor UX, Regresión) | en-curso | Rama `chore/equipo-qa`; archivo `misiones/2026-11-24-equipo-qa.md` |
+| 12 | Fase 2: equipo de agentes QA (Probador, Revisor UX, Regresión) | en-auditoria | Rama `chore/equipo-qa`; archivo `misiones/2026-11-24-equipo-qa.md` |
 ## Fase 2 — Equipo de agentes QA (SOLO con la app al 100%)
 Probador (Playwright, flujos reales tras cada deploy + smoke test diario), Revisor UX
 (reseña priorizada) y Regresión (flujos críticos tras cada merge). Los hallazgos entran

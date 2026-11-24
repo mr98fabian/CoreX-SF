@@ -169,7 +169,11 @@ if (cuentaA) {
   }, segunda.page);
   await segunda.ctx.close();
 
-  const deudaOk = await flujo('agregar-deuda', async () => {
+  // El canario que entra con el relevo usa la deuda que ese usuario ya registró en su corrida
+  // (añadir otra choca con el tope de 2 deudas del plan gratis).
+  const deudaOk = CANARIO && cuentaA === relevo
+    ? (Object.assign(resultados['agregar-deuda'], { veredicto: 'OMITIDO', detalle: 'el canario usa la deuda del usuario de relevo' }), true)
+    : await flujo('agregar-deuda', async () => {
     await p.goto(`${BASE}/dashboard/accounts/manage`);
     await p.getByRole('button', { name: 'Agregar Cuenta' }).click();
     const d = p.getByRole('dialog');
@@ -279,7 +283,7 @@ const ultimaPath = `${QA}ultima-verde.json`;
 if (REGRESION) {
   const ultima = existsSync(ultimaPath) ? JSON.parse(readFileSync(ultimaPath, 'utf8')) : null;
   regresion = { base: ultima ? `${ultima.commit} (${ultima.fecha})` : 'sin corrida verde previa', rotos: [] };
-  if (ultima) regresion.rotos = lista.filter((r) => r.veredicto !== 'PASA' && ultima.flujos.includes(r.flujo)).map((r) => r.flujo);
+  if (ultima) regresion.rotos = lista.filter((r) => !['PASA', 'OMITIDO'].includes(r.veredicto) && ultima.flujos.includes(r.flujo)).map((r) => r.flujo);
 }
 const datos = { fecha: ahora.toISOString(), base: BASE, commit, canario: CANARIO, verde, limpieza, regresion, flujos: lista };
 writeFileSync(`${carpeta}/resultado.json`, JSON.stringify(datos, null, 2));
