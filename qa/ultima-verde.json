@@ -1,0 +1,15 @@
+{
+  "fecha": "2026-11-24T09:06:01.895Z",
+  "commit": "43c1e06",
+  "carpeta": "corridas/2026-11-24_0906",
+  "flujos": [
+    "registro",
+    "login",
+    "agregar-deuda",
+    "plan",
+    "calendario",
+    "suscripciones",
+    "conectar-ia",
+    "borrar-cuenta"
+  ]
+}

@@ -144,7 +144,16 @@ const principal = await contexto();
 const p = principal.page;
 let cuentaA = null, cuentaB = null;
 
-await flujo('registro', async () => {
+const relevoPath = `${QA}.estado/relevo.json`;
+const relevo = existsSync(relevoPath) ? JSON.parse(readFileSync(relevoPath, 'utf8')) : null;
+
+if (CANARIO && relevo) {
+  // Supabase limita los correos por hora: el canario entra con el usuario de relevo en vez de registrar.
+  cuentaA = relevo;
+  await entrar(p, cuentaA);
+  await p.waitForURL('**/dashboard**', { timeout: 30_000 });
+  Object.assign(resultados.registro, { veredicto: 'OMITIDO', detalle: 'el canario entra con el usuario de relevo' });
+} else await flujo('registro', async () => {
   cuentaA = await registrar(p, 'registro', 'QA Desechable');
   await espera('registro', 'saludo del panel tras confirmar el correo', p.getByText('Hola, QA'));
   await foto(p, 'registro', 'panel');
@@ -224,9 +233,9 @@ if (cuentaA) {
 // Supabase limita los correos de confirmación por hora, así que no se registra un segundo usuario:
 // se borra la cuenta principal de la corrida ANTERIOR (desechable, con datos reales de prueba), que
 // quedó de relevo en .estado/relevo.json. La primera corrida, sin relevo, registra uno propio.
-const relevoPath = `${QA}.estado/relevo.json`;
-const relevo = existsSync(relevoPath) ? JSON.parse(readFileSync(relevoPath, 'utf8')) : null;
-{
+if (CANARIO) { // el canario prueba la guardia, no el borrado: no gasta el usuario de relevo
+  Object.assign(resultados['borrar-cuenta'], { veredicto: 'OMITIDO', detalle: 'el canario no borra cuentas' });
+} else {
   const borrar = await contexto();
   await flujo('borrar-cuenta', async () => {
     if (relevo) {
@@ -252,10 +261,10 @@ const relevo = existsSync(relevoPath) ? JSON.parse(readFileSync(relevoPath, 'utf
 // La cuenta principal queda de relevo para el borrado de la próxima corrida.
 mkdirSync(`${QA}.estado`, { recursive: true });
 let limpieza = cuentaB?.borrada ? `usuario de borrado eliminado (${cuentaB.email})` : (cuentaB ? `PENDIENTE borrar ${cuentaB.email}` : 'sin usuario de borrado');
-if (cuentaA) {
+if (cuentaA && cuentaA !== relevo) {
   writeFileSync(relevoPath, JSON.stringify({ email: cuentaA.email, clave: cuentaA.clave, creada: ahora.toISOString() }, null, 1));
   limpieza += ` · ${cuentaA.email} queda de relevo para la próxima corrida`;
-} else if (cuentaB?.borrada) {
+} else if (cuentaB?.borrada && !cuentaA) {
   writeFileSync(relevoPath, 'null');
 }
 if (cuentaB && !cuentaB.borrada && relevo === null && cuentaA === null) limpieza += ' (revisar a mano)';
@@ -264,7 +273,7 @@ await principal.ctx.close();
 
 // ───────────────────────── reporte ─────────────────────────
 const lista = FLUJOS.map((f) => resultados[f]);
-const verde = lista.every((r) => r.veredicto === 'PASA');
+const verde = lista.every((r) => r.veredicto === 'PASA' || (CANARIO && r.veredicto === 'OMITIDO'));
 let regresion = null;
 const ultimaPath = `${QA}ultima-verde.json`;
 if (REGRESION) {

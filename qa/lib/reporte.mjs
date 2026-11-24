@@ -14,7 +14,7 @@ export function escribirReporte(carpeta, d) {
   L.push('', '| Flujo | Veredicto | Tiempo | Detalle |', '|---|---|---|---|');
   for (const f of d.flujos) {
     const det = [f.detalle, ...(f.errores || [])].filter(Boolean).join(' · ').replace(/\|/g, '/');
-    L.push(`| ${f.flujo} | ${f.veredicto === 'PASA' ? '✅ PASA' : f.veredicto === 'FALLA' ? '❌ FALLA' : '⏸ NO CORRIÓ'} | ${(f.ms / 1000).toFixed(1)} s | ${det || '—'} |`);
+    L.push(`| ${f.flujo} | ${f.veredicto === 'PASA' ? '✅ PASA' : f.veredicto === 'FALLA' ? '❌ FALLA' : f.veredicto === 'OMITIDO' ? '➖ OMITIDO' : '⏸ NO CORRIÓ'} | ${(f.ms / 1000).toFixed(1)} s | ${det || '—'} |`);
   }
   const fallos = d.flujos.filter((f) => f.veredicto === 'FALLA');
   if (fallos.length) {

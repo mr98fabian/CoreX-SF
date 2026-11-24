@@ -1,0 +1,75 @@
+{
+  "fecha": "2026-11-24T09:06:53.086Z",
+  "base": "https://korexf.com",
+  "commit": "43c1e06",
+  "canario": "calendario",
+  "verde": false,
+  "limpieza": "usuario de borrado eliminado (korexqa71af7522cd@euploading.com)",
+  "regresion": null,
+  "flujos": [
+    {
+      "flujo": "registro",
+      "veredicto": "FALLA",
+      "detalle": "el registro mostró: email rate limit exceeded",
+      "capturas": [
+        "capturas/01-registro-formulario.png",
+        "capturas/02-registro-fallo.png"
+      ],
+      "ms": 6346
+    },
+    {
+      "flujo": "login",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "agregar-deuda",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "plan",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "calendario",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "suscripciones",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "conectar-ia",
+      "veredicto": "NO CORRIÓ",
+      "detalle": "dependía de un flujo que falló",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "borrar-cuenta",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/03-borrar-cuenta-aviso.png",
+        "capturas/04-borrar-cuenta-confirmar.png",
+        "capturas/05-borrar-cuenta-borrada.png",
+        "capturas/06-borrar-cuenta-reingreso-rechazado.png"
+      ],
+      "ms": 9914
+    }
+  ]
+}
