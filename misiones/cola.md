@@ -10,7 +10,7 @@ aprueba merges.
 | 2 | Push: plantillas en inglés según idioma del dispositivo | completada | Hoy el copy de push es solo ES; archivo `misiones/2026-11-22-push-plantillas-en.md` |
 | 2b | Push: pulido visual de notificaciones (Android) | completada | Pedido de Fabian: elegantes y profesionales; misma rama `feat/push-en-y-pulido`; archivo `misiones/2026-11-22-push-pulido-visual.md` |
 | 3 | Kit IA: neutralizar la marca en `lib/aiKit.ts` | en-auditoria | Rama `chore/kit-ia-neutro`; archivo `misiones/2026-11-22-kit-ia-neutro.md` |
-| 4 | Correos de notificación transaccionales | pendiente | Cola original de lanzamiento |
+| 4 | Correos de notificación (canal email del motor de avisos) | en-auditoria | Rama `feat/correos-notificacion`; archivo `misiones/2026-11-23-correos-notificacion.md` |
 | 5 | Calendario que se actualiza solo (serie diaria real del motor) | en-auditoria | Rama `feat/calendario-serie-diaria`; archivo `misiones/2026-11-23-calendario-serie-diaria.md` |
 | 6 | Apple IAP (pagos iOS) | bloqueada | Espera inscripción Apple Developer + Mac |
 | 8 | Integración de Stripe Managed Payments (checkout web) | completada | Deuda de la misión 1: la compra web falla (Lemon rechazado); archivo `misiones/2026-11-22-integracion-stripe.md` |

@@ -89,3 +89,44 @@ def set_preferences(body: PreferenceIn, user_id: str = Depends(get_current_user_
         return {"enabled": row.push_enabled}
 
 
+# ── Notice e-mails (email_engine.py): the preference and the profile the engine writes in ──
+
+class ProfileIn(BaseModel):
+    language: str = PField(default=push_engine.DEFAULT_LANGUAGE, max_length=16)  # normalized to es | en
+    timezone: str = PField(default=push_engine.DEFAULT_TZ, max_length=64)
+
+
+@router.get("/email")
+def get_email_preferences(user_id: str = Depends(get_current_user_id)):
+    with request_session() as s:
+        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
+        return {"enabled": True if row is None else bool(row.email_enabled)}
+
+
+@router.put("/email")
+def set_email_preferences(body: PreferenceIn, user_id: str = Depends(get_current_user_id)):
+    with request_session() as s:
+        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first() or UserSettings(user_id=user_id)
+        row.email_enabled = body.enabled
+        s.add(row)
+        s.commit()
+        return {"enabled": row.email_enabled}
+
+
+@router.put("/profile")
+def sync_profile(body: ProfileIn, user_id: str = Depends(get_current_user_id)):
+    """The app reports its language and time zone (every sign-in and every language switch):
+    notice e-mails go out in that language and respect quiet hours in that zone."""
+    try:
+        ZoneInfo(body.timezone)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Unknown time zone")
+    with request_session() as s:
+        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first() or UserSettings(user_id=user_id)
+        row.language = push_engine.normalize_language(body.language)
+        row.timezone = body.timezone
+        s.add(row)
+        s.commit()
+        return {"language": row.language, "timezone": row.timezone}
+
+

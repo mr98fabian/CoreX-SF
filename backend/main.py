@@ -143,13 +143,16 @@ import mcp_remote  # noqa: E402
 mcp_remote.mount(app)
 
 
-# ── Push notices (push_engine.py): hourly, only when Firebase is configured ──
+# ── Notices (push_engine.py + email_engine.py): hourly, only when a channel is configured ──
 @app.on_event("startup")
 async def start_push_loop():
     import asyncio
+    import email_engine
     import push_engine
-    if push_engine.configured():
+    channels = [n for n, on in (("push", push_engine.configured()),
+                                ("email-dry-run" if email_engine.dry_run() else "email", email_engine.active())) if on]
+    if channels:
         app.state.push_task = asyncio.create_task(push_engine.loop())
-        logger.info("Push notices: hourly loop started")
+        logger.info(f"Notices: hourly loop started ({', '.join(channels)})")
     else:
-        logger.info("Push notices: FIREBASE_SERVICE_ACCOUNT_JSON not set, nothing will be sent")
+        logger.info("Notices: neither FIREBASE_SERVICE_ACCOUNT_JSON nor RESEND_API_KEY+EMAIL_FROM set, nothing will be sent")

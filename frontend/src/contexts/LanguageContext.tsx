@@ -872,6 +872,9 @@ const translations: Record<string, Record<Language, string>> = {
     "push.toggle": { es: "Avisos en el teléfono", en: "Notices on your phone" },
     "push.toggleSub": { es: "Cortes, tu misión del día y deudas saldadas. Máximo uno al día.", en: "Cuts, your mission of the day and paid-off debts. At most one a day." },
     "push.deniedSub": { es: "Están bloqueados en el sistema: toca para abrir los ajustes del teléfono.", en: "They're blocked in the system: tap to open your phone's settings." },
+    // Notice e-mails (components/EmailToggleRow, backend/email_engine.py)
+    "email.toggle": { es: "Correos de notificación", en: "Notification e-mails" },
+    "email.toggleSub": { es: "Los mismos avisos por correo cuando no llegan al teléfono. Máximo uno al día en total.", en: "The same notices by e-mail when they don't reach your phone. At most one a day in total." },
     // Mi Cuenta (features/settings/MyAccountPage) and /eliminar-cuenta (features/account/DeleteAccountInfoPage)
     "account.title": { es: "Mi Cuenta", en: "My Account" },
     "account.rowSub": { es: "Tu email, tu plan y eliminar la cuenta", en: "Your email, your plan and deleting the account" },
@@ -1075,6 +1078,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("korex-language", lang);
         // Push notices follow the app's language (lazy: no Capacitor code on the shared path)
         void import("@/lib/push").then((m) => m.syncPushLanguage()).catch(() => undefined);
+        // ...and so do notice e-mails
+        void import("@/lib/noticeProfile").then((m) => m.syncNoticeProfile()).catch(() => undefined);
     };
 
     const t = (key: string): string => {
