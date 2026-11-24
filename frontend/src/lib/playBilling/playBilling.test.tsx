@@ -196,7 +196,7 @@ describe('Web: Stripe checkout', () => {
         await render(<UpgradeModal open onOpenChange={() => undefined} />);
         const card = byTestId('upgrade-paid')!;
         expect(card.textContent).toContain('$100.00');
-        expect(card.textContent).toContain('7 días gratis, luego $100.00/año');
+        expect(card.textContent).toContain('7 días gratis, luego $100.00/año + impuestos');
         expect(document.body.textContent).toContain('Cancela durante los 7 días gratis y no se cobra nada. Precios en USD.');
         expect(byTestId('play-store-actions')).toBeNull();
         await click(buttonWith('Empezar prueba gratis'));

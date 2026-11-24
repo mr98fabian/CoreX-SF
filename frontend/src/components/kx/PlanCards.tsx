@@ -6,7 +6,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
 import { usePlans, type PlanId, type PlanView } from '@/lib/plans';
-import { PAID_KEYS, TRIAL_DAYS } from '@/lib/pricing';
+import { PAID_KEYS, TRIAL_DAYS, taxNote } from '@/lib/pricing';
 
 interface Props {
     currentPlan?: string;
@@ -41,11 +41,11 @@ export function PlanCards({ currentPlan, onChoose, busy, ctaLabel, store }: Prop
                         <p className={`text-xs font-bold uppercase tracking-[.16em] ${hero ? 'text-kx-amber-soft' : 'text-kx-ink2'}`}>{p.name}</p>
                         <p className={`kx-num mt-1 font-light text-kx-ink ${hero ? 'text-[34px]' : 'text-[26px]'}`}>
                             {hero && store ? store.price : formatMoney(p.annual)}
-                            {hero && <small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}</small>}
+                            {hero && <small className="ml-1 text-xs font-normal text-kx-ink2">{es ? '/año' : '/yr'}{!store && ` ${taxNote(es)}`}</small>}
                         </p>
                         {hero && store && store.trialLine && <p className="text-[13px] text-kx-ink">{store.trialLine}</p>}
                         {hero && !store && p.trialDays > 0 && (
-                            <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(p.annual)}/año` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(p.annual)}/yr`}</p>
+                            <p className="text-[13px] text-kx-ink">{es ? `${TRIAL_DAYS} días gratis, luego ${formatMoney(p.annual)}/año ${taxNote(true)}` : `${TRIAL_DAYS}-day free trial, then ${formatMoney(p.annual)}/yr ${taxNote(false)}`}</p>
                         )}
                         <ul className="mt-3 space-y-1.5 text-[13.5px] text-kx-ink2">
                             <li className="flex gap-2">{tick}{p.debtLimit == null ? (es ? 'Deudas ilimitadas' : 'Unlimited debts') : (es ? `Hasta ${p.debtLimit} deudas` : `Up to ${p.debtLimit} debts`)}</li>
