@@ -13,7 +13,7 @@
  * interest_saved_monthly instead.
  */
 import { moment, primeAudio } from '@/lib/feedback';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
@@ -23,22 +23,13 @@ import { apiFetch } from '@/lib/api';
 import { localDay } from '@/lib/stage';
 import { findFundingAccount } from '@/lib/funding';
 import { useKxSummary } from '@/hooks/useKxSummary';
+import { useCommandCenter } from '@/hooks/useCommandCenter';
 import { useAccountLogos } from '@/hooks/useAccounts';
 import { AccountLogo } from '@/components/AccountLogo';
 import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
 import { DrawnCheck } from '@/components/kx/motion';
-import { MissionCard, type MissionResult } from '@/components/kx/MissionCard';
+import { MissionCard } from '@/components/kx/MissionCard';
 import { MoneyAmount } from '@/components/MoneyAmount';
-
-interface CommandCenter {
-    excedente?: { mensual: number | null; suscripciones_mensuales: number; comido_por_suscripciones: boolean };
-    mision?: MissionResult;
-    morning_briefing: {
-        recommended_action: { amount: number; destination: string; destination_balance: number; destination_apr: number; reason: string } | null;
-        impact?: { interest_saved_monthly?: number };
-    } | null;
-    confidence_meter?: { debts_ranked?: { name: string; apr: number; balance: number; is_target: boolean; daily_cost?: number }[]; strategy?: string };
-}
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -52,14 +43,13 @@ export default function AttackPage() {
     const { toast } = useToast();
     const s = useKxSummary();
     const logoOf = useAccountLogos();
-    const [cc, setCc] = useState<CommandCenter | null>(null);
-    const [ccError, setCcError] = useState(false);
+    // Cached (React Query): a revisit paints at once and refreshes behind; plan writes invalidate it (lib/planSync)
+    const ccQuery = useCommandCenter();
+    const cc = ccQuery.data ?? null;
+    const ccError = ccQuery.isError && !cc;
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState<{ destination: string; amount: number } | null>(null);
     const names = es ? MONTHS_ES : MONTHS_EN;
-
-    const fetchCc = () => apiFetch<CommandCenter>('/api/strategy/command-center').then(setCc).catch(() => setCcError(true));
-    useEffect(() => { fetchCc(); }, []);
 
     // Payoff month per debt, from the same engine timeline as the calendar
     const payoff = useMemo(() => {
@@ -102,7 +92,7 @@ export default function AttackPage() {
             setDone({ destination: rec.destination, amount });
             moment('payment');
             toast({ title: es ? `Ataque confirmado: ${formatMoney(amount)} a ${rec.destination}` : `Attack confirmed: ${formatMoney(amount)} to ${rec.destination}` });
-            s.reload(); fetchCc();
+            // No manual refresh: the POST is a plan write, so apiFetch already invalidated the plan (summary + command-center)
         } catch {
             toast({ title: es ? 'No se pudo confirmar el ataque' : "Couldn't confirm the attack", variant: 'destructive' });
         } finally {
@@ -124,7 +114,7 @@ export default function AttackPage() {
                 {loading && <div className="h-48 kx-shimmer rounded-[20px]" aria-busy="true" />}
                 {!loading && (s.error || ccError) && (
                     <Section tone="debt" title={es ? 'No pudimos cargar tu plan' : "We couldn't load your plan"}>
-                        <button onClick={() => { setCcError(false); s.reload(); fetchCc(); }} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
+                        <button onClick={s.reload}className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
                     </Section>
                 )}
 
