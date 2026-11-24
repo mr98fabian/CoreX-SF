@@ -13,7 +13,7 @@ aprueba merges.
 | 4 | Correos de notificación (canal email del motor de avisos) | en-auditoria | Rama `feat/correos-notificacion`; archivo `misiones/2026-11-23-correos-notificacion.md` |
 | 5 | Calendario que se actualiza solo (serie diaria real del motor) | en-auditoria | Rama `feat/calendario-serie-diaria`; archivo `misiones/2026-11-23-calendario-serie-diaria.md` |
 | 6 | Apple IAP (pagos iOS) | bloqueada | Espera inscripción Apple Developer + Mac |
-| 7 | Command-center rápido + caché stale-while-revalidate | en-curso | Rama `perf/command-center-cache`; archivo `misiones/2026-11-22-command-center-cache.md` |
+| 7 | Command-center rápido + caché stale-while-revalidate | en-auditoria | Rama `perf/command-center-cache`; archivo `misiones/2026-11-22-command-center-cache.md` |
 | 8 | Integración de Stripe Managed Payments (checkout web) | completada | Deuda de la misión 1: la compra web falla (Lemon rechazado); archivo `misiones/2026-11-22-integracion-stripe.md` |
 | 9 | Prueba de pagos demo de Stripe (teléfono virtual) | en-curso | Prueba de punta a punta de la misión 8 en modo test; archivo `misiones/2026-11-22-prueba-pagos-stripe.md` |
 | 10 | CI en GitHub con bloqueo real de merge | en-auditoria | Rama `chore/ci-bloqueo`; archivo `misiones/2026-11-22-ci-bloqueo.md` |
