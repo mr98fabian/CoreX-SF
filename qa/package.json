@@ -1,0 +1,15 @@
+{
+  "name": "korex-qa",
+  "private": true,
+  "description": "Equipo QA de KoreX (Probador + Regresión). No forma parte de las suites de la app.",
+  "type": "module",
+  "scripts": {
+    "probador": "node run.mjs",
+    "canario": "node run.mjs --local --canario=calendario",
+    "regresion": "node run.mjs --regresion",
+    "resena": "node resena.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

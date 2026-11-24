@@ -1,0 +1,88 @@
+{
+  "fecha": "2026-11-24T08:07:39.580Z",
+  "base": "https://korexf.com",
+  "commit": "43c1e06",
+  "canario": null,
+  "verde": false,
+  "limpieza": "cuenta principal borrada por la UI",
+  "regresion": null,
+  "flujos": [
+    {
+      "flujo": "registro",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/01-registro-formulario.png",
+        "capturas/02-registro-cuenta-creada.png",
+        "capturas/03-registro-panel.png"
+      ],
+      "ms": 11222
+    },
+    {
+      "flujo": "login",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/04-login-panel.png"
+      ],
+      "ms": 3685
+    },
+    {
+      "flujo": "agregar-deuda",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/05-agregar-deuda-formulario.png",
+        "capturas/06-agregar-deuda-lista.png"
+      ],
+      "ms": 4196
+    },
+    {
+      "flujo": "plan",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/07-plan-plan.png"
+      ],
+      "ms": 2302
+    },
+    {
+      "flujo": "calendario",
+      "veredicto": "FALLA",
+      "detalle": "no apareció: la deuda «QA Tarjeta Prueba» en el calendario",
+      "capturas": [
+        "capturas/08-calendario-fallo.png"
+      ],
+      "ms": 21259
+    },
+    {
+      "flujo": "suscripciones",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/09-suscripciones-formulario.png",
+        "capturas/10-suscripciones-lista.png"
+      ],
+      "ms": 4628
+    },
+    {
+      "flujo": "conectar-ia",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/11-conectar-ia-guia.png",
+        "capturas/12-conectar-ia-planes.png"
+      ],
+      "ms": 2493
+    },
+    {
+      "flujo": "borrar-cuenta",
+      "veredicto": "FALLA",
+      "detalle": "no se pudo crear el usuario desechable: el registro mostró: email rate limit exceeded",
+      "capturas": [
+        "capturas/13-borrar-cuenta-fallo.png"
+      ],
+      "ms": 6019
+    }
+  ]
+}
