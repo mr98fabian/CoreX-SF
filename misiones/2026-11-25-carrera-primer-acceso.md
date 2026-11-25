@@ -84,9 +84,9 @@ paralelas intentan crear a la vez su fila por usuario (`user_settings` y similar
         de esta ficha (`+  - [ ] Sin \`console.log\`…`), no código.
   - [x] Puerta compartida → `python scripts/verify.py`: 
     ```
-    verify: backend:pytest OK (38s)        # 
+    verify: backend:pytest OK (38s)
     verify: backend:alembic-heads OK (1s)
-    verify: frontend:vitest OK (59s)       # 
+    verify: frontend:vitest OK (59s)
     verify: frontend:eslint OK (15s)
     verify: frontend:build OK (20s)
     verify: OK                             (exit 0)
