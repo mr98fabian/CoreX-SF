@@ -24,6 +24,9 @@ from transaction_classifier import classify_transaction
 
 from routers.engagement import award_once
 
+from velocity_engine import payment_impact
+from helpers import is_payment_category
+
 router = APIRouter(prefix="/api", tags=["transactions"])
 
 
@@ -144,15 +147,23 @@ def get_all_transactions(
         total = session.exec(select(func.count()).select_from(query.subquery())).one()
         results = session.exec(query.order_by(Transaction.date.desc()).offset(offset).limit(limit)).all()
 
-        accs = {a.id: a.name for a in session.exec(
+        rows = {a.id: a for a in session.exec(
             select(Account).where(Account.id.in_({tx.account_id for tx in results if tx.account_id}))
         ).all()} if results else {}
+
+        def impact(tx):
+            # A payment to a debt: what it stops costing (engine, estimate). The client never computes it.
+            a = rows.get(tx.account_id)
+            if a is None or a.type != "debt" or not is_payment_category(tx.category) or Decimal(str(tx.amount)) <= 0:
+                return None
+            return payment_impact(abs(Decimal(str(tx.amount))), a.interest_rate)
 
         return {
             "transactions": [
                 {"id": tx.id, "date": tx.date, "amount": float(tx.amount),
                  "description": tx.description, "category": tx.category,
-                 "account_id": tx.account_id, "account_name": accs.get(tx.account_id, "Unknown")}
+                 "account_id": tx.account_id, "account_name": rows[tx.account_id].name if tx.account_id in rows else "Unknown",
+                 "impacto": impact(tx)}
                 for tx in results
             ],
             "total": total, "limit": limit, "offset": offset,

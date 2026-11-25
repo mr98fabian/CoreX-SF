@@ -10,11 +10,16 @@
 
 export interface TimelinePoint { date: string; total_balance: number }
 
+/** One month of the server's projection (velocity_engine.debt_path → resumen_meses). */
+export interface MonthSummary { mes: string; inicio: number; cierre: number; pagos: number; interes: number; baja: number; tramo?: string }
+
 export interface CalendarMonth {
     year: number;
     month: number;          // 0-11
-    start: number;          // projected total debt on day 1
+    start: number;          // projected total debt on day 1 (the current month: today's debt)
     end: number;            // projected total debt at month close
+    /** what the debt goes down this month (the current month: from today) — the server's figure */
+    drop: number;
     zeroDay: number | null; // day the debt reaches $0 (freedom month only)
     days?: number[];        // daily series: balance at the end of each day (index = day − 1)
 }
@@ -26,8 +31,8 @@ const money = (v: unknown) => Math.max(0, Number(v) || 0);
 /** Months from `today`'s month to the freedom month, plus one all-green month after it.
  *  With `daily` (the engine's step series), every day is the engine's value. */
 export function buildMonths(timeline: TimelinePoint[], currentDebt: number, today: Date = new Date(),
-    daily?: TimelinePoint[] | null): CalendarMonth[] {
-    if (daily && daily.length) return monthsFromDaily(daily, today);
+    daily?: TimelinePoint[] | null, summary?: MonthSummary[] | null): CalendarMonth[] {
+    if (daily && daily.length) return withServerDrop(monthsFromDaily(daily, today), summary);
     const closes = new Map<string, number>();
     for (const p of timeline) {
         const [y, m] = p.date.split('-').map(Number);
@@ -46,7 +51,7 @@ export function buildMonths(timeline: TimelinePoint[], currentDebt: number, toda
             const pace = prevPace > 0 ? prevPace : start;
             zeroDay = Math.min(daysIn(y, m), Math.max(1, Math.ceil((start / pace) * daysIn(y, m))));
         }
-        out.push({ year: y, month: m, start, end, zeroDay });
+        out.push({ year: y, month: m, start, end, zeroDay, drop: Math.max(0, start - end) }); // example data only
         if (start <= 0 && end <= 0) break; // the all-green month after freedom
         prevPace = Math.max(0, start - end);
         start = end;
@@ -75,12 +80,18 @@ function monthsFromDaily(daily: TimelinePoint[], today: Date): CalendarMonth[] {
             if (zeroDay === null && carry <= 0 && (d === 1 ? start : days[d - 2]) > 0) zeroDay = d;
             days.push(carry);
         }
-        out.push({ year: y, month: m, start, end: carry, zeroDay, days });
+        out.push({ year: y, month: m, start, end: carry, zeroDay, days, drop: 0 });
         if (start <= 0 && carry <= 0) break; // the all-green month after freedom
         m += 1;
         if (m > 11) { m = 0; y += 1; }
     }
     return out;
+}
+
+/** Each month's drop is the server's (resumen_meses.baja); a month it does not list keeps 0. */
+function withServerDrop(months: CalendarMonth[], summary?: MonthSummary[] | null): CalendarMonth[] {
+    const byKey = new Map((summary ?? []).map((s) => [s.mes, Math.max(0, Number(s.baja) || 0)]));
+    return months.map((mo) => ({ ...mo, drop: byKey.get(key(mo.year, mo.month)) ?? 0 }));
 }
 
 /** Projected total debt on `day` (1-based) of `mo`. */

@@ -70,8 +70,8 @@ export default function AttackPage() {
     // After confirming, keep showing what was just paid (the engine already recommends the next one)
     const rec = done ? { amount: done.amount, destination: done.destination, destination_balance: done.amount, destination_apr: cc?.morning_briefing?.recommended_action?.destination_apr ?? 0, reason: '' }
         : (cc?.morning_briefing?.recommended_action ?? null);
-    // Presentation cap only: never ask to send more than the debt owes or the account holds
-    const amount = rec ? Math.min(rec.amount, rec.destination_balance, funding?.bal ?? rec.amount) : 0;
+    // The server already caps it (attack_impact: never more than the debt owes or the cash held)
+    const amount = rec ? rec.amount : 0;
     const ranked = (cc?.confidence_meter?.debts_ranked ?? []).slice(0, STEPS);
     const stageByName = new Map(s.debts.map((d) => [d.name, d.stage]));
     const saved = cc?.morning_briefing?.impact?.interest_saved_monthly ?? 0;

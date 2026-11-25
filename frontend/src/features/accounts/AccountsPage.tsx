@@ -88,6 +88,9 @@ interface Account {
     loan_term_months?: number;
     remaining_months?: number;
     credit_limit?: number;
+    /** server (velocity_engine): interest per day at today's balance and utilization % (1 decimal) */
+    daily_interest?: number | string;
+    utilization?: number | string | null;
 }
 
 interface Transaction {
@@ -267,9 +270,8 @@ export default function AccountsPage() {
 
     // Locked accounts summary stats (for banner + badges)
     const lockedTotalDebt = lockedDebts.reduce((sum, d) => sum + d.balance, 0);
-    const lockedDailyInterest = lockedDebts.reduce(
-        (sum, d) => sum + (d.balance * d.interest_rate / 100 / 365), 0
-    );
+    // Interest per day per account is the server's (velocity_engine.debt_daily_interest)
+    const lockedDailyInterest = lockedDebts.reduce((sum, d) => sum + Number(d.daily_interest ?? 0), 0);
 
     // Upgrade modal state
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -817,7 +819,7 @@ export default function AccountsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {sortedDebts.map(acc => {
                                 const isLocked = lockedIds.has(acc.id);
-                                const dailyLoss = acc.balance * acc.interest_rate / 100 / 365;
+                                const dailyLoss = Number(acc.daily_interest ?? 0);
 
                                 return (
                                     <Card
@@ -874,7 +876,7 @@ export default function AccountsPage() {
 
                                             {/* 📊 Credit Utilization Bar — only for revolving debts with a credit limit */}
                                             {acc.credit_limit && acc.credit_limit > 0 && ['credit_card', 'heloc'].includes(acc.debt_subtype || '') && (() => {
-                                                const utilPct = Math.min(100, Math.round((acc.balance / acc.credit_limit) * 100));
+                                                const utilPct = Math.min(100, Number(acc.utilization ?? 0)); // server, 1 decimal
                                                 const utilColor = utilPct <= 30
                                                     ? 'bg-kx-paid' : utilPct <= 50
                                                         ? 'bg-kx-amber' : utilPct <= 70

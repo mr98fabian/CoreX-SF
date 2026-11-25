@@ -162,7 +162,8 @@ def _month_totals(movements) -> dict:
     """Per month (YYYY-MM): what the GPS pays to debt by kind and what comes in. The Plan reads
     these; it never sums movements on the client (misión 17, spec §3)."""
     out: dict = {}
-    keys = {"attack": "ataque", "obligation": "obligaciones", "min_payment": "minimos", "income": "ingresos"}
+    keys = {"attack": "ataque", "obligation": "obligaciones", "min_payment": "minimos", "income": "ingresos",
+            "shield": "escudo"}
     for m in movements:
         k = keys.get(m["type"])
         if k is None:

@@ -19,7 +19,7 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/AuthContext';
 import { apiFetch } from '@/lib/api';
-import { buildMonths, type CalendarMonth, type IncomeItem, type TimelinePoint } from '@/lib/calendarSeries';
+import { buildMonths, type CalendarMonth, type IncomeItem, type MonthSummary, type TimelinePoint } from '@/lib/calendarSeries';
 import { KX_SUMMARY_KEY, invalidatePlanData } from '@/lib/planSync';
 import { paidFraction, stageOf, type Stage } from '@/lib/stage';
 import type { MissionResult } from '@/components/kx/MissionCard';
@@ -43,9 +43,13 @@ export interface KxAccount {
 }
 
 interface Dashboard { total_debt: number; liquid_cash: number; total_daily_interest?: number; mision?: MissionResult;
+    /** D3: «Disponible para tu plan» = the mission's attack (server); liquid_cash is shown as cash */
+    disponible_plan?: number;
     interes_diario?: { periodos: Record<'dia' | 'semana' | 'mes' | 'anio', number> } }
 /** daily_series: the engine's daily step series (calendar band + exact $0 day); missing on an older server. */
-interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number; daily_series?: TimelinePoint[] }
+interface FreedomPath { timeline: TimelinePoint[]; freedom_date: string; total_months: number; daily_series?: TimelinePoint[];
+    /** per month: open, close, payments, interest and drop (server, velocity_engine.debt_path) */
+    resumen_meses?: MonthSummary[] }
 
 export interface StagedAccount extends KxAccount { stage: Stage; paid: number | null; bal: number }
 
@@ -93,9 +97,11 @@ export function useKxSummary() {
         const debts = staged.filter((a) => a.type === 'debt');
         const counts = { debt: 0, almost: 0, paid: 0 } as Record<'debt' | 'almost' | 'paid', number>;
         for (const a of debts) if (a.stage !== 'support') counts[a.stage] += 1;
-        const months: CalendarMonth[] = buildMonths(data?.path?.timeline ?? [], totalDebt, new Date(), data?.path?.daily_series);
+        const months: CalendarMonth[] = buildMonths(data?.path?.timeline ?? [], totalDebt, new Date(), data?.path?.daily_series,
+            data?.path?.resumen_meses);
         const freedom = months.find((m) => m.zeroDay) ?? null;
-        return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
+        return { totalDebt, liquid: Number(data?.dashboard?.liquid_cash ?? 0),
+            available: Number(data?.dashboard?.disponible_plan ?? 0), daily: Number(data?.dashboard?.total_daily_interest ?? 0), dailyPeriods: data?.dashboard?.interes_diario?.periodos,
             mission: data?.dashboard?.mision?.mision ?? null,
             faltante: data?.dashboard?.mision?.faltante ?? null,
             staged, debts, counts, months, freedom };

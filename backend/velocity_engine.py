@@ -2157,6 +2157,14 @@ def interest_periods(daily: Decimal) -> dict:
     return {"dia": d, "semana": d * 7, "mes": d * DAYS_PER_YEAR / 12, "anio": d * DAYS_PER_YEAR}
 
 
+def payment_impact(amount, apr) -> dict:
+    """What a payment stops costing, at the debt's APR (estimate): per day (amount × APR / 36500,
+    the daily_interest rule) and per month (× 365/12). The Plan's history shows these as-is."""
+    daily = debt_daily_interest(amount, apr)
+    return {"ahorro_diario": float(daily.quantize(_CENT, rounding=ROUND_HALF_UP)),
+            "ahorro_mensual": float((daily * DAYS_PER_YEAR / 12).quantize(_CENT, rounding=ROUND_HALF_UP))}
+
+
 def interest_periods_json(daily) -> dict:
     """THE interest per period every screen shows: from the daily figure the user SEES (rounded
     to the cent), so day × 7 = week on screen. Dashboard and Ajustes read this same dict."""
