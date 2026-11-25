@@ -1,22 +1,16 @@
 /**
- * DebtCalendar — KoreX's signature piece: your debt painted on time.
- * Each day's background is the projected total debt that day (red → yellow →
- * green at $0); ‹ › navigates month by month to the freedom month; paydays get
- * a blue dot; the $0 day gets a ★. Phrase first, then the month's hero number.
+ * DebtCalendar — your debt painted on time. Each day's background is the projected total
+ * debt that day (red → yellow → green at $0); ‹ › navigates month by month to the freedom
+ * month. Phrase first, then the month's ONE hero («Debes ≈»).
  *
- * Data: months from lib/calendarSeries (the engine's daily series: each day and
- * the $0 day as the engine projects them). `compact` = heat-map only, for Inicio.
+ * «Cobre a la vista» (misión 19, direccion-de-arte §6.3): the grid stays; a copper line runs
+ * under every week (copper = days behind you, funda = days ahead, the cut on today), and the
+ * day's events are marks with icons at the bottom of the cell — copper dot = a charge (a day
+ * you pay), icon 8 = statement cut, icon 10 = payday in --kx-pay — two at most, then «+N».
  *
- * Anti-generic treatment (2026-11-05): the month is ONE painting — no boxes.
- * Each week is a band whose gradient runs through that week's days, bands sit
- * edge to edge, and days are separated by hairlines like a ledger. The day
- * number (Fraunces) is the protagonist; marks are sober: blue dot = payday,
- * amber ring + HOY = today, ★ = the $0 day, amber ◆ = statement cut, grey dash
- * = a charge. With `live`, every event (paydays, charges, cuts, the day sheet,
- * the month total) comes from the server (GET /api/calendar/events, the daily
- * mission's own functions); the client only paints. Fixed positions so marks
- * never collide: ◆ top-left · dash bottom-right · dot bottom-centre.
- * `compact` (Inicio) keeps only the dot and the ◆.
+ * Data: months from lib/calendarSeries (the engine's daily series). With `live`, every event
+ * (paydays, charges, cuts, the day sheet, the month total) comes from the server
+ * (GET /api/calendar/events); the client only paints. `compact` = heat-map only.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAnimate } from 'framer-motion';
@@ -30,6 +24,8 @@ import { toDayDetail } from '@/lib/calendarEvents';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { useIsDark } from '@/contexts/ThemeContext';
 import { DaySheet } from './DaySheet';
+import { CopperLine } from './CopperLine';
+import { KxCut, KxPayday } from './icons';
 
 const MONTHS = {
     es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
@@ -123,6 +119,17 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                 ? (es ? `al cierre del mes (estimado) · bajas desde hoy ≈ ${approx(mo.drop)}` : `at month close (estimate) · down from today ≈ ${approx(mo.drop)}`)
                 : (es ? `al cierre del mes (estimado) · bajas ≈ ${approx(mo.drop)}` : `at month close (estimate) · down ≈ ${approx(mo.drop)}`);
     const progress = maxDebt > 0 ? (1 - mo.end / maxDebt) * 100 : 100;
+    const heroText = mo.end <= 0 ? approx(0) : `≈ ${approx(mo.end)}`;
+    // §6.3: a line runs under every week — copper for the days behind you, funda for the
+    // days ahead, the cut on today (time, never money). Only the user's own calendar.
+    const isThisMonth = mo.month === today.getMonth() && mo.year === today.getFullYear();
+    const weekDone = (week: { day: number | null }[]) => {
+        if (!isThisMonth) return mo.year * 12 + mo.month < today.getFullYear() * 12 + today.getMonth() ? 1 : 0;
+        const at = week.findIndex((c) => c.day === today.getDate());
+        if (at >= 0) return (at + 0.5) / 7;
+        const days = week.filter((c) => c.day !== null).map((c) => c.day!);
+        return days.length && days[0] < today.getDate() ? 1 : 0;
+    };
 
     return (
         <div className="kx-lit">
@@ -142,9 +149,10 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                             <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
                         </button>
                     </div>
-                    <div className="mb-1 mt-2.5 text-center">
+                    <div className="relative mb-1 mt-2.5 text-center" data-testid="hero">
+                        <span aria-hidden="true" className="pointer-events-none absolute -inset-x-4 -inset-y-6 -z-10" style={{ background: 'var(--kx-foco)' }} />
                         <p className="text-[10.5px] font-bold uppercase tracking-[.15em] text-kx-ink2">{es ? 'Debes' : 'You owe'}</p>
-                        <p className="kx-hero-number mt-0.5 text-[36px] text-kx-ink">{mo.end <= 0 ? approx(0) : `≈ ${approx(mo.end)}`}</p>
+                        <p className={cx('kx-hero-number mt-0.5 text-kx-ink', heroText.length > 9 ? 'text-[44px]' : 'text-[56px]')}>{heroText}</p>
                         <p className="text-xs text-kx-ink2">{heroNote}</p>
                         {monthCharges != null && monthCharges > 0 && (
                             <p className="mt-1 text-xs text-kx-ink2" data-testid="month-charges">
@@ -180,7 +188,8 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                     };
                     const band = `linear-gradient(90deg, ${week.map((_c, i) => `${tone(i)} ${((i + 0.5) / 7 * 100).toFixed(1)}%`).join(', ')})`;
                     return (
-                        <div key={w} role="row" className="kx-cal-cell grid grid-cols-7 border-t border-black/15 first:border-t-0" style={{ background: band }}>
+                        <div key={w} className="border-t border-black/15 first:border-t-0">
+                        <div role="row" className="kx-cal-cell grid grid-cols-7" style={{ background: band }}>
                             {week.map((c, i) => {
                                 if (c.day === null) return <span key={i} role="gridcell" className="aspect-square border-l border-black/10 first:border-l-0" />;
                                 const ink = c.free ? { color: '#052E1B' } : { color: debtColor(c.debt, maxDebt, light).color };
@@ -191,7 +200,7 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                                     c.pay && (es ? 'día de nómina' : 'payday'),
                                     c.cut && (es ? 'día de corte' : 'statement cut'),
                                     c.charge && (es ? 'día de cobro' : 'charge day'),
-                                    c.free && (es ? '¡libre de deudas!' : 'debt-free!'),
+                                    c.free && (es ? 'libre de deudas' : 'debt-free'),
                                 ].filter(Boolean).join(', ');
                                 const label = `${DOW_LONG[es ? 'es' : 'en'][date.getDay()]} ${c.day}${es ? ' de' : ''} ${monthName}${marks ? `, ${marks}` : ''}, ${c.debt <= 0 ? (es ? 'sin deuda' : 'no debt') : `${es ? 'proyección' : 'projection'} ≈ ${approx(c.debt)}`}`;
                                 const body = (
@@ -200,9 +209,20 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                                         {isToday && <span className="pointer-events-none absolute inset-[3px] rounded-[10px] ring-2 ring-kx-amber" aria-hidden="true" />}
                                         {isToday && !compact && <span className="kx-tech pointer-events-none absolute left-1/2 top-[3px] -translate-x-1/2 rounded-sm bg-kx-amber px-1 text-[7.5px] font-bold leading-[11px] text-kx-on-amber" aria-hidden="true">{es ? 'HOY' : 'TODAY'}</span>}
                                         {c.free && <span className="absolute right-1 top-0.5 text-[10px] text-kx-amber" aria-hidden="true">★</span>}
-                                        {c.cut && <span data-testid="cut-mark" className="pointer-events-none absolute left-1 top-0.5 text-[9px] leading-none text-kx-amber [text-shadow:0_0_2px_rgba(0,0,0,.7)]" aria-hidden="true">◆</span>}
-                                        {c.charge && !compact && <span data-testid="charge-mark" className="absolute bottom-[5px] right-1.5 h-[2px] w-[6px] rounded-full bg-kx-ink2" aria-hidden="true" />}
-                                        {c.pay && <span data-testid="payday-mark" className="absolute bottom-[4px] left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-kx-pay ring-1 ring-black/20" aria-hidden="true" />}
+                                        {(() => {
+                                            const all = [
+                                                c.charge && !compact && <span key="c" data-testid="charge-mark" className="h-[6px] w-[6px] rounded-full bg-kx-amber ring-1 ring-black/30" />,
+                                                c.cut && <span key="k" data-testid="cut-mark" className="text-kx-ink [filter:drop-shadow(0_0_1px_rgba(0,0,0,.8))]"><KxCut size={12} /></span>,
+                                                c.pay && <span key="p" data-testid="payday-mark" className="text-kx-pay [filter:drop-shadow(0_0_1px_rgba(0,0,0,.8))]"><KxPayday size={12} lit={false} /></span>,
+                                            ].filter(Boolean);
+                                            if (!all.length) return null;
+                                            return (
+                                                <span className="pointer-events-none absolute bottom-[3px] left-1/2 flex -translate-x-1/2 items-center gap-0.5" aria-hidden="true" data-testid="marks">
+                                                    {all.slice(0, 2)}
+                                                    {all.length > 2 && <span data-testid="more-mark" className="kx-tech text-[8px] font-bold leading-none">+{all.length - 2}</span>}
+                                                </span>
+                                            );
+                                        })()}
                                     </>
                                 );
                                 const cls = 'relative flex aspect-square items-center justify-center border-l border-black/10 first:border-l-0';
@@ -216,6 +236,12 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                                 );
                             })}
                         </div>
+                        {live && !compact && (
+                            <div className="bg-kx-surface px-1.5 py-1" data-testid="week-line">
+                                <CopperLine done={weekDone(week)} label={es ? `Semana ${w + 1}: días ya pasados` : `Week ${w + 1}: days behind you`} />
+                            </div>
+                        )}
+                        </div>
                     );
                 })}
             </div>
@@ -223,9 +249,9 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
 
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-kx-ink2">
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded" style={{ background: 'linear-gradient(90deg,#DC2626,#FBBF24,#34D399)' }} />{es ? 'fondo = tu deuda' : 'background = your debt'}</span>
-                <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-kx-pay" />{es ? 'día de pago' : 'payday'}</span>
-                {live && !compact && <span className="flex items-center gap-1.5"><span className="h-[2px] w-[8px] rounded-full bg-kx-ink2" />{es ? 'te cobran' : 'charge'}</span>}
-                {live && <span className="flex items-center gap-1.5"><span className="text-[10px] text-kx-amber">◆</span>{es ? 'corte' : 'statement cut'}</span>}
+                <span className="flex items-center gap-1.5"><span className="text-kx-pay"><KxPayday size={14} lit={false} /></span>{es ? 'día de pago' : 'payday'}</span>
+                {live && !compact && <span className="flex items-center gap-1.5"><span className="h-[6px] w-[6px] rounded-full bg-kx-amber" />{es ? 'te cobran' : 'charge'}</span>}
+                {live && <span className="flex items-center gap-1.5"><KxCut size={14} />{es ? 'corte' : 'statement cut'}</span>}
                 <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded ring-2 ring-kx-amber" />{es ? 'hoy' : 'today'}</span>
                 <span className="flex items-center gap-1.5"><span className="text-kx-amber">★</span>{es ? 'libre' : 'free'}</span>
             </div>

@@ -1,10 +1,10 @@
 /**
- * Cuentas (Fase 6, approved v8): the same total debt as Inicio as hero + a
- * small "available", then accounts GROUPED BY STAGE (EN DEUDA → CASI →
- * PAGADAS, then support accounts). Each row: stage band, name, tabular
- * balance, progress bar, labeled chip. Detail (APR, limit, minimum, cut and
- * due days, history, "Registrar pago") is one tap away in a sheet; the full
- * manager with amortization is the third layer (/dashboard/accounts/manage).
+ * Cuentas («Cobre a la vista», misión 19, direccion-de-arte §6.5): ONE hero, «Efectivo en
+ * cuentas» (the total debt is Inicio's hero). Each debt is a row with its copper line under
+ * it — the line IS the bar; the stage lives only in its chip. The attack target (the server's
+ * pick) goes first with icon 6; paid debts close the list, all copper + PAGADA, folded past 3;
+ * the $0 ceremony runs inside the row (components/kx/Ceremony). Own money goes apart, no line.
+ * Detail (APR, limit, minimum, cut and due days, history, "Registrar pago") stays one tap away.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -17,8 +17,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useKxSummary, type StagedAccount } from '@/hooks/useKxSummary';
 import { STAGE_ORDER, localDay, type Stage } from '@/lib/stage';
-import { AmberRule, BankHeader, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageBar, StageChip, StatePhrase } from '@/components/kx';
-import { MoneyCount, StampDrop } from '@/components/kx/motion';
+import { BankHeader, CopperLine, EmptyState, ErrorState, HeroNumber, LedgerRow, PaidStamp, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
+import { PaidLine } from '@/components/kx/Ceremony';
+import { KxAccounts, KxBank, KxMission } from '@/components/kx/icons';
+import { MoneyCount } from '@/components/kx/motion';
 import { moment, primeAudio } from '@/lib/feedback';
 import { useJustPaid } from '@/hooks/useJustPaid';
 import { findFundingAccount } from '@/lib/funding';
@@ -49,6 +51,7 @@ export default function AccountsStagePage() {
     const [history, setHistory] = useState<Tx[] | null>(null);
     const [amount, setAmount] = useState('');
     const [saving, setSaving] = useState(false);
+    const [showAllPaid, setShowAllPaid] = useState(false);
     const justPaid = useJustPaid(s.staged);
     // Corte en Cero: consecutive $0 statement cuts per card (cut history)
     const { data: credit } = useCreditPanel();
@@ -114,9 +117,7 @@ export default function AccountsStagePage() {
     }
     if (s.error) {
         return <div className="kx-scope -m-4 min-h-full p-5 md:-m-8 md:p-8">
-            <Section tone="debt" title={es ? 'No pudimos cargar tus cuentas' : "We couldn't load your accounts"}>
-                <button onClick={s.reload} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
-            </Section>
+            <ErrorState text={es ? 'No pudimos cargar tus cuentas.' : "We couldn't load your accounts."} retry={es ? 'Reintentar' : 'Retry'} onRetry={s.reload} />
         </div>;
     }
 
@@ -126,77 +127,101 @@ export default function AccountsStagePage() {
         ? (es ? 'Aún no tienes deudas registradas.' : 'No debts on record yet.')
         : (es ? `${s.staged.length} cuentas: ${s.counts.debt} en deuda, ${s.counts.almost} casi, ${s.counts.paid} pagadas.`
             : `${s.staged.length} accounts: ${s.counts.debt} in debt, ${s.counts.almost} almost, ${s.counts.paid} paid.`);
-    const visible: Stage[] = filter && STAGE_ORDER.includes(filter) ? [filter] : [...STAGE_ORDER, 'support'];
+    const visible: Stage[] = filter && STAGE_ORDER.includes(filter) ? [filter] : [...STAGE_ORDER];
+    // §6.5: the attack target goes first, with icon 6 (the server's own pick)
+    const targetName = s.dashboard?.mision?.objetivo ?? null;
+    const target = !filter ? s.staged.find((a) => a.name === targetName && a.type === 'debt' && a.bal > 0) ?? null : null;
+    const lineLabel = (a: StagedAccount) => es ? `${a.name}: avance` : `${a.name}: progress`;
+
+    const debtRow = (a: StagedAccount, stage: Stage, icon?: React.ReactNode) => (
+        <LedgerRow key={a.id} title={<span className="flex items-center gap-2">{icon}{a.name}</span>} logo={<AccountLogo name={a.name} src={a.logo_url} />}
+            amount={<MoneyCount value={a.bal} />} onClick={() => openDetail(a)}>
+            <span className="mt-1.5 flex items-center gap-2">
+                <StageChip stage={stage} suffix={stage === 'paid' ? '' : undefined} />
+                <span className="text-xs text-kx-ink2">{note(a)}</span>
+            </span>
+            {/* The row's line replaces the progress bar; the paid fraction is the one the bar showed */}
+            {stage === 'paid'
+                ? <PaidLine label={lineLabel(a)} ceremony={justPaid.has(a.id)} />
+                : <span className="mt-2 block"><CopperLine done={a.paid ?? 0} label={lineLabel(a)} /></span>}
+            {credit?.por_tarjeta[String(a.id)] && (
+                <UsageBar pct={credit.por_tarjeta[String(a.id)].pct} band={credit.por_tarjeta[String(a.id)].banda} es={es} />
+            )}
+            {credit?.sin_limite.includes(a.id) && (
+                <span className="mt-1.5 block text-[11px] text-kx-ink3">{es ? 'Sin límite preestablecido' : 'No preset spending limit'}</span>
+            )}
+            {(cuts?.streaks[String(a.id)] ?? 0) >= 1 && (
+                <span data-testid="cut-streak" className="mt-1.5 inline-block rounded-full border border-kx-line px-2 py-0.5 text-[11px] text-kx-ink2">
+                    {es ? `Cortes en $0: ${cuts!.streaks[String(a.id)]} seguidos` : `$0 cuts: ${cuts!.streaks[String(a.id)]} in a row`}
+                </span>
+            )}
+        </LedgerRow>
+    );
 
     return (
         <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Cuentas' : 'Accounts'} greeting={es ? 'agrupadas por etapa, no en lista plana' : 'grouped by stage, not a flat list'} />
-                <AmberRule />
                 <StatePhrase>{phrase}</StatePhrase>
-                <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
-                    phrase={<>{es ? 'Efectivo en cuentas ' : 'Cash in accounts '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b>
+                <HeroNumber label={es ? 'Efectivo en cuentas' : 'Cash in accounts'} amount={s.liquid}
+                    phrase={<>{es ? 'Deuda total ' : 'Total debt '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.totalDebt)}</b>
                         {mainChecking && <span className="text-kx-ink3"> · {mainChecking.name}</span>}</>} />
 
                 {!filter && <CreditPanel es={es} data={credit} />}
 
                 {filter && (
-                    <button onClick={() => setParams({})} className="text-[13px] font-semibold text-kx-amber">
+                    <button onClick={() => setParams({})} className="flex min-h-[44px] items-center text-[13px] font-semibold text-kx-amber-text">
                         {es ? '← Ver todas las etapas' : '← Show all stages'}
                     </button>
                 )}
 
+                {target && (
+                    <Section tone="neutral" title={<span className="flex items-center gap-2"><KxBank size={16} />{es ? 'Objetivo del ataque' : 'Attack target'}</span>}>
+                        <div data-testid="attack-target">{debtRow(target, target.stage, <KxMission size={18} />)}</div>
+                    </Section>
+                )}
+
                 {visible.map((stage) => {
-                    const list = groups[stage];
-                    if (list.length === 0) return null;
+                    const all = groups[stage].filter((a) => a !== target);
+                    if (all.length === 0) return null;
+                    const list = stage === 'paid' && !showAllPaid && all.length > 3 ? all.slice(0, 3) : all;
                     const parts = chunk(list, MAX_PER_SECTION);
                     return parts.map((part, pi) => (
-                        <Section key={`${stage}-${pi}`} tone={stage}
-                            title={parts.length > 1 ? `${titles[stage]} · ${pi + 1}/${parts.length}` : titles[stage]}>
-                            {part.map((a) => (
-                                <LedgerRow key={a.id} title={a.name} logo={<AccountLogo name={a.name} src={a.logo_url} />} amount={<MoneyCount value={a.bal} />} stage={stage} onClick={() => openDetail(a)}>
-                                    {stage !== 'support' && (
-                                        <>
-                                            <span className="mt-1.5 flex items-center gap-2">
-                                                <StageChip stage={stage} suffix={stage === 'paid' ? ' ✓' : ''} />
-                                                <span className="text-xs text-kx-ink2">{note(a)}</span>
-                                                {stage === 'paid' && <span className="ml-auto"><StampDrop drop={justPaid.has(a.id)}><PaidStamp /></StampDrop></span>}
-                                            </span>
-                                            <StageBar stage={stage} pct={a.paid} />
-                                            {credit?.por_tarjeta[String(a.id)] && (
-                                                <UsageBar pct={credit.por_tarjeta[String(a.id)].pct} band={credit.por_tarjeta[String(a.id)].banda} es={es} />
-                                            )}
-                                            {credit?.sin_limite.includes(a.id) && (
-                                                <span className="mt-1.5 block text-[11px] text-kx-ink3">{es ? 'Sin límite preestablecido' : 'No preset spending limit'}</span>
-                                            )}
-                                            {(cuts?.streaks[String(a.id)] ?? 0) >= 1 && (
-                                                <span data-testid="cut-streak" className="mt-1.5 inline-block rounded-full border border-kx-line px-2 py-0.5 text-[11px] text-kx-ink2">
-                                                    {es ? `Cortes en $0: ${cuts!.streaks[String(a.id)]} seguidos` : `$0 cuts: ${cuts!.streaks[String(a.id)]} in a row`}
-                                                </span>
-                                            )}
-                                        </>
-                                    )}
-                                </LedgerRow>
-                            ))}
+                        <Section key={`${stage}-${pi}`} tone="neutral"
+                            title={parts.length > 1 ? `${titles[stage]} · ${pi + 1}/${parts.length}` : titles[stage]}
+                            action={stage === 'paid' && all.length > 3 && pi === parts.length - 1 ? (
+                                <button type="button" onClick={() => setShowAllPaid((v) => !v)} data-testid="paid-toggle"
+                                    className="flex min-h-[44px] items-center px-1 text-[12.5px] font-semibold text-kx-amber-text">
+                                    {showAllPaid ? (es ? 'Ver menos' : 'Show less') : (es ? `Ver las ${all.length}` : `Show all ${all.length}`)}
+                                </button>) : undefined}>
+                            {part.map((a) => debtRow(a, stage))}
                         </Section>
                     ));
                 })}
 
+                {/* Your own money goes apart, without a line: it is not a debt */}
+                {!filter && support.length > 0 && (
+                    <Section tone="neutral" title={titles.support}>
+                        {support.map((a) => (
+                            <LedgerRow key={a.id} title={a.name} logo={<AccountLogo name={a.name} src={a.logo_url} />} amount={<MoneyCount value={a.bal} />} onClick={() => openDetail(a)} />
+                        ))}
+                    </Section>
+                )}
+
                 {filter && groups[filter]?.length === 0 && (
-                    <Section tone={filter} title={titles[filter]}>
+                    <Section tone="neutral" title={titles[filter]}>
                         <p className="text-sm text-kx-ink2">{es ? 'Todavía no hay cuentas en esta etapa.' : 'No accounts in this stage yet.'}</p>
                     </Section>
                 )}
 
-                {s.staged.length === 0 && (
-                    <Section tone="neutral" title={es ? 'Empieza aquí' : 'Start here'}>
-                        <p className="text-sm text-kx-ink2">{es ? 'Agrega tus tarjetas, préstamos y tu cuenta de cheques para ver tu camino al verde.' : 'Add your cards, loans and checking account to see your path to green.'}</p>
-                    </Section>
+                {s.staged.length === 0 ? (
+                    <EmptyState icon={KxAccounts} text={es ? 'Aún no has añadido cuentas.' : "You haven't added any accounts yet."}
+                        action={es ? 'Añadir cuenta' : 'Add account'} to="/dashboard/accounts/manage" />
+                ) : (
+                    <Link to="/dashboard/accounts/manage" className="flex min-h-[44px] items-center justify-center rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
+                        {es ? 'Agregar o editar cuentas · ' : 'Add or edit accounts · '}<b className="ml-1 font-semibold text-kx-ink2">{es ? 'abrir gestor' : 'open manager'}</b>
+                    </Link>
                 )}
-
-                <Link to="/dashboard/accounts/manage" className="block rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
-                    {es ? 'Agregar o editar cuentas · ' : 'Add or edit accounts · '}<b className="font-semibold text-kx-ink2">{es ? 'abrir gestor' : 'open manager'}</b>
-                </Link>
             </div>
 
             <Sheet open={!!open} onOpenChange={(v) => !v && setOpen(null)}>

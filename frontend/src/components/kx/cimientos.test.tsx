@@ -110,7 +110,7 @@ describe('3 · título de pantalla', () => {
 
 describe('4 · línea de cobre', () => {
     it('geometry: funda 10 px + 1 px shadow, copper 6 px centred, cut lip 2 px', () => {
-        expect(block).toContain('.kx-line { position: relative; height: 14px; }');
+        expect(block).toContain('.kx-line { position: relative; height: 14px; overflow: hidden; }');
         expect(block).toContain('.kx-line__track { position: absolute; inset: 2px 0;'); // 10 px track
         expect(block).toContain('.kx-line__copper { position: absolute; inset: 2px 0;'); // 6 px copper
         expect(block).toMatch(/\.kx-line__funda \{[^}]*box-shadow: inset 0 -1px 0 var\(--kx-funda-sombra\)/);

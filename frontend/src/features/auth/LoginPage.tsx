@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LOGIN_COPY, type LoginCopy } from './loginCopy';
+import { CopperLine } from '@/components/kx';
 
 // ──────────────────────────────────────────────
 // Password Requirements
@@ -311,7 +312,6 @@ export default function LoginPage() {
     if (view === 'success') {
         return (
             <div className="h-[100dvh] flex items-center justify-center bg-kx-raised relative overflow-hidden px-4">
-                <BackgroundOrbs />
                 <Styles />
                 <div className="relative z-10 w-full max-w-md text-center animate-slide-in">
                     <div className="bg-kx-raised border border-kx-line rounded-2xl shadow-2xl p-10">
@@ -369,31 +369,19 @@ export default function LoginPage() {
         <div className="h-[100dvh] overflow-y-auto overflow-x-hidden bg-[#060810] relative">
             <Styles />
 
-            {/* Decorative background — clipped to the viewport so the oversized
-                orbs/watermark never create scrollbars. */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <BackgroundOrbs />
-                <img
-                    src="/korex-isotipo.svg"
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute opacity-[0.18] w-[700px] h-[700px] select-none drop-shadow-[0_0_80px_rgba(251,191,36,0.12)]"
-                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-                />
-            </div>
-
             {/* min-h-full centers when content fits (sign in / forgot — no scroll),
                 and allows scrolling only when it overflows (sign up has many fields). */}
             <div className="relative min-h-full flex items-center justify-center px-6 py-4">
             <div className="relative z-10 w-full max-w-[380px] sm:max-w-md">
-                {/* KoreX Brand Logo */}
-                <div className="text-center mb-4 sm:mb-5">
-                    <img
-                        src="/korex-imagotipo.svg"
-                        alt="KoreX"
-                        className="h-16 sm:h-20 mx-auto mb-2 drop-shadow-[0_0_25px_rgba(251,191,36,0.25)] animate-splash-in"
-                    />
-                    <p className="text-kx-ink2 text-xs sm:text-sm mt-1 animate-splash-in" style={{ animationDelay: '0.2s' }}>{c.tagline}</p>
+                {/* Misión 19 (§6.1): logo 48 px + name, the copper line already open as the horizon,
+                    one sentence. No hero number on this screen. */}
+                <div className="mb-5 space-y-4" data-testid="login-head">
+                    <div className="flex items-center justify-center gap-3">
+                        <img src="/korex-isotipo.svg" alt="" aria-hidden="true" className="h-12 w-12" data-testid="login-logo" />
+                        <span className="font-editorial text-[26px] text-kx-ink">KoreX</span>
+                    </div>
+                    <CopperLine done={1} label={c.tagline} />
+                    <p className="kx-screen-title text-center text-kx-ink" data-testid="login-tagline">{c.tagline}</p>
                 </div>
 
                 {/* Card */}
@@ -406,8 +394,8 @@ export default function LoginPage() {
                                     key={tab}
                                     type="button"
                                     onClick={() => switchView(tab)}
-                                    className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${view === tab
- ? 'bg-kx-amber text-kx-on-amber shadow-md '
+                                    className={`flex-1 min-h-[44px] rounded-lg text-sm font-medium transition-colors duration-300 ${view === tab
+ ? 'bg-kx-surface2 text-kx-ink'
  : 'text-kx-ink2 hover:text-kx-ink'
  }`}
                                 >
@@ -606,7 +594,8 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-300
+                            data-testid="login-submit"
+                            className="w-full min-h-[52px] rounded-xl font-semibold text-sm transition-all duration-300
                                 bg-kx-amber text-kx-on-amber
                                   hover:shadow-lg 
                                 active:scale-[0.98]
@@ -621,6 +610,13 @@ export default function LoginPage() {
                                 view === 'forgot' ? c.sendReset : view === 'signup' ? c.createAccount : c.signIn
                             )}
                         </button>
+
+                        {view === 'signin' && (
+                            <button type="button" onClick={handleDemoLogin} disabled={isDemoLoading || isSubmitting} data-testid="login-demo"
+                                className="w-full min-h-[52px] rounded-xl border border-kx-line text-sm font-semibold text-kx-ink transition-colors hover:border-kx-ink3 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isDemoLoading ? c.loading : c.tryDemo}
+                            </button>
+                        )}
 
                         {/* Back — forgot */}
                         {view === 'forgot' && (
@@ -677,24 +673,6 @@ export default function LoginPage() {
                     </p>
                     <p className="text-xs text-kx-ink3 mt-2 flex items-center justify-center gap-1.5">
                         {c.version}
-                        <span className="text-kx-ink">·</span>
-                        <button
-                            type="button"
-                            onClick={handleDemoLogin}
-                            disabled={isDemoLoading || isSubmitting}
-                            className="text-kx-ink3 hover:text-kx-amber transition-colors duration-300
-                                disabled:opacity-50 disabled:cursor-not-allowed
-                                underline underline-offset-2 decoration-kx-ink hover:decoration-kx-amber"
-                        >
-                            {isDemoLoading ? (
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="h-3 w-3 animate-spin rounded-full border border-kx-amber border-t-transparent" />
-                                    {c.loading}
-                                </span>
-                            ) : (
-                                c.tryDemo
-                            )}
-                        </button>
                     </p>
                 </div>
             </div>
@@ -704,21 +682,6 @@ export default function LoginPage() {
 }
 
 // ── Shared Components ──
-
-function BackgroundOrbs() {
-    return (
-        <>
-            <div
-                className="absolute w-[500px] h-[500px] rounded-full blur-[120px] opacity-15"
-                style={{ background: 'radial-gradient(circle, #f59e0b, transparent)', top: '-10%', left: '-10%', animation: 'float 8s ease-in-out infinite' }}
-            />
-            <div
-                className="absolute w-[400px] h-[400px] rounded-full blur-[100px] opacity-10"
-                style={{ background: 'radial-gradient(circle, #3b82f6, transparent)', bottom: '-10%', right: '-10%', animation: 'float 10s ease-in-out infinite reverse' }}
-            />
-        </>
-    );
-}
 
 function Styles() {
     return (

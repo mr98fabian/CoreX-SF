@@ -7,7 +7,6 @@
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useFormatMoney } from '@/hooks/useFormatMoney';
@@ -15,7 +14,8 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useToast } from '@/components/ui/use-toast';
 import { apiFetch } from '@/lib/api';
-import { AmberRule, BankHeader, HeroNumber, LedgerRow, PrimaryPill, Section } from '@/components/kx';
+import { BankHeader, EmptyState, ErrorState, HeroNumber, LedgerRow, PrimaryPill, Section } from '@/components/kx';
+import { KxAdd, KxSubscriptions } from '@/components/kx/icons';
 import { AccountLogo } from '@/components/AccountLogo';
 import { MoneyCount } from '@/components/kx/motion';
 import { cardHint, whenInWords, type Freq, type RecurringSub, type SubsResponse } from './subscriptionText';
@@ -29,23 +29,30 @@ export function SubscriptionsView({ data, es, onAdd, onEdit }: { data: SubsRespo
     const { formatMoney } = useFormatMoney();
     const active = data.items.filter((s) => s.status === 'active');
     const gone = data.items.filter((s) => s.status === 'cancelled');
+    // Same name twice among the active ones: a plain note, no alarm colour (§6.6)
+    const norm = (n: string) => n.trim().toLowerCase();
+    const repeated = new Set(active.map((s) => norm(s.name)).filter((n, i, all) => all.indexOf(n) !== i));
     const addBtn = (
         <button onClick={onAdd} aria-label={es ? 'Agregar suscripción' : 'Add subscription'}
-            className="kx-press flex h-9 w-9 items-center justify-center rounded-full border border-kx-line text-kx-ink2 hover:text-kx-ink">
-            <Plus className="h-[18px] w-[18px]" strokeWidth={1.75} />
+            className="kx-press flex h-11 w-11 items-center justify-center rounded-full border border-kx-line text-kx-ink2 hover:text-kx-ink">
+            <KxAdd size={20} />
         </button>
     );
     return (
         <>
-            <HeroNumber label={es ? 'Pagas al mes · estimado' : 'You pay monthly · estimate'} amount={Number(data.monthly_total)}
+            <HeroNumber label={es ? 'Te cobran al mes ≈' : 'Charged per month ≈'} amount={Number(data.monthly_total)}
                 phrase={<>{es ? 'Al año: ' : 'Per year: '}<b className="kx-num font-semibold text-kx-ink"><MoneyCount value={Number(data.annual_total)} /></b>
                     <span className="text-kx-ink3">{es ? ` · ${active.length} activas` : ` · ${active.length} active`}</span></>} />
 
             <Section tone="neutral" title={es ? 'Próximos cobros' : 'Upcoming charges'} action={addBtn}>
-                {active.length === 0 && <p className="py-1 text-[13.5px] text-kx-ink2">{es ? 'Aún no registras suscripciones. Toca + para agregar la primera.' : 'No subscriptions yet. Tap + to add the first.'}</p>}
+                {active.length === 0 && <EmptyState icon={KxSubscriptions} text={es ? 'Aún no has añadido suscripciones.' : "You haven't added any subscriptions yet."}
+                    action={es ? 'Añadir suscripción' : 'Add subscription'} onAction={onAdd} />}
                 {active.map((s) => (
-                    <LedgerRow key={s.id} onClick={() => onEdit(s)} title={s.name} logo={<AccountLogo name={s.name} src={s.logo_url} />}
-                        amount={<MoneyCount value={Number(s.amount)} />}>
+                    <LedgerRow key={s.id} onClick={() => onEdit(s)} title={<span className="flex items-center gap-2"><KxSubscriptions size={16} className="flex-none text-kx-ink3" lit={false} />{s.name}</span>}
+                        logo={<AccountLogo name={s.name} src={s.logo_url} />} amount={<MoneyCount value={Number(s.amount)} />}>
+                        {repeated.has(norm(s.name)) && (
+                            <span data-testid="sub-repeated" className="mt-0.5 block pl-[42px] text-[12.5px] text-kx-ink2">{es ? 'Aparece dos veces: revisa si la pagas doble.' : 'It appears twice: check whether you pay it twice.'}</span>
+                        )}
                         <span className="mt-0.5 flex justify-between gap-2 pl-[42px] text-[12.5px]">
                             <span className="text-kx-ink2">{whenInWords(s.next_charge_date, es)}{s.frequency !== 'monthly' && ` · ${FREQ_LABEL[es ? 'es' : 'en'][s.frequency]}`}</span>
                             {cardHint(s.account_name) && <span className="kx-tech text-kx-ink3">{cardHint(s.account_name)}</span>}
@@ -55,7 +62,7 @@ export function SubscriptionsView({ data, es, onAdd, onEdit }: { data: SubsRespo
             </Section>
 
             {gone.length > 0 && (
-                <Section tone="neutral" title={es ? 'Ya no pagas' : 'No longer paying'}>
+                <Section tone="neutral" title={es ? 'Canceladas' : 'Cancelled'}>
                     {gone.map((s) => (
                         <LedgerRow key={s.id} onClick={() => onEdit(s)} title={<span className="text-kx-ink2 line-through decoration-kx-ink3">{s.name}</span>}
                             logo={<AccountLogo name={s.name} src={s.logo_url} />}
@@ -114,13 +121,8 @@ export default function SubscriptionsPage() {
         <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Suscripciones' : 'Subscriptions'} greeting={es ? 'lo que te cobran cada mes, en un solo lugar' : 'what you are charged every month, in one place'} />
-                <AmberRule />
                 {isLoading && <div className="h-40 kx-shimmer rounded-[var(--kx-radius-card)]" aria-busy="true" />}
-                {isError && (
-                    <Section tone="debt" title={es ? 'No pudimos cargar tus suscripciones' : "We couldn't load your subscriptions"}>
-                        <button onClick={() => refetch()} className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
-                    </Section>
-                )}
+                {isError && <ErrorState text={es ? 'No pudimos cargar tus suscripciones.' : "We couldn't load your subscriptions."} retry={es ? 'Reintentar' : 'Retry'} onRetry={() => refetch()} />}
                 {data && <SubscriptionsView data={data} es={es} onAdd={() => setDraft({ ...EMPTY })} onEdit={edit} />}
             </div>
 
@@ -156,11 +158,11 @@ export default function SubscriptionsPage() {
                             <PrimaryPill type="submit" disabled={!valid || save.isPending}>{es ? 'Guardar' : 'Save'}</PrimaryPill>
                             {draft.id && draft.status === 'active' && (
                                 <button type="button" onClick={() => cancel.mutate(draft.id!)} disabled={cancel.isPending}
-                                    className="kx-press block w-full py-2 text-center text-[13.5px] font-semibold text-kx-debt">{es ? 'Ya no la pago' : 'I no longer pay it'}</button>
+                                    className="kx-press block min-h-[44px] w-full py-2 text-center text-[13.5px] font-semibold text-kx-debt">{es ? 'Cancelar suscripción' : 'Cancel subscription'}</button>
                             )}
                             {draft.id && draft.status === 'cancelled' && (
                                 <button type="button" onClick={() => save.mutate({ ...draft, status: 'active' })}
-                                    className="kx-press block w-full py-2 text-center text-[13.5px] font-semibold text-kx-ink2">{es ? 'La volví a contratar' : 'I subscribed again'}</button>
+                                    className="kx-press block min-h-[44px] w-full py-2 text-center text-[13.5px] font-semibold text-kx-ink2">{es ? 'La volví a contratar' : 'I subscribed again'}</button>
                             )}
                         </form>
                     )}

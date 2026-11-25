@@ -26,7 +26,7 @@ const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July
 const isoDate = (s: string) => new Date(`${s}T12:00:00`);
 
 /** mission = the headline; faltante = the first obligation the cash can't reach (secondary warning). */
-export function MissionCard({ mission, faltante, es }: { mission: DailyMission; faltante?: DailyMission | null; es: boolean }) {
+export function MissionCard({ mission, faltante, es, action: cta }: { mission: DailyMission; faltante?: DailyMission | null; es: boolean; action?: React.ReactNode }) {
     const months = es ? MONTHS_ES : MONTHS_EN;
     const fmt = (s: string) => { const d = isoDate(s); return es ? `${d.getDate()} de ${months[d.getMonth()]}` : `${months[d.getMonth()]} ${d.getDate()}`; };
     const action = isoDate(mission.fecha_accion);
@@ -79,6 +79,7 @@ export function MissionCard({ mission, faltante, es }: { mission: DailyMission; 
                     )}
                 </div>
             </div>
+            {cta}
         </Section>
     );
 }

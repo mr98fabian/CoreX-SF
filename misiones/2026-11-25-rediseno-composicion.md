@@ -1,6 +1,6 @@
 # Misión 19: Rediseño «Cobre a la vista» — B: Composición
 - **ID:** 2026-11-25-rediseno-composicion
-- **Estado:** en-curso
+- **Estado:** en-auditoria
 - **Rama:** feat/rediseno-composicion
 - **Repo:** CoreX-SF
 
@@ -44,9 +44,38 @@ Componer las 5 pantallas de la barra, el login, la ceremonia de $0 y los estados
 - Pantallas fuera de la barra (ajustes, ranking, juez, reloj de dinero, landing, precios).
 
 ## Reporte (lo llena Claude al ejecutar)
-- **Fecha:**
-- **Rama y commit:**
-- **Evidencia de los criterios de aceptación:**
+- **Fecha:** 2026-11-25
+- **Rama y commit:** `feat/rediseno-composicion` (ver PR). Primer commit: criterios de aceptación.
+- **Evidencia de los criterios de aceptación** (tests en `frontend/src/features/composicion.test.tsx`, 32 en verde; captura `pantallas-375.png` en la carpeta de esta misión):
+  1. Inicio: `-t "Inicio"` passed. Héroe «Debes ≈» de 56 px con la luz detrás; conector color funda hasta la misión; «Ver cómo hacerlo» es la única superficie de cobre (`bg-kx-amber` aparece 1 vez en `HomePage.tsx`); los dos datos en una línea de Plex Mono; interés diario con el icono 11; comparación, etapas, casa y liga plegadas bajo «Tu avance en detalle».
+  2. Calendario: `-t "Calendario"` + `calendarEvents.test.tsx` passed. Rejilla conservada; línea bajo cada semana (cobre lo pasado, funda lo que falta, corte en hoy); punto de cobre = cobro, icono 8 = corte, icono 10 = nómina en `--kx-pay`; máximo 2 marcas y «+N»; el DaySheet no cambia (mismo componente y props).
+  3. Plan: `-t "Plan"` + `AttackPage.test.tsx` passed. Héroe = fecha libre («Mayo de 2029») en Fraunces; línea vertical a 16 px del borde, de hoy a la fecha libre; una marca por deuda con su mes en Plex Mono (del evento de la línea de tiempo del servidor) y su coste diario; icono 14 al final; la funda viaja desde la última posición al entrar.
+  4. Cuentas: `-t "Cuentas"` passed. Héroe «Efectivo en cuentas»; cada deuda con su línea (sin barra de progreso ni banda de color); etapa solo en la pastilla; objetivo del ataque arriba con el icono 6; pagadas al final con cobre entero + PAGADA, plegadas si son más de 3; dinero propio aparte y sin línea.
+  5. Suscripciones: `-t "Suscripciones"` passed. Héroe «Te cobran al mes ≈»; filas con el icono 5; «Cancelar suscripción»; grupo «Canceladas»; repetidas con nota de texto sin color de alarma.
+  6. Ceremonia: `-t "ceremonia"` passed (temporizadores falsos): la funda se va en el fotograma siguiente (480 ms), PAGADA a los 700 ms exactos, sin confeti, mascota, sonido ni capa encima. Total 700 ms + la caída del sello, por debajo de 1.3 s. **No vista en vivo**: necesita que una deuda llegue a $0 durante la sesión.
+  7. Login: `-t "Login"` passed. Logo de 48 px + nombre, línea de cobre abierta, «Tu plan para salir de deudas.», Entrar (cobre, 52 px) y Probar demo (contorno, 52 px); sin número héroe; sin los orbes decorativos en bucle.
+  8. Estados: `-t "estados"` passed. Vacío = icono de 40 px en `--kx-ink-3` + una línea + un botón; error = icono 17 + qué pasó + Reintentar, en las 5 pantallas; todas en $0 = Plan con la línea entera en cobre y «Sin deudas.».
+  9. Héroe y tono: `-t "héroe y tono"` passed. Un héroe por pantalla (0 en el login); cero «cable», «pelar», «enchuf» o «Tadeo»; cero «¡» en estos archivos (se quitaron 4 exclamaciones del login y del calendario).
+  10. Contraste y objetivos táctiles: `-t "contraste"` passed (funda ≥ 3:1 en los tres fondos; tinta sobre cobre 8.59:1). Auditoría en el navegador de todos los botones y enlaces visibles de las 6 pantallas: **0 por debajo de 44 px** a 375 y a 360 px (`objetivos-tactiles-375.json`, `objetivos-tactiles-360.json`, script `sheet19.mjs`).
+  11. Reducir movimiento: `-t "reducir"` passed (la ceremonia pinta el estado final, sin caída del sello).
+  12. Prueba del papá: **pendiente de Fabian.**
+  13. Prueba de identidad: **pendiente de Fabian.**
+  14. Puerta: `python scripts/verify.py` → `verify: OK` (pytest, alembic heads, vitest 61 archivos / 451 tests, eslint, build).
+  15. CI: ver checks del PR.
 - **Checklist de auto-verificación:**
+  - [x] Sin backend, endpoints ni migraciones. `ActionPlanPage.tsx` (simulación completa, fuera de la barra) sin cambios.
+  - [x] Sin `console.log`, secretos ni `any` nuevos en el código de la app.
+  - [x] Sin scroll horizontal en las 5 pantallas a 360 px (medido: 0 px en las cinco).
+  - [x] Puerta compartida → `verify: OK`.
 - **Desviaciones o dudas:**
-- **Fallos preexistentes:**
+  - **La pestaña Plan es `AttackPage`** (ruta `/dashboard/action-plan`); ahí va la composición del Plan. `ActionPlanPage` es la simulación completa (`/action-plan/full`) y queda fuera.
+  - **Para decidir — avance de cada deuda en Cuentas:** cada fila usa la fracción pagada que ya mostraba la barra (`paidFraction`, sin cálculo nuevo), no el tiempo. Una línea por tiempo daría el mismo avance a todas las deudas y la prueba del papá no podría salir. El criterio por tiempo (decisión b) sí se aplica en el Plan y en el Calendario.
+  - **Plan — lo recorrido:** no existe fecha de inicio del plan, así que la línea empieza hoy y lo recorrido es la parte del mes en curso. Sigue siendo tiempo, no dinero.
+  - El botón de la misión en Inicio es nuevo («Ver cómo hacerlo», lleva al Plan), porque el documento le da un botón principal.
+  - En Inicio la fecha libre pasa de la franja ámbar a una línea bajo el héroe; la franja desaparece.
+  - En el Calendario se conservan el fondo de color por deuda y la barra roja → verde.
+  - Las suscripciones «repetidas» se detectan por nombre igual (sin mayúsculas ni espacios), porque el servidor no marca duplicados.
+  - La marca del mapache se quitó del aviso «llegó a $0» de Inicio. Sigue en el DaySheet (no se cambia su contenido) y en Análisis (fuera de alcance).
+  - **Corrección de la misión 18:** `.kx-line` no tenía `overflow: hidden` y el envoltorio del corte creaba scroll horizontal (hasta 51 px en Cuentas). Se añade, con test de regresión.
+  - Tests actualizados al diseño aprobado: `calendarEvents.test.tsx`, `noche.test.ts` (3), `SubscriptionsView.test.tsx`, `AttackPage.test.tsx`, `cimientos.test.tsx`.
+- **Fallos preexistentes:** ninguno.

@@ -11,8 +11,11 @@ vi.mock('@/hooks/useFormatMoney', () => ({ useFormatMoney: () => ({ formatMoney:
 vi.mock('@/hooks/useAccounts', () => ({ useAccountLogos: () => () => undefined }));
 vi.mock('@/hooks/useKxSummary', () => ({
     useKxSummary: () => ({
-        loading: false, error: null, reload: vi.fn(), path: null,
-        debts: [{ name: 'Visa', stage: 'debt' }],
+        loading: false, error: null, reload: vi.fn(),
+        // misión 19: the axis places each debt by the server timeline's own payoff event
+        path: { timeline: [{ date: '2027-03-01', total_balance: 0, events: ['Visa Paid Off'] }] },
+        freedom: { year: 2027, month: 2 },
+        debts: [{ name: 'Visa', stage: 'debt', bal: 3000 }],
         staged: [{ name: 'Checking', type: 'checking', bal: 2000 }],
     }),
 }));
@@ -61,9 +64,11 @@ describe('Plan de ataque', () => {
         expect(el.textContent).toContain('Visa');
     });
 
-    it('shows each debt daily cost from the command center next to its APR', async () => {
+    it('the route is the plan line: each debt ends on its month, with its daily cost from the command center (misión 19)', async () => {
         vi.mocked(apiFetch).mockResolvedValue({ morning_briefing: null, ...METER });
         const el = await render();
-        expect(el.querySelector('[data-testid="daily-cost"]')?.textContent).toBe(' · te cobra $1.97/día');
+        const mark = [...el.querySelectorAll('[data-testid="axis-mark"]')].map((m) => m.textContent).find((t) => t?.includes('Visa'));
+        expect(mark).toBe('mar 2027 Visa en $0 · te cobra $1.97/día');
+        expect(el.querySelector('[data-testid="hero"] .kx-hero-number')!.textContent).toBe('marzo de 2027');
     });
 });

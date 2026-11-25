@@ -92,15 +92,19 @@ export function StatePhrase({ children, tone = 'amber' }: { children: ReactNode;
 // ── Hero number: ONE per screen, with its interpreting phrase ──
 export function HeroNumber({ label, amount, phrase }: { label: string; amount: number; phrase: ReactNode }) {
     const { formatMoney } = useFormatMoney();
+    // 56 px; 44 px when the figure passes 9 characters (direccion-de-arte §2.3)
+    const size = formatMoney(amount).split('.')[0].length > 9 ? 'text-[44px]' : 'text-[56px]';
     // Counts from the previous value after a payment; the final value is the server's
     const render = (n: number) => {
         const [d, c] = formatMoney(n).split('.');
         return <>{d}{c && <sup className="ml-0.5 align-super text-[23px] text-kx-ink3">.{c}</sup>}</>;
     };
     return (
-        <div className="kx-lit kx-halo" data-kx-elev="2" data-testid="hero">
+        <div className="kx-lit relative" data-kx-elev="2" data-testid="hero">
+            {/* The one light of the screen, behind its one number */}
+            <span aria-hidden="true" className="pointer-events-none absolute -inset-x-4 -inset-y-10 -z-10" style={{ background: 'var(--kx-foco)' }} />
             <p className="kx-label">{label}</p>
-            <p className="kx-hero-number mt-1.5 text-[52px] text-kx-ink">
+            <p className={`kx-hero-number mt-1.5 ${size} text-kx-ink`}>
                 <CountUp value={amount} format={render} label={formatMoney} />
             </p>
             <p className="mt-2.5 text-[13.5px] text-kx-ink2">{phrase}</p>
@@ -236,6 +240,7 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
 // sits on the shell's bottom edge whatever height the view has, and the content
 // can never scroll under it. Hidden while the soft keyboard is open.
 export { CopperLine } from './CopperLine';
+export { EmptyState, ErrorState, VerticalLine, Connector } from './states';
 export { Opening } from './Opening';
 
 export function TabBar() {

@@ -7,6 +7,7 @@
  */
 import { useState } from 'react';
 import { MoneyCount } from '@/components/kx/motion';
+import { KxInterest } from '@/components/kx/icons';
 
 export type Period = 'dia' | 'semana' | 'mes' | 'anio';
 export type InterestPeriods = Record<Period, number>;
@@ -50,17 +51,18 @@ export function DailyInterestLine({ es, periods, debtBalances }: { es: boolean; 
     const choose = (p: Period) => { setPeriod(p); try { localStorage.setItem(KEY, p); } catch { /* private mode */ } };
     return (
         <div data-testid="daily-interest" data-state="charging" className="text-[13px] text-kx-ink2">
-            <p>
-                {LEAD[period][i]} <MoneyCount value={periods[period]} className="kx-num font-semibold text-kx-ink" />
-                <span className="text-xs text-kx-ink3"> · {es ? 'estimado, al ritmo de hoy' : "estimate, at today's pace"}</span>
+            <p className="flex items-start gap-2">
+                <KxInterest size={18} className="mt-px flex-none text-kx-ink3" />
+                <span>{LEAD[period][i]} <MoneyCount value={periods[period]} className="kx-num font-semibold text-kx-ink" />
+                <span className="text-xs text-kx-ink3"> · {es ? 'estimado, al ritmo de hoy' : "estimate, at today's pace"}</span></span>
             </p>
-            <div className="mt-1 flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 <span className="text-xs text-kx-ink3">{es ? 'baja con cada pago' : 'drops with every payment'}</span>
                 <span className="ml-auto flex gap-1" role="group" aria-label={es ? 'Periodo' : 'Period'}>
                     {(Object.keys(LABELS) as Period[]).map((p) => (
                         <button key={p} onClick={() => choose(p)} aria-pressed={p === period}
-                            className={`rounded-full px-2 py-0.5 text-[11px] ${p === period ? 'bg-kx-raised font-semibold text-kx-ink' : 'text-kx-ink3'}`}>
-                            {LABELS[p][i]}
+                            className="flex min-h-[44px] min-w-[44px] items-center justify-center">
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] ${p === period ? 'bg-kx-raised font-semibold text-kx-ink' : 'text-kx-ink3'}`}>{LABELS[p][i]}</span>
                         </button>
                     ))}
                 </span>
