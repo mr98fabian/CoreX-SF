@@ -3,13 +3,13 @@ Settings Router — User preferences and onboarding state.
 Persists user-level flags in the user_settings table.
 """
 from fastapi import APIRouter, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session
 from pydantic import BaseModel
 import logging
 
 from database import engine
 from models import UserSettings
-from helpers import bypass_fk
+from helpers import bypass_fk, get_or_create_for_user
 from auth import get_current_user_id
 from api_tokens import require_scope
 
@@ -23,17 +23,8 @@ class SettingsUpdate(BaseModel):
 
 
 def _get_or_create(session: Session, user_id: str) -> UserSettings:
-    """Upsert pattern: return existing row or create a new one."""
-    settings = session.exec(
-        select(UserSettings).where(UserSettings.user_id == user_id)
-    ).first()
-    if not settings:
-        settings = UserSettings(user_id=user_id)
-        with bypass_fk(session):
-            session.add(settings)
-            session.commit()
-        session.refresh(settings)
-    return settings
+    """Return the user's settings row, creating it race-safely on first access."""
+    return get_or_create_for_user(session, UserSettings, user_id)
 
 
 @router.get("/settings")

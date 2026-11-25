@@ -13,6 +13,7 @@ from sqlmodel import select
 import push_engine
 from auth import DEMO_USER_ID, get_current_user_id
 from database import request_session
+from helpers import get_or_create_for_user
 from models import PushDevice, UserSettings
 
 router = APIRouter(prefix="/api/push", tags=["push"])
@@ -82,7 +83,7 @@ def get_preferences(user_id: str = Depends(get_current_user_id)):
 @router.put("/preferences")
 def set_preferences(body: PreferenceIn, user_id: str = Depends(get_current_user_id)):
     with request_session() as s:
-        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first() or UserSettings(user_id=user_id)
+        row = get_or_create_for_user(s, UserSettings, user_id)
         row.push_enabled = body.enabled
         s.add(row)
         s.commit()
@@ -106,7 +107,7 @@ def get_email_preferences(user_id: str = Depends(get_current_user_id)):
 @router.put("/email")
 def set_email_preferences(body: PreferenceIn, user_id: str = Depends(get_current_user_id)):
     with request_session() as s:
-        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first() or UserSettings(user_id=user_id)
+        row = get_or_create_for_user(s, UserSettings, user_id)
         row.email_enabled = body.enabled
         s.add(row)
         s.commit()
@@ -122,7 +123,7 @@ def sync_profile(body: ProfileIn, user_id: str = Depends(get_current_user_id)):
     except Exception:
         raise HTTPException(status_code=400, detail="Unknown time zone")
     with request_session() as s:
-        row = s.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first() or UserSettings(user_id=user_id)
+        row = get_or_create_for_user(s, UserSettings, user_id)
         row.language = push_engine.normalize_language(body.language)
         row.timezone = body.timezone
         s.add(row)

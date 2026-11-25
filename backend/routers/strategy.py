@@ -58,11 +58,8 @@ def get_peace_shield_data(user_id: str = Depends(get_current_user_id)):
 def update_shield_target(data: dict, user_id: str = Depends(get_current_user_id)):
     target = Decimal(str(data.get("target", DEFAULT_PEACE_SHIELD)))
     with request_session() as session:
-        settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
-        if settings:
-            settings.shield_target = target
-        else:
-            settings = UserSettings(user_id=user_id, shield_target=target)
+        settings = helpers.get_or_create_for_user(session, UserSettings, user_id)
+        settings.shield_target = target
         session.add(settings)
         with bypass_fk(session):
             session.commit()
@@ -78,11 +75,8 @@ def update_attack_percentage(data: dict, user_id: str = Depends(get_current_user
     if pct < 0 or pct > 100:
         raise HTTPException(status_code=400, detail="percentage must be between 0 and 100.")
     with request_session() as session:
-        settings = session.exec(select(UserSettings).where(UserSettings.user_id == user_id)).first()
-        if settings:
-            settings.attack_percentage = pct
-        else:
-            settings = UserSettings(user_id=user_id, attack_percentage=pct)
+        settings = helpers.get_or_create_for_user(session, UserSettings, user_id)
+        settings.attack_percentage = pct
         session.add(settings)
         with bypass_fk(session):
             session.commit()

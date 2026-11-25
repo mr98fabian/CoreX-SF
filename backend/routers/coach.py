@@ -34,13 +34,7 @@ WEEKDAYS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "do
 
 
 def _profile(session, user_id: str) -> CoachProfile:
-    p = session.exec(select(CoachProfile).where(CoachProfile.user_id == user_id)).first()
-    if not p:
-        p = CoachProfile(user_id=user_id)
-        session.add(p)
-        session.commit()
-        session.refresh(p)
-    return p
+    return helpers.get_or_create_for_user(session, CoachProfile, user_id)
 
 
 def _out(p: CoachProfile) -> dict:

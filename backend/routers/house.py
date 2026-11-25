@@ -18,7 +18,7 @@ from sqlmodel import select
 
 from api_tokens import audit_summary, require_scope
 from database import request_session
-from helpers import accounts_to_active_debt_objects
+from helpers import accounts_to_active_debt_objects, get_or_create_for_user
 from models import Account, CashflowItem, HouseGoal
 from velocity_engine import (HOUSE_INSURANCE_PCT, HOUSE_RATE, HOUSE_TAX_PCT, house_goal_estimate,
                              monthly_income, plan_minimum)
@@ -92,7 +92,7 @@ def get_house_goal(user_id: str = Depends(require_scope("read:dashboard"))):
 def put_house_goal(body: HouseGoalIn, user_id: str = Depends(require_scope("write:accounts"))):
     data = body.model_dump()
     with request_session() as session:
-        g = session.exec(select(HouseGoal).where(HouseGoal.user_id == user_id)).first() or HouseGoal(user_id=user_id, **data)
+        g = get_or_create_for_user(session, HouseGoal, user_id, **data)
         for k, v in data.items():
             setattr(g, k, v)
         g.updated_at = datetime.utcnow()
