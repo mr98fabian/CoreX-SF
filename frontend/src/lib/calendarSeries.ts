@@ -18,7 +18,8 @@ export interface CalendarMonth {
     month: number;          // 0-11
     start: number;          // projected total debt on day 1 (the current month: today's debt)
     end: number;            // projected total debt at month close
-    /** what the debt goes down this month (the current month: from today) — the server's figure */
+    /** what the debt goes down this month (the current month: from today) — the server's figure;
+     *  negative when interest outruns the payments (the debt goes UP) */
     drop: number;
     zeroDay: number | null; // day the debt reaches $0 (freedom month only)
     days?: number[];        // daily series: balance at the end of each day (index = day − 1)
@@ -90,7 +91,7 @@ function monthsFromDaily(daily: TimelinePoint[], today: Date): CalendarMonth[] {
 
 /** Each month's drop is the server's (resumen_meses.baja); a month it does not list keeps 0. */
 function withServerDrop(months: CalendarMonth[], summary?: MonthSummary[] | null): CalendarMonth[] {
-    const byKey = new Map((summary ?? []).map((s) => [s.mes, Math.max(0, Number(s.baja) || 0)]));
+    const byKey = new Map((summary ?? []).map((s) => [s.mes, Number(s.baja) || 0]));
     return months.map((mo) => ({ ...mo, drop: byKey.get(key(mo.year, mo.month)) ?? 0 }));
 }
 

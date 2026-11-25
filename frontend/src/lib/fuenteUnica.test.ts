@@ -10,6 +10,7 @@ import accounts from '@/features/accounts/AccountsPage.tsx?raw';
 import actionPlan from '@/features/actionplan/ActionPlanPage.tsx?raw';
 import attack from '@/features/attack/AttackPage.tsx?raw';
 import home from '@/features/home/HomePage.tsx?raw';
+import cuentas from '@/features/accounts/AccountsStagePage.tsx?raw';
 
 const FILES: Record<string, string> = {
     'DebtCalendar.tsx': calendar, 'SettingsPage.tsx': settings, 'AccountsPage.tsx': accounts,
@@ -38,6 +39,9 @@ describe('fuente única: las pantallas no calculan dinero por su cuenta', () => 
     it('Inicio: «Disponible para tu plan» es el ataque de la misión (D3), el efectivo va aparte', () => {
         expect(home).toMatch(/Disponible para tu plan: '[^\n]*formatMoney\(s\.available\)/);
         expect(home).toContain('Efectivo en cuentas');
+        // D3: cash is never called «Disponible» anywhere
+        expect(cuentas).not.toMatch(/'Disponible '[^\n]*s\.liquid/);
+        expect(cuentas).toContain('Efectivo en cuentas');
     });
 
     it('Calendario: la baja del mes en curso se rotula «desde hoy»', () => {
