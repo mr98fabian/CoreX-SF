@@ -1,0 +1,89 @@
+{
+  "fecha": "2026-11-24T10:04:23.974Z",
+  "base": "https://korexf.com",
+  "commit": "43c1e06",
+  "canario": "calendario",
+  "verde": false,
+  "limpieza": "sin usuario de borrado · korexqa31def083ab@euploading.com queda de relevo para la próxima corrida",
+  "regresion": null,
+  "flujos": [
+    {
+      "flujo": "registro",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/01-registro-formulario.png",
+        "capturas/02-registro-cuenta-creada.png",
+        "capturas/03-registro-panel.png"
+      ],
+      "ms": 14053,
+      "errores": [
+        "HTTP 500 /api/settings"
+      ]
+    },
+    {
+      "flujo": "login",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/04-login-panel.png"
+      ],
+      "ms": 4646
+    },
+    {
+      "flujo": "agregar-deuda",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/05-agregar-deuda-formulario.png",
+        "capturas/06-agregar-deuda-lista.png"
+      ],
+      "ms": 4152
+    },
+    {
+      "flujo": "plan",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/07-plan-plan.png"
+      ],
+      "ms": 2347
+    },
+    {
+      "flujo": "calendario",
+      "veredicto": "FALLA",
+      "detalle": "(canario) no apareció: encabezado «Tu calendario de deuda»",
+      "capturas": [
+        "capturas/08-calendario-fallo.png"
+      ],
+      "ms": 21091
+    },
+    {
+      "flujo": "suscripciones",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/09-suscripciones-formulario.png",
+        "capturas/10-suscripciones-lista.png"
+      ],
+      "ms": 4127
+    },
+    {
+      "flujo": "conectar-ia",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/11-conectar-ia-guia.png",
+        "capturas/12-conectar-ia-planes.png"
+      ],
+      "ms": 2698
+    },
+    {
+      "flujo": "borrar-cuenta",
+      "veredicto": "OMITIDO",
+      "detalle": "el canario no borra cuentas",
+      "capturas": [],
+      "ms": 0
+    }
+  ]
+}

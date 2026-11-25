@@ -1,0 +1,97 @@
+{
+  "fecha": "2026-11-24T11:00:37.348Z",
+  "base": "https://korexf.com",
+  "commit": "43c1e06",
+  "canario": null,
+  "verde": true,
+  "limpieza": "usuario de borrado eliminado (korexqa31def083ab@euploading.com) · korexqad38b08a779@euploading.com queda de relevo para la próxima corrida",
+  "regresion": {
+    "base": "43c1e06 (2026-11-24T09:06:01.895Z)",
+    "rotos": []
+  },
+  "flujos": [
+    {
+      "flujo": "registro",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/01-registro-formulario.png",
+        "capturas/02-registro-cuenta-creada.png",
+        "capturas/03-registro-panel.png"
+      ],
+      "ms": 14694,
+      "errores": [
+        "HTTP 500 /api/settings"
+      ]
+    },
+    {
+      "flujo": "login",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/04-login-panel.png"
+      ],
+      "ms": 4052
+    },
+    {
+      "flujo": "agregar-deuda",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/05-agregar-deuda-formulario.png",
+        "capturas/06-agregar-deuda-lista.png"
+      ],
+      "ms": 4667
+    },
+    {
+      "flujo": "plan",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/07-plan-plan.png"
+      ],
+      "ms": 2313
+    },
+    {
+      "flujo": "calendario",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/08-calendario-calendario.png"
+      ],
+      "ms": 2609
+    },
+    {
+      "flujo": "suscripciones",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/09-suscripciones-formulario.png",
+        "capturas/10-suscripciones-lista.png"
+      ],
+      "ms": 4610
+    },
+    {
+      "flujo": "conectar-ia",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/11-conectar-ia-guia.png",
+        "capturas/12-conectar-ia-planes.png"
+      ],
+      "ms": 3231
+    },
+    {
+      "flujo": "borrar-cuenta",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/13-borrar-cuenta-aviso.png",
+        "capturas/14-borrar-cuenta-confirmar.png",
+        "capturas/15-borrar-cuenta-borrada.png",
+        "capturas/16-borrar-cuenta-reingreso-rechazado.png"
+      ],
+      "ms": 11141
+    }
+  ]
+}

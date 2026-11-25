@@ -1,0 +1,84 @@
+{
+  "fecha": "2026-11-24T11:03:18.975Z",
+  "base": "https://korexf.com",
+  "commit": "43c1e06",
+  "canario": "calendario",
+  "verde": false,
+  "limpieza": "sin usuario de borrado",
+  "regresion": {
+    "base": "43c1e06 (2026-11-24T11:00:37.348Z)",
+    "rotos": [
+      "calendario"
+    ]
+  },
+  "flujos": [
+    {
+      "flujo": "registro",
+      "veredicto": "OMITIDO",
+      "detalle": "el canario entra con el usuario de relevo",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "login",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/01-login-panel.png"
+      ],
+      "ms": 3750
+    },
+    {
+      "flujo": "agregar-deuda",
+      "veredicto": "OMITIDO",
+      "detalle": "el canario usa la deuda del usuario de relevo",
+      "capturas": [],
+      "ms": 0
+    },
+    {
+      "flujo": "plan",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/02-plan-plan.png"
+      ],
+      "ms": 2338
+    },
+    {
+      "flujo": "calendario",
+      "veredicto": "FALLA",
+      "detalle": "(canario) no apareció: encabezado «Tu calendario de deuda»",
+      "capturas": [
+        "capturas/03-calendario-fallo.png"
+      ],
+      "ms": 20974
+    },
+    {
+      "flujo": "suscripciones",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/04-suscripciones-formulario.png",
+        "capturas/05-suscripciones-lista.png"
+      ],
+      "ms": 4127
+    },
+    {
+      "flujo": "conectar-ia",
+      "veredicto": "PASA",
+      "detalle": "",
+      "capturas": [
+        "capturas/06-conectar-ia-guia.png",
+        "capturas/07-conectar-ia-planes.png"
+      ],
+      "ms": 2547
+    },
+    {
+      "flujo": "borrar-cuenta",
+      "veredicto": "OMITIDO",
+      "detalle": "el canario no borra cuentas",
+      "capturas": [],
+      "ms": 0
+    }
+  ]
+}

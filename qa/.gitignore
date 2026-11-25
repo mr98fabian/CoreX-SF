@@ -1,0 +1,5 @@
+node_modules/
+.estado/
+# Las corridas pesan ~3 MB: en git solo quedan reporte y datos; capturas y hoja viven en la PC.
+corridas/*/capturas/
+corridas/*/hoja-contacto.png
