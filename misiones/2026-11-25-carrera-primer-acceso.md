@@ -1,6 +1,6 @@
 # Misión: Fix — HTTP 500 intermitente en el primer acceso de cuentas nuevas
 - **ID:** 2026-11-25-carrera-primer-acceso
-- **Estado:** en-curso
+- **Estado:** en-auditoria
 - **Rama:** fix/carrera-primer-acceso
 - **Repo:** CoreX-SF
 ## Objetivo
@@ -40,16 +40,62 @@ paralelas intentan crear a la vez su fila por usuario (`user_settings` y similar
 - `subscriptions` (filas creadas por webhooks, no en el primer acceso).
 - Migraciones / esquema.
 ## Reporte (lo llena Claude al ejecutar)
-- **Fecha:**
-- **Rama y commit:**
-- **Evidencia de los criterios de aceptación** (uno a uno, con el número de la tabla):
-  1.
-- **Checklist de auto-verificación** (cada ítem con su artefacto; una marca sola no vale):
-  - [ ] Diff auto-revisado → `git diff --stat origin/main...HEAD`
-  - [ ] Archivos fuera de alcance = 0 → `git diff --name-only origin/main...HEAD`
-  - [ ] Migraciones = 1 head → sin migraciones + diff que lo prueba
-  - [ ] Sin `console.log`, secretos ni `any` nuevos
-  - [ ] Puerta compartida → salida final de `python scripts/verify.py`
-  - [ ] Criterios de aceptación uno a uno → ver la sección anterior
+- **Fecha:** 2026-11-25
+- **Rama y commit:** `fix/carrera-primer-acceso` — criterios `bf57fd7`, fix + test `d6fde95` (desde `main` `b607c69`)
+- **Evidencia de los criterios de aceptación:**
+  1. `pytest tests/test_carrera_primer_acceso.py -q` → `5 passed` (endpoint: 6 peticiones paralelas
+     3× `GET /api/settings` + 3× `PUT /api/push/profile` → todas 200, `count(user_settings) == 1`;
+     helper con 6 hilos para `user_settings`, `coach_profiles`, `sync_state`, `house_goals` → un solo id, una fila).
+  2. **Rojo sin el arreglo** (mismo test contra `routers/` de `main`, antes de `d6fde95`):
+     ```
+     E   AssertionError: statuses=[500, 500, 200, 500, 500, 500] bodies=['{"error":"INTERNAL_ERROR",...
+     [ERROR] korex: [2c36e998] Unhandled error on PUT /api/push/profile: IntegrityError:
+       (sqlite3.IntegrityError) UNIQUE constraint failed: user_settings.user_id
+     FAILED tests/test_carrera_primer_acceso.py::test_first_access_parallel_requests_all_200_and_one_row
+     ```
+  3. Helper único `backend/helpers.py::get_or_create_for_user` (`INSERT … ON CONFLICT (user_id) DO NOTHING`
+     + SELECT; dialectos `postgresql` y `sqlite`). Lo usan `settings_api._get_or_create`, `push` (preferences,
+     email, profile), `strategy` (shield, attack-percentage), `coach._profile`, `sync.mark`, `house` (PUT).
+     `grep -rn "or UserSettings(\|or SyncState(\|or HouseGoal(\|or CoachProfile(" backend/routers` → vacío (exit 1).
+  4. Contrato intacto: mismas rutas, mismos cuerpos (el test 1 compara los JSON); suite completa en la puerta (ver 5).
+  5. Puerta compartida: ver salida al final del checklist.
+  6. Sin migraciones: el diff no toca `backend/alembic/` (lista abajo); el esquema ya tenía `user_id` único.
+  7. CI: ver checks del PR.
+  8. **Pendiente:** el Probador QA debe confirmar en su siguiente corrida (registro de cuenta nueva,
+     canario-1004) que el 500 del primer acceso no reaparece.
+- **Checklist de auto-verificación:**
+  - [x] Diff auto-revisado → `git diff --stat origin/main...HEAD`:
+    ```
+    backend/helpers.py                           | 33 ++++++++++
+    backend/routers/coach.py                     |  8 +--
+    backend/routers/house.py                     |  4 +-
+    backend/routers/push.py                      |  7 +-
+    backend/routers/settings_api.py              | 17 ++---
+    backend/routers/strategy.py                  | 14 ++--
+    backend/routers/sync.py                      |  3 +-
+    backend/tests/test_carrera_primer_acceso.py  | 96 ++++++++++++++++++++++++++++
+    misiones/2026-11-25-carrera-primer-acceso.md | 55 ++++++++++++++++
+    misiones/cola.md                             |  1 +
+    ```
+  - [x] Archivos fuera de alcance = 0 → la lista de arriba: helper, los 6 routers con get-or-create por
+        usuario, el test nuevo y los archivos de misión. Nada de frontend ni `alembic/`.
+  - [x] Migraciones → sin migraciones (ninguna ruta `backend/alembic/` en el diff).
+  - [x] Sin `console.log`, secretos ni `any` nuevos → única coincidencia: la línea del propio checklist
+        de esta ficha (`+  - [ ] Sin \`console.log\`…`), no código.
+  - [x] Puerta compartida → `python scripts/verify.py`: 
+    ```
+    verify: backend:pytest OK (38s)        # 
+    verify: backend:alembic-heads OK (1s)
+    verify: frontend:vitest OK (59s)       # 
+    verify: frontend:eslint OK (15s)
+    verify: frontend:build OK (20s)
+    verify: OK                             (exit 0)
+    ```
+  - [x] Criterios de aceptación uno a uno → sección anterior.
 - **Desviaciones o dudas:**
-- **Fallos preexistentes** (si los hay):
+  - El arreglo se extendió a `coach_profiles`, `sync_state` y `house_goals` (mismo patrón, `user_id` único),
+    como pide el paso 2. `subscriptions` queda fuera: sus filas las crean webhooks, no el primer acceso.
+  - El helper hace commit del INSERT antes de que el endpoint aplique sus cambios (antes iba todo en un
+    commit). Inocuo: se llama al principio de cada endpoint, sin cambios pendientes en la sesión.
+  - Trabajado en un worktree aparte (`KoreX-wt-carrera`) para no tocar la carpeta compartida.
+- **Fallos preexistentes:** ninguno.
