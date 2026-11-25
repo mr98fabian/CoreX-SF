@@ -96,8 +96,9 @@ def test_owner_data_first_obligation_covered_is_the_headline_and_the_cut_that_do
     [m] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
     assert (m["tipo"], m["degradada"], m["fecha_accion"]) == ("minimo", "corte", date(2026, 12, 7))
     assert m["copy"].startswith("No alcanza para dejar la Amex en $0 antes del corte del 12 de noviembre")
-    # … and the rest goes to the avalanche: what stays above the shield after the car
-    assert (r["ataque"], r["objetivo"]) == (D("274.20"), "Amex")
+    # … and the rest goes to the avalanche, from TODAY's cash only (Fabian 2026-11-25):
+    # 1,915.32 − reserve (car 641.12 + Amex minimum 200) − shield 1,000 = 74.20
+    assert (r["ataque"], r["objetivo"]) == (D("74.20"), "Amex")
 
 
 def test_cash_below_the_first_obligation_makes_the_faltante_the_headline():

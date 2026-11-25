@@ -45,24 +45,26 @@ Misión 14 (`misiones/2026-11-24-auditoria-numeros/`, PR #13); si esta misión l
 - **Rama y commits:** `feat/fuente-unica-numeros` desde `origin/main` 868eae6 — 553036c (criterios) · 9d1fd26 (tests en
   rojo) · 6f9b34d (motor) · 46eb700 (pantallas) · 1ba6b0e (rótulos D3 / mes que sube) · este reporte.
 - **Evidencia de los criterios de aceptación:**
-  1. `pytest tests/test_concordancia.py` → **39 passed**. En rojo antes del motor (commit 9d1fd26, con solo
+  1. `pytest tests/test_concordancia.py` → **43 passed** (39 + 4 del criterio del ataque, 2026-11-25). En rojo antes del motor (commit 9d1fd26, con solo
      `helpers.today` añadido): **32 failed** — `test_deuda_total_igual_en_todas` (Calendario-hoy 1,021 ≠ Inicio),
      `cierre_de_mes…[1|15|24|30]`, `ya_no_promete_la_baja_fantasma`, `reserva_una_sola_definicion`,
      `copy_de_reserva…`, `faltante_inicio_igual_gps`, `disponible_es_el_ataque`, `interes_periodos_unicos`,
      `minimo_unico_en_la_mision`, `meses_calendario` (5 ≠ 4, 15 ≠ 14, 6 ≠ 5), `maria_demo_se_concilia_sola`,
      `huerfanos_retirados`.
-  2. Caso #1 (`caso_real_anon`, hoy 24-nov), salida de `/api/velocity/freedom-path` y `/api/strategy/tactical-gps`:
-     `{"mes": "2026-11", "inicio": 35410.63, "cierre": 32977.40, "pagos": 2595.78, "interes": 162.55, "baja": 2433.23}`;
-     pagos del GPS en noviembre: 24-nov ataque Préstamo personal 1,045.04 · 29-nov Tarjeta B 1,476.88 · 29-nov
-     Tarjeta D 73.86 = **2,595.78** (= `pagos`). Antes: «bajas ≈ $7,667.78» igual el 1, 15, 24 y 30; ahora
-     `test_bajas_no_dependen_de_dias_pasados` lo fija. Reserva 6,014.24, sin faltante, copy:
+  2. Caso #1 (`caso_real_anon`, hoy 24-nov), salida de `/api/velocity/freedom-path` y `/api/strategy/tactical-gps`
+     con el criterio final del ataque (2026-11-25):
+     `{"mes": "2026-11", "inicio": 35410.63, "cierre": 34028.91, "pagos": 1550.74, "interes": 169.02, "baja": 1381.72}`;
+     pagos del GPS en noviembre: 29-nov Tarjeta B 1,476.88 · 29-nov Tarjeta D 73.86 = **1,550.74** (= `pagos`, y = los
+     pagos reales programados del caso). Antes: «bajas ≈ $7,667.78» igual el 1, 15, 24 y 30; ahora lo fijan
+     `test_bajas_no_dependen_de_dias_pasados` y `test_caso_real_noviembre_baja_solo_los_pagos_programados`. Reserva
+     6,014.24, ataque **$0**, sin faltante, primer ataque el 12-dic ($1,804.42 a Préstamo personal); copy:
      «Reservamos $6,014.24 para el corte de la Tarjeta B (29 de noviembre) y 5 pagos más hasta el 20 de diciembre.
-     Con lo que sobra, ataca hoy $1,045.04 a la Préstamo personal (estimado).»
+     Hoy no sobra para atacar sin tocar tu escudo (estimado).»
   3. María (`test_maria_demo_se_concilia_sola` passed; `test_demo_persona.py` passed): reserva **$585.88** (sus
      mínimos) en vez de $18,400; las 4 tarjetas «degradadas» por D2 con copy explícito («No alcanza para dejar la
      Tarjeta de tienda en $0 antes del corte del 28 de noviembre: paga el mínimo ($80.48) antes del 5 de diciembre y
      lo demás va a la avalancha»); ataque $615.00; GPS sin caja negativa; libre en **15 meses calendario**
-     (2028-02); interés evitado $30,526.09.
+     (2028-02); interés evitado $30,525.41.
   4. `npx vitest run src/lib/fuenteUnica.test.ts` → **32 passed**. En `main` habría fallado:
      `git grep` en `origin/main` encuentra `sd.daily_interest_all * 30` (SettingsPage.tsx:933) y
      `mo.start - mo.end` (DebtCalendar.tsx:118).
@@ -87,11 +89,13 @@ Misión 14 (`misiones/2026-11-24-auditoria-numeros/`, PR #13); si esta misión l
   - [x] Puerta compartida → `verify: OK`.
   - [x] Criterios uno a uno → ver arriba.
 - **Desviaciones e interpretaciones (para Fabian y Mijo):**
-  1. **D1 también cambia el ataque**: el sobrante se mide contra la caja fechada (punto más bajo de la ventana, con
-     nóminas). Por eso la misión puede atacar hoy cuando las nóminas de los próximos días cubren los cortes (caso #1:
-     $1,045.04 hoy; antes, $0). Ninguna obligación queda descubierta ni la caja baja del escudo (lo fijan
-     `test_u14_gps_obligations` y la concordancia). Si se prefiere el criterio anterior (no atacar mientras la
-     reserva supere la caja de hoy), es un cambio de una línea en `get_daily_mission`.
+  1. **Ataque de hoy — decidido por Fabian (2026-11-25)**: el ataque se topa a la caja de HOY menos toda la reserva,
+     con el escudo intacto (`líquido − reserva − escudo`); las nóminas fechadas no cuentan para el ataque de hoy. Sigue
+     topado también por el punto más bajo de la ventana. El faltante se sigue juzgando con la caja fechada (D1).
+     Caso #1: ataque $0 (antes de la decisión, $1,045.04). Lo fijan `test_ataque_de_hoy_no_cuenta_nominas_fechadas`
+     (3 personas) y `test_caso_real_noviembre_baja_solo_los_pagos_programados`. Tests ajustados por el tope:
+     `test_daily_mission` (Amex 274.20 → 74.20), `test_suscripciones_motor` (el cargo baja el ataque, nunca más que
+     él mismo) y la landing de María ($30,526 → $30,525; línea de tiempo recalculada).
   2. **D2 se aplicó también al «estado»** (pagar el estado completo), no solo al corte: es la misma regla de matar la
      tarjeta; sin esto, María volvía a reservar saldos completos tras cada corte simulado.
   3. **Suscripciones activas sin fecha**: el paseo fechado no les inventa día, así que su mes se aparta del ataque.

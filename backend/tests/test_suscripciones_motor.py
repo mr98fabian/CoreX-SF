@@ -181,7 +181,9 @@ def test_a_dated_subscription_inside_the_window_lowers_the_attack(client):
         sub.status = "cancelled"
         s.add(sub); s.commit()
     without = get(client, "/api/strategy/command-center")["mision"]["ataque"]
-    assert round((without - dated) * 100) == 90000  # exactly the charge
+    # The charge lowers the attack, never by more than itself. Today's attack is also capped at
+    # today's cash minus the reserve (Fabian 2026-11-25), which already binds part of the way.
+    assert 0 < without - dated <= 900
 
 
 def test_a_dated_subscription_replaces_its_duplicate_recurring_item_in_the_dated_path():

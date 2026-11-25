@@ -2428,8 +2428,9 @@ def get_daily_mission(
       cash from their date on, shield intact.
     - D1: an obligation is "faltante" only if the cash projected ON ITS DATE (dated incomes and
       expenses, shield intact) cannot cover it: the same walk as the GPS (mission_cash_walk).
-    - Attack = the lowest end-of-day cash of the window minus the shield, capped at the target's
-      balance and today's cash. No income on record: attack 0 (no invented salary).
+    - Attack = the lowest end-of-day cash of the window minus the shield, capped at TODAY's cash
+      minus the whole reserve and the shield (dated paydays never fund today's attack — Fabian,
+      2026-11-25) and at the target's balance. No income on record: attack 0 (no invented salary).
       Active subscriptions with no charge date (`undated_monthly`) never get a made-up day: their
       month is kept out of the attack instead.
     - Debts with no obligation keep their plain minimum on due_day (the engine minimum, the one
@@ -2483,7 +2484,10 @@ def get_daily_mission(
     attack = Decimal('0')
     if recurring_incomes and target and walk["cierres"]:
         lowest = min(walk["cierres"]) - shield_target - Decimal(str(undated_monthly))
-        attack = max(Decimal('0'), min(lowest, target.balance, walk["cierres"][0] - shield_target))
+        # Fabian (2026-11-25): today's attack never counts dated paydays — it is capped at TODAY's
+        # cash minus the whole reserve, shield intact. The faltante still uses the dated cash (D1).
+        todays_cash = liquid_cash - reserve - shield_target
+        attack = max(Decimal('0'), min(lowest, todays_cash, target.balance, walk["cierres"][0] - shield_target))
         attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
 
     # Headline: the first obligation; the faltante only when it is that very obligation that falls short.

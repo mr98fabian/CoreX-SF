@@ -183,6 +183,23 @@ def test_faltante_inicio_igual_gps(world, persona):
 
 
 @pytest.mark.parametrize("persona", ALL)
+def test_ataque_de_hoy_no_cuenta_nominas_fechadas(world, persona):
+    """Fabian 2026-11-25: today's attack is capped at TODAY's cash minus the reserve (shield intact);
+    dated paydays never fund it. The faltante still uses the dated cash (D1)."""
+    dash = world(persona).get("/api/dashboard")
+    m = dash["mision"]
+    cap = max(0.0, dash["liquid_cash"] - m["reserva"] - float(dash["shield_target"]))
+    assert m["ataque"] <= cap + CENT
+
+
+def test_caso_real_noviembre_baja_solo_los_pagos_programados(world):
+    w = world("caso_real")
+    m = _month(w.get("/api/velocity/freedom-path"), w.day)
+    assert w.get("/api/dashboard")["mision"]["ataque"] == 0  # 4,803.20 de caja < 6,014.24 de reserva
+    assert abs(m["pagos"] - 1550.74) < CENT, "Tarjeta B 1,476.88 + Tarjeta D 73.86 el 29-nov"
+
+
+@pytest.mark.parametrize("persona", ALL)
 def test_disponible_es_el_ataque(world, persona):
     dash = world(persona).get("/api/dashboard")
     assert abs(dash["disponible_plan"] - dash["mision"]["ataque"]) < CENT

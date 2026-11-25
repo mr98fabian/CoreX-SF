@@ -28,7 +28,7 @@ def _load(client, h):
 # engine's output on a fixed day (the 2026-11-24 audit case), pinned here.
 LANDING_DAY = date(2026, 11, 24)
 MARIA_MONTHS = 15
-MARIA_INTEREST_AVOIDED = 30526
+MARIA_INTEREST_AVOIDED = 30525
 
 
 @pytest.fixture(autouse=True)
