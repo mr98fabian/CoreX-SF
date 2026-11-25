@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 from fastapi import HTTPException
 from sqlalchemy import text
+from sqlmodel import select
 from velocity_engine import DebtAccount
 
 DEMO_USER_ID = "00000000-0000-4000-a000-000000000001"
@@ -35,6 +36,38 @@ def bypass_fk(session):
             session.execute(text("PRAGMA foreign_keys = ON"))
     else:
         yield
+
+
+def get_or_create_for_user(session, model, user_id: str, **defaults):
+    """Race-safe get-or-create of a per-user row (any model with a UNIQUE `user_id`).
+
+    A new account's first screen fires several requests in parallel that each create the same
+    row (user_settings, coach_profiles…). A plain SELECT→INSERT lets two of them see "no row",
+    both INSERT, and the loser hits the unique constraint → IntegrityError → HTTP 500 (misión 16).
+    Here the INSERT is `ON CONFLICT (user_id) DO NOTHING` — the database itself picks one winner,
+    atomically — and everyone then reads the winning row. Postgres (prod) and SQLite (local/tests).
+
+    `defaults` apply only when this call creates the row; callers set their own fields afterwards.
+    Commits the insert, so call it before staging other changes on the session.
+    """
+    query = select(model).where(model.user_id == user_id)
+    row = session.exec(query).first()
+    if row is not None:
+        return row
+    dialect = session.get_bind().dialect.name
+    if dialect == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert
+    elif dialect == "sqlite":
+        from sqlalchemy.dialects.sqlite import insert
+    else:
+        raise RuntimeError(f"get_or_create_for_user: unsupported dialect {dialect}")
+    # Build the values through the model so Python-side defaults (default_factory…) apply.
+    values = model(user_id=user_id, **defaults).model_dump(exclude_none=True)
+    stmt = insert(model.__table__).values(**values).on_conflict_do_nothing(index_elements=["user_id"])
+    with bypass_fk(session):
+        session.execute(stmt)
+        session.commit()
+    return session.exec(query).one()
 
 
 def today():

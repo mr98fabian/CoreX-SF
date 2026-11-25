@@ -13,6 +13,7 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlmodel import select
+from helpers import get_or_create_for_user
 
 from database import request_session
 from api_tokens import require_scope, audit_summary
@@ -82,7 +83,7 @@ def sync_mark(body: MarkBody, tz: Optional[str] = Query(None, max_length=64),
     source = body.source
     now = datetime.utcnow()
     with request_session() as s:
-        row = s.exec(select(SyncState).where(SyncState.user_id == user_id)).first() or SyncState(user_id=user_id)
+        row = get_or_create_for_user(s, SyncState, user_id)
         row.last_sync_at, row.last_source = now, source
         s.add(row)
         s.commit()
