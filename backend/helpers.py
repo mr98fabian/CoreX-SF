@@ -37,6 +37,14 @@ def bypass_fk(session):
         yield
 
 
+def today():
+    """THE app's clock for every number shown to the user (dashboard, plan, calendar, GPS,
+    command-center, push). One function so every surface computes at the same instant and the
+    concordance tests can fix the day (tests/test_concordancia.py)."""
+    from datetime import date as _date
+    return _date.today()
+
+
 def _debt_account(acc) -> DebtAccount:
     """Build a DebtAccount from an Account ORM row."""
     return DebtAccount(
