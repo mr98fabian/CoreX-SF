@@ -57,7 +57,7 @@ async def lookup(user_id):
 def env(monkeypatch):
     for k in ("FIREBASE_SERVICE_ACCOUNT_JSON", "RESEND_API_KEY", "EMAIL_FROM", "EMAIL_DRY_RUN"):
         monkeypatch.delenv(k, raising=False)
-    monkeypatch.setattr(helpers, "build_daily_mission", lambda *a, **k: {"mision": None})
+    monkeypatch.setattr(helpers, "build_daily_mission", lambda *a, **k: {**_REAL_MISSION(*a, **k), "mision": None})
     yield monkeypatch
     app.dependency_overrides.pop(get_current_user_id, None)
     with Session(database.engine) as s:
@@ -88,12 +88,26 @@ def device(uid=U, token="tok-email-1"):
         s.commit()
 
 
+def _cash(uid):
+    """Misión 17 (D2): the mission only asks to leave a card at $0 when the cash covers it, and the
+    cut notice says exactly that. Test users get enough cash for their test cards."""
+    with Session(database.engine) as s:
+        if not s.exec(select(Account).where(Account.user_id == uid, Account.type == "checking")).first():
+            s.add(Account(user_id=uid, name="Cheques", type="checking", balance=Decimal("5000")))
+            s.commit()
+
+
+_REAL_MISSION = helpers.build_daily_mission
+
+
 def card(uid=U, name="Visa Oro", balance="430.00", closing=25):
     with Session(database.engine) as s:
         a = Account(user_id=uid, name=name, type="debt", balance=Decimal(balance), interest_rate=Decimal("24"),
                     min_payment=Decimal("35"), closing_day=closing, debt_subtype="credit_card")
         s.add(a); s.commit(); s.refresh(a)
-        return a.id
+    if Decimal(balance) > 0:
+        _cash(uid)
+    return a.id
 
 
 def paid_off(uid=U, name="Tarjeta chica"):
@@ -104,7 +118,7 @@ def paid_off(uid=U, name="Tarjeta chica"):
 
 
 def mission(monkeypatch, monto="150.00", cuenta="Visa Oro"):
-    monkeypatch.setattr(helpers, "build_daily_mission", lambda *a, **k: {"mision": {
+    monkeypatch.setattr(helpers, "build_daily_mission", lambda *a, **k: {**_REAL_MISSION(*a, **k), "mision": {
         "tipo": "corte", "cuenta": cuenta, "monto": Decimal(monto), "fecha_accion": DAY}})
 
 

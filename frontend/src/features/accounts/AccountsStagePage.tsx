@@ -135,7 +135,7 @@ export default function AccountsStagePage() {
                 <AmberRule />
                 <StatePhrase>{phrase}</StatePhrase>
                 <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
-                    phrase={<>{es ? 'Disponible ' : 'Available '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b>
+                    phrase={<>{es ? 'Efectivo en cuentas ' : 'Cash in accounts '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b>
                         {mainChecking && <span className="text-kx-ink3"> · {mainChecking.name}</span>}</>} />
 
                 {!filter && <CreditPanel es={es} data={credit} />}

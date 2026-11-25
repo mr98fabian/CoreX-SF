@@ -23,12 +23,13 @@ import { VelocityCalculatorModal } from './VelocityCalculatorModal';
 // figures below are the engine's own output for her data, pinned by
 // backend/tests/test_demo_persona.py. Always shown labeled "Datos de ejemplo".
 const EXAMPLE_START = 18400;
-const EXAMPLE_TIMELINE = [17361, 16296, 15205, 14089, 12948, 11781, 10588, 9369, 8123, 6726, 5422, 4092, 2734, 1348, 0];
-const EXAMPLE_MONTHS = 14;
-const EXAMPLE_INTEREST_AVOIDED = 30176; // vs paying only the minimums (engine estimate)
+// Misión 17: from THE cash route (debt_path) on 2026-11-24, D1-D4 applied.
+const EXAMPLE_TIMELINE = [17873, 15859, 14669, 13641, 12590, 11516, 10418, 9296, 8148, 6975, 5778, 4556, 3308, 2035, 736, 0];
+const EXAMPLE_MONTHS = 15;
+const EXAMPLE_INTEREST_AVOIDED = 30525; // vs paying only the minimums (engine estimate)
 // Daily interest at the start of her plan vs month 12 (engine; pinned in test_demo_persona.py)
 const EXAMPLE_DAILY_BEFORE = 13.12;
-const EXAMPLE_DAILY_MONTH12 = 2.64;
+const EXAMPLE_DAILY_MONTH12 = 2.95;
 
 const STATUS = {
     live: { es: 'Disponible hoy', en: 'Available today' },

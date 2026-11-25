@@ -28,6 +28,7 @@ from models import Subscription
 from plan_guard import PLAN_LIMITS, entitlement, effective_plan_limit, _parse_ts
 from helpers import filter_active_debt_accounts
 from velocity_engine import daily_interest
+from velocity_engine import interest_periods_json
 
 logger = logging.getLogger("korex.subscriptions")
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
@@ -353,6 +354,8 @@ def get_savings_estimate(user_id: str = Depends(get_current_user_id), session: S
 
     return {
         "has_data": True, "total_debt": round(total_debt, 2), "daily_interest_all": _cents(total_daily_interest),
+        # THE periods (same function as the dashboard): the client never multiplies the daily figure
+        "interes_periodos": interest_periods_json(total_daily_interest),
         "plans": plans_result,
         "social_proof": {"total_accounts_monitored": len(accounts), "total_debt_tracked": round(total_debt, 2)},
     }

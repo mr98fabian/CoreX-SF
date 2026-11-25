@@ -115,7 +115,13 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                 : (es ? `En ${monthName}, ya vas en amarillo.` : `In ${monthName}, you're into yellow.`);
     const heroNote = isAfter || mo.zeroDay
         ? (es ? 'deuda proyectada al cierre del mes' : 'projected debt at month close')
-        : (es ? `al cierre del mes (estimado) · bajas ≈ ${approx(mo.start - mo.end)}` : `at month close (estimate) · down ≈ ${approx(mo.start - mo.end)}`);
+        : mo.drop < 0
+            // interest outruns the payments: say it goes UP, never a misleading "down $0"
+            ? (es ? `al cierre del mes (estimado) · sube${idx === 0 && !example ? ' desde hoy' : ''} ≈ ${approx(Math.abs(mo.drop))} por interés`
+                : `at month close (estimate) · up${idx === 0 && !example ? ' from today' : ''} ≈ ${approx(Math.abs(mo.drop))} in interest`)
+            : idx === 0 && !example
+                ? (es ? `al cierre del mes (estimado) · bajas desde hoy ≈ ${approx(mo.drop)}` : `at month close (estimate) · down from today ≈ ${approx(mo.drop)}`)
+                : (es ? `al cierre del mes (estimado) · bajas ≈ ${approx(mo.drop)}` : `at month close (estimate) · down ≈ ${approx(mo.drop)}`);
     const progress = maxDebt > 0 ? (1 - mo.end / maxDebt) * 100 : 100;
 
     return (
@@ -142,7 +148,7 @@ export function DebtCalendar({ months, maxDebt, paydays, live, compact, example 
                         <p className="text-xs text-kx-ink2">{heroNote}</p>
                         {monthCharges != null && monthCharges > 0 && (
                             <p className="mt-1 text-xs text-kx-ink2" data-testid="month-charges">
-                                {es ? 'Te cobran este mes ' : 'Charged this month '}<b className="kx-num text-kx-ink">{formatMoney(monthCharges)}</b>
+                                {es ? 'Te cobran este mes (fechado) ' : 'Charged this month (dated) '}<b className="kx-num text-kx-ink">{formatMoney(monthCharges)}</b>
                                 <span className="text-kx-ink3">{es ? ' · incluye suscripciones' : ' · includes subscriptions'}</span>
                             </p>
                         )}

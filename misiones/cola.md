@@ -19,6 +19,7 @@ aprueba merges.
 | 10 | CI en GitHub con bloqueo real de merge | en-auditoria | Rama `chore/ci-bloqueo`; archivo `misiones/2026-11-22-ci-bloqueo.md` |
 | 11 | Verificación en origen (aceptación antes del código + hook que bloquea) | en-auditoria | Rama `chore/verificacion-origen`; archivo `misiones/2026-11-22-verificacion-origen.md` |
 | 12 | Fase 2: equipo de agentes QA (Probador, Revisor UX, Regresión) | en-auditoria | Rama `chore/equipo-qa`; archivo `misiones/2026-11-24-equipo-qa.md` |
+| 17 | Fuente única de números (corrección de la Misión 14, D1–D4) | en-auditoria | Rama `feat/fuente-unica-numeros`; archivo `misiones/2026-11-24-fuente-unica-numeros.md`; Mijo corre la sonda de concordancia contra producción tras el despliegue |
 ## Fase 2 — Equipo de agentes QA (SOLO con la app al 100%)
 Probador (Playwright, flujos reales tras cada deploy + smoke test diario), Revisor UX
 (reseña priorizada) y Regresión (flujos críticos tras cada merge). Los hallazgos entran

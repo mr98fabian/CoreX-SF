@@ -24,6 +24,8 @@ from routers.cuts import streak
 from routers.engagement import generate_alias, leave_leagues
 from plan_guard import scoped_plan_limit
 from velocity_engine import daily_interest, get_projections, goal_progress
+import helpers
+from helpers import build_plan_path
 
 router = APIRouter(prefix="/api", tags=["coach"])
 
@@ -107,8 +109,9 @@ def get_logros(user_id: str = Depends(require_scope("read:dashboard")),
 
         # Same engine path as the command center's freedom counter
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=helpers.today()) if debts else None
         proj = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id),
-                               extra_monthly=get_cashflow_surplus(session, user_id, debts))
+                               extra_monthly=get_cashflow_surplus(session, user_id, debts), plan_path=path)
         free_date = proj.get("velocity_debt_free_date") if debts else None
         cut_streak = streak(session, user_id)
         today_daily = daily_interest(filter_active_debt_accounts(accounts, plan_limit))["total"]  # same source as the dashboard

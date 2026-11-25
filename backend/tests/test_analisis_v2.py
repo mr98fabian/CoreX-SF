@@ -120,8 +120,11 @@ def test_a_confirmed_attack_after_the_cut_reduces_the_pending_statement():
                           description="Velocity Execution: Ataque", category="Debt Payment"))
         s.commit()
         r = build_daily_mission(s, U, s.exec(select(Account).where(Account.user_id == U)).all())
-    [estado] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
-    assert estado["monto"] == D("1179.27")  # 1679.27 − 100 manual − 400 attack (before: the attack was ignored → 1579.27)
+    # D2: without cash for the whole statement the cycle reserves its minimum; the statement itself
+    # (what is still owed of it) is the same number either way
+    owed = [o["monto"] for o in r["obligaciones"] if o["cuenta"] == "Amex" and o["tipo"] == "estado"] + \
+        [d["monto_completo"] for d in r["degradadas"] if d["cuenta"] == "Amex"]
+    assert owed == [D("1179.27")]  # 1679.27 − 100 manual − 400 attack (before: the attack was ignored → 1579.27)
 
 
 # ── /api/analytics/v2: contract — every figure == its source ──

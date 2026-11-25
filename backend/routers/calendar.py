@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from api_tokens import require_scope
 from database import request_session
+import helpers
 from helpers import calendar_month
 from plan_guard import scoped_plan_limit
 
@@ -32,9 +33,9 @@ def calendar_events(
     plan_limit: int | None = Depends(scoped_plan_limit),
 ):
     if month is None:
-        month = date.today().isoformat()[:7]
+        month = helpers.today().isoformat()[:7]
     if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month):
         raise HTTPException(status_code=422, detail="month must be YYYY-MM")
     year, mon = int(month[:4]), int(month[5:])
     with request_session() as session:
-        return _json(calendar_month(session, user_id, year, mon, plan_limit))
+        return _json(calendar_month(session, user_id, year, mon, plan_limit, today=helpers.today()))

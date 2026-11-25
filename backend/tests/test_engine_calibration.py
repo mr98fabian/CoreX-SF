@@ -82,10 +82,10 @@ def test_d3_installment_loans_keep_their_payment_in_the_baseline():
 def test_d4_tactical_gps_counts_cash_and_savings(client, monkeypatch):
     from auth import get_current_user_id
     from main import app
-    from routers import strategy
+    import velocity_engine
     seen = {}
-    real = strategy.generate_action_plan
-    monkeypatch.setattr(strategy, "generate_action_plan", lambda accs, inc, exp, cash, *a, **k: seen.setdefault("cash", cash) and real(accs, inc, exp, cash, *a, **k))
+    real = velocity_engine.debt_path  # the GPS is the cash leg of debt_path (misión 17)
+    monkeypatch.setattr(velocity_engine, "debt_path", lambda accs, inc, exp, cash, *a, **k: seen.setdefault("cash", cash) and real(accs, inc, exp, cash, *a, **k))
     uid = "c0c0c0c0-0000-4000-a000-00000000000d"
     app.dependency_overrides[get_current_user_id] = lambda: uid
     try:

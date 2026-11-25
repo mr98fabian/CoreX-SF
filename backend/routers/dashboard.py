@@ -10,15 +10,14 @@ import copy
 from database import engine
 from database import request_session
 from models import Account, CashflowItem, Transaction
-from helpers import cashflow_events, dated_cashflow, build_daily_mission, accounts_to_debt_objects, filter_active_debt_accounts, accounts_to_active_debt_objects, get_shield_target
+import helpers
+from helpers import (dated_cashflow, build_daily_mission, filter_active_debt_accounts, accounts_to_active_debt_objects,
+                     get_shield_target, account_plan_minimum, payday_rule, load_cashflow_inputs, total_debt as _total_debt)
 from auth import get_current_user_id
 from api_tokens import require_scope
 from plan_guard import effective_plan_limit, scoped_plan_limit
-from velocity_engine import daily_interest, debt_daily_interest, interest_periods
-from velocity_engine import (
-    DebtAccount, get_velocity_target,
-    calculate_safe_attack_equity, detect_debt_alerts, MISSION_WINDOW_DAYS, mission_json,
-)
+from velocity_engine import daily_interest, debt_daily_interest, interest_periods_json
+from velocity_engine import detect_debt_alerts, MISSION_WINDOW_DAYS, mission_json, reserve_copy
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -47,40 +46,32 @@ def get_dashboard_metrics(
         active_debts = filter_active_debt_accounts(accounts, plan_limit)
         active_debt_ids = {id(a) for a in active_debts}
 
-        total_debt = sum(acc.balance for acc in active_debts)
+        total_debt = _total_debt(accounts, plan_limit)
         total_all_debt = sum(acc.balance for acc in all_debts)
         unmonitored_debt = total_all_debt - total_debt
         liquid_cash = sum(acc.balance for acc in accounts if acc.type != "debt")
 
         # Calculate Chase Balance (or primary checking)
-        chase_acc = next((acc for acc in accounts if "chase" in acc.name.lower() and acc.type == "checking"), None)
-        if not chase_acc:
-            chase_acc = next((acc for acc in accounts if acc.type == "checking"), None)
+        # The account money comes from: the largest liquid one, whatever its type (checking, cash…)
+        chase_acc = next(iter(helpers.funding_accounts(accounts)), None)
 
         chase_balance = chase_acc.balance if chase_acc else Decimal("0")
 
         # --- ATTACK EQUITY & SAFETY PROTOCOL ---
         debt_objects = accounts_to_active_debt_objects(accounts, plan_limit)
 
-        # Fetch REAL cashflow items for accurate projection
-        cashflow_items = session.exec(
-            select(CashflowItem).where(CashflowItem.user_id == user_id)
-        ).all()
-
         # Real recurring incomes/expenses, any frequency, income by is_income
         # (never an invented salary: no income on record = nothing comes in)
-        today = date.today()
-        real_incomes, real_expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
-        safety_data = calculate_safe_attack_equity(
-            liquid_cash, shield_target, debt_objects,
-            recurring_incomes=copy.deepcopy(real_incomes), recurring_expenses=copy.deepcopy(real_expenses),
-        )
+        today = helpers.today()
+        cf_data = load_cashflow_inputs(session, user_id)
+        cashflow_items = cf_data["items"]
+        real_incomes, real_expenses = dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS, data=cf_data)
 
-        # Same mission as the Plan (velocity_engine.get_daily_mission): the
-        # "safe" surplus is what is left after the cycle's obligations.
-        # Same cashflow and shield already loaded above (no second round trip).
+        # THE reserve and THE attack: the daily mission (velocity_engine.get_daily_mission), the same
+        # one the Plan shows. Its obligations ARE the breakdown (no second definition, N-04).
         mission = build_daily_mission(session, user_id, accounts, plan_limit, today=today,
-                                      cashflow=(real_incomes, real_expenses), shield_target=shield_target)
+                                      cashflow=(real_incomes, real_expenses), shield_target=shield_target, data=cf_data)
+        mission_out = mission_json(mission)
         attack_equity = mission["ataque"]
         reserved_for_bills = mission["reserva"]
 
@@ -91,29 +82,10 @@ def get_dashboard_metrics(
         if debts:
             target_account = max(debts, key=lambda x: x.interest_rate)
 
-            # --- SMART ADVICE LOGIC ---
-            today = date.today()
-
-            # 1. Find Next Payday (from Cashflow Items)
-            incomes = [cf for cf in cashflow_items if cf.is_income or cf.category == "income"]
-            next_payday = today + timedelta(days=30)  # Default backup
-
-            if incomes:
-                candidates = []
-                for inc in incomes:
-                    try:
-                        d = int(inc.day_of_month)
-                        candidate_date = date(today.year, today.month, d)
-                        if candidate_date < today:
-                            if today.month == 12:
-                                candidate_date = date(today.year + 1, 1, d)
-                            else:
-                                candidate_date = date(today.year, today.month + 1, d)
-                        candidates.append(candidate_date)
-                    except Exception:
-                        pass
-                if candidates:
-                    next_payday = min(candidates)
+            # 1. Next payday: the cashflow's own trigger rule (any frequency), never a guessed day
+            is_payday = payday_rule(cashflow_items)
+            next_payday = next((today + timedelta(days=i) for i in range(1, 400) if is_payday(today + timedelta(days=i))),
+                               today + timedelta(days=30))
 
             # 2. Determine Action Date
             has_surplus = attack_equity > 0
@@ -124,25 +96,8 @@ def get_dashboard_metrics(
             r = target_account.interest_rate
             target_daily = debt_daily_interest(b, r)
 
-            monthly_interest_cost = b * (r / Decimal("100")) / Decimal("12")
-            principal_part = max(Decimal("0"), target_account.min_payment - monthly_interest_cost)
-
-            # 4. Justification
-            if has_surplus:
-                why_text = (
-                    f"Tienes un excedente SEGURO de ${float(attack_equity):,.2f}. "
-                    f"(Ya reservamos ${float(reserved_for_bills):,.2f} para facturas próximas). "
-                    f"Ataca hoy para eliminar interés diario."
-                )
-            else:
-                if reserved_for_bills > 0:
-                    why_text = (
-                        f"Tu ataque está pausado por Seguridad. "
-                        f"Reservando ${float(reserved_for_bills):,.2f} para pagos mínimos próximos. "
-                        f"La prioridad es sobrevivir este mes."
-                    )
-                else:
-                    why_text = "Tu ataque está recargando. Esperando ingresos."
+            # 4. Justification: describes THE reserve (its real obligations), never "pagos mínimos"
+            why_text = reserve_copy(mission, has_surplus)
 
             # --- MULTI-ACCOUNT ALLOCATION PLAN ---
             # Builds a breakdown: how much to take from EACH liquid account
@@ -263,7 +218,7 @@ def get_dashboard_metrics(
                 "name": target_account.name,
                 "balance": float(target_account.balance),
                 "interest_rate": float(target_account.interest_rate),
-                "min_payment": float(target_account.min_payment),
+                "min_payment": float(account_plan_minimum(target_account)),
                 "action_date": action_date.strftime("%Y-%m-%d"),
                 "priority_reason": f"Atacamos {target_account.name} (APR {float(r)}%) tras asegurar tus facturas.",
                 "justification": why_text,
@@ -297,15 +252,17 @@ def get_dashboard_metrics(
         ]
 
         return {
-            "mision": mission_json(mission),
+            "mision": mission_out,
             "total_debt": total_debt,
             "liquid_cash": liquid_cash,
+            # D3: "Disponible para tu plan" IS the mission's attack; cash is shown apart, as cash
+            "disponible_plan": float(attack_equity),
+            "efectivo": float(liquid_cash),
             "chase_balance": chase_balance,
             "shield_target": shield_target,
             "attack_equity": attack_equity,
             "reserved_for_bills": float(reserved_for_bills),
-            "safety_breakdown": safety_data["breakdown"],
-            "calendar": safety_data.get("projection_data", []),
+            "safety_breakdown": mission_out["obligaciones"],
             "velocity_target": velocity_target,
             "velocity_weapons": velocity_weapons,
             "unmonitored_debt": float(unmonitored_debt),
@@ -314,7 +271,7 @@ def get_dashboard_metrics(
             "total_daily_interest": _cents(total_daily_interest),
             "interes_diario": {
                 # Derived from the daily the user SEES, so day × 7 = week on screen
-                "periodos": {k: _cents(v) for k, v in interest_periods(Decimal(str(_cents(total_daily_interest)))).items()},
+                "periodos": interest_periods_json(total_daily_interest),
                 "etiqueta": "estimado, al ritmo de hoy",
             },
         }

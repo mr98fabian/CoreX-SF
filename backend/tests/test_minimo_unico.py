@@ -96,14 +96,7 @@ def test_virtual_row_projection_and_calendar_field_equal_plan_minimum(owner):
     virtual = {r["name"].removeprefix("Deuda: "): r["amount"] for r in owner.get("/api/cashflow", headers=H).json()
                if r.get("is_debt_virtual")}
     assert virtual == EXPECTED
-
-    days = owner.get("/api/cashflow/projection", headers=H).json()
-    charged = {}
-    for d in days["days"] if isinstance(days, dict) else days:
-        for ev in d.get("events", []):
-            if ev.get("category") == "debt_payment":
-                charged.setdefault(ev["name"].removeprefix("Deuda: "), -ev["amount"])
-    assert charged == EXPECTED
+    # /api/cashflow/projection was retired (misión 17, N-15): it had its own definitions
 
 
 def test_total_min_payments_sums_plan_minimum(owner):
@@ -120,8 +113,6 @@ def test_debt_with_stored_minimum_zero_never_shows_a_50(owner):
         s.commit()
     rows = [r for r in owner.get("/api/cashflow", headers=H).json() if r["name"] == "Deuda: Sin minimo"]
     assert rows and rows[0]["amount"] == 60.0                 # the rule: 2000 × 2% + 1% = $60, not $50
-    body = str(owner.get("/api/cashflow/projection", headers=H).json())
-    assert "-50.0" not in body
 
 
 def test_fixed_loan_created_with_minimum_zero_keeps_zero(owner):
@@ -136,7 +127,10 @@ def test_fixed_loan_created_with_minimum_zero_keeps_zero(owner):
 
 # On 2026-11-10: surplus 2289.65, freedom 2027-04-01 (6 months), standard 2030-03-01.
 # Dates are stored as month offsets from today so the test doesn't age.
-BASELINE = {"surplus": "2289.65", "total_months": 6, "freedom_offset": 5, "standard_offset": 40}
+# Misión 17 (D4, Fabian 2026-11-24): the plan starts from the dated cash, never the average surplus
+# from day 1 of the current month, so freedom moves one month (offset 5 → 6) and total_months now
+# counts calendar months from today (= the offset). Surplus and the minimums route do not move.
+BASELINE = {"surplus": "2289.65", "total_months": 6, "freedom_offset": 6, "standard_offset": 40}
 
 
 def _offset(iso: str) -> int:

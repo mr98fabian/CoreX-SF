@@ -173,8 +173,17 @@ def test_a_dated_subscription_inside_the_window_lowers_the_attack(client):
         sub.next_charge_date = soon
         s.add(sub); s.commit()
     dated = get(client, "/api/strategy/command-center")["mision"]["ataque"]
-    assert dated < no_date
-    assert round((no_date - dated) * 100) == 90000  # exactly the charge
+    # Misión 17: an undated subscription no longer attacks with its own month (it was free money):
+    # dated or not, the charge stays out of the attack, and it is exactly the charge.
+    assert dated == no_date
+    with Session(database.engine) as s:
+        sub = s.exec(select(RecurringSubscription).where(RecurringSubscription.user_id == U)).first()
+        sub.status = "cancelled"
+        s.add(sub); s.commit()
+    without = get(client, "/api/strategy/command-center")["mision"]["ataque"]
+    # The charge lowers the attack, never by more than itself. Today's attack is also capped at
+    # today's cash minus the reserve (Fabian 2026-11-25), which already binds part of the way.
+    assert 0 < without - dated <= 900
 
 
 def test_a_dated_subscription_replaces_its_duplicate_recurring_item_in_the_dated_path():

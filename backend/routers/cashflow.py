@@ -132,63 +132,6 @@ def _item_triggers(item: CashflowItem, d: date, epoch: date = date(2024, 1, 1)) 
     return False
 
 
-# ── Projection ───────────────────────────────────────────────
-
-@router.get("/cashflow/projection")
-def get_cashflow_projection(months: int = 3, user_id: str = Depends(get_current_user_id)):
-    months = max(1, min(months, 12))
-    with request_session() as session:
-        accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        items = session.exec(select(CashflowItem).where(CashflowItem.user_id == user_id)).all()
-
-        liquid_cash = float(sum(acc.balance for acc in accounts if acc.type != "debt"))
-        today = date.today()
-        start = date(today.year, today.month, 1)
-        end = date(start.year + (start.month + months - 1) // 12, ((start.month + months - 1) % 12) + 1, 1)
-        total_days = (end - start).days
-        today_offset = (today - start).days
-
-        events: dict[str, list] = {}
-        for offset in range(total_days):
-            d = start + timedelta(days=offset)
-            d_str = d.isoformat()
-            events[d_str] = []
-            for item in items:
-                if _item_triggers(item, d):
-                    amt = float(item.amount)
-                    events[d_str].append({"name": item.name, "amount": amt if item.category == "income" else -amt, "category": item.category})
-            last_day = calendar.monthrange(d.year, d.month)[1]
-            for acc in accounts:
-                if acc.type == "debt" and acc.balance > 0 and acc.due_day and d.day == min(acc.due_day, last_day):
-                    events[d_str].append({"name": f"Deuda: {acc.name}", "amount": -float(account_plan_minimum(acc)), "category": "debt_payment"})
-
-        balances: dict[str, float] = {today.isoformat(): liquid_cash}
-        bal = liquid_cash
-        for offset in range(today_offset + 1, total_days):
-            d_str = (start + timedelta(days=offset)).isoformat()
-            bal += sum(ev["amount"] for ev in events.get(d_str, []))
-            balances[d_str] = round(bal, 2)
-        bal = liquid_cash
-        for offset in range(today_offset - 1, -1, -1):
-            d_str = (start + timedelta(days=offset)).isoformat()
-            bal -= sum(ev["amount"] for ev in events.get((start + timedelta(days=offset + 1)).isoformat(), []))
-            balances[d_str] = round(bal, 2)
-
-        return {
-            "start_balance": round(liquid_cash, 2), "today": today.isoformat(), "total_days": total_days,
-            "days": [
-                {"date": (start + timedelta(days=o)).isoformat(),
-                 "balance": balances.get((start + timedelta(days=o)).isoformat(), liquid_cash),
-                 "events": events.get((start + timedelta(days=o)).isoformat(), []),
-                 "is_today": o == today_offset,
-                 "zone": "past" if o < today_offset else ("today" if o == today_offset else "future"),
-                 "day_label": (start + timedelta(days=o)).strftime("%a"),
-                 "day_num": (start + timedelta(days=o)).day}
-                for o in range(total_days)
-            ],
-        }
-
-
 @router.post("/cashflow/auto-execute")
 def auto_execute_recurring(user_id: str = Depends(get_current_user_id)):
     return {"executed": [], "count": 0, "date": date.today().isoformat()}
