@@ -27,7 +27,9 @@ async function render(node: React.ReactNode) {
 }
 afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChild(host); host = null; } reduced = false; });
 
-const reducedBlock = kxCss.slice(kxCss.lastIndexOf('@media (prefers-reduced-motion: reduce)'));
+// The depth section's own reduced-motion block (misión 18 added a later section with its own)
+const depthCss = kxCss.slice(kxCss.indexOf('/* ── Profundidad 2.5D (2026-11)'));
+const reducedBlock = depthCss.slice(depthCss.indexOf('@media (prefers-reduced-motion: reduce)'));
 
 describe('Profundidad 2.5D', () => {
     it('the permanent layout has no backdrop blur and sheets have none either', () => {

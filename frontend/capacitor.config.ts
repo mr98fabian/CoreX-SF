@@ -17,6 +17,8 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_CROP',
       splashFullScreen: true,
       backgroundColor: '#020617',
+      // Misión 18: frame 0 of the opening (res/drawable/kx_splash.xml, vector, no bitmap)
+      androidSplashResourceName: 'kx_splash',
     },
     StatusBar: {
       style: 'DARK',

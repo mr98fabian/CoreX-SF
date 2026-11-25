@@ -39,6 +39,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 import { Toaster } from "@/components/ui/toaster";
+import { Opening } from "@/components/kx/Opening";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { useVersionCheck } from "@/hooks/useVersionCheck";
 import { ApkUpdateBanner } from "@/components/ApkUpdateBanner";
@@ -110,6 +111,8 @@ function AppShell() {
               </Routes>
             </Suspense>
             <Toaster />
+            {/* Misión 18: the 1 s opening over the app, which is already mounted underneath */}
+            <Opening pathname={window.location.pathname} />
             <ApkUpdateBanner />
           </NotificationProvider>
         </AuthProvider>

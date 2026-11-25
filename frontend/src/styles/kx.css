@@ -376,3 +376,57 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
    Contrast guarded in features/home/CompareChart.test.tsx. */
 .kx-scope { --kx-plan-line: #F59E0B; }
 :root:not(.dark) .kx-scope { --kx-plan-line: #D97706; }
+
+/* ── «Cobre a la vista» — cimientos (misión 18, misiones/2026-11-25-direccion-de-arte.md) ── */
+/* New tokens in their own :root block: the approved "Noche con luz" block stays byte-identical
+   (noche.test.ts). Funda = what is still owed, cobre = what is behind you. */
+:root {
+  --kx-funda: #7482A0;
+  --kx-funda-sombra: #4A5670;
+  --kx-cobre: var(--kx-stripe);
+  --kx-foco: radial-gradient(60% 50% at 50% 38%, rgba(255, 247, 230, .09), transparent);
+}
+/* Screen title: Fraunces upright, 22 px, 400. Never italic. */
+.kx-screen-title { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 400; font-style: normal; line-height: 1.2; letter-spacing: -0.01em; }
+
+/* The copper line: copper is a fixed track; the funda (what is still owed) sits on top and
+   shrinks with transform only. The cut moves with the funda and carries a 2 px lip, so the
+   boundary never depends on colour alone. --kx-done is 0…1 (time travelled, set inline). */
+.kx-line { position: relative; height: 14px; }
+.kx-line__track { position: absolute; inset: 2px 0; overflow: hidden; border-radius: 999px; }
+.kx-line__copper { position: absolute; inset: 2px 0; border-radius: 999px; background: var(--kx-cobre); }
+.kx-line__funda, .kx-line__cut { transition: transform var(--kx-dur-slow) var(--kx-ease-out); }
+.kx-line[data-dir="up"] .kx-line__funda, .kx-line[data-dir="up"] .kx-line__cut { transition-duration: var(--kx-dur-base); }
+.kx-line__funda { position: absolute; inset: 0; background: var(--kx-funda); box-shadow: inset 0 -1px 0 var(--kx-funda-sombra); transform-origin: right center; transform: scaleX(calc(1 - var(--kx-done))); }
+.kx-line__cut { position: absolute; inset: 0; pointer-events: none; transform: translateX(calc(var(--kx-done) * 100%)); }
+.kx-line__cut::before { content: ""; position: absolute; left: -1px; top: 0; width: 2px; height: 14px; border-radius: 1px; background: var(--kx-funda); }
+.kx-line[data-edge] .kx-line__cut { display: none; }
+.kx-line__glint { position: absolute; inset: 0; opacity: 0; background: linear-gradient(90deg, transparent, rgba(255, 247, 230, .7), transparent); }
+.kx-line[data-flash] .kx-line__glint { animation: kx-glint var(--kx-dur-base) var(--kx-ease-out) 460ms both; /* ends at 700 ms */ }
+@keyframes kx-glint { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* Opening (§4.4): 1000 ms. The app is mounted under it from ms 0; #root is clipped by an
+   iris that opens at 600 ms. Timing lives here; components/kx/Opening.tsx only removes it. */
+.kx-open { position: fixed; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; background: #020617; }
+.kx-open__logo { width: 64px; height: 64px; background: #F5F2EC; -webkit-mask: url(/korex-isotipo.svg) center / contain no-repeat; mask: url(/korex-isotipo.svg) center / contain no-repeat; animation: kx-fade-out 320ms var(--kx-ease-out) 600ms both; }
+.kx-open .kx-line { width: 70vw; }
+.kx-open .kx-line__funda { width: 50%; transform: none; animation: kx-open-l 360ms var(--kx-ease-out) 120ms both; }
+.kx-open .kx-line__funda + .kx-line__funda { left: 50%; animation-name: kx-open-r; }
+.kx-open .kx-line__cut { left: 50%; transform: none; animation: kx-open-l 360ms var(--kx-ease-out) 120ms both, kx-show 0s 120ms both; }
+.kx-open .kx-line__cut + .kx-line__cut { animation: kx-open-r 360ms var(--kx-ease-out) 120ms both, kx-show 0s 120ms both; }
+.kx-open .kx-line__glint { width: 120px; left: calc(50% - 60px); animation: kx-glint 120ms linear 480ms both; }
+@keyframes kx-open-l { to { transform: translateX(-60px); } }
+@keyframes kx-open-r { to { transform: translateX(60px); } }
+@keyframes kx-fade-out { to { opacity: 0; } }
+@keyframes kx-show { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kx-iris { from { clip-path: circle(0 at 50% calc(50% + 52px)); } to { clip-path: circle(80vmax at 50% calc(50% + 52px)); } }
+html.kx-opening #root { position: relative; z-index: 1; animation: kx-iris 320ms var(--kx-ease-out) 600ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-line__funda, .kx-line__cut { transition: none; }
+  .kx-line[data-flash] .kx-line__glint { animation: none; }
+  /* Reduced: no iris, no opening line — the first frame fades out in 150 ms over the app */
+  html.kx-opening #root { animation: none; }
+  .kx-open { z-index: 10000; pointer-events: none; animation: kx-fade-out 150ms linear both; }
+  .kx-open *, .kx-open .kx-line__funda, .kx-open .kx-line__cut, .kx-open .kx-line__glint { animation: none; }
+}

@@ -28,6 +28,10 @@ export const COUNT_MS = 560;
 
 export const MAX_MS = 700;
 
+/** The ONE exception to MAX_MS: the opening sequence (misión 18, §4.4). Guarded by
+ *  components/kx/cimientos.test.tsx — nothing else may run longer than MAX_MS. */
+export const OPENING_MS = 1000;
+
 const QUERY = '(prefers-reduced-motion: reduce)';
 
 export function prefersReducedMotion(): boolean {

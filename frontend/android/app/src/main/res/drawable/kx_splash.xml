@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Misión 18 (direccion-de-arte §4.4): frame 0 of the web opening, so the native splash hands
+     over without a jump. #020617, the logo centred 64 dp, and 40 dp below it the closed line
+     (funda #7482A0, 10 dp, 1 dp shadow). Same geometry as .kx-open: the column logo 64 + 40 +
+     line 14 is centred, so the logo centre sits 27 dp above the screen centre and the line
+     centre 52 dp below. Line width ≈ 70 % of a 360 dp phone (54 dp each side): layer-list
+     has no percentages. No bitmap. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><color android:color="#020617" /></item>
+    <item android:drawable="@drawable/kx_splash_logo" android:gravity="center" android:bottom="54dp" />
+    <item android:gravity="center_vertical|fill_horizontal" android:left="54dp" android:right="54dp" android:top="106dp" android:height="1dp">
+        <shape android:shape="rectangle"><solid android:color="#4A5670" /></shape>
+    </item>
+    <item android:gravity="center_vertical|fill_horizontal" android:left="54dp" android:right="54dp" android:top="104dp" android:height="10dp">
+        <shape android:shape="rectangle"><corners android:radius="5dp" /><solid android:color="#7482A0" /></shape>
+    </item>
+</layer-list>
