@@ -78,6 +78,8 @@ interface ExecutedTransaction {
     category: string;
     account_id?: number;
     account_name?: string;
+    /** server (velocity_engine.payment_impact): what this payment stops costing, estimate */
+    impacto?: { ahorro_diario: number; ahorro_mensual: number } | null;
 }
 
 interface HistoryResponse {
@@ -101,7 +103,11 @@ interface TacticalGPSResponse {
     freedom_date_standard: string | null;
     months_saved: number;
     interest_saved: number;
+    /** per month YYYY-MM: what the GPS pays by kind and what comes in (server sums, never the client) */
+    totales_mes?: Record<string, MonthTotals>;
 }
+
+interface MonthTotals { ataque: number; obligaciones: number; minimos: number; ingresos: number; escudo: number }
 
 // ─── Helpers ─────────────────────────────────────────────────
 
@@ -138,6 +144,7 @@ export default function ActionPlanPage() {
 
     // ── State ────────────────────────────────────────────────
     const [movements, setMovements] = useState<TacticalMovement[]>([]);
+    const [monthTotals, setMonthTotals] = useState<Record<string, MonthTotals>>({});
     const [accounts, setAccounts] = useState<AccountInfo[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [executingKey, setExecutingKey] = useState<string | null>(null);
@@ -221,6 +228,7 @@ export default function ActionPlanPage() {
             // Handle both new object shape and legacy array
             if (gpsRaw && typeof gpsRaw === 'object' && !Array.isArray(gpsRaw)) {
                 setMovements(Array.isArray(gpsRaw.movements) ? gpsRaw.movements : []);
+                setMonthTotals(gpsRaw.totales_mes ?? {});
                 setFreedomDateVelocity(gpsRaw.freedom_date_velocity ?? null);
                 setFreedomDateStandard(gpsRaw.freedom_date_standard ?? null);
                 setMonthsSaved(gpsRaw.months_saved ?? 0);
@@ -304,12 +312,12 @@ export default function ActionPlanPage() {
         // committed payments: plain minimums AND the mission's obligations (cut to $0, statement, loan) — U-14
         const mins = filteredMovements.filter(m => m.type === 'min_payment' || m.type === 'obligation');
         const incomes = filteredMovements.filter(m => m.type === 'income');
-        const totalAttack = attacks.reduce((sum, m) => sum + m.amount, 0);
-        const totalShield = shields.reduce((sum, m) => sum + m.amount, 0);
-        const totalMin = mins.reduce((sum, m) => sum + m.amount, 0);
-        const totalIncome = incomes.reduce((sum, m) => sum + m.amount, 0);
-        return { attackCount: attacks.length, shieldCount: shields.length, totalAttack, totalShield, totalMin, totalIncome, minCount: mins.length, incomeCount: incomes.length };
-    }, [filteredMovements]);
+        // Money totals are the server's (tactical-gps totales_mes); here only the counts
+        const t = monthTotals[`${currentMonth.year}-${String(currentMonth.month + 1).padStart(2, '0')}`];
+        return { attackCount: attacks.length, shieldCount: shields.length, minCount: mins.length, incomeCount: incomes.length,
+            totalAttack: t?.ataque ?? 0, totalShield: t?.escudo ?? 0, totalMin: (t?.obligaciones ?? 0) + (t?.minimos ?? 0),
+            totalIncome: t?.ingresos ?? 0 };
+    }, [filteredMovements, monthTotals, currentMonth]);
 
     // ── Execute handler (opens confirmation first) ──────────
     const handleRequestExecute = (movement: TacticalMovement) => {
@@ -377,32 +385,11 @@ export default function ActionPlanPage() {
         }
     };
 
-    // ── Calculate impact for executed transactions ───────────
-    const getImpactForTx = (tx: ExecutedTransaction) => {
-        // Extract the destination account name from the description
-        const desc = tx.description.replace('Velocity Execution: ', '');
-        const parts = desc.split(': ');
-        const destName = parts.length > 1 ? parts.slice(1).join(': ') : parts[0];
-
-        // Find the matching debt account to get interest rate
-        const debtAcc = accounts.find(a =>
-            a.type === 'debt' && a.name.toLowerCase() === destName.toLowerCase()
-        );
-
-        if (!debtAcc || !debtAcc.interest_rate) {
-            return { dailySaved: 0, monthlySaved: 0, daysShortened: 0 };
-        }
-
-        const apr = debtAcc.interest_rate;
-        const dailySaved = (tx.amount * (apr / 100)) / 365;
-        const monthlySaved = dailySaved * 30;
-
-        // Approximate days shortened
-        const dailyDebtCost = (debtAcc.balance * (apr / 100)) / 365;
-        const daysShortened = dailyDebtCost > 0 ? Math.round(tx.amount / dailyDebtCost) : 0;
-
-        return { dailySaved, monthlySaved, daysShortened };
-    };
+    // ── Impact of an executed payment: the server's figures (velocity_engine.payment_impact) ──
+    const getImpactForTx = (tx: ExecutedTransaction) => ({
+        dailySaved: tx.impacto?.ahorro_diario ?? 0,
+        monthlySaved: tx.impacto?.ahorro_mensual ?? 0,
+    });
 
     // ── Loading State ────────────────────────────────────────
     if (isLoading) {
@@ -820,7 +807,6 @@ export default function ActionPlanPage() {
                                                         <TrendingDown size={12} strokeWidth={1.75} />
                                                         <span className="kx-num">{formatMoney(impact.dailySaved)}{t('strategy.confidence.perDay')}</span>
                                                         <span className="kx-num">{formatMoney(impact.monthlySaved)}{t('actionPlan.perMonth')}</span>
-                                                        <span className="kx-num text-kx-amber-soft">-{impact.daysShortened}{t('actionPlan.daysAbbr')}</span>
                                                     </span>
                                                 )}
                                             </div>

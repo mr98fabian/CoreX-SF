@@ -1,3 +1,4 @@
+import pytest
 """María is the one fictional persona shared by the public landing and the demo.
 The landing quotes her plan (KxLanding.tsx: $18,400, 4 cards, 14 months to $0);
 this pins the engine to those numbers so they can never silently drift."""
@@ -23,6 +24,19 @@ def _load(client, h):
         assert r.status_code == 200
 
 
+# Misión 17: THE plan is the cash route from a real day (D4), so the landing's figures are the
+# engine's output on a fixed day (the 2026-11-24 audit case), pinned here.
+LANDING_DAY = date(2026, 11, 24)
+MARIA_MONTHS = 15
+MARIA_INTEREST_AVOIDED = 30525
+
+
+@pytest.fixture(autouse=True)
+def _landing_day(monkeypatch):
+    import helpers
+    monkeypatch.setattr(helpers, "today", lambda: LANDING_DAY)
+
+
 def test_maria_plan_matches_the_landing(client, auth_headers):
     from sqlmodel import SQLModel
     import database
@@ -34,14 +48,16 @@ def test_maria_plan_matches_the_landing(client, auth_headers):
 
     path = client.get("/api/velocity/freedom-path", headers=auth_headers).json()
     free = date.fromisoformat(path["freedom_date"])
-    today = date.today()
-    assert (free.year - today.year) * 12 + free.month - today.month == 14
+    today = LANDING_DAY
+    assert (free.year - today.year) * 12 + free.month - today.month == MARIA_MONTHS
+    compare = client.get("/api/velocity/compare", headers=auth_headers).json()
+    assert round(compare["ahorro"]["intereses"]) == MARIA_INTEREST_AVOIDED
 
 
 # María's daily-interest line on the landing (KxLanding.tsx EXAMPLE_DAILY_*):
 # "antes" = today's balances, "hoy" = month 12 of her plan (timeline[11]).
 MARIA_DAILY_BEFORE = 13.12
-MARIA_DAILY_MONTH12 = 2.64
+MARIA_DAILY_MONTH12 = 2.95
 
 
 def test_maria_daily_interest_matches_the_landing(client, auth_headers):

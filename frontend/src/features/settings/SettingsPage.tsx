@@ -75,6 +75,8 @@ interface SavingsData {
     total_debt: number;
     /** velocity_engine.daily_interest (real); feeds the Interés Diario ticker */
     daily_interest_all: number;
+    /** velocity_engine.interest_periods_json: the same periods Inicio shows (never × 30 here) */
+    interes_periodos?: Record<'dia' | 'semana' | 'mes' | 'anio', number>;
     social_proof: {
         total_accounts_monitored: number;
         total_debt_tracked: number;
@@ -930,12 +932,12 @@ export default function SettingsPage() {
                                     </div>
                                     <div className="h-8 w-px bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]" />
                                     <div>
-                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.daily_interest_all * 30)}</p>
+                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.interes_periodos?.mes ?? 0)}</p>
                                         <p className="text-[10px] text-kx-debt uppercase">{t('sub.perMonth')}</p>
                                     </div>
                                     <div className="h-8 w-px bg-[color-mix(in_srgb,var(--kx-debt)_20%,transparent)]" />
                                     <div>
-                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.daily_interest_all * 365)}</p>
+                                        <p className="text-lg font-bold text-kx-debt font-mono">{formatMoneyShort(sd.interes_periodos?.anio ?? 0)}</p>
                                         <p className="text-[10px] text-kx-debt uppercase">{t('sub.perYear')}</p>
                                     </div>
                                 </div>

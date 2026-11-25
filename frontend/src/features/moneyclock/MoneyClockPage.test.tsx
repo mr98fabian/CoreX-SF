@@ -52,7 +52,7 @@ describe('Reloj de dinero', () => {
         expect(apiFetch.mock.calls.map((c) => c[0])).toEqual(['/api/cashflow/summary']);
         expect(el.querySelector('[data-testid="clock-hero"]')!.textContent).toBe('Te sobran');
         expect(el.textContent).toContain('$164.38');
-        expect(el.textContent).toContain('al ritmo de este mes');
+        expect(el.textContent).toContain('Al mes (promedio)');
         expect(row(el, 'earn')).toContain('$312.33');
         expect(row(el, 'spend')).toContain('$147.95');
         expect(row(el, 'left')).toContain('$164.38');

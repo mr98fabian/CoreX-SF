@@ -39,11 +39,11 @@ def test_cut_in_ten_days_is_paid_before_the_first_attack():
     first_attack = first_index(plan, lambda m: m["type"] == "attack")
     assert cut_pay is not None and first_attack is not None
     assert plan[cut_pay]["amount"] == 800.0 and plan[cut_pay]["date"] == "2026-11-21"  # cut 23 − 2
-    # the attack happens, but never ahead of the uncovered cut: on day 1 the mission
-    # already reserved the $800, so whatever attacks is only the leftover
-    attacks_before_cut = [m for m in plan[:cut_pay] if m["type"] == "attack"]
-    reserved_ok = all(D(str(m["funding_balance_after"])) >= D("800") for m in attacks_before_cut)
-    assert reserved_ok, "an attack before the cut ate the cut's money"
+    # D1 (Fabian 2026-11-24): the cash that matters is the cash ON THE CUT'S DATE, paydays included.
+    # So an attack may happen before the cut, but only with what is left after it: the cut is paid
+    # in full, nothing falls short and the cash never drops under the shield.
+    assert not [m for m in plan if m["type"] == "faltante"], "an attack before the cut ate the cut's money"
+    assert min(D(str(m["funding_balance_after"])) for m in plan) >= D("500") - D("0.01")
 
 
 def test_a_big_dated_expense_reduces_the_attack_by_the_same_amount():
@@ -68,19 +68,18 @@ def test_owner_like_scenario_no_attack_opens_the_plan_when_the_mission_says_zero
     expenses = [once("Mudanza", "3270", date(2026, 12, 1))]
     cash = D("3200")
     mission = get_daily_mission(accs, cash, D("500"), incomes, expenses, today=START)
-    assert mission["ataque"] == 0  # the mission reserves the cuts and the move first
     plan = generate_action_plan(accs, incomes, expenses, cash, shield_target=D("500"), start=START)
-    assert not [m for m in plan if m["type"] == "attack" and m["date"] == START.isoformat()]
-    first = plan[0]
-    assert first["type"] != "attack"
+    # D1: the cuts and the move are reserved against the cash projected on THEIR dates (the Nov 15
+    # payday included); the day-one attack is exactly the mission's, and only the leftover
+    day_one = sum(D(str(m["amount"])) for m in plan if m["type"] == "attack" and m["date"] == START.isoformat())
+    assert day_one == mission["ataque"]
     # every cut is paid in full on cut − 2 (Slate 2323 → Nov 19) and no attack ever leaves one uncovered:
     # the attacks that do happen (after the Nov 15 payday) are only the leftover
     cut_2323 = first_index(plan, lambda m: m["type"] == "obligation" and m["destination"] == "Slate 2323")
     assert cut_2323 is not None and plan[cut_2323]["date"] == "2026-11-19" and plan[cut_2323]["amount"] == 410.0
     assert not [m for m in plan if m["type"] == "faltante"]
     assert min(D(str(m["funding_balance_after"])) for m in plan) >= D("500") - D("0.01")
-    first_attack = first_index(plan, lambda m: m["type"] == "attack")
-    assert first_attack is not None and plan[first_attack]["date"] >= "2026-11-15"  # not before the payday
+    assert all(m["amount"] > 0 for m in plan if m["type"] == "attack")
 
 
 def test_gps_day_one_attack_equals_the_mission_attack():

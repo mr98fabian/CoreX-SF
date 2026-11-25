@@ -68,7 +68,7 @@ export default function MoneyClockPage() {
                 {data && data.has_income && (
                     <div data-testid="clock" className="space-y-5">
                         <div>
-                            <p className="kx-label">{es ? 'al ritmo de este mes' : "at this month's pace"}</p>
+                            <p className="kx-label">{es ? 'Al mes (promedio)' : 'Per month (average)'}</p>
                             <p data-testid="clock-hero" className={`mt-2 text-[17px] ${short ? 'text-kx-debt' : 'text-kx-ink2'}`}>
                                 {short ? (es ? 'Te falta' : "You're short") : (es ? 'Te sobran' : 'You have left')}
                             </p>

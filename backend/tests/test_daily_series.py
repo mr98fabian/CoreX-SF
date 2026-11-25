@@ -147,7 +147,9 @@ def test_endpoint_daily_matches_timeline(owner):
     closes = month_closes(path["daily_series"])
     assert [closes[t["date"]] for t in path["timeline"]] == [t["total_balance"] for t in path["timeline"]]
     # the attack lands on the paydays (1st and 15th), the minimums on the 5th and 18th
-    later = [p for p in path["daily_series"] if p["date"] > date.today().isoformat()[:7] + "-31"]
+    # misión 17: the cash leg (to fin_tramo_caja) lists every day; the monthly continuation after it
+    # keeps placing each flow on its real day
+    later = [p for p in path["daily_series"] if p["date"] > path["fin_tramo_caja"]]
     assert {p["date"][8:] for p in later} <= {"01", "05", "12", "15", "18", "28", "29", "30", "31"}
     # and freedom-path's monthly answer is the same as compare's (one source)
     c = owner.get("/api/velocity/compare", headers=H).json()

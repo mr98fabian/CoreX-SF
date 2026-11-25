@@ -102,7 +102,8 @@ export default function HomePage() {
                 )}
 
                 <HeroNumber label={es ? 'Deuda total' : 'Total debt'} amount={s.totalDebt}
-                    phrase={<>{es ? 'Disponible para tu plan: ' : 'Available for your plan: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.liquid)}</b></>} />
+                    phrase={<>{es ? 'Disponible para tu plan: ' : 'Available for your plan: '}<b className="kx-num font-semibold text-kx-ink">{formatMoney(s.available)}</b>
+                        <span className="text-kx-ink3">{es ? ' · Efectivo en cuentas: ' : ' · Cash in accounts: '}{formatMoney(s.liquid)}</span></>} />
                 <DailyInterestLine es={es} periods={s.dailyPeriods} debtBalances={s.debts.map((a) => a.bal)} />
 
                 {/* HOY — the single active signal: the server's mission, same as the Plan */}

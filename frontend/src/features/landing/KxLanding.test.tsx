@@ -18,7 +18,7 @@ let root: Root;
 afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChild(host); host = null; } });
 
 describe('Landing · María', () => {
-    it('quotes her daily interest as pinned by the engine test (13.12 → 2.64 at month 12)', async () => {
+    it('quotes her daily interest as pinned by the engine test (13.12 → 2.95 at month 12)', async () => {
         host = document.createElement('div');
         document.body.appendChild(host);
         root = createRoot(host);
@@ -26,7 +26,7 @@ describe('Landing · María', () => {
         const line = host.querySelector('[data-testid="maria-daily"]')!.textContent;
         // Same figures as backend/tests/test_demo_persona.py MARIA_DAILY_BEFORE / MARIA_DAILY_MONTH12
         expect(line).toContain('$13.12');
-        expect(line).toContain('$2.64');
+        expect(line).toContain('$2.95');
         expect(host.textContent).toContain('María, persona ficticia');
     });
 });

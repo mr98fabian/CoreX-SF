@@ -84,21 +84,27 @@ def test_without_income_there_is_no_attack_and_only_obligations_show():
     assert r["mision"] is None and r["ataque"] == D("0")
 
 
-def test_owner_data_first_obligation_covered_is_the_headline_and_faltante_goes_apart():
-    # 10-nov: liquid $1,915.32 · car $641.12 on the 11th · Amex $1,679.27 cut on the 12th
+def test_owner_data_first_obligation_covered_is_the_headline_and_the_cut_that_does_not_fit_degrades():
+    # 10-nov: liquid $1,915.32 · car $641.12 on the 11th · Amex $1,679.27 cut on the 12th.
+    # D2 (Fabian 2026-11-24): above the $1,000 shield only $274.20 is left after the car, so the Amex
+    # cannot be left at $0: the cycle reserves its minimum (due Dec 7) and says so — no "faltante".
     amex = card(name="Amex", bal="1679.27", closing=12, due=7)
     r = get_daily_mission([amex, loan(due=11)], D("1915.32"), D("1000"), INCOME, [], today=TODAY)
     assert (r["mision"]["tipo"], r["mision"]["cuenta"]) == ("prestamo", "Auto")
-    f = r["faltante"]
-    # 641.12 + 1679.27 = 2320.39 − 1915.32 = 405.07 missing for the Amex cut
-    assert (f["tipo"], f["cuenta"], f["monto"], f["obligacion"]) == ("faltante", "Amex", D("405.07"), "corte")
-    assert f["copy"] == "Te faltan $405.07 para cubrir el corte de la Amex del 12 de noviembre"
-    assert r["ataque"] == D("0")
+    assert r["faltante"] is None
+    assert r["degradadas"] == [{"cuenta": "Amex", "tipo": "corte", "monto_completo": D("1679.27")}]
+    [m] = [o for o in r["obligaciones"] if o["cuenta"] == "Amex"]
+    assert (m["tipo"], m["degradada"], m["fecha_accion"]) == ("minimo", "corte", date(2026, 12, 7))
+    assert m["copy"].startswith("No alcanza para dejar la Amex en $0 antes del corte del 12 de noviembre")
+    # … and the rest goes to the avalanche, from TODAY's cash only (Fabian 2026-11-25):
+    # 1,915.32 − reserve (car 641.12 + Amex minimum 200) − shield 1,000 = 74.20
+    assert (r["ataque"], r["objetivo"]) == (D("74.20"), "Amex")
 
 
 def test_cash_below_the_first_obligation_makes_the_faltante_the_headline():
+    # D1: the shield stays intact, so with $500 (below the $1,000 shield) the whole $641.12 is missing
     r = get_daily_mission([loan(due=11)], D("500"), D("1000"), INCOME, [], today=TODAY)
-    assert (r["mision"]["tipo"], r["mision"]["monto"], r["mision"]["obligacion"]) == ("faltante", D("141.12"), "prestamo")
+    assert (r["mision"]["tipo"], r["mision"]["monto"], r["mision"]["obligacion"]) == ("faltante", D("641.12"), "prestamo")
     assert r["faltante"] == r["mision"]
 
 
@@ -171,8 +177,8 @@ def test_biweekly_income_flagged_is_income_counts_in_inicio(client):
     seed(CashflowItem(user_id=A, name="Nómina", amount=D("2400"), category="Ingreso", is_income=True,
                       frequency="biweekly", day_of_week=4))
     dash = get(client, "/api/dashboard")
-    events = [e["name"] for day in dash["calendar"] for e in day["events"]]
-    assert "Nómina" in events
+    cal = get(client, "/api/calendar/events")  # the old safe-equity "calendar" field is gone (misión 17)
+    assert any(i["nombre"] == "Nómina" for day in cal["dias"] for i in day["ingresos"])
     assert dash["attack_equity"] > 0  # the income is real, so there is an attack after the reserve
 
 
