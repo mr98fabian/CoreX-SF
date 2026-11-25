@@ -21,6 +21,8 @@ aprueba merges.
 | 12 | Fase 2: equipo de agentes QA (Probador, Revisor UX, Regresión) | en-auditoria | Rama `chore/equipo-qa`; archivo `misiones/2026-11-24-equipo-qa.md` |
 | 17 | Fuente única de números (corrección de la Misión 14, D1–D4) | en-auditoria | Rama `feat/fuente-unica-numeros`; archivo `misiones/2026-11-24-fuente-unica-numeros.md`; Mijo corre la sonda de concordancia contra producción tras el despliegue |
 | 16 | Fix: HTTP 500 intermitente en el primer acceso de cuentas nuevas (carrera en get-or-create) | en-auditoria | Rama `fix/carrera-primer-acceso`; archivo `misiones/2026-11-25-carrera-primer-acceso.md`; hallazgo QA canario-1004; el Probador QA confirma en su siguiente corrida |
+| 18 | Rediseño «Cobre a la vista» — A: Cimientos (tokens, línea, iconos, barra, apertura) | en-auditoria | Rama `feat/rediseno-cimientos`; archivo `misiones/2026-11-25-rediseno-cimientos.md`; fuente: `misiones/2026-11-25-direccion-de-arte.md`; criterio 8 (fotogramas ≤ 32 ms) aceptado por Fabian como herencia de main (2026-11-25) |
+| 19 | Rediseño «Cobre a la vista» — B: Composición (5 pantallas, ceremonia de $0, login, estados) | pendiente | Rama `feat/rediseno-composicion`; precondición: misión 18 fusionada |
 ## Fase 2 — Equipo de agentes QA (SOLO con la app al 100%)
 Probador (Playwright, flujos reales tras cada deploy + smoke test diario), Revisor UX
 (reseña priorizada) y Regresión (flujos críticos tras cada merge). Los hallazgos entran

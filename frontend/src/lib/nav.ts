@@ -4,21 +4,24 @@
  * sidebar/hamburger. MORE = only in the sidebar/hamburger, under "Más".
  * No section appears in both groups. Panel de Crédito has no entry: it lives in Cuentas.
  */
-import { Home, CalendarDays, ListChecks, Wallet, Repeat, Activity, Gavel, Clock, Target, BarChart3, Trophy, Settings, type LucideIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { Activity, Gavel, Clock, Target, BarChart3, Trophy, Settings } from 'lucide-react';
+import { KxAccounts, KxCalendar, KxHome, KxPlan, KxSubscriptions } from '@/components/kx/icons';
 
 export interface NavItem {
     to: string;
     /** LanguageContext key */
     labelKey: string;
-    icon: LucideIcon;
+    /** Primary: the kx «trazo de cable» icons (copper tip when `lit`). More: lucide. */
+    icon: ComponentType<{ className?: string; size?: number; strokeWidth?: number; lit?: boolean; 'aria-hidden'?: boolean | 'true' | 'false' }>;
 }
 
 export const NAV_PRIMARY: readonly NavItem[] = [
-    { to: '/dashboard', labelKey: 'nav.home', icon: Home },
-    { to: '/dashboard/calendar', labelKey: 'nav.calendar', icon: CalendarDays },
-    { to: '/dashboard/action-plan', labelKey: 'nav.plan', icon: ListChecks },
-    { to: '/dashboard/accounts', labelKey: 'nav.accountsShort', icon: Wallet },
-    { to: '/dashboard/subscriptions', labelKey: 'nav.subscriptions', icon: Repeat },
+    { to: '/dashboard', labelKey: 'nav.home', icon: KxHome },
+    { to: '/dashboard/calendar', labelKey: 'nav.calendar', icon: KxCalendar },
+    { to: '/dashboard/action-plan', labelKey: 'nav.plan', icon: KxPlan },
+    { to: '/dashboard/accounts', labelKey: 'nav.accountsShort', icon: KxAccounts },
+    { to: '/dashboard/subscriptions', labelKey: 'nav.subscriptions', icon: KxSubscriptions },
 ];
 
 export const NAV_MORE: readonly NavItem[] = [

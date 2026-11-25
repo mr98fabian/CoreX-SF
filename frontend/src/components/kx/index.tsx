@@ -68,7 +68,7 @@ export function BankHeader({ greeting, title }: { greeting?: string; title?: str
             <div className="min-w-0">
                 <p data-testid="kx-dateline" className="font-editorial text-[13px] first-letter:uppercase text-kx-ink3">{editorialDate(new Date(), es ? 'es' : 'en')}</p>
                 {greeting && <p className="text-sm text-kx-ink2">{greeting}</p>}
-                {title && <h1 className="text-[22px] font-semibold tracking-tight text-kx-ink">{title}</h1>}
+                {title && <h1 className="kx-screen-title text-kx-ink">{title}</h1>}
             </div>
             <p className="flex shrink-0 items-center gap-1.5 text-[11px] text-kx-ink3">
                 <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -235,6 +235,9 @@ export function PrimaryPill({ children, onClick, disabled, type = 'button' }: {
 // Lives IN the shell's flex column (header / content / tab bar), not fixed: it
 // sits on the shell's bottom edge whatever height the view has, and the content
 // can never scroll under it. Hidden while the soft keyboard is open.
+export { CopperLine } from './CopperLine';
+export { Opening } from './Opening';
+
 export function TabBar() {
     const { language, t } = useLanguage();
     const es = language === 'es';
@@ -243,18 +246,19 @@ export function TabBar() {
     useEffect(() => onKeyboardChange(setKeyboard), []);
     return (
         <nav aria-label={es ? 'Navegación principal' : 'Main navigation'} data-testid="tabbar" data-keyboard={keyboard ? 'open' : 'closed'}
-            className={cx('relative z-40 shrink-0 border-t border-kx-line bg-kx-bg px-2 pb-[max(18px,var(--kx-safe-bottom))] pt-2.5 md:hidden', keyboard ? 'hidden' : 'flex')}>
+            className={cx('relative z-40 shrink-0 border-t border-kx-line bg-kx-bg px-0.5 pb-[max(18px,var(--kx-safe-bottom))] md:hidden', keyboard ? 'hidden' : 'flex')}>
             {NAV_PRIMARY.map(({ to, icon: Icon, labelKey }) => {
                 const active = isNavActive(pathname, to);
                 return (
-                    <Link key={to} to={to} aria-current={active ? 'page' : undefined}
-                        className={cx('kx-press relative min-w-0 flex-1 text-center text-[10.5px] transition-colors duration-[var(--kx-dur-base)]', active ? 'font-semibold text-kx-amber' : 'text-kx-ink3')}>
+                    <Link key={to} to={to} aria-current={active ? 'page' : undefined} data-testid="tab"
+                        className={cx('kx-press relative flex h-14 min-w-[44px] flex-auto flex-col items-center justify-center gap-1 text-[11px] leading-none tracking-[-0.01em] transition-colors duration-[var(--kx-dur-base)]', active ? 'font-semibold text-kx-ink' : 'text-kx-ink3')}>
+                        {/* Active = a 24×3 copper segment on the bar's top edge, sliding tab to tab */}
                         {active && (
                             <motion.span layoutId="kx-tab-indicator" transition={tx('base', prefersReducedMotion())}
-                                aria-hidden="true" className="absolute -top-2.5 left-1/2 -ml-4 h-[3px] w-8 rounded-full bg-kx-amber" />
+                                aria-hidden="true" data-testid="tab-indicator" className="absolute -top-px left-1/2 -ml-3 h-[3px] w-6 rounded-full" style={{ background: 'var(--kx-cobre)' }} />
                         )}
-                        <Icon className="mx-auto mb-1 h-[22px] w-[22px]" strokeWidth={1.75} aria-hidden="true" />
-                        <span className="block truncate">{t(labelKey)}</span>
+                        <Icon className="h-6 w-6" lit={active} aria-hidden="true" />
+                        <span className="block max-w-full truncate">{t(labelKey)}</span>
                     </Link>
                 );
             })}
@@ -287,7 +291,7 @@ export function SideNav({ onNavigate }: { onNavigate?: () => void }) {
                                 <Link key={to} to={to} aria-current={active ? 'page' : undefined} onClick={onNavigate}
                                     className={cx('flex h-10 w-full items-center gap-2 rounded-md px-4 text-sm font-medium transition-colors',
                                         active ? 'bg-[color-mix(in_srgb,var(--kx-amber)_14%,transparent)] text-kx-amber' : 'text-kx-ink2 hover:bg-kx-raised hover:text-kx-ink')}>
-                                    <Icon size={18} strokeWidth={1.5} aria-hidden="true" /> <span className="whitespace-nowrap">{t(labelKey)}</span>
+                                    <Icon size={18} strokeWidth={1.5} aria-hidden="true" {...(gi === 0 ? { lit: active } : {})} /> <span className="whitespace-nowrap">{t(labelKey)}</span>
                                 </Link>
                             );
                         })}
