@@ -59,6 +59,7 @@ Construir los cimientos del rediseño aprobado: tokens nuevos, título de pantal
      - `main` (sin apertura): 9–10 fotogramas > 32 ms, máximo 233–267 ms.
      - Rama: 11 fotogramas > 32 ms, máximo 217–233 ms; dentro de la apertura, 7–8, máximo 217–233 ms.
      - Los picos (~130, ~230, ~170 ms) son el arranque de la propia app y ya están en `main`; la apertura añade 1–2 fotogramas de ~33 ms. Lo comprobé además con la apertura sin ninguna animación y con un fundido en lugar del iris: mismos picos. Con el CPU real de un Android de gama media no está medido.
+     - **Decisión de Fabian (2026-11-25): «Aceptar como herencia».** Los fotogramas largos son del arranque de la app, ya presentes en `main`; el criterio 8 se acepta para esta misión sin cambio de código.
   9. Movimiento: `› 9 · movimiento` passed (nada nuevo en bucle; fuera de la apertura nada pasa de 700 ms: el destello empieza a 460 ms y acaba a 700; nada escucha el scroll; el corte no recibe toques).
   10. Reducir movimiento: `› 10 · reducir movimiento` passed (sin transición de línea ni destello ni iris; la apertura es un fundido de 150 ms y se quita a los 150 ms).
   11. Peso: build de `origin/main` frente a la rama, suma gzip de lo que carga `dist/index.html`: 279 848 → 281 811 bytes (**+1963 bytes**, límite 20 KB). Todos los JS y CSS: +2557 bytes. Imágenes nuevas en `frontend/`: 0 (la única imagen nueva es la evidencia de esta misión, en `misiones/`).
