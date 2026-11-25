@@ -219,6 +219,7 @@ def calculate_debt_free_date(
     debts: List[DebtAccount],
     extra_monthly: Decimal = Decimal('0'),
     start: Optional[date] = None,
+    plan_path: Optional[Dict] = None,
 ) -> Dict:
     """
     Calculate the debt-free date using standard vs. velocity strategy.
@@ -242,7 +243,7 @@ def calculate_debt_free_date(
         }
 
     # Both routes come from compare_paths (one run of each strategy)
-    c = compare_paths(debts, extra_monthly, start)
+    c = compare_paths(debts, extra_monthly, start, plan_path=plan_path)
     return {
         "standard_months": c["minimos"]["meses"],
         "velocity_months": c["plan"]["meses"],
@@ -271,11 +272,18 @@ def _points(timeline: List[Dict], today_balance: Decimal, today: date, upto: Opt
     return pts
 
 
+def _calendar_months(today: date, freedom_date: str) -> int:
+    """Months on the calendar from today's month to the freedom month (14 = 14 months away)."""
+    f = date.fromisoformat(freedom_date)
+    return (f.year - today.year) * 12 + f.month - today.month
+
+
 def compare_paths(
     debts: List[DebtAccount],
     extra_monthly: Decimal = Decimal('0'),
     start: Optional[date] = None,
     fuente_aporte: Optional[str] = None,
+    plan_path: Optional[Dict] = None,
 ) -> Dict:
     """Plan vs minimums only (the Inicio chart). Runs EACH strategy of
     simulate_freedom_path once; calculate_debt_free_date reads from here.
@@ -294,13 +302,22 @@ def compare_paths(
                 "ahorro": {"intereses": Decimal('0'), "meses": 0, "anios": Decimal('0'), "es_minimo": False}}
 
     min_sim = simulate_freedom_path(debts, Decimal('0'), roll_freed_payments=False, recalc_minimums=True, start=start)
-    plan_sim = simulate_freedom_path(debts, extra_monthly, start=start)
+    # D4: the user's plan is THE cash route (debt_path) when the caller has it; the monthly
+    # route from day 1 only for callers without user data (the public calculator).
+    plan_sim = plan_path if plan_path is not None else simulate_freedom_path(debts, extra_monthly, start=start)
 
     q = lambda x: Decimal(str(x)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)  # noqa: E731
-    plan_tope = plan_sim["total_months"] >= SIM_MAX_MONTHS and plan_sim["timeline"][-1]["total_balance"] > 0
+    plan_tope = plan_sim.get("tope_simulador") if plan_path is not None else         plan_sim["total_months"] >= SIM_MAX_MONTHS and plan_sim["timeline"][-1]["total_balance"] > 0
     min_tope = min_sim["total_months"] >= SIM_MAX_MONTHS and min_sim["timeline"][-1]["total_balance"] > 0
-    dominio = max(COMPARE_MIN_DOMAIN, 2 * plan_sim["total_months"])
-    meses_ahorro = max(0, min_sim["total_months"] - plan_sim["total_months"])
+    # The user's plan (misión 17): months on the calendar from today, for both routes. Without the
+    # cash route (public calculator) the simulator's own month count, as before.
+    if plan_path is not None:
+        plan_meses = _calendar_months(today, plan_sim["freedom_date"])
+        min_meses = _calendar_months(today, min_sim["freedom_date"])
+    else:
+        plan_meses, min_meses = plan_sim["total_months"], min_sim["total_months"]
+    dominio = max(COMPARE_MIN_DOMAIN, 2 * plan_meses)
+    meses_ahorro = max(0, min_meses - plan_meses)
     # same quantization as before the refactor (difference first, then round)
     intereses_ahorro = max(Decimal('0'), Decimal(str(min_sim["total_interest_paid"])) - Decimal(str(plan_sim["total_interest_paid"]))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
@@ -310,8 +327,8 @@ def compare_paths(
         "estado": estado,
         "dominio_meses": dominio,
         "plan": {
-            "meses": plan_sim["total_months"],
-            "anios": _years(plan_sim["total_months"]),
+            "meses": plan_meses,
+            "anios": _years(plan_meses),
             "fecha_libre": None if plan_tope else plan_sim["freedom_date"],
             "tope_simulador": plan_tope,
             "interes_total": q(plan_sim["total_interest_paid"]),
@@ -320,14 +337,14 @@ def compare_paths(
             "puntos": _points(plan_sim["timeline"], deuda_hoy, today),
         },
         "minimos": {
-            "meses": min_sim["total_months"],
-            "anios": _years(min_sim["total_months"]),
+            "meses": min_meses,
+            "anios": _years(min_meses),
             "fecha_libre": None if min_tope else min_sim["freedom_date"],
             # the last month the simulator reached (only for legacy standard_date; never shown)
             "fecha_fin_simulada": min_sim["freedom_date"],
             "anio_libre": None if min_tope else int(min_sim["freedom_date"][:4]),
             "tope_simulador": min_tope,
-            "cortado": min_sim["total_months"] > dominio,
+            "cortado": min_meses > dominio,
             "interes_total": q(min_sim["total_interest_paid"]),
             "puntos": _points(min_sim["timeline"], deuda_hoy, today, upto=dominio),
         },
@@ -577,7 +594,7 @@ def generate_tactical_schedule(
     return sorted(movements, key=lambda x: x.date)
 
 
-def generate_action_plan(
+def _cash_plan(
     accounts: List["MissionAccount"],
     incomes: List[dict],
     expenses: List[dict],
@@ -587,32 +604,39 @@ def generate_action_plan(
     weapons: Optional[List[VelocityWeapon]] = None,
     start: Optional[date] = None,
     days: int = 62,
-) -> List[Dict]:
-    """Tactical GPS (U-14): the daily mission, projected day by day over ~2 months.
-
-    ONE source with the daily mission. For every simulated day d, with the balances
-    and cash the plan has reached:
-      1. get_daily_mission(state, cash, shield, incomes, expenses, today=d) decides —
-         obligations first (cuts to $0 at cut − 2, statements, loan payments, statement
-         minimums: mission_obligations / statement_cycle_minimum), then dated expenses
-         (the safe-equity projection), and only the LEFTOVER attacks, strict avalanche.
-      2. That day's flows happen: incomes, dated expenses, the obligations whose action
-         date is d (and plain minimums on due_day for debts the mission does not cover).
-      3. Then, and only then, the attack the mission allowed for d.
-    So if the mission says attack $0 today, the GPS never opens with an attack.
-    `incomes` / `expenses` are dated events ({"name", "amount", "dates"}) covering at
-    least [start, start + days + MISSION_WINDOW_DAYS) — helpers.dated_cashflow.
-    """
+    undated_monthly: Decimal = Decimal('0'),
+) -> Dict:
+    """THE cash route (misión 17): the daily mission projected day by day from TODAY, with the
+    balances and cash the plan has reached. Every day d:
+      0. a fixed loan's interest posts on its due day, before its payment;
+      1. get_daily_mission(state, cash, …, today=d) decides (obligations first, D1/D2, avalanche);
+      2. incomes, dated expenses, the obligations whose action date is d and the plain minimums of
+         debts no obligation covers — paid only from cash ABOVE the shield (D1);
+      3. the velocity chunk (HELOC/UIL → highest APR above it), once a month on an income day;
+      4. only the leftover the mission allowed attacks — strict avalanche (its target);
+      5. end of day: a card's cut posts its interest (none if it reports $0: grace) and opens the
+         next statement; debts without a cut post at month end; then the day's interest accrues
+         (balance × APR / 36500, the same rule as daily_interest).
+    The total debt of each day = balances + interest accrued not posted yet, so
+    close = open − payments + interest, exactly. Days before `start` are never projected.
+    `incomes` / `expenses` are dated events covering [start, start + days + MISSION_WINDOW_DAYS]."""
+    import calendar as _cal
     start = start or date.today()
     cash = Decimal(str(liquid_cash))
     state = [dataclasses.replace(a) for a in accounts if a.balance > 0]
     original = {a.name: a.balance for a in state}
+    accrued: Dict[str, Decimal] = {a.name: Decimal('0') for a in state}
     sim_weapons = [dataclasses.replace(w) for w in (weapons or []) if w.available_credit > Decimal('500')]
     chunk_months: set = set()
     movements: List[Dict] = []
+    points: List[tuple] = []
+    months: Dict[str, Dict] = {}
 
     def money(x: Decimal) -> float:
         return float(Decimal(x).quantize(_CENT, rounding=ROUND_HALF_UP))
+
+    def total() -> Decimal:
+        return sum((a.balance for a in state), Decimal('0')) + sum(accrued.values(), Decimal('0'))
 
     def move(d: date, title: str, description: str, amount: Decimal, kind: str, source: str, destination: str,
              debt: Optional["MissionAccount"] = None, before: Optional[Decimal] = None, **extra) -> None:
@@ -631,20 +655,41 @@ def generate_action_plan(
             "etiqueta": "estimado", **extra,
         })
 
-    def pay(debt: "MissionAccount", amount: Decimal) -> Decimal:
+    def pay(debt: "MissionAccount", amount: Decimal, ym: str) -> Decimal:
         nonlocal cash
-        paid = max(Decimal('0'), min(amount, debt.balance, max(cash, Decimal('0'))))  # never more than the cash
+        paid = max(Decimal('0'), min(amount, debt.balance, cash - shield_target))  # D1: never into the shield
         debt.balance -= paid
         debt.paid_since_cut += paid  # a statement / cut paid down stays paid inside the cycle
         cash -= paid
+        months[ym]["pagos"] += paid
         return paid
+
+    def post(debt: "MissionAccount", ym: str, grace: bool) -> None:
+        amount = accrued.get(debt.name, Decimal('0'))
+        accrued[debt.name] = Decimal('0')
+        if grace and debt.balance <= 0:
+            months[ym]["interes"] -= amount  # paid in full before the cut: no interest charged
+            return
+        rounded = amount.quantize(_CENT, rounding=ROUND_HALF_UP)
+        debt.balance += rounded
+        months[ym]["interes"] += rounded - amount
 
     for offset in range(days + 1):
         d = start + timedelta(days=offset)
+        ym = d.isoformat()[:7]
+        n = _cal.monthrange(d.year, d.month)[1]
+        if ym not in months:
+            months[ym] = {"inicio": total(), "pagos": Decimal('0'), "interes": Decimal('0'), "pagadas": []}
+
+        # 0) a fixed loan's interest posts on its due day, before the payment
+        for debt in state:
+            if debt.debt_subtype in FIXED_SUBTYPES and debt.due_day and d.day == min(debt.due_day, n):
+                post(debt, ym, grace=False)
+
         # 1) the mission decides with the state at the start of the day (it already projects d's flows)
-        mission = get_daily_mission(state, cash, shield_target, incomes, expenses, today=d)
+        mission = get_daily_mission(state, cash, shield_target, incomes, expenses, today=d, undated_monthly=undated_monthly)
         due_today = [o for o in mission["obligaciones"] if o["fecha_accion"] == d]
-        covered = {o["cuenta"] for o in mission["obligaciones"]}
+        covered = set(mission["cubiertas"])
 
         # 2a) incomes
         for inc in incomes:
@@ -666,10 +711,11 @@ def generate_action_plan(
             if debt is None or debt.balance <= 0:
                 continue
             before = debt.balance
-            paid = pay(debt, o["monto"])
+            paid = pay(debt, o["monto"], ym)
             if paid > 0:
                 move(d, f"{o['tipo'].upper()}: {debt.name}", o["copy"], paid, "obligation", funding_account_name, debt.name,
-                     debt, before, obligacion=o["tipo"], fecha_evento=o["fecha_evento"].isoformat())
+                     debt, before, obligacion=o["tipo"], fecha_evento=o["fecha_evento"].isoformat(),
+                     **({"degradada": o["degradada"]} if o.get("degradada") else {}))
             short = min(o["monto"], before) - paid
             if short > 0:
                 move(d, f"FALTANTE: {debt.name}", f"Te faltan {_usd(short)} para cubrir {_what(o)}", short, "faltante",
@@ -680,16 +726,17 @@ def generate_action_plan(
                     and debt.due_day and d.day == debt.due_day:
                 before = debt.balance
                 minimum = debt.engine_minimum if debt.engine_minimum is not None else debt.min_payment
-                paid = pay(debt, minimum)
+                paid = pay(debt, minimum, ym)
                 if paid > 0:
                     move(d, f"MIN PAYMENT: {debt.name}", f"Pago mínimo de {debt.name}", paid, "min_payment",
                          funding_account_name, debt.name, debt, before)
 
-        # 2e) velocity chunk (HELOC/UIL → highest APR above the weapon), once a month on an income day
+        # 3) velocity chunk (HELOC/UIL → highest APR above the weapon), once a month on an income day.
+        # The weapon's own balance grows by the same amount: the total debt does not move.
         if sim_weapons and (d.year, d.month) not in chunk_months and any(d in inc["dates"] for inc in incomes):
             for weapon in sorted(sim_weapons, key=lambda w: w.interest_rate):
                 targets = [a for a in state if a.balance > 0 and a.interest_rate > weapon.interest_rate
-                           and a.debt_subtype not in ("heloc", "uil")]
+                           and a.debt_subtype not in ("heloc", "uil") and a.name != weapon.name]
                 if weapon.available_credit < Decimal('500') or not targets:
                     continue
                 target = max(targets, key=lambda a: a.interest_rate)
@@ -699,6 +746,13 @@ def generate_action_plan(
                 before = target.balance
                 target.balance -= chunk
                 weapon.balance += chunk
+                line = next((a for a in state if a.name == weapon.name), None)
+                if line is None:
+                    line = MissionAccount(name=weapon.name, balance=Decimal('0'), interest_rate=weapon.interest_rate,
+                                          min_payment=Decimal('0'), debt_subtype=weapon.weapon_type)
+                    state.append(line)
+                    accrued[line.name] = Decimal('0')
+                line.balance += chunk
                 spread = (target.interest_rate / Decimal('100') / Decimal('365') - weapon.daily_rate) * chunk
                 move(d, f"VELOCITY CHUNK: {target.name}",
                      f"{_usd(chunk)} de {weapon.name} ({float(weapon.interest_rate)}% APR) → {target.name} ({float(target.interest_rate)}% APR)",
@@ -708,17 +762,155 @@ def generate_action_plan(
                 chunk_months.add((d.year, d.month))
                 break
 
-        # 3) only the leftover the mission allowed attacks — strict avalanche (its target)
-        attack = min(mission["ataque"], max(Decimal('0'), cash))
+        # 4) only the leftover the mission allowed attacks — strict avalanche (its target)
+        attack = min(mission["ataque"], max(Decimal('0'), cash - shield_target))
         target = next((a for a in state if a.name == mission["objetivo"] and a.balance > 0), None)
         if attack > Decimal('10') and target is not None:
             before = target.balance
-            paid = pay(target, attack)
+            paid = pay(target, attack, ym)
             move(d, f"{'PAY OFF' if target.balance <= 0 else 'ATTACK'}: {target.name}",
                  f"Atacar la {target.name} con {_usd(paid)} desde {funding_account_name} (avalancha: el interés más alto)",
                  paid, "attack", funding_account_name, target.name, target, before)
 
-    return movements
+        # 5) end of day: cuts (grace when it reports $0) and month-end posting, then the day's interest
+        for debt in state:
+            if debt.debt_subtype in FIXED_SUBTYPES:
+                if not debt.due_day and d.day == n:
+                    post(debt, ym, grace=False)
+                continue
+            if debt.closing_day and d.day == min(debt.closing_day, n):
+                post(debt, ym, grace=True)
+                debt.last_cut_date, debt.last_cut_reported, debt.paid_since_cut = d, debt.balance, Decimal('0')
+                if debt.balance > 0:
+                    minimum = min(plan_minimum(DebtAccount(name=debt.name, balance=debt.balance,
+                                                           interest_rate=debt.interest_rate, min_payment=debt.min_payment,
+                                                           debt_subtype=debt.debt_subtype)), debt.balance)
+                    debt.statement_minimum, debt.engine_minimum = minimum, minimum
+                    debt.statement_due = _next_on_or_after(debt.due_day, d + timedelta(days=1)) if debt.due_day else None
+                else:
+                    debt.statement_minimum, debt.statement_due = None, None
+            elif not debt.closing_day and d.day == n:
+                post(debt, ym, grace=True)
+        for debt in state:
+            if debt.balance > 0:
+                it = debt_daily_interest(debt.balance, debt.interest_rate)
+                accrued[debt.name] = accrued.get(debt.name, Decimal('0')) + it
+                months[ym]["interes"] += it
+        for name, bal in original.items():
+            a = by_name.get(name)
+            if a is not None and a.balance <= 0 and name not in months[ym]["pagadas"] and bal > 0 \
+                    and not any(name in m["pagadas"] for m in months.values()):
+                months[ym]["pagadas"].append(name)
+        t = total()
+        points.append((d, t))
+        months[ym]["cierre"] = t
+        months[ym]["activas"] = len([a for a in state if a.balance > 0])
+        months[ym]["interes_diario"] = daily_interest([a for a in state if a.balance > 0])["total"]
+
+    return {"movements": movements, "points": points, "months": months, "state": state, "accrued": accrued,
+            "cash": cash}
+
+
+def generate_action_plan(
+    accounts: List["MissionAccount"],
+    incomes: List[dict],
+    expenses: List[dict],
+    liquid_cash: Decimal,
+    funding_account_name: str = "Checking",
+    shield_target: Decimal = DEFAULT_PEACE_SHIELD,
+    weapons: Optional[List[VelocityWeapon]] = None,
+    start: Optional[date] = None,
+    days: int = 62,
+) -> List[Dict]:
+    """Tactical GPS (U-14): the movements of the cash route (_cash_plan), the daily mission
+    projected day by day. So if the mission says attack $0 today, the GPS never opens with an attack."""
+    return _cash_plan(accounts, incomes, expenses, liquid_cash, funding_account_name, shield_target, weapons,
+                      start, days)["movements"]
+
+
+DEBT_PATH_HORIZON = 62
+
+
+def debt_path(
+    accounts: List["MissionAccount"],
+    incomes: List[dict],
+    expenses: List[dict],
+    liquid_cash: Decimal,
+    shield_target: Decimal,
+    extra_monthly: Decimal,
+    weapons: Optional[List[VelocityWeapon]] = None,
+    today: Optional[date] = None,
+    horizon: int = DEBT_PATH_HORIZON,
+    is_payday: Optional[Callable[[date], bool]] = None,
+    funding_account_name: str = "Checking",
+    undated_monthly: Decimal = Decimal('0'),
+) -> Dict:
+    """THE projection of the user's debt (misión 17, spec §2; D4): the single source of the
+    Calendar, the freedom date, «pagarás / ahorrarás», the GPS and the command-center.
+
+    1. Cash leg, from TODAY to the end of the month that holds today + horizon: _cash_plan
+       (obligations first, shield, attack only from the leftover, strict avalanche, D1/D2).
+    2. Monthly continuation from the first day of the next month, with the balances the cash leg
+       left (interest accrued included) and `extra_monthly` (the monthly surplus) — the existing
+       plan route (daily_series / simulate_freedom_path), placed on its real days.
+    Days before today are never projected: the month's first point is today's debt.
+    Every figure is an ESTIMATE."""
+    import calendar as _cal
+    today = today or date.today()
+    reach = today + timedelta(days=horizon)
+    end = reach.replace(day=_cal.monthrange(reach.year, reach.month)[1])
+    plan = _cash_plan(accounts, incomes, expenses, liquid_cash, funding_account_name, shield_target, weapons,
+                      start=today, days=(end - today).days, undated_monthly=undated_monthly)
+    q = lambda x: Decimal(x).quantize(_CENT, rounding=ROUND_HALF_UP)  # noqa: E731
+    first = today.replace(day=1)
+    opening = sum((a.balance for a in accounts if a.balance > 0), Decimal('0'))
+    daily = [{"date": first.isoformat(), "total_balance": float(q(opening))}]
+    daily += [{"date": d.isoformat(), "total_balance": float(max(q(t), Decimal('0')))} for d, t in plan["points"]]
+    resumen, timeline = [], []
+    for ym, m in plan["months"].items():
+        inicio, cierre, pagos = q(m["inicio"]), max(q(m["cierre"]), Decimal('0')), q(m["pagos"])
+        interes = cierre - inicio + pagos  # rounded identity: close = open − payments + interest
+        resumen.append({"mes": ym, "inicio": inicio, "cierre": cierre, "pagos": pagos, "interes": interes,
+                        "baja": inicio - cierre, "tramo": "caja"})
+        d = date.fromisoformat(f"{ym}-01")
+        timeline.append({"date": ym, "month_display": d.strftime("%b %Y"),
+                         "events": [f"{name} Paid Off" for name in m["pagadas"]], "total_balance": float(cierre),
+                         "debts_active": m["activas"], "interest_paid": float(interes),
+                         "daily_interest": float(q(m["interes_diario"])), "is_freedom_month": cierre <= 0})
+    free = next((date.fromisoformat(f"{r['mes']}-01") for r in resumen if r["cierre"] <= 0), None)
+    tope = False
+    if free is None:
+        cont_debts = [DebtAccount(name=a.name, balance=q(a.balance + plan["accrued"].get(a.name, Decimal('0'))),
+                                  interest_rate=a.interest_rate, min_payment=a.min_payment, due_day=a.due_day,
+                                  closing_day=a.closing_day or 0, debt_subtype=a.debt_subtype)
+                      for a in plan["state"] if a.balance > 0]
+        cont = daily_series(cont_debts, Decimal(str(extra_monthly)), is_payday=is_payday, today=end + timedelta(days=1))
+        daily += cont["daily_series"]
+        prev = resumen[-1]["cierre"] if resumen else q(opening)
+        for snap in cont["timeline"]:
+            cierre = q(Decimal(str(snap["total_balance"])))
+            interes = q(Decimal(str(snap["interest_paid"])))
+            resumen.append({"mes": snap["date"], "inicio": prev, "cierre": cierre, "pagos": prev + interes - cierre,
+                            "interes": interes, "baja": prev - cierre, "tramo": "mensual"})
+            prev = cierre
+        timeline += cont["timeline"]
+        tope = cont["total_months"] >= SIM_MAX_MONTHS and bool(cont["timeline"]) and cont["timeline"][-1]["total_balance"] > 0
+        free = date.fromisoformat(cont["freedom_date"])
+    months_to_free = (free.year - today.year) * 12 + free.month - today.month
+    return {
+        "timeline": timeline,
+        "deuda_hoy": float(q(opening)),
+        "daily_series": daily,
+        "resumen_meses": resumen,
+        "freedom_date": free.isoformat(),
+        "freedom_month_display": free.strftime("%B %Y"),
+        "total_months": months_to_free,
+        "total_interest_paid": float(sum((r["interes"] for r in resumen), Decimal('0'))),
+        "tope_simulador": tope,
+        "movements": plan["movements"],
+        "fin_tramo_caja": end.isoformat(),
+        "etiqueta": "estimado",
+    }
 
 
 def monthly_attack(surplus: Optional[Decimal], liquid_cash: Decimal, attack_percentage: Decimal) -> Decimal:
@@ -775,6 +967,7 @@ def get_projections(
     extra_monthly: Optional[Decimal] = None,
     subscriptions_monthly: Optional[Decimal] = None,
     eaten_by_subscriptions: bool = False,
+    plan_path: Optional[Dict] = None,
 ) -> Dict:
     """
     Generate complete velocity banking projections.
@@ -807,7 +1000,7 @@ def get_projections(
     target_name = target.name if target else "No Active Debts"
 
     # Calculate projections
-    projections = calculate_debt_free_date(debts, extra_monthly)
+    projections = calculate_debt_free_date(debts, extra_monthly, plan_path=plan_path)
 
     return {
         "total_debt": float(total_debt),
@@ -1964,6 +2157,13 @@ def interest_periods(daily: Decimal) -> dict:
     return {"dia": d, "semana": d * 7, "mes": d * DAYS_PER_YEAR / 12, "anio": d * DAYS_PER_YEAR}
 
 
+def interest_periods_json(daily) -> dict:
+    """THE interest per period every screen shows: from the daily figure the user SEES (rounded
+    to the cent), so day × 7 = week on screen. Dashboard and Ajustes read this same dict."""
+    shown = Decimal(str(daily)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return {k: float(v.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)) for k, v in interest_periods(shown).items()}
+
+
 # ================================================================
 # DAILY MISSION — obligations first, then avalanche (Plan-Obligaciones)
 # One function feeds Inicio's "único pendiente" and the Plan's mission.
@@ -2123,6 +2323,82 @@ def _what(o: Dict) -> str:
     return f"{noun} de la {o['cuenta']} del {_fecha_es(o['fecha_evento'])}"
 
 
+def _degraded(o: Dict, a: MissionAccount, today: date, end: date) -> Optional[Dict]:
+    """D2: the card cannot be paid in full on time, so the cycle reserves only its minimum and the
+    rest goes to the avalanche. Corte: the minimum of the statement that cut will produce, due on
+    the next due_day after it. Estado: the statement's minimum, on its own due date. None when that
+    minimum falls outside the window (nothing to reserve in this cycle)."""
+    engine = a.engine_minimum if a.engine_minimum is not None else a.min_payment
+    if o["tipo"] == "estado":
+        amount = statement_cycle_minimum(a, today) or min(max(engine - a.paid_since_cut, Decimal('0')), a.balance)
+        due = o["fecha_evento"]
+        copy = (f"No alcanza para pagar todo el estado de la {a.name}: paga el mínimo ({_usd(amount)}) antes del "
+                f"{_fecha_es(due)} y lo demás va a la avalancha")
+    else:
+        if not a.due_day:
+            return None
+        due = _next_on_or_after(a.due_day, o["fecha_evento"] + timedelta(days=1))
+        amount = min(engine, a.balance)
+        copy = (f"No alcanza para dejar la {a.name} en $0 antes del corte del {_fecha_es(o['fecha_evento'])}: "
+                f"paga el mínimo ({_usd(amount)}) antes del {_fecha_es(due)} y lo demás va a la avalancha")
+    if amount <= 0 or due >= end:
+        return None
+    return {"tipo": "minimo", "cuenta": a.name, "monto": amount, "fecha_accion": due, "fecha_evento": due,
+            "copy": copy, "degradada": o["tipo"], "monto_completo": o["monto"]}
+
+
+_HARDNESS = {"prestamo": 0, "estado": 0, "minimo": 0, "corte": 1}
+
+
+def _obligation_key(o: Dict):
+    return (o["fecha_evento"], _HARDNESS[o["tipo"]], -o["monto"])
+
+
+def _day_flows(incomes: List[dict], expenses: List[dict], today: date, window: int) -> List[tuple]:
+    """(income, expense) of each day of the window, summed once per mission."""
+    out = []
+    for i in range(window):
+        d = today + timedelta(days=i)
+        out.append((sum((Decimal(str(e["amount"])) for e in incomes if d in e["dates"]), Decimal('0')),
+                    sum((Decimal(str(e["amount"])) for e in expenses if d in e["dates"]), Decimal('0'))))
+    return out
+
+
+def mission_cash_walk(accounts: List[MissionAccount], obligations: List[Dict], covered: set, liquid_cash: Decimal,
+                      shield_target: Decimal, recurring_incomes: List[dict], recurring_expenses: List[dict],
+                      today: date, window: int, flows: Optional[List[tuple]] = None) -> Dict:
+    """The cash the plan will have, day by day, in [today, today + window): THE same order of events as
+    the tactical GPS (generate_action_plan): incomes, dated expenses, the obligations whose action
+    date is that day (paid only from cash ABOVE the shield, D1), plain minimums of debts no obligation
+    covers. Returns the end-of-day cash and the first obligation the cash cannot cover on its date."""
+    by_day: Dict[date, List[Dict]] = {}
+    for o in sorted(obligations, key=_obligation_key):
+        by_day.setdefault(o["fecha_accion"], []).append(o)
+    cash = Decimal(str(liquid_cash))
+    ends: List[Decimal] = []
+    faltante = None
+    flows = flows or _day_flows(recurring_incomes, recurring_expenses, today, window)
+    for i in range(window):
+        d = today + timedelta(days=i)
+        cash += flows[i][0] - flows[i][1]
+        for o in by_day.get(d, []):
+            paid = max(Decimal('0'), min(o["monto"], cash - shield_target))
+            cash -= paid
+            short = o["monto"] - paid
+            if short > 0 and faltante is None:
+                falta = short.quantize(_CENT, rounding=ROUND_HALF_UP)
+                faltante = {"tipo": "faltante", "cuenta": o["cuenta"], "monto": falta, "obligacion": o["tipo"],
+                            "fecha_accion": o["fecha_accion"], "fecha_evento": o["fecha_evento"],
+                            "copy": f"Te faltan {_usd(falta)} para cubrir {_what(o)}"}
+        for a in accounts:
+            if a.balance > 0 and a.name not in covered and a.debt_subtype not in FIXED_SUBTYPES \
+                    and a.due_day and d.day == a.due_day:
+                minimum = a.engine_minimum if a.engine_minimum is not None else a.min_payment
+                cash -= max(Decimal('0'), min(minimum, a.balance, cash - shield_target))
+        ends.append(cash)
+    return {"cierres": ends, "faltante": faltante}
+
+
 def get_daily_mission(
     accounts: List[MissionAccount],
     liquid_cash: Decimal,
@@ -2131,69 +2407,84 @@ def get_daily_mission(
     recurring_expenses: List[dict],
     today: Optional[date] = None,
     window: int = MISSION_WINDOW_DAYS,
+    undated_monthly: Decimal = Decimal('0'),
 ) -> Dict:
-    """Today's single mission: the most urgent obligation; with none in the
-    window, the avalanche attack with what is left after the cycle's reserve.
+    """Today's single mission: the most urgent obligation; with none in the window, the avalanche
+    attack with what is left after the cycle's reserve.
 
-    - Reserve = sum of the window's obligations. It REPLACES the minimum-payment
-      reserve of safe equity for those accounts (they leave the simulation), so
-      nothing is counted twice; debts without an obligation keep theirs, and a
-      debt with no due_day in the DB is never billed on a default day.
-    - Attack = safe equity simulated from (liquid − reserve) with REAL incomes
-      and expenses, minus the monthly interest gaps, capped at the target's
-      balance and the cash. No income on record: attack 0 (no invented salary).
-    - Reserve > liquid: "faltante", the exact amount missing to cover the first
-      obligation the cash cannot reach. Never a silent $0 attack.
+    - Obligations: mission_obligations (loan payments, statements, cuts to $0, statement minimums).
+    - D2 (Fabian, 2026-11-24): a card is paid in full (cut to $0 / whole statement) only when the
+      projected cash covers it; otherwise the cycle reserves its minimum and the rest goes to the
+      avalanche, said openly in the obligation's copy ("degradada"). Hard obligations (loans,
+      minimums) are reserved first; cards are decided in date order against the lowest projected
+      cash from their date on, shield intact.
+    - D1: an obligation is "faltante" only if the cash projected ON ITS DATE (dated incomes and
+      expenses, shield intact) cannot cover it: the same walk as the GPS (mission_cash_walk).
+    - Attack = the lowest end-of-day cash of the window minus the shield, capped at the target's
+      balance and today's cash. No income on record: attack 0 (no invented salary).
+      Active subscriptions with no charge date (`undated_monthly`) never get a made-up day: their
+      month is kept out of the attack instead.
+    - Debts with no obligation keep their plain minimum on due_day (the engine minimum, the one
+      every screen charges); a debt with no due_day is never billed on a made-up day.
     """
     today = today or date.today()
     liquid_cash = Decimal(str(liquid_cash))
-    obligations = mission_obligations(accounts, today, window)
-    reserve = sum((o["monto"] for o in obligations), Decimal('0'))
-    covered = {o["cuenta"] for o in obligations}
-
+    end = today + timedelta(days=window)
+    raw = mission_obligations(accounts, today, window)
+    by_name = {a.name: a for a in accounts}
     open_debts = [a for a in accounts if a.balance > 0]
+
+    # Gap: debts whose minimum does not cover their monthly interest (an alert, never paid ahead)
     gap_debts, gap_cost = [], Decimal('0')
     for a in open_debts:
         mi = (a.balance * (a.interest_rate / Decimal('100')) / Decimal('12')).quantize(_CENT, rounding=ROUND_HALF_UP)
-        shortfall = mi - a.min_payment
+        minimum = a.engine_minimum if a.engine_minimum is not None else a.min_payment
+        shortfall = mi - minimum
         if shortfall > 0:
             gap_cost += shortfall
             gap_debts.append({"name": a.name, "shortfall": shortfall, "apr": a.interest_rate})
 
-    def as_debt(a: MissionAccount, billed: bool) -> DebtAccount:
-        # due_day 0 never matches a calendar day: no phantom default bill
-        return DebtAccount(name=a.name, balance=a.balance, interest_rate=a.interest_rate, min_payment=a.min_payment,
-                           due_day=(a.due_day or 0) if billed else 0, closing_day=a.closing_day or 0,
-                           debt_subtype=a.debt_subtype)
+    # D2: hard obligations first, then each card in date order against the lowest cash from its date on
+    hard = [o for o in raw if o["tipo"] not in ("corte", "estado")]
+    cards = sorted([o for o in raw if o["tipo"] in ("corte", "estado")], key=lambda o: (o["fecha_accion"], _obligation_key(o)))
+    covered = {o["cuenta"] for o in raw}
+    accepted: List[Dict] = list(hard)
+    degradadas: List[Dict] = []
+    flows = _day_flows(recurring_incomes, recurring_expenses, today, window)
+    for o in cards:
+        walk = mission_cash_walk(accounts, accepted, covered, liquid_cash, shield_target,
+                                 recurring_incomes, recurring_expenses, today, window, flows)["cierres"]
+        offset = (o["fecha_accion"] - today).days
+        slack = min(walk[offset:]) - shield_target if offset < len(walk) else Decimal('0')
+        if slack >= o["monto"]:
+            accepted.append(o)
+            continue
+        degradadas.append({"cuenta": o["cuenta"], "tipo": o["tipo"], "monto_completo": o["monto"]})
+        lesser = _degraded(o, by_name[o["cuenta"]], today, end)
+        if lesser is not None:
+            accepted.append(lesser)
+    obligations = sorted(accepted, key=_obligation_key)
+    reserve = sum((o["monto"] for o in obligations), Decimal('0'))
 
-    sim_debts = [as_debt(a, True) for a in open_debts if a.name not in covered]
-    target = get_velocity_target([as_debt(a, False) for a in open_debts])
+    walk = mission_cash_walk(accounts, obligations, covered, liquid_cash, shield_target,
+                             recurring_incomes, recurring_expenses, today, window, flows)
+    faltante = walk["faltante"]
+    target = get_velocity_target([DebtAccount(name=a.name, balance=a.balance, interest_rate=a.interest_rate,
+                                              min_payment=a.min_payment, debt_subtype=a.debt_subtype)
+                                  for a in open_debts])
     attack = Decimal('0')
-    if recurring_incomes and target and liquid_cash > reserve:
-        safe = calculate_safe_attack_equity(liquid_cash - reserve, shield_target, sim_debts, days_buffer=window,
-                                            recurring_incomes=recurring_incomes,
-                                            recurring_expenses=recurring_expenses or [], start_date=today)["safe_equity"]
-        attack = max(Decimal('0'), min(safe, target.balance, liquid_cash - reserve))
+    if recurring_incomes and target and walk["cierres"]:
+        lowest = min(walk["cierres"]) - shield_target - Decimal(str(undated_monthly))
+        attack = max(Decimal('0'), min(lowest, target.balance, walk["cierres"][0] - shield_target))
         attack = attack.quantize(_CENT, rounding=ROUND_HALF_UP)
 
-    # The first obligation the cumulative cash cannot reach: a warning of its own
-    faltante = None
-    if reserve > liquid_cash:
-        running = Decimal('0')
-        for o in obligations:
-            running += o["monto"]
-            if running > liquid_cash:
-                falta = (running - liquid_cash).quantize(_CENT, rounding=ROUND_HALF_UP)
-                faltante = {"tipo": "faltante", "cuenta": o["cuenta"], "monto": falta, "obligacion": o["tipo"],
-                            "fecha_accion": o["fecha_accion"], "fecha_evento": o["fecha_evento"],
-                            "copy": f"Te faltan {_usd(falta)} para cubrir {_what(o)}"}
-                break
-
-    # Headline: the first obligation when the cash covers it; the faltante only
-    # when not even the first one is covered.
+    # Headline: the first obligation; the faltante only when it is that very obligation that falls short.
     mission = None
     if obligations:
-        mission = faltante if obligations[0]["monto"] > liquid_cash else obligations[0]
+        first = obligations[0]
+        same = faltante and (faltante["cuenta"], faltante["obligacion"], faltante["fecha_accion"]) == \
+            (first["cuenta"], first["tipo"], first["fecha_accion"])
+        mission = faltante if same else first
     elif attack > 0:
         mission = {"tipo": "avalancha", "cuenta": target.name, "monto": attack, "fecha_accion": today,
                    "fecha_evento": today, "copy": f"Ataca la {target.name} con {_usd(attack)} hoy"}
@@ -2202,6 +2493,8 @@ def get_daily_mission(
         "mision": mission,
         "faltante": faltante,
         "obligaciones": obligations,
+        "degradadas": degradadas,
+        "cubiertas": sorted(covered),
         "reserva": reserve.quantize(_CENT, rounding=ROUND_HALF_UP),
         "ataque": attack,
         "objetivo": target.name if target else None,
@@ -2212,6 +2505,27 @@ def get_daily_mission(
         "ventana_dias": window,
         "etiqueta": "estimado",
     }
+
+
+def reserve_copy(mission: Dict, has_attack: bool) -> str:
+    """What the reserve IS, in words: its real obligations (cuts to $0, statements, loan payments,
+    minimums) and their dates. Never "pagos mínimos" for something that is not a minimum."""
+    obs = mission["obligaciones"]
+    if not obs:
+        return ("Sin pagos del ciclo pendientes: lo que sobra va a la avalancha." if has_attack
+                else "Tu ataque está recargando: espera tu próximo ingreso.")
+    first = obs[0]
+    noun = {"corte": "el corte de la", "estado": "el estado de la", "minimo": "el mínimo de la",
+            "prestamo": "el pago de la"}[first["tipo"]]
+    rest = len(obs) - 1
+    tail = f" y {rest} pago{'s' if rest != 1 else ''} más hasta el {_fecha_es(obs[-1]['fecha_evento'])}" if rest else ""
+    head = (f"Reservamos {_usd(mission['reserva'])} para {noun} {first['cuenta']} "
+            f"({_fecha_es(first['fecha_accion'])}){tail}.")
+    if has_attack:
+        return f"{head} Con lo que sobra, ataca hoy {_usd(mission['ataque'])} a la {mission['objetivo']} (estimado)."
+    if mission.get("faltante"):
+        return f"{head} {mission['faltante']['copy']} (estimado)."
+    return f"{head} Hoy no sobra para atacar sin tocar tu escudo (estimado)."
 
 
 def mission_json(result: Dict) -> Dict:

@@ -382,21 +382,69 @@ def mission_accounts_for(session, user_id: str, debts, today=None) -> list:
     return out
 
 
+def undated_subscriptions_monthly(data: dict) -> Decimal:
+    """Monthly total of ACTIVE subscriptions with no charge date: the dated paths never paint
+    them on a made-up day, so the mission keeps that month out of the attack instead."""
+    from velocity_engine import monthly_amount
+    return sum((monthly_amount(s.amount, s.frequency) for s in data["active_subs"] if not s.next_charge_date),
+               Decimal("0")).quantize(Decimal("0.01"))
+
+
 def build_daily_mission(session, user_id: str, accounts, plan_limit: int | None = None, today=None,
-                        cashflow=None, shield_target=None):
+                        cashflow=None, shield_target=None, data: dict | None = None, mission_accounts=None):
     """Gathers the user's data and asks the engine (velocity_engine.get_daily_mission).
     Callers (dashboard, command-center) only serialize the result. A caller that already
     loaded `cashflow` (dated_cashflow for today and MISSION_WINDOW_DAYS) or `shield_target`
     in this request passes them, so the same rows are not fetched twice."""
     from datetime import date as _date
     from velocity_engine import MISSION_WINDOW_DAYS, get_daily_mission
-    today = today or _date.today()
-    mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
-    incomes, expenses = cashflow if cashflow is not None else dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS)
+    today = today or globals()["today"]()
+    if mission_accounts is None:
+        mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
+    data = data if data is not None else load_cashflow_inputs(session, user_id)
+    incomes, expenses = cashflow if cashflow is not None else dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS, data=data)
     if shield_target is None:
         shield_target = get_shield_target(session, user_id)
     return get_daily_mission(mission_accounts, Decimal(str(get_liquid_cash(accounts))), shield_target,
-                             incomes, expenses, today=today)
+                             incomes, expenses, today=today, undated_monthly=undated_subscriptions_monthly(data))
+
+
+def total_debt(accounts, plan_limit: int | None = None) -> Decimal:
+    """THE total debt every surface shows: open debts of the plan-limited set."""
+    return sum((Decimal(str(a.balance)) for a in filter_active_debt_accounts(accounts, plan_limit)), Decimal("0"))
+
+
+def weapons_for(accounts) -> list:
+    """HELOC / UIL lines with room: the velocity weapons of the cash route."""
+    from velocity_engine import VelocityWeapon
+    return [VelocityWeapon(name=a.name, balance=Decimal(str(a.balance)), credit_limit=Decimal(str(a.credit_limit or 0)),
+                           interest_rate=Decimal(str(a.interest_rate)), weapon_type=a.debt_subtype or "heloc")
+            for a in accounts
+            if a.type == "debt" and a.debt_subtype in ("heloc", "uil") and (a.credit_limit or 0) > a.balance]
+
+
+def build_plan_path(session, user_id: str, accounts, plan_limit: int | None = None, today=None,
+                    data: dict | None = None, shield_target=None, attack_percentage=None, mission_accounts=None) -> dict:
+    """Gathers the user's data and asks the engine for THE projection (velocity_engine.debt_path):
+    Calendar, freedom date, «pagarás / ahorrarás», GPS movements and command-center read this
+    one result, so they cannot disagree. Rows already read in the request can be passed in."""
+    from velocity_engine import DEBT_PATH_HORIZON, MISSION_WINDOW_DAYS, debt_path, monthly_attack, monthly_surplus
+    today = today or globals()["today"]()
+    data = data if data is not None else load_cashflow_inputs(session, user_id)
+    if shield_target is None or attack_percentage is None:
+        shield_target, attack_percentage = get_plan_settings(session, user_id)
+    debts = filter_active_debt_accounts(accounts, plan_limit)
+    if mission_accounts is None:
+        mission_accounts = mission_accounts_for(session, user_id, debts, today)
+    incomes, expenses = dated_cashflow(session, user_id, today, DEBT_PATH_HORIZON + 32 + MISSION_WINDOW_DAYS, data=data)
+    liquid = Decimal(str(get_liquid_cash(accounts)))
+    surplus = monthly_surplus(data["tuples"], [_debt_account(a) for a in debts], data["subscriptions"])
+    extra = monthly_attack(surplus, liquid, attack_percentage)
+    funding = funding_accounts(accounts)
+    return debt_path(mission_accounts, incomes, expenses, liquid, shield_target, extra, weapons=weapons_for(accounts),
+                     today=today, is_payday=payday_rule(data["items"]),
+                     funding_account_name=funding[0].name if funding else "Checking",
+                     undated_monthly=undated_subscriptions_monthly(data))
 
 
 def cashflow_summary_for(session, user_id: str, plan_limit: int | None = None) -> dict:

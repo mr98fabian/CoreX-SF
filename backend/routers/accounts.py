@@ -23,6 +23,8 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
 
+from velocity_engine import card_utilization, debt_daily_interest, round_utilization
+
 router = APIRouter(prefix="/api", tags=["accounts"])
 
 
@@ -32,6 +34,11 @@ def _out(acc: Account) -> dict:
     stays as the bank's minimum, display only. Clients never recompute it."""
     data = acc.model_dump(mode="json")
     data["plan_minimum"] = str(account_plan_minimum(acc))
+    # Engine figures the screens show as-is (misión 17, spec §3): interest per day and utilization
+    is_debt = acc.type == "debt"
+    data["daily_interest"] = str(debt_daily_interest(acc.balance, acc.interest_rate).quantize(Decimal("0.01"))) if is_debt else "0.00"
+    pct = card_utilization(acc.balance, acc.credit_limit) if is_debt else None
+    data["utilization"] = str(round_utilization(pct)) if pct is not None else None
     return data
 
 

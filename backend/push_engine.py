@@ -174,18 +174,27 @@ def candidates(s: Session, user_id: str, today: date, hour: int) -> list[dict]:
     out: list[dict] = []
 
     in_two = today + timedelta(days=2)
-    for a in debts:
-        if a.closing_day and Decimal(str(a.balance or 0)) > 0 and _cut_date(int(a.closing_day), in_two):
-            out.append({"kind": "corte", "key": f"{a.id}:{in_two.isoformat()}",
-                        "vars": {"name": a.name, "fecha": in_two, "amount": _usd(a.balance)},
-                        "data": {"route": "/dashboard/accounts/manage", "account_id": a.id}})
-
-    if hour == MISSION_HOUR:
+    cutting = [a for a in debts if a.closing_day and Decimal(str(a.balance or 0)) > 0 and _cut_date(int(a.closing_day), in_two)]
+    result = None
+    if cutting or hour == MISSION_HOUR:
         try:
-            mission = build_daily_mission(s, user_id, accounts, limit, today=today)["mision"]
+            result = build_daily_mission(s, user_id, accounts, limit, today=today)
         except Exception:
             logger.exception("push: mission unavailable for a user")
-            mission = None
+    # The cut notice says what the MISSION reserves for that cut (misión 17, N-14). A card the cash
+    # cannot leave at $0 (D2) gets no "report clean" notice: its minimum is the mission's job.
+    cortes = {o["cuenta"]: o for o in (result or {}).get("obligaciones", [])
+              if o["tipo"] == "corte" and o["fecha_evento"] == in_two}
+    for a in cutting:
+        o = cortes.get(a.name)
+        if o is None:
+            continue
+        out.append({"kind": "corte", "key": f"{a.id}:{in_two.isoformat()}",
+                    "vars": {"name": a.name, "fecha": in_two, "amount": _usd(o["monto"])},
+                    "data": {"route": "/dashboard/accounts/manage", "account_id": a.id}})
+
+    if hour == MISSION_HOUR:
+        mission = (result or {}).get("mision")
         if mission and mission.get("tipo") != "faltante" and Decimal(str(mission.get("monto") or 0)) > 0 \
                 and mission.get("fecha_accion", today) <= today:
             out.append({"kind": "mision", "key": today.isoformat(),

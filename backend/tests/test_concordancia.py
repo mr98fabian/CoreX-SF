@@ -87,8 +87,10 @@ def test_deuda_total_igual_en_todas(world, persona):
     assert abs(sum(float(a["balance"]) for a in accounts if a["type"] == "debt" and float(a["balance"]) > 0) - total) < CENT
     assert abs(compare["deuda_hoy"] - total) < CENT
     assert abs(proj["total_debt"] - total) < CENT
-    today_point = [p for p in path["daily_series"] if p["date"] <= w.day.isoformat()][-1]
-    assert abs(today_point["total_balance"] - total) < CENT, "Calendario-hoy == Inicio (N-02)"
+    # N-02: the Calendar paints today's debt on every past day (nothing "lands" today) and names it
+    past = [p for p in path["daily_series"] if p["date"] < w.day.isoformat()]
+    assert all(abs(p["total_balance"] - total) < CENT for p in past), "Calendario-hoy == Inicio (N-02)"
+    assert abs(path["deuda_hoy"] - total) < CENT
     assert abs(_month(path, w.day)["inicio"] - total) < CENT
 
 
@@ -113,7 +115,7 @@ def test_caso_real_ya_no_promete_la_baja_fantasma(world):
     w = world("caso_real")
     m = _month(w.get("/api/velocity/freedom-path"), w.day)
     assert abs(m["baja"] - 7667.78) > 1, "N-01: la baja fantasma de la Misión 14"
-    assert m["baja"] < 2000
+    assert m["baja"] <= m["pagos"] + CENT, "baja solo lo que se paga de verdad (menos el interés)"
 
 
 def test_bajas_no_dependen_de_dias_pasados(world):
@@ -262,7 +264,9 @@ def test_huerfanos_retirados(world):
     w = world("owner")
     from fastapi.testclient import TestClient
     c = TestClient(app)
+    gets = {r.path for r in app.routes if "GET" in (getattr(r, "methods", None) or set())}
     for url in ("/api/cashflow/projection", "/api/notifications/summary", "/api/notifications/upcoming"):
-        assert c.get(url, headers=H).status_code == 404, url
+        assert url not in gets, url
+        assert c.get(url, headers=H).status_code in (404, 405), url  # /cashflow/{id} answers 405 to a GET
     routes = [r for r in app.routes if getattr(r, "path", "") == "/api/cashflow/summary"]
     assert len(routes) == 1

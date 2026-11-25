@@ -16,8 +16,9 @@ from helpers import (
     bypass_fk, accounts_to_active_debt_objects, get_shield_target, get_liquid_cash,
     find_account_by_name, calc_attack_streak, update_account_balance, get_attack_percentage, get_cashflow_surplus, get_cashflow_breakdown, funding_accounts,
     build_daily_mission, dated_cashflow, filter_active_debt_accounts, mission_accounts_for,
-    load_cashflow_inputs, payday_rule, get_plan_settings,
+    load_cashflow_inputs, payday_rule, get_plan_settings, build_plan_path, weapons_for,
 )
+import helpers
 from auth import get_current_user_id
 from api_tokens import require_scope
 from plan_guard import effective_plan_limit, scoped_plan_limit
@@ -98,11 +99,13 @@ def get_velocity_projections(
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        cf = get_cashflow_breakdown(session, user_id, debts)
+        data = load_cashflow_inputs(session, user_id)
+        cf = get_cashflow_breakdown(session, user_id, debts, data=data)
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=helpers.today(), data=data)
         return get_projections(debts, Decimal(str(get_liquid_cash(accounts))),
                                get_attack_percentage(session, user_id),
                                extra_monthly=cf["surplus"], subscriptions_monthly=cf["subscriptions_monthly"],
-                               eaten_by_subscriptions=cf["eaten_by_subscriptions"])
+                               eaten_by_subscriptions=cf["eaten_by_subscriptions"], plan_path=path)
 
 
 @router.get("/velocity/freedom-path")
@@ -112,13 +115,11 @@ def get_freedom_path(
 ):
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
-        debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        # Same surplus as get_cashflow_surplus, loaded once: its items also give the paydays
-        cf = load_cashflow_inputs(session, user_id)
-        velocity = monthly_attack(monthly_surplus(cf["tuples"], debts, cf["subscriptions"]),
-                                  Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
-        # Additive: the monthly contract as before + "daily_series" (the calendar's band)
-        return daily_series(debts, velocity, is_payday=payday_rule(cf["items"]))
+        # THE projection (velocity_engine.debt_path): the same result the plan, the GPS and the
+        # command-center read. Monthly contract as before + daily_series + resumen_meses.
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=helpers.today())
+        path.pop("movements", None)
+        return path
 
 
 @router.get("/velocity/compare")
@@ -132,9 +133,13 @@ def get_velocity_compare(
     with request_session() as session:
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
-        surplus = get_cashflow_surplus(session, user_id, debts)
+        data = load_cashflow_inputs(session, user_id)
+        surplus = monthly_surplus(data["tuples"], debts, data["subscriptions"])
         velocity = monthly_attack(surplus, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id))
-        return compare_paths(debts, velocity, fuente_aporte="excedente" if surplus is not None else "porcentaje_liquidez")
+        today = helpers.today()
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=today, data=data)
+        return compare_paths(debts, velocity, start=today, plan_path=path,
+                             fuente_aporte="excedente" if surplus is not None else "porcentaje_liquidez")
 
 
 @router.get("/velocity/simulate")
@@ -153,6 +158,20 @@ def get_simulation(
 
 # ── Tactical GPS & Execution ─────────────────────────────────
 
+def _month_totals(movements) -> dict:
+    """Per month (YYYY-MM): what the GPS pays to debt by kind and what comes in. The Plan reads
+    these; it never sums movements on the client (misión 17, spec §3)."""
+    out: dict = {}
+    keys = {"attack": "ataque", "obligation": "obligaciones", "min_payment": "minimos", "income": "ingresos"}
+    for m in movements:
+        k = keys.get(m["type"])
+        if k is None:
+            continue
+        row = out.setdefault(m["date"][:7], {v: Decimal("0") for v in keys.values()})
+        row[k] += Decimal(str(m["amount"]))
+    return {ym: {k: float(v.quantize(Decimal("0.01"))) for k, v in row.items()} for ym, row in out.items()}
+
+
 @router.get("/strategy/tactical-gps")
 def get_tactical_gps(
     user_id: str = Depends(require_scope("read:plan")),
@@ -162,31 +181,19 @@ def get_tactical_gps(
         accounts = session.exec(select(Account).where(Account.user_id == user_id)).all()
         debts = accounts_to_active_debt_objects(accounts, plan_limit)
 
-        asset_accounts = funding_accounts(accounts)
-        funding_name = asset_accounts[0].name if asset_accounts else "Checking"
-        shield_target = get_shield_target(session, user_id)
-
-        weapons = [
-            VelocityWeapon(name=acc.name, balance=Decimal(str(acc.balance)),
-                           credit_limit=Decimal(str(acc.credit_limit or 0)),
-                           interest_rate=Decimal(str(acc.interest_rate)), weapon_type=acc.debt_subtype or "heloc")
-            for acc in accounts
-            if acc.type == "debt" and acc.debt_subtype in ("heloc", "uil") and (acc.credit_limit or 0) > acc.balance
-        ]
-
-        # U-14: the GPS is the daily mission projected day by day — same accounts (cuts, statements,
-        # statement minimums), same dated incomes/expenses, same shield. All liquid cash counts.
-        today = date.today()
-        horizon = 62
-        mission_accounts = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
-        incomes, expenses = dated_cashflow(session, user_id, today, horizon + 1 + MISSION_WINDOW_DAYS)
-        movements = generate_action_plan(mission_accounts, incomes, expenses, Decimal(str(get_liquid_cash(accounts))),
-                                         funding_name, shield_target, weapons, start=today, days=horizon)
+        weapons = weapons_for(accounts)
+        # U-14 + misión 17: the GPS IS the cash leg of THE projection (debt_path), so its movements,
+        # the Calendar and the freedom date come from one run. All liquid cash counts.
+        data = load_cashflow_inputs(session, user_id)
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=helpers.today(), data=data)
+        movements = path["movements"]
         projections = get_projections(debts, Decimal(str(get_liquid_cash(accounts))), get_attack_percentage(session, user_id),
-                                      extra_monthly=get_cashflow_surplus(session, user_id, debts))
+                                      extra_monthly=monthly_surplus(data["tuples"], debts, data["subscriptions"]),
+                                      plan_path=path)
 
         return {
             "movements": movements,
+            "totales_mes": _month_totals(movements),
             "velocity_weapons": [
                 {"name": w.name, "weapon_type": w.weapon_type, "balance": float(w.balance),
                  "credit_limit": float(w.credit_limit), "available_credit": float(w.available_credit),
@@ -310,16 +317,6 @@ def get_classified_transactions(limit: int = 50, user_id: str = Depends(get_curr
                                 "date": tx.date, "name": tx.description, "category": tx.category} for tx in txs])
 
 
-@router.get("/cashflow/summary")
-def get_cashflow_intelligence(user_id: str = Depends(get_current_user_id)):
-    with request_session() as session:
-        txs = session.exec(select(Transaction).where(Transaction.user_id == user_id)
-                          .order_by(Transaction.date.desc()).limit(100)).all()
-        return get_cashflow_summary(classify_batch(
-            [{"amount": float(tx.amount), "name": tx.description, "category": tx.category} for tx in txs]
-        ))
-
-
 # ── Strategy Command Center ──────────────────────────────────
 
 @router.get("/strategy/command-center")
@@ -340,8 +337,11 @@ def get_strategy_command_center(
         liquid_cash = Decimal(str(get_liquid_cash(accounts)))
         shield = get_peace_shield_status(liquid_cash, shield_target)
         # One source with Inicio: obligations first, attack = what is left (engine)
-        mission = build_daily_mission(session, user_id, accounts, plan_limit, shield_target=shield_target,
-                                      cashflow=dated_cashflow(session, user_id, date.today(), MISSION_WINDOW_DAYS, data=cf_data))
+        today = helpers.today()
+        macc = mission_accounts_for(session, user_id, filter_active_debt_accounts(accounts, plan_limit), today)
+        mission = build_daily_mission(session, user_id, accounts, plan_limit, today=today, shield_target=shield_target,
+                                      cashflow=dated_cashflow(session, user_id, today, MISSION_WINDOW_DAYS, data=cf_data),
+                                      data=cf_data, mission_accounts=macc)
         attack_amount = mission["ataque"]
         target = next((d for d in debt_accounts if d.name == mission["objetivo"]), None)
 
@@ -352,7 +352,7 @@ def get_strategy_command_center(
             gap_debts = [{"name": g["name"], "shortfall": float(g["shortfall"]), "apr": float(g["apr"])} for g in mission["gap_debts"]]
             # Engine: amount capped at the debt balance / cash; days from the same simulation route
             impact = attack_impact(debt_accounts, target, attack_amount, liquid_cash,
-                                   monthly_attack(surplus, liquid_cash, attack_pct))
+                                   monthly_attack(surplus, liquid_cash, attack_pct), start=today)
             effective_attack = impact["amount"]
             interest_saved_monthly = impact["interest_saved_monthly"]
             days_accelerated = impact["days_accelerated"]
@@ -388,7 +388,9 @@ def get_strategy_command_center(
                 confidence_meter["explanation"] = f"Every $100 to {top.name} saves ${float(top.interest_rate)}/yr vs ${float(second.interest_rate)}/yr to {second.name}"
 
         # Freedom Counter
-        projections = get_projections(debt_accounts, liquid_cash, attack_pct, extra_monthly=surplus)
+        path = build_plan_path(session, user_id, accounts, plan_limit, today=today, data=cf_data,
+                               shield_target=shield_target, attack_percentage=attack_pct, mission_accounts=macc)
+        projections = get_projections(debt_accounts, liquid_cash, attack_pct, extra_monthly=surplus, plan_path=path)
         std_date, vel_date = projections.get("standard_debt_free_date", "N/A"), projections.get("velocity_debt_free_date", "N/A")
         try:
             from datetime import datetime as _dt
