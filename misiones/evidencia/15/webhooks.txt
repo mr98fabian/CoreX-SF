@@ -1,0 +1,21 @@
+# Misión 15 — Webhooks (extracto de idor-matrix.txt + sondas de producción)
+
+PASS  stripe         webhook sin firma                                              → 401  (esperado: 401)
+PASS  stripe         webhook con firma inventada                                    → 401  (esperado: 401)
+PASS  stripe         webhook firmado hace 10 min (replay fuera de tolerancia)       → 401  (esperado: 401)
+PASS  stripe         webhook con cuerpo alterado tras firmar                        → 401  (esperado: 401)
+PASS  stripe         mismo evento entregado 2 veces → 200/200; filas de B = 1  (esperado: 1, sin duplicar)
+PASS  stripe         evento viejo (1 h antes) re-firmado llega tarde → stale; estado = active  (esperado: stale, no degrada)
+PASS  play-rtdn      RTDN sin configurar → fail-closed                              → 503  (esperado: 503)
+
+## Producción (sondas que no alteran nada: firma/JWT inválidos)
+POST /api/subscriptions/webhook  Stripe-Signature inventada  → 401 {"error":"Invalid signature"}   (⇒ STRIPE_WEBHOOK_SECRET existe)
+POST /api/subscriptions/webhook  sin firma                   → 401
+POST /api/subscriptions/google/rtdn  Bearer JWT basura       → 401 {"error":"Invalid push token"} (⇒ audiencia y cuenta de servicio configuradas)
+
+## Revisión de código
+- Stripe (routers/subscriptions.py verify_signature): HMAC-SHA256 sobre "t.body", compare_digest, tolerancia de timestamp (replay viejo → 401, probado). Fail-closed: sin secreto → 503.
+- Idempotencia Stripe: upsert de UNA fila por usuario + orden por timestamp del evento (evento más viejo → "stale", probado). Reentregar el mismo evento no duplica filas (probado).
+- Play RTDN (routers/google_play.py): JWT RS256 contra certs de Google, aud = GOOGLE_RTDN_AUDIENCE, iss de Google, exp/iat obligatorios. Duplicado/antiguo → ignorado por eventTimeMillis. El estado SIEMPRE se relee de la API de Google (la notificación no es fuente de verdad).
+- Fijar el emisor (GOOGLE_RTDN_SERVICE_ACCOUNT) es opcional en código: si no está en Railway, cualquier JWT OIDC firmado por Google con nuestra audiencia pasa la puerta (H-13; impacto acotado porque el estado viene de Google).
+- Verify de Play: el token de compra ligado a otra cuenta (obfuscatedExternalAccountId o fila existente) → 403.
