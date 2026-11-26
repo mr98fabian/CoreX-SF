@@ -1,16 +1,13 @@
 /**
- * Plan de ataque / Pago (Fase 6): the screen where you ACT.
- * Hero = today's attack ("Ataca la Amex con $X"), ONE primary button
- * (Confirmar) with its consequence phrase next to it, and the avalanche
- * drawn as a 3–4 step route (each step in its debt's stage color, the active
- * step in amber, future steps dimmed). Full simulation, plan settings and
- * other methods live one tap away (/dashboard/action-plan/full).
+ * Plan («Cobre a la vista», misión 19, direccion-de-arte §6.4) — the screen where you act.
+ * ONE hero: the debt-free date (Fraunces, with the screen's light). Then today's mission or
+ * attack with ONE primary button (Confirmar), and the avalanche as one vertical line from
+ * today to the free month: each debt that ends is a mark (name + month in Plex Mono), icon 14
+ * closes it. Full simulation, plan settings and other methods live one tap away
+ * (/dashboard/action-plan/full).
  *
- * Sources (engine, no math here): /api/strategy/command-center for today's
- * recommendation, the freedom-path timeline (useKxSummary) for each debt's
- * payoff month. The engine's days_accelerated is not shown: it is not
- * calibrated (documented tech debt) — the consequence uses the engine's
- * interest_saved_monthly instead.
+ * Sources (engine, no math here): /api/strategy/command-center for today's recommendation,
+ * the freedom-path timeline (useKxSummary) for each debt's payoff month and the free month.
  */
 import { moment, primeAudio } from '@/lib/feedback';
 import { useMemo, useState } from 'react';
@@ -24,9 +21,8 @@ import { localDay } from '@/lib/stage';
 import { findFundingAccount } from '@/lib/funding';
 import { useKxSummary } from '@/hooks/useKxSummary';
 import { useCommandCenter } from '@/hooks/useCommandCenter';
-import { useAccountLogos } from '@/hooks/useAccounts';
-import { AccountLogo } from '@/components/AccountLogo';
-import { AmberRule, BankHeader, PrimaryPill, Section, StageChip, StatePhrase } from '@/components/kx';
+import { BankHeader, ErrorState, PrimaryPill, Section, StatePhrase, VerticalLine } from '@/components/kx';
+import { PlanAxis, type AxisMark } from '@/features/actionplan/PlanAxis';
 import { DrawnCheck } from '@/components/kx/motion';
 import { MissionCard } from '@/components/kx/MissionCard';
 import { MoneyAmount } from '@/components/MoneyAmount';
@@ -38,33 +34,29 @@ const STEPS = 4;
 export default function AttackPage() {
     const { language } = useLanguage();
     const es = language === 'es';
+    const freedomText = (f: { year: number; month: number }) => `${(es ? MONTHS_ES : MONTHS_EN)[f.month]} ${es ? 'de ' : ''}${f.year}`;
     usePageTitle(es ? 'Plan de ataque' : 'Attack plan');
     const { formatMoney } = useFormatMoney();
     const { toast } = useToast();
     const s = useKxSummary();
-    const logoOf = useAccountLogos();
     // Cached (React Query): a revisit paints at once and refreshes behind; plan writes invalidate it (lib/planSync)
     const ccQuery = useCommandCenter();
     const cc = ccQuery.data ?? null;
     const ccError = ccQuery.isError && !cc;
     const [busy, setBusy] = useState(false);
     const [done, setDone] = useState<{ destination: string; amount: number } | null>(null);
-    const names = es ? MONTHS_ES : MONTHS_EN;
 
     // Payoff month per debt, from the same engine timeline as the calendar
-    const payoff = useMemo(() => {
+    const payoffMonth = useMemo(() => {
         const map = new Map<string, string>();
         for (const p of (s.path?.timeline ?? []) as { date: string; events?: string[] }[]) {
             for (const ev of p.events ?? []) {
-                const name = ev.replace(/ (Paid Off|Eliminated)$/, ''); // engine emits both forms
-                if (!map.has(name)) {
-                    const [y, m] = p.date.split('-').map(Number);
-                    map.set(name, `${names[m - 1]} ${y}`);
-                }
+                const name = ev.replace(/ (Paid Off|Eliminated)$/, '');
+                if (!map.has(name)) map.set(name, p.date.slice(0, 7));
             }
         }
         return map;
-    }, [s.path, names]);
+    }, [s.path]);
 
     const funding = findFundingAccount(s.staged);
     // After confirming, keep showing what was just paid (the engine already recommends the next one)
@@ -73,7 +65,6 @@ export default function AttackPage() {
     // The server already caps it (attack_impact: never more than the debt owes or the cash held)
     const amount = rec ? rec.amount : 0;
     const ranked = (cc?.confidence_meter?.debts_ranked ?? []).slice(0, STEPS);
-    const stageByName = new Map(s.debts.map((d) => [d.name, d.stage]));
     const saved = cc?.morning_briefing?.impact?.interest_saved_monthly ?? 0;
 
     const confirm = async () => {
@@ -104,19 +95,38 @@ export default function AttackPage() {
     // The same mission Inicio shows (server). An obligation comes first; the attack is what is left after it.
     const mission = cc?.mision?.mision ?? null;
     const obligationFirst = !!mission && mission.tipo !== 'avalancha';
+    // §6.4 axis: each debt ends where the server's timeline says (its own event); paid ones on top
+    const paidNow = s.debts.filter((d) => d.bal <= 0).map((d) => d.name);
+    const allPaid = s.debts.length > 0 && paidNow.length === s.debts.length;
+    const daily = new Map(ranked.map((d) => [d.name, d.daily_cost ?? 0]));
+    const marks: AxisMark[] = s.debts.filter((d) => d.bal > 0 && payoffMonth.has(d.name))
+        .map((d) => ({ name: d.name, month: payoffMonth.get(d.name)!, note: daily.get(d.name) ? (es ? `te cobra ${formatMoney(daily.get(d.name)!)}/día` : `charges ${formatMoney(daily.get(d.name)!)}/day`) : undefined }));
+    const freedomIso = s.freedom ? `${s.freedom.year}-${String(s.freedom.month + 1).padStart(2, '0')}-01` : null;
 
     return (
         <div className="kx-scope -m-4 min-h-full pb-8 md:-m-8 lg:pb-10">
             <div className="mx-auto max-w-xl space-y-6 px-5 pt-6">
                 <BankHeader title={es ? 'Plan de ataque' : 'Attack plan'} greeting={es ? 'la pantalla de actuar' : 'where you act'} />
-                <AmberRule />
+
+                {/* §6.4: ONE hero — the debt-free date — then the plan as one vertical line */}
+                {!loading && !s.error && allPaid && (
+                    <div className="space-y-4" data-testid="plan-free">
+                        <h2 className="kx-screen-title text-kx-ink">{es ? 'Sin deudas.' : 'Debt-free.'}</h2>
+                        <div className="relative" style={{ height: 120 }}>
+                            <VerticalLine done={1} height={120} label={es ? 'Plan completo' : 'Plan complete'} />
+                        </div>
+                    </div>
+                )}
+                {!loading && !s.error && !allPaid && s.freedom && (
+                    <div className="relative" data-testid="hero">
+                        <span aria-hidden="true" className="pointer-events-none absolute -inset-x-4 -inset-y-10 -z-10" style={{ background: 'var(--kx-foco)' }} />
+                        <p className="kx-label">{es ? 'Libre de deudas · estimado' : 'Debt-free · estimate'}</p>
+                        <p className={`kx-hero-number mt-1.5 first-letter:uppercase text-kx-ink ${freedomText(s.freedom).length > 9 ? 'text-[44px]' : 'text-[56px]'}`}>{freedomText(s.freedom)}</p>
+                    </div>
+                )}
 
                 {loading && <div className="h-48 kx-shimmer rounded-[20px]" aria-busy="true" />}
-                {!loading && (s.error || ccError) && (
-                    <Section tone="debt" title={es ? 'No pudimos cargar tu plan' : "We couldn't load your plan"}>
-                        <button onClick={s.reload}className="text-sm font-semibold text-kx-amber">{es ? 'Reintentar' : 'Retry'}</button>
-                    </Section>
-                )}
+                {!loading && (s.error || ccError) && <ErrorState text={es ? 'No pudimos cargar tu plan.' : "We couldn't load your plan."} retry={es ? 'Reintentar' : 'Retry'} onRetry={s.reload} />}
 
                 {!loading && !s.error && !ccError && cc?.excedente?.comido_por_suscripciones && (
                     <Section tone="debt" title={es ? 'Tus suscripciones se comen todo tu excedente' : 'Your subscriptions eat your whole surplus'}>
@@ -153,8 +163,8 @@ export default function AttackPage() {
                         <div>
                             <p className="kx-label">{es ? 'Tu ataque de hoy' : 'Today’s attack'}</p>
                             <p className="mt-1.5 text-[17px] text-kx-ink2">{done ? (es ? `Atacaste la ${rec.destination} con` : `You attacked ${rec.destination} with`) : (es ? `Ataca la ${rec.destination} con` : `Attack ${rec.destination} with`)}</p>
-                            {/* The v9 editorial graft: the giant number is the hero of the screen where you act */}
-                            <p className="kx-hero-number text-[68px] leading-[0.95] text-kx-ink sm:text-[88px]">{formatMoney(amount)}</p>
+                            {/* Misión 19: the screen's one hero is the debt-free date; the attack is the action's figure */}
+                            <p className="kx-num font-editorial text-[34px] leading-none text-kx-ink" data-testid="attack-amount">{formatMoney(amount)}</p>
                             <p className="mt-2 text-[13.5px] text-kx-ink2">
                                 {funding && <>{es ? 'Sale de ' : 'From '}<b className="font-semibold text-kx-ink">{funding.name}</b></>}
                                 {!done && <>{es ? ` · tasa de la deuda ` : ` · debt rate `}<span className="kx-tech">{rec.destination_apr.toFixed(2)}%</span></>}
@@ -180,43 +190,14 @@ export default function AttackPage() {
                     </>
                 )}
 
-                {!loading && ranked.length > 0 && (
+                {!loading && !s.error && !allPaid && freedomIso && (
                     <Section tone="neutral" bare title={es ? 'Tu ruta · avalancha' : 'Your route · avalanche'}>
-                        {/* One ledger: editorial step numbers, hairlines, amber band = today's target */}
-                        <ol className="kx-rows overflow-hidden rounded-[var(--kx-radius-card)] border border-kx-line bg-kx-surface">
-                            {ranked.map((d, i) => {
-                                const active = d.is_target || (i === 0 && !ranked.some((x) => x.is_target));
-                                const stage = stageByName.get(d.name) ?? 'debt';
-                                const when = payoff.get(d.name);
-                                return (
-                                    <li key={d.name} className={`relative flex items-start gap-3.5 border-t border-[var(--kx-line-soft)] px-4 py-3 first:border-t-0 ${active ? 'bg-[rgba(245,158,11,.06)]' : ''}`}>
-                                        {active && <span aria-hidden="true" className="absolute bottom-3 left-0 top-3 w-[3px] rounded-full bg-kx-amber" />}
-                                        <span className={`kx-num font-editorial w-6 flex-none text-right text-[26px] leading-none ${active ? 'text-kx-amber' : 'text-kx-ink3'}`}>{i + 1}</span>
-                                        <span className={`min-w-0 flex-1 ${active ? '' : 'opacity-70'}`}>
-                                            <span className="flex items-center justify-between gap-2">
-                                                <span className="flex min-w-0 items-center gap-2.5">
-                                                    <AccountLogo name={d.name} src={logoOf(d.name)} />
-                                                    <span className="truncate text-[15px] font-semibold text-kx-ink">{d.name}</span>
-                                                </span>
-                                                <StageChip stage={stage} suffix="" />
-                                            </span>
-                                            <span className="mt-0.5 block text-[12.5px] text-kx-ink2">
-                                                {when ? (es ? `muere en ${when} (estimado)` : `paid off in ${when} (estimate)`) : (es ? 'fecha por calcular' : 'date pending')}
-                                                {' · '}<span className="kx-tech">{d.apr.toFixed(2)}%</span>
-                                                {d.daily_cost != null && d.daily_cost > 0 && (
-                                                    <span data-testid="daily-cost">{es ? ' · te cobra ' : ' · charges you '}<span className="kx-num">{formatMoney(d.daily_cost)}</span>{es ? '/día' : '/day'}</span>
-                                                )}
-                                            </span>
-                                        </span>
-                                    </li>
-                                );
-                            })}
-                        </ol>
+                        <PlanAxis today={localDay()} freedom={freedomIso} marks={marks} paidNow={paidNow} es={es} />
                     </Section>
                 )}
 
                 {!loading && (
-                    <Link to="/dashboard/action-plan/full" className="block rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
+                    <Link to="/dashboard/action-plan/full" className="block min-h-[44px] rounded-full border border-dashed border-kx-line py-3 text-center text-[13px] text-kx-ink3">
                         {es ? 'Simulación completa, ajustes del plan y otros métodos · ' : 'Full simulation, plan settings and other methods · '}<b className="font-semibold text-kx-ink2">{es ? 'abrir' : 'open'}</b>
                     </Link>
                 )}

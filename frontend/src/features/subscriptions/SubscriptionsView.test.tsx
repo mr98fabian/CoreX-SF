@@ -45,7 +45,7 @@ describe('Suscripciones', () => {
         const text = el.textContent ?? '';
         expect(text).toContain('Netflix');
         expect(text).toContain('···4884');
-        expect(text).toContain('Ya no pagas');
+        expect(text).toContain('Canceladas'); // misión 19 (§6.6)
         expect(text).toContain('$792.00');
         expect(el.querySelector('img')?.getAttribute('src')).toContain('netflix.png');
         // no logo → monogram with the initial, never a broken <img>

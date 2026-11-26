@@ -55,15 +55,16 @@ afterEach(() => { if (host) { act(() => root.unmount()); document.body.removeChi
 const cell = (el: HTMLElement, d: number) => el.querySelector(`[data-day="${d}"]`)!;
 
 describe('Calendario de eventos', () => {
-    it('reads the month from the server and paints payday + charge + cut in their fixed places', async () => {
+    it('reads the month from the server and paints its marks: two at most, then +N (misión 19)', async () => {
         vi.mocked(apiFetch).mockResolvedValue(EVENTS);
         const el = await render(<DebtCalendar live months={months} maxDebt={30000} />);
         expect(vi.mocked(apiFetch).mock.calls[0][0]).toBe(`/api/calendar/events?month=${EVENTS.mes}`);
         const c = cell(el, 7);
-        expect(c.querySelector('[data-testid="payday-mark"]')!.className).toContain('bottom-[4px] left-1/2');
-        expect(c.querySelector('[data-testid="charge-mark"]')!.className).toContain('bottom-[5px] right-1.5');
-        expect(c.querySelector('[data-testid="cut-mark"]')!.className).toContain('left-1 top-0.5');
-        expect(c.querySelector('[data-testid="cut-mark"]')!.textContent).toBe('◆');
+        // day 7 has a charge, a cut and a payday: the copper dot and the cut icon show, the payday folds into «+1»
+        expect(c.querySelector('[data-testid="charge-mark"]')!.className).toContain('bg-kx-amber');
+        expect(c.querySelector('[data-testid="cut-mark"] svg[data-kx-icon="Cut"]')).not.toBeNull();
+        expect(c.querySelector('[data-testid="payday-mark"]')).toBeNull();
+        expect(c.querySelector('[data-testid="more-mark"]')!.textContent).toBe('+1');
         expect(c.getAttribute('aria-label')).toMatch(/día de nómina, día de corte, día de cobro/);
         expect(cell(el, 8).querySelectorAll('[data-testid$="-mark"]')).toHaveLength(0);
     });

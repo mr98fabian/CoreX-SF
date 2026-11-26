@@ -392,7 +392,7 @@ html.kx-app-shell, html.kx-app-shell body { height: 100%; overflow: hidden; over
 /* The copper line: copper is a fixed track; the funda (what is still owed) sits on top and
    shrinks with transform only. The cut moves with the funda and carries a 2 px lip, so the
    boundary never depends on colour alone. --kx-done is 0…1 (time travelled, set inline). */
-.kx-line { position: relative; height: 14px; }
+.kx-line { position: relative; height: 14px; overflow: hidden; } /* misión 19: the cut wrapper travels by translateX and must not widen the page */
 .kx-line__track { position: absolute; inset: 2px 0; overflow: hidden; border-radius: 999px; }
 .kx-line__copper { position: absolute; inset: 2px 0; border-radius: 999px; background: var(--kx-cobre); }
 .kx-line__funda, .kx-line__cut { transition: transform var(--kx-dur-slow) var(--kx-ease-out); }

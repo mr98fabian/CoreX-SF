@@ -63,9 +63,8 @@ describe('Noche con luz — tokens', () => {
         expect(stripe).not.toContain('#B45309');
         expect(css).not.toMatch(/--kx-stripe:[^;]*#B45309/);
         expect(stripe).toContain('kx-on-amber');
-        const inStripe = homeSrc.slice(homeSrc.indexOf('<AmberStripe>'), homeSrc.indexOf('</AmberStripe>'));
-        expect(inStripe).not.toMatch(/BankHeader|text-kx-ink/);
-        expect(homeSrc.indexOf('<BankHeader')).toBeLessThan(homeSrc.indexOf('<AmberStripe>'));
+        // Misión 19 (§6.2): Inicio no longer carries the stripe — the mission's button is its only copper surface
+        expect(homeSrc).not.toContain('<AmberStripe');
     });
 
     it('amber as text maps to the text token; paper has grain; the system bars stay #020617', () => {
@@ -82,14 +81,14 @@ describe('Noche con luz — tokens', () => {
         expect(offenders).toEqual([]);
     });
 
-    it('the raccoon appears in exactly three moments: empty, paid, quiet', () => {
+    it('the raccoon mark appears only in the empty and quiet moments (misión 19: no mascot in the $0 ceremony)', () => {
         const uses = Object.entries(sources).filter(([p]) => !p.includes('.test.') && p.endsWith('.tsx'))
             .flatMap(([, src]) => [...src.matchAll(/<Raccoon moment="(\w+)"/g)].map((m) => m[1]));
-        expect(uses.sort()).toEqual(['empty', 'paid', 'quiet']);
+        expect(uses.sort()).toEqual(['empty', 'quiet']);
     });
 
-    it('life: halo behind the hero number, bars fill on entry, motion tokens untouched', () => {
-        expect(kxSrc).toMatch(/className="kx-lit kx-halo"/);
+    it('life: the light (--kx-foco) behind the hero number, bars fill on entry, motion tokens untouched', () => {
+        expect(kxSrc).toMatch(/data-testid="hero"[\s\S]{0,240}background: 'var\(--kx-foco\)'/);
         expect(css).toMatch(/\.kx-halo::after/);
         expect(css).toMatch(/@keyframes kx-fill-in/);
         expect(css).toMatch(/--kx-dur-fast: 120ms;[\s\S]*--kx-dur-base: 240ms;[\s\S]*--kx-dur-slow: 480ms;/);
