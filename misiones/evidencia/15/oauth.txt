@@ -1,0 +1,47 @@
+# Misión 15 — Tokens / OAuth / MCP (extracto de idor-matrix.txt + sondas de producción)
+
+PASS  tokens         B GET /api/tokens no lista el de A                             → 200  (esperado: 200 sin A)
+PASS  tokens         B DELETE /api/tokens/1                                         → 404  (esperado: 404)
+PASS  tokens         B GET /api/tokens/audit vacío                                  → 200  (esperado: 200 [])
+PASS  tokens         token kx_ de A lee SOLO las cuentas de A                       → 200  (esperado: 200 con A)
+PASS  tokens         token kx_ en endpoint sin opt-in (GET /api/tokens)             → 403  (esperado: 403)
+PASS  tokens         token kx_ no puede borrar la cuenta (DELETE /api/user/me)      → 403  (esperado: 403)
+PASS  tokens         token kx_ sin scope write:payments (POST /api/transactions)    → 403  (esperado: 403)
+PASS  tokens         token kx_ revocado → 401 de verdad                             → 401  (esperado: 401)
+PASS  oauth          authorize sin PKCE                                             → 302  (esperado: error invalid_request)
+PASS  oauth          authorize con PKCE plain                                       → 302  (esperado: error invalid_request)
+PASS  oauth          authorize pidiendo write:payments                              → 302  (esperado: invalid_scope)
+PASS  oauth          authorize con redirect_uri no registrado                       → 400  (esperado: 400 sin redirigir)
+PASS  oauth          register con redirect http no-loopback                         → 400  (esperado: 400)
+PASS  oauth          B aprueba el consentimiento de A                               → 404  (esperado: 404)
+PASS  oauth          token con code_verifier equivocado                             → 400  (esperado: invalid_grant)
+PASS  oauth          el code quemado tras un intento fallido no se reusa            → 400  (esperado: invalid_grant (un solo uso))
+PASS  oauth          token emitido: scopes = kit, sin write:payments, expira 1 h    → 200  (esperado: kit, 3600)
+PASS  oauth          access OAuth no sirve en endpoint sin opt-in                   → 403  (esperado: 403)
+PASS  oauth          access OAuth no puede registrar pagos                          → 403  (esperado: 403)
+PASS  oauth          rotación: el access viejo muere al rotar                       → 401  (esperado: 401)
+PASS  oauth          reuso del refresh viejo                                        → 400  (esperado: invalid_grant)
+PASS  oauth          …y el reuso revoca la familia (access nuevo muerto)            → 401  (esperado: 401)
+PASS  oauth          …y el refresh nuevo también                                    → 400  (esperado: invalid_grant)
+PASS  oauth          refresh no puede ampliar scopes                                → 400  (esperado: 400)
+PASS  mcp            POST /mcp sin token                                            → 401  (esperado: 401)
+PASS  mcp            POST /mcp con token en query string                            → 401  (esperado: 401)
+PASS  mcp            POST /mcp con token revocado                                   → 401  (esperado: 401)
+PASS  mcp            POST /mcp con JWT de sesión (no kx_)                           → 401  (esperado: 401)
+PASS  mcp            token OAuth caducado en /api/accounts                          → 401  (esperado: 401)
+
+## Producción (sondas de solo lectura, 2026-11-25)
+POST /mcp sin token                          → 401 {"error":"invalid_token"}
+GET  /mcp sin token                          → 401
+GET  /.well-known/oauth-authorization-server → 200, code_challenge_methods_supported = ["S256"], scopes = kit (sin write:payments)
+GET  /api/accounts con JWT alg=none          → 401 "Invalid or expired token"
+
+## Revisión de código (routers/oauth.py, api_tokens.py, mcp_remote.py, auth.py)
+- Access OAuth: TTL 1 h (ACCESS_TTL). Refresh: TTL 60 días, rotación en cada uso; reuso de uno rotado/revocado → revoca familia + access (probado arriba).
+- PKCE: solo S256, regex 43-128; sin PKCE o "plain" → invalid_request (probado). Code de un solo uso, se quema antes de emitir.
+- Scopes: KIT_SCOPES = read:accounts, read:dashboard, read:plan, run:simulations, write:accounts. write:payments → invalid_scope en authorize, register y refresh (probado). Kit del frontend (lib/aiKit.ts KIT_TOKEN_SCOPES) = mismos 5.
+- write:payments SOLO es alcanzable creando un token manual con la casilla explícita en Ajustes → Conecta tu IA (ConnectAI.tsx, nunca marcada por defecto). Por diseño (ver H-10).
+- Tokens kx_: solo sha256 en BD; default-deny (get_current_user_id rechaza kx_ con 403); revocación efectiva en la petición siguiente (probado); plan de pago comprobado en cada petición.
+- Tokens manuales: expires_at NULL → no caducan (H-10).
+- /mcp: token en query string nunca autentica (probado); DNS-rebinding protection con hosts/orígenes fijos.
+- Consentimiento OAuth: el primer usuario con sesión que abre el handle se lo queda; B no puede aprobar el de A (probado). La pantalla /oauth/consent es enmarcable en korexf.com (H-06).
