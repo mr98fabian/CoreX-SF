@@ -70,6 +70,7 @@ Componer las 5 pantallas de la barra, el login, la ceremonia de $0 y los estados
 - **Desviaciones o dudas:**
   - **La pestaña Plan es `AttackPage`** (ruta `/dashboard/action-plan`); ahí va la composición del Plan. `ActionPlanPage` es la simulación completa (`/action-plan/full`) y queda fuera.
   - **Para decidir — avance de cada deuda en Cuentas:** cada fila usa la fracción pagada que ya mostraba la barra (`paidFraction`, sin cálculo nuevo), no el tiempo. Una línea por tiempo daría el mismo avance a todas las deudas y la prueba del papá no podría salir. El criterio por tiempo (decisión b) sí se aplica en el Plan y en el Calendario.
+    **Decisión de Fabian (2026-11-25): «Fracción pagada».** Queda así; sin cambio de código.
   - **Plan — lo recorrido:** no existe fecha de inicio del plan, así que la línea empieza hoy y lo recorrido es la parte del mes en curso. Sigue siendo tiempo, no dinero.
   - El botón de la misión en Inicio es nuevo («Ver cómo hacerlo», lleva al Plan), porque el documento le da un botón principal.
   - En Inicio la fecha libre pasa de la franja ámbar a una línea bajo el héroe; la franja desaparece.
