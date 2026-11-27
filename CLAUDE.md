@@ -74,6 +74,9 @@ Se activan solos por contexto; también con `/nombre`.
 | `critical-evaluator` | Red team de un plan o decisión antes de ejecutarla |
 | `executive-synthesis` | Resúmenes e informes para decidir |
 | `frontend-design` | Ejecutar la dirección de marca con más audacia (plugin oficial) |
+| `ciclo-mision` | Correr una misión: orden de commits, estados y comprobación antes de `en-auditoria` |
+| `release-android` | Versión nueva de Android: `build.gradle` (Play) y `apk.json` (APK directo), firma y secretos |
+| `copy-bilingue` | Cualquier texto visible: `t()` en `LanguageContext.tsx`, ES primero, sin claves crudas |
 
 Notas de ideas sin procesar: `docs/raw/` (ver su README).
 
