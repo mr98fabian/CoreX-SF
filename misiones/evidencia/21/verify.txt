@@ -1,0 +1,7 @@
+verify: backend:pytest OK (28s)
+verify: backend:alembic-heads OK (1s)
+verify: frontend:vitest OK (53s)
+verify: frontend:eslint OK (11s)
+verify: frontend:build OK (17s)
+verify: OK
+exit=0

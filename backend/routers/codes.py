@@ -1,31 +1,22 @@
 """
 POST /api/codes/redeem — session only (get_current_user_id already rejects kx_ API
-tokens). Rate limited 5/min per IP and per session; errors are generic so the
+tokens). Rate limited 5/min per session (rate_limit.py: per user, never per proxy IP); errors are generic so the
 endpoint never reveals whether a code exists.
 """
-import hashlib
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field as PField
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from access_codes import CodesDisabled, RedeemError, redeem
 from auth import DEMO_USER_ID, get_current_user_id
 from database import request_session
+from rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/codes", tags=["codes"])
-limiter = Limiter(key_func=get_remote_address)
 
 GENERIC = "Invalid or unavailable code."
-
-
-def _session_key(request: Request) -> str:
-    """Per-user bucket without decoding the JWT here: a hash of the bearer token."""
-    auth = request.headers.get("authorization", "")
-    return "s:" + hashlib.sha256(auth.encode("utf-8")).hexdigest()[:32]
 
 
 class RedeemRequest(BaseModel):
@@ -33,8 +24,7 @@ class RedeemRequest(BaseModel):
 
 
 @router.post("/redeem")
-@limiter.limit("5/minute")
-@limiter.limit("5/minute", key_func=_session_key)
+@limiter.limit("5/minute")  # key: the session (rate_limit.rate_limit_key)
 def redeem_code(request: Request, body: RedeemRequest, user_id: str = Depends(get_current_user_id)):
     if user_id == DEMO_USER_ID:
         raise HTTPException(status_code=403, detail="Demo accounts can't redeem codes")

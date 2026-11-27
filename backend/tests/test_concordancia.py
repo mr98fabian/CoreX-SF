@@ -13,6 +13,7 @@ import helpers
 from auth import get_current_user_id
 from main import app
 from tests.personas import CASO_REAL_TODAY, PERSONAS, seed
+from tests.route_list import iter_routes
 
 H = {"Authorization": "Bearer x"}
 CENT = 0.011
@@ -281,9 +282,10 @@ def test_huerfanos_retirados(world):
     w = world("owner")
     from fastapi.testclient import TestClient
     c = TestClient(app)
-    gets = {r.path for r in app.routes if "GET" in (getattr(r, "methods", None) or set())}
+    gets = {path for path, r in iter_routes(app.routes) if "GET" in (getattr(r, "methods", None) or set())}
+    assert len(gets) > 50  # the scan really sees the routers (guards against a vacuous pass)
     for url in ("/api/cashflow/projection", "/api/notifications/summary", "/api/notifications/upcoming"):
         assert url not in gets, url
         assert c.get(url, headers=H).status_code in (404, 405), url  # /cashflow/{id} answers 405 to a GET
-    routes = [r for r in app.routes if getattr(r, "path", "") == "/api/cashflow/summary"]
+    routes = [r for path, r in iter_routes(app.routes) if path == "/api/cashflow/summary"]
     assert len(routes) == 1

@@ -1,0 +1,8 @@
+$ pip-audit -r backend/requirements.txt  (2026-11-27T09:47:38Z)
+Found 4 known vulnerabilities in 2 packages
+Name          Version ID              Fix Versions
+------------- ------- --------------- ------------
+python-dotenv 1.2.1   PYSEC-2026-2270 1.2.2
+python-dotenv 1.2.1   PYSEC-2026-2270 1.2.2
+pytest        8.3.5   PYSEC-2026-1845 9.0.3
+pytest        8.3.5   PYSEC-2026-1845 9.0.3

@@ -36,6 +36,13 @@ def setup_database():
     SQLModel.metadata.drop_all(_test_engine)
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """The app-wide default limit (SlowAPIMiddleware) would otherwise add up across the suite."""
+    app.state.limiter.reset()
+    yield
+
+
 @pytest.fixture
 def client():
     """FastAPI TestClient with demo auth header pre-configured."""

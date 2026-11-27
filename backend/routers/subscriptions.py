@@ -23,6 +23,7 @@ from sqlmodel import Session, select
 from pydantic import BaseModel
 
 from database import get_session, request_session
+from rate_limit import limiter
 from auth import get_current_user_id
 from models import Subscription
 from plan_guard import PLAN_LIMITS, entitlement, effective_plan_limit, _parse_ts
@@ -214,6 +215,7 @@ def _apply_subscription(session: Session, user_id: str, sub: dict, existing: Opt
 
 
 @router.post("/webhook")
+@limiter.exempt  # Stripe delivers from a few IPs in bursts; the signature is the gate
 async def handle_webhook(request: Request, session: Session = Depends(get_session)):
     raw_body = await request.body()
 

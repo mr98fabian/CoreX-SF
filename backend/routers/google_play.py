@@ -27,6 +27,7 @@ from sqlmodel import Session, select
 
 from auth import get_current_user_id
 from database import get_session
+from rate_limit import limiter
 from models import Subscription
 from plan_guard import _parse_ts
 
@@ -264,6 +265,7 @@ def _ms_to_iso(ms) -> Optional[str]:
 
 
 @router.post("/rtdn")
+@limiter.exempt  # Pub/Sub pushes from Google IPs; the OIDC JWT is the gate
 async def handle_rtdn(request: Request, session: Session = Depends(get_session)):
     audience = os.getenv("GOOGLE_RTDN_AUDIENCE", "").strip()
     info = _service_account()
