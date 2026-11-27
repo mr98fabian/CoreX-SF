@@ -1,0 +1,11 @@
+# Mismos tests nuevos corridos contra origin/main (c1b99d9), ANTES del fix: deben fallar.
+=========================== short test summary info ===========================
+FAILED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[get-/api/plaid/create_link_token-None]
+FAILED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/exchange_public_token-body1]
+FAILED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[get-/api/plaid/accounts-None]
+FAILED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/import_accounts-None]
+FAILED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/sync_transactions-body4]
+FAILED tests/test_plaid_disabled.py::test_cross_user_cannot_read_or_import_other_users_bank
+FAILED tests/test_plaid_disabled.py::test_no_plaid_routes_are_mounted - Asser...
+FAILED tests/test_plaid_disabled.py::test_switch_is_off_and_no_global_token_state
+8 failed in 1.42s

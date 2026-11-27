@@ -1,0 +1,11 @@
+$ rg "plaid_tokens" backend/
+(exit 1; 1 = 0 resultados)
+
+$ rg -n "/plaid|plaid/" frontend/src   (¿alguna pantalla llama a /plaid/*?)
+frontend/src\components\AIKit.test.tsx:108:        for (const line of AI_INSTRUCTIONS.spli
+frontend/src\lib\planSync.test.tsx:96:            '/api/user/me/attack-percentage', '/api/
+(la única coincidencia es la regex PLAN_WRITE de lib/planEvents.ts: clasifica rutas para refrescar el plan, no hace ninguna llamada)
+
+$ rg -o "getenv\(.PLAID_[A-Z_]+" backend -g "*.py"   (variables PLAID_* que lee el código, solo nombres)
+backend\plaid_service.py:getenv('PLAID_CLIENT_ID
+backend\plaid_service.py:getenv('PLAID_SECRET
