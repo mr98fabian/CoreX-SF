@@ -1,0 +1,11 @@
+# tests/test_plaid_disabled.py en fix/plaid-sin-auth (después del fix)
+=========================== short test summary info ===========================
+PASSED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[get-/api/plaid/create_link_token-None]
+PASSED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/exchange_public_token-body1]
+PASSED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[get-/api/plaid/accounts-None]
+PASSED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/import_accounts-None]
+PASSED tests/test_plaid_disabled.py::test_anonymous_plaid_routes_are_closed[post-/api/plaid/sync_transactions-body4]
+PASSED tests/test_plaid_disabled.py::test_cross_user_cannot_read_or_import_other_users_bank
+PASSED tests/test_plaid_disabled.py::test_no_plaid_routes_are_mounted
+PASSED tests/test_plaid_disabled.py::test_switch_is_off_and_no_global_token_state
+8 passed in 0.79s

@@ -1,0 +1,13 @@
+# Sonda local (backend de fix/plaid-sin-auth en 127.0.0.1:8011, SQLite desechable), 2026-11-27
+GET /api/plaid/create_link_token [anon] -> {"detail":"Not Found"} | HTTP 404
+GET /api/plaid/create_link_token [demo] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/exchange_public_token [anon] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/exchange_public_token [demo] -> {"detail":"Not Found"} | HTTP 404
+GET /api/plaid/accounts [anon] -> {"detail":"Not Found"} | HTTP 404
+GET /api/plaid/accounts [demo] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/import_accounts [anon] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/import_accounts [demo] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/sync_transactions [anon] -> {"detail":"Not Found"} | HTTP 404
+POST /api/plaid/sync_transactions [demo] -> {"detail":"Not Found"} | HTTP 404
+# Control: una ruta real sigue viva
+GET /api/accounts [demo] -> HTTP 200
