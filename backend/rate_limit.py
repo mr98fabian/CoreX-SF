@@ -17,7 +17,6 @@ import os
 from typing import List, Union
 
 from slowapi import Limiter
-from slowapi.middleware import SlowAPIMiddleware, _find_route_handler
 from starlette.requests import Request
 
 from auth import DEMO_TOKEN
@@ -90,12 +89,19 @@ def rate_limit_key(request: Request) -> str:
 limiter = Limiter(key_func=rate_limit_key, default_limits=[DEFAULT_LIMIT])
 
 
-class DefaultLimitMiddleware(SlowAPIMiddleware):
-    """SlowAPIMiddleware, minus ASGI-object endpoints (the /mcp mount): slowapi names a route by
-    its function's __name__ and crashes on them. /mcp is already limited per token (api_tokens)."""
+def enforce_default_limit(request: Request) -> None:
+    """default_limits for every API route without its own @limiter.limit (and not @limiter.exempt).
 
-    async def dispatch(self, request, call_next):
-        handler = _find_route_handler(request.app.routes, request.scope)
-        if handler is not None and not hasattr(handler, "__name__"):
-            return await call_next(request)
-        return await super().dispatch(request, call_next)
+    A global dependency, not SlowAPIMiddleware: from FastAPI 0.137 included routers are nested
+    (_IncludedRouter) and the middleware's route lookup finds no handler, so it silently exempts
+    every route. Here routing already ran, so scope["endpoint"] is the real function. Raises
+    RateLimitExceeded → 429 through the app's handler. Mounts (/mcp) never reach it: they're not
+    APIRoutes, and /mcp is limited per token in api_tokens.
+    """
+    endpoint = request.scope.get("endpoint")
+    if not limiter.enabled or endpoint is None or not hasattr(endpoint, "__name__"):
+        return
+    name = f"{endpoint.__module__}.{endpoint.__name__}"
+    if name in limiter._exempt_routes or name in limiter._route_limits:
+        return
+    limiter._check_request_limit(request, endpoint, True)

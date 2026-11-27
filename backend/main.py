@@ -8,7 +8,7 @@ All routes live in backend/routers/. This file handles:
   - Router registration
 """
 import os, uuid, time, logging, traceback
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
@@ -34,18 +34,18 @@ IS_DEV = ENVIRONMENT == "development"
 
 # ── Rate Limiter ─────────────────────────────────────────────
 # One limiter for the whole app (rate_limit.py): key = user, else the real client IP behind our
-# proxies. SlowAPIMiddleware applies default_limits to every route without its own limit.
-from rate_limit import DefaultLimitMiddleware, limiter  # noqa: E402
+# proxies. enforce_default_limit applies default_limits to every route without its own limit.
+from rate_limit import enforce_default_limit, limiter  # noqa: E402
 
 app = FastAPI(
     title="KoreX Financial System", version="2.0.0",
     docs_url="/docs" if IS_DEV else None,
     redoc_url="/redoc" if IS_DEV else None,
     openapi_url="/openapi.json" if IS_DEV else None,
+    dependencies=[Depends(enforce_default_limit)],
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(DefaultLimitMiddleware)  # added before CORS so 429s still carry CORS headers
 
 app.add_middleware(
     CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True,

@@ -9,6 +9,7 @@ from models import Account
 from routers import transactions
 from sqlmodel import Session, select
 from database import engine
+from tests.route_list import iter_routes
 
 USER_A = "aaaaaaaa-0000-4000-a000-00000000000a"
 USER_B = "bbbbbbbb-0000-4000-a000-00000000000b"
@@ -68,7 +69,8 @@ def test_cross_user_cannot_read_or_import_other_users_bank(client, fake_bank, as
 
 
 def test_no_plaid_routes_are_mounted():
-    mounted = [getattr(r, "path", "") for r in app.routes]
+    mounted = [path for path, _ in iter_routes(app.routes)]
+    assert len(mounted) > 50  # the scan really sees the routers (guards against a vacuous pass)
     assert [p for p in mounted if "/plaid" in p] == []
 
 
