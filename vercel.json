@@ -6,6 +6,13 @@
     "outputDirectory": "frontend/dist",
     "headers": [
         {
+            "source": "/(.*)",
+            "headers": [
+                { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'sha256-Q0CXdI5a959mtVLcr1/SPr2inufsNxZNj1naeDHx3CI='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://korexf.com https://*.supabase.co wss://*.supabase.co https://corex-sf-production.up.railway.app https://formsubmit.co; worker-src 'self' blob:; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" },
+                { "key": "X-Frame-Options", "value": "DENY" }
+            ]
+        },
+        {
             "source": "/apk.json",
             "headers": [
                 { "key": "Cache-Control", "value": "no-cache, must-revalidate" },
