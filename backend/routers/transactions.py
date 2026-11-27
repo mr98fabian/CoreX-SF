@@ -1,17 +1,15 @@
 """
-Transactions Router — Create, list, sync, and Plaid integration.
+Transactions Router — Create and list transactions (in-app Plaid is disabled).
 """
-import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from decimal import Decimal
-from datetime import date, timedelta
 from typing import List
 import uuid
 
 from database import engine
 from database import request_session
-from models import Account, Transaction, TransactionCreate, MovementLog
+from models import Account, Transaction, TransactionCreate
 from helpers import bypass_fk, update_account_balance
 from auth import get_current_user_id
 from api_tokens import require_scope, audit_summary
@@ -20,7 +18,6 @@ import audit_text
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from core_engine.calculators import calculate_minimum_payment
-from transaction_classifier import classify_transaction
 
 from routers.engagement import award_once
 
@@ -170,132 +167,12 @@ def get_all_transactions(
         }
 
 
-# ── Plaid Integration ────────────────────────────────────────
-
-from pydantic import BaseModel
-
-class PlaidPublicToken(BaseModel): public_token: str
-class PlaidAccessToken(BaseModel): access_token: str
-
-plaid_tokens: dict = {}
-
-
-def _plaid_call(fn_name: str, *args, fallback_msg: str = "Plaid service error"):
-    try:
-        from plaid_service import create_link_token, exchange_public_token, get_accounts, sync_transactions
-        return {"create_link_token": create_link_token, "exchange_public_token": exchange_public_token,
-                "get_accounts": get_accounts, "sync_transactions": sync_transactions}[fn_name](*args)
-    except Exception:
-        logging.getLogger("korex.transactions").exception("Plaid call %s failed", fn_name)
-        raise HTTPException(status_code=500, detail=fallback_msg)
-
-
-@router.get("/plaid/create_link_token")
-def api_create_link_token():
-    return _plaid_call("create_link_token")
-
-
-@router.post("/plaid/exchange_public_token")
-def api_exchange_public_token(data: PlaidPublicToken):
-    result = _plaid_call("exchange_public_token", data.public_token)
-    plaid_tokens["current"] = result["access_token"]
-    return {"success": True, "item_id": result["item_id"]}
-
-
-@router.get("/plaid/accounts")
-def api_get_plaid_accounts():
-    token = plaid_tokens.get("current")
-    if not token:
-        raise HTTPException(status_code=400, detail="No bank linked. Connect a bank first.")
-    return {"accounts": _plaid_call("get_accounts", token)}
-
-
-@router.post("/plaid/import_accounts")
-def api_import_plaid_accounts(user_id: str = Depends(get_current_user_id)):
-    token = plaid_tokens.get("current")
-    if not token:
-        raise HTTPException(status_code=400, detail="No bank linked. Connect a bank first.")
-
-    plaid_accounts = _plaid_call("get_accounts", token)
-    imported = []
-
-    with request_session() as session:
-        for acc in plaid_accounts:
-            existing = session.exec(
-                select(Account).where(Account.plaid_account_id == acc["plaid_account_id"], Account.user_id == user_id)
-            ).first()
-            name = f"{acc['name']} (...{acc['mask']})" if acc.get('mask') else acc['name']
-            if existing:
-                existing.balance = Decimal(str(abs(acc["balance"])))
-                existing.name = name
-                continue
-
-            korex_type = "debt" if acc["type"] == "credit" else (
-                "checking" if acc.get("subtype") in ["checking", None] else "savings"
-            )
-            session.add(Account(
-                name=name, type=korex_type, balance=Decimal(str(abs(acc["balance"]))),
-                interest_rate=Decimal("0"), min_payment=Decimal("0"), payment_frequency="monthly",
-                plaid_account_id=acc["plaid_account_id"], user_id=user_id,
-            ))
-            imported.append(name)
-
-        with bypass_fk(session):
-            session.commit()
-    return {"success": True, "imported": imported, "count": len(imported)}
-
-
-@router.post("/plaid/sync_transactions")
-def api_sync_transactions(data: PlaidAccessToken, user_id: str = Depends(get_current_user_id)):
-    result = _plaid_call("sync_transactions", data.access_token)
-    counts = {"added": 0, "skipped": 0}
-
-    with request_session() as session:
-        accounts = session.exec(
-            select(Account).where(Account.plaid_account_id != None, Account.user_id == user_id)
-        ).all()
-        account_map = {acc.plaid_account_id: acc.id for acc in accounts}
-
-        for tx in result.get("added", []):
-            local_id = account_map.get(tx["plaid_account_id"])
-            if not local_id:
-                counts["skipped"] += 1; continue
-            if session.exec(select(Transaction).where(Transaction.plaid_transaction_id == tx["plaid_transaction_id"])).first():
-                counts["skipped"] += 1; continue
-
-            classification = classify_transaction(
-                amount=Decimal(str(tx["amount"])), name=tx["name"],
-                merchant_name=tx.get("merchant_name"), category=tx.get("category"),
-            )
-            session.add(Transaction(
-                account_id=local_id, date=tx["date"],
-                amount=Decimal(str(tx["amount"])) * Decimal("-1"),
-                description=tx["name"],
-                category=f"{classification['tag'].title()}: {tx['category']}",
-                plaid_transaction_id=tx["plaid_transaction_id"], user_id=user_id,
-            ))
-            counts["added"] += 1
-
-        with bypass_fk(session):
-            session.commit()
-
-        # Auto-verify pending movement logs
-        for log in session.exec(select(MovementLog).where(MovementLog.status == "executed", MovementLog.user_id == user_id)).all():
-            match = session.exec(
-                select(Transaction).where(
-                    Transaction.amount == log.amount,
-                    Transaction.date >= (date.fromisoformat(log.date_executed) - timedelta(days=3)).isoformat(),
-                    Transaction.date <= (date.fromisoformat(log.date_executed) + timedelta(days=3)).isoformat(),
-                )
-            ).first()
-            if match:
-                log.status = "verified"
-                log.verified_transaction_id = match.id
-                session.add(log)
-        with bypass_fk(session):
-            session.commit()
-
-    return {
-        "success": True, "added": counts["added"], "skipped": counts["skipped"],
-        "has_more": result.get("has_more", False), "next_cursor": result.get("next_cursor"),
-    }
+# ── Plaid (disabled) ─────────────────────────────────────────
+# Plaid inside the app is disabled by product decision (2026-11-09): bank connections
+# live in the user's own AI (via MCP). Mission 20 (H-01) removed the /api/plaid/* routes,
+# which skipped auth and shared one process-global access token across users.
+# Turning this on requires per-user token storage (S-05) and Fabian's yes; until then
+# there are no routes to mount, so flipping the switch fails at import time.
+PLAID_IN_APP_ENABLED = False
+if PLAID_IN_APP_ENABLED:
+    raise RuntimeError("Plaid in-app needs per-user token storage (S-05) first; see Mission 20.")
