@@ -11,8 +11,7 @@ import os, uuid, time, logging, traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from database import begin_request_db, end_request_db, create_db_and_tables, seed_data
@@ -34,7 +33,9 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 IS_DEV = ENVIRONMENT == "development"
 
 # ── Rate Limiter ─────────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+# One limiter for the whole app (rate_limit.py): key = user, else the real client IP behind our
+# proxies. SlowAPIMiddleware applies default_limits to every route without its own limit.
+from rate_limit import DefaultLimitMiddleware, limiter  # noqa: E402
 
 app = FastAPI(
     title="KoreX Financial System", version="2.0.0",
@@ -44,6 +45,7 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(DefaultLimitMiddleware)  # added before CORS so 429s still carry CORS headers
 
 app.add_middleware(
     CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True,
@@ -128,6 +130,7 @@ def on_startup():
 
 # ── Health Check ─────────────────────────────────────────────
 @app.get("/health")
+@limiter.exempt
 def health():
     return {"status": "ok"}
 

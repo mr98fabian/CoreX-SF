@@ -25,8 +25,6 @@ from urllib.parse import urlencode, urlparse
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlmodel import select
 
 from api_tokens import SCOPES, generate_token, hash_token
@@ -34,10 +32,10 @@ from auth import DEMO_USER_ID, get_current_user_id
 from database import request_session
 from models import ApiToken, OAuthClient, OAuthCode, OAuthRefreshToken
 from plan_guard import ai_access_for
+from rate_limit import limiter  # key = real client IP (no user before the grant)
 
 logger = logging.getLogger("korex.oauth")
 router = APIRouter(tags=["oauth"])
-limiter = Limiter(key_func=get_remote_address)
 
 DEFAULT_ISSUER = "https://corex-sf-production.up.railway.app"
 # The only scopes OAuth can ever grant = frontend lib/aiKit.ts KIT_TOKEN_SCOPES (guard test keeps them equal).

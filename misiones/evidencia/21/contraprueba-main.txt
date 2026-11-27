@@ -1,0 +1,24 @@
+# Contraprueba H-02: tests nuevos contra origin/main a110ae9 (2026-11-27T09:37:20Z)
+$ git worktree add --detach <tmp> a110ae9 && cp backend/tests/test_rate_limit_keys.py <tmp>/backend/tests/ && pytest tests/test_rate_limit_keys.py -q -p no:warnings
+        assert first[:5] == [400] * 5 and first[5] == 429
+>       assert redeem(c, "session-user-b", ATTACKER) == 400  # same IP, other user: own bucket
+E       AssertionError: assert 429 == 400
+        assert [redeem(c, "attacker", ATTACKER) for _ in range(6)][5] == 429
+>       assert redeem(c, "victim", VICTIM) == 400
+E       AssertionError: assert 429 == 400
+        assert 429 not in hits[:10] and hits[10] == 429
+>       assert register(c, VICTIM) != 429  # other client behind the same proxy: own bucket
+E       AssertionError: assert 429 != 429
+        assert hits[10] == 429
+>       assert register(c, f"192.0.2.99, {VICTIM}") != 429
+E       AssertionError: assert 429 != 429
+>       assert hits[:DEFAULT] == [200] * DEFAULT and hits[DEFAULT] == 429
+E       assert ([200, 200, 20...200, 200, ...] == [200, 200, 20...200, 200, ...]
+PASSED tests/test_rate_limit_keys.py::test_forwarded_header_from_untrusted_peer_is_ignored
+PASSED tests/test_rate_limit_keys.py::test_default_limit_exempts_health_and_webhooks
+FAILED tests/test_rate_limit_keys.py::test_users_do_not_share_bucket_on_redeem
+FAILED tests/test_rate_limit_keys.py::test_one_ip_does_not_exhaust_redeem_for_everyone
+FAILED tests/test_rate_limit_keys.py::test_one_ip_does_not_exhaust_oauth_register_for_everyone
+FAILED tests/test_rate_limit_keys.py::test_forwarded_forged_left_part_is_ignored_behind_trusted_proxy
+FAILED tests/test_rate_limit_keys.py::test_default_limit_applies_to_routes_without_their_own
+Resultado en main: 5 failed, 2 passed. Los 2 que pasan cubren lo que main ya hacía (ignorar XFF de un peer no confiable; webhooks/health sin 429 porque no hay límite global). En la rama: 7 passed.
