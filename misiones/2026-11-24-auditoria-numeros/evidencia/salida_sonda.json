@@ -1,0 +1,674 @@
+[
+ {
+  "persona": "caso_real_anon_2026-11-24",
+  "hoy": "2026-11-24",
+  "deuda_total": "35410.63",
+  "liquido": "4803.20",
+  "escudo": "1000.00",
+  "interes": {
+   "dia_motor": "24.4724",
+   "dia_manual": "24.4724",
+   "dia": "24.47",
+   "semana": "171.29",
+   "mes": "744.30",
+   "anio": "8931.55",
+   "anio_sin_redondear_dia": "8932.44"
+  },
+  "cashflow_summary": {
+   "income_monthly": "13242.50",
+   "expenses_monthly": "3062.50",
+   "subscriptions_monthly": "1767.84",
+   "debt_payments_monthly": "1466.10",
+   "outflow_monthly": "6296.44",
+   "surplus_monthly": "6946.06",
+   "balance_monthly": "6946.06",
+   "has_income": true
+  },
+  "aporte_mensual_plan": "6946.06",
+  "plan_minimum": {
+   "Préstamo personal": "413.80",
+   "Tarjeta A": "97.91",
+   "Tarjeta C": "35.00",
+   "Tarjeta G": "35.00",
+   "Tarjeta B": "47.99",
+   "Tarjeta D": "35.00",
+   "Auto": "801.40"
+  },
+  "mision": {
+   "reserva": "6014.24",
+   "ataque": "0",
+   "objetivo": "Préstamo personal",
+   "mision": "Deja la Tarjeta B en $0 — paga a más tardar el 29 de noviembre para que reporte $0 el 1 de diciembre",
+   "faltante": "Te faltan $797.24 para cubrir el pago de la Auto del 11 de diciembre",
+   "obligaciones": [
+    [
+     "corte",
+     "Tarjeta B",
+     "1476.88",
+     "2026-11-29",
+     "2026-12-01"
+    ],
+    [
+     "corte",
+     "Tarjeta D",
+     "73.86",
+     "2026-11-29",
+     "2026-12-01"
+    ],
+    [
+     "estado",
+     "Tarjeta A",
+     "2883.81",
+     "2026-12-06",
+     "2026-12-06"
+    ],
+    [
+     "corte",
+     "Tarjeta C",
+     "364.49",
+     "2026-12-06",
+     "2026-12-08"
+    ],
+    [
+     "prestamo",
+     "Auto",
+     "801.40",
+     "2026-12-11",
+     "2026-12-11"
+    ],
+    [
+     "prestamo",
+     "Préstamo personal",
+     "413.80",
+     "2026-12-20",
+     "2026-12-20"
+    ]
+   ],
+   "obligaciones_hasta_fin_de_mes": "1550.74"
+  },
+  "calendario": {
+   "inicio_mes": 35410.63,
+   "cierre_mes": 27742.85,
+   "bajas": 7667.78,
+   "puntos_mes": [
+    [
+     "01",
+     35410.63
+    ],
+    [
+     "24",
+     29249.15
+    ],
+    [
+     "26",
+     29201.16
+    ],
+    [
+     "27",
+     27811.94
+    ],
+    [
+     "30",
+     27742.85
+    ]
+   ],
+   "fecha_libre": "2027-03-01",
+   "meses": 5,
+   "interes_total_plan": 1893.18,
+   "interes_mes0": 744.38,
+   "flujos_mes0": [
+    [
+     "Préstamo personal",
+     "307.28",
+     "413.80",
+     "6946.06"
+    ],
+    [
+     "Tarjeta A",
+     "69.07",
+     "97.91",
+     "0"
+    ],
+    [
+     "Tarjeta C",
+     "8.43",
+     "35.00",
+     "0"
+    ],
+    [
+     "Tarjeta G",
+     "0.91",
+     "35.00",
+     "0"
+    ],
+    [
+     "Tarjeta B",
+     "33.22",
+     "47.99",
+     "0"
+    ],
+    [
+     "Tarjeta D",
+     "1.57",
+     "35.00",
+     "0"
+    ],
+    [
+     "Auto",
+     "323.90",
+     "801.40",
+     "0"
+    ]
+   ]
+  },
+  "calendario_eventos": {
+   "total_mes_sale": "6226.44",
+   "total_mes_entra": "12305.00",
+   "sale_desde_hoy": "1475.08",
+   "sale_ya_pasado": "4751.36",
+   "minimos_del_mes": "1396.10",
+   "deudas_sin_fecha": [
+    "Tarjeta G",
+    "Tarjeta D"
+   ]
+  },
+  "compare": {
+   "deuda_hoy": "35410.63",
+   "estado": "ok",
+   "plan": {
+    "meses": "5",
+    "fecha_libre": "2027-03-01",
+    "interes_total": "1893.18",
+    "aporte_mensual": "6946.06"
+   },
+   "minimos": {
+    "meses": "156",
+    "fecha_libre": "2039-10-01",
+    "interes_total": "22271.23"
+   },
+   "ahorro": {
+    "intereses": "20378.05",
+    "meses": "151",
+    "anios": "12.6",
+    "es_minimo": "False"
+   },
+   "pagaras_plan": "37303.81",
+   "pagaras_minimos": "57681.86"
+  },
+  "projections": {
+   "total_debt": 35410.63,
+   "total_min_payments": 1466.1,
+   "velocity_power": 6946.06,
+   "velocity_debt_free_date": "2027-03-01",
+   "standard_debt_free_date": "2039-10-01",
+   "months_saved": 151,
+   "interest_saved": 20378.05,
+   "velocity_interest": 1893.18
+  },
+  "gps": {
+   "pagos_a_deuda_por_mes": {
+    "2026-11": "1550.74",
+    "2026-12": "9897.33",
+    "2027-01": "7894.71"
+   },
+   "deuda_cierre_mes_sin_interes": "33859.89",
+   "movs_mes": [
+    [
+     "11-29",
+     "obligation",
+     "Tarjeta B",
+     1476.88
+    ],
+    [
+     "11-29",
+     "obligation",
+     "Tarjeta D",
+     73.86
+    ]
+   ],
+   "faltantes": [],
+   "primer_ataque": [
+    "2026-12-12",
+    "Préstamo personal",
+    1777.78
+   ],
+   "caja_min": 1413.8
+  },
+  "cierre_realista": "34006.72",
+  "safe_equity_panel": {
+   "safe": "2463.27",
+   "reserved": "1339.93",
+   "msg": "Reserved $1,339.93 to protect against Tarjeta B on Nov 26"
+  }
+ },
+ {
+  "persona": "maria_demo",
+  "hoy": "2026-11-24",
+  "deuda_total": "18400.00",
+  "liquido": "3350.00",
+  "escudo": "1000.00",
+  "interes": {
+   "dia_motor": "13.1155",
+   "dia_manual": "13.1155",
+   "dia": "13.12",
+   "semana": "91.84",
+   "mes": "399.07",
+   "anio": "4788.80",
+   "anio_sin_redondear_dia": "4787.16"
+  },
+  "cashflow_summary": {
+   "income_monthly": "4008.33",
+   "expenses_monthly": "2570.00",
+   "subscriptions_monthly": "0.00",
+   "debt_payments_monthly": "585.88",
+   "outflow_monthly": "3155.88",
+   "surplus_monthly": "852.45",
+   "balance_monthly": "852.45",
+   "has_income": true
+  },
+  "aporte_mensual_plan": "852.45",
+  "plan_minimum": {
+   "Tarjeta de tienda": "80.48",
+   "Tarjeta Visa": "233.94",
+   "Tarjeta Mastercard": "166.46",
+   "Tarjeta Discover": "105.00"
+  },
+  "mision": {
+   "reserva": "18400.00",
+   "ataque": "0",
+   "objetivo": "Tarjeta de tienda",
+   "mision": "Deja la Tarjeta de tienda en $0 — paga a más tardar el 26 de noviembre para que reporte $0 el 28 de noviembre",
+   "faltante": "Te faltan $2,450.00 para cubrir el corte de la Tarjeta Discover del 5 de diciembre",
+   "obligaciones": [
+    [
+     "corte",
+     "Tarjeta de tienda",
+     "2300.00",
+     "2026-11-26",
+     "2026-11-28"
+    ],
+    [
+     "corte",
+     "Tarjeta Discover",
+     "3500.00",
+     "2026-12-03",
+     "2026-12-05"
+    ],
+    [
+     "corte",
+     "Tarjeta Visa",
+     "7200.00",
+     "2026-12-06",
+     "2026-12-08"
+    ],
+    [
+     "corte",
+     "Tarjeta Mastercard",
+     "5400.00",
+     "2026-12-13",
+     "2026-12-15"
+    ]
+   ],
+   "obligaciones_hasta_fin_de_mes": "2300.00"
+  },
+  "calendario": {
+   "inicio_mes": 18400.0,
+   "cierre_mes": 17360.6,
+   "bajas": 1039.4,
+   "puntos_mes": [
+    [
+     "01",
+     18400.0
+    ],
+    [
+     "24",
+     17360.6
+    ],
+    [
+     "30",
+     17360.6
+    ]
+   ],
+   "fecha_libre": "2028-01-01",
+   "meses": 15,
+   "interes_total_plan": 3232.86,
+   "interes_mes0": 398.93,
+   "flujos_mes0": [
+    [
+     "Tarjeta de tienda",
+     "57.48",
+     "80.48",
+     "852.45"
+    ],
+    [
+     "Tarjeta Visa",
+     "161.94",
+     "233.94",
+     "0"
+    ],
+    [
+     "Tarjeta Mastercard",
+     "112.46",
+     "166.46",
+     "0"
+    ],
+    [
+     "Tarjeta Discover",
+     "67.05",
+     "105.00",
+     "0"
+    ]
+   ]
+  },
+  "calendario_eventos": {
+   "total_mes_sale": "3095.88",
+   "total_mes_entra": "3700.00",
+   "sale_desde_hoy": "180.00",
+   "sale_ya_pasado": "2915.88",
+   "minimos_del_mes": "585.88",
+   "deudas_sin_fecha": []
+  },
+  "compare": {
+   "deuda_hoy": "18400.00",
+   "estado": "ok",
+   "plan": {
+    "meses": "15",
+    "fecha_libre": "2028-01-01",
+    "interes_total": "3232.86",
+    "aporte_mensual": "852.45"
+   },
+   "minimos": {
+    "meses": "244",
+    "fecha_libre": "2047-02-01",
+    "interes_total": "33408.91"
+   },
+   "ahorro": {
+    "intereses": "30176.05",
+    "meses": "229",
+    "anios": "19.1",
+    "es_minimo": "False"
+   },
+   "pagaras_plan": "21632.86",
+   "pagaras_minimos": "51808.91"
+  },
+  "projections": {
+   "total_debt": 18400.0,
+   "total_min_payments": 585.88,
+   "velocity_power": 852.45,
+   "velocity_debt_free_date": "2028-01-01",
+   "standard_debt_free_date": "2047-02-01",
+   "months_saved": 229,
+   "interest_saved": 30176.05,
+   "velocity_interest": 3232.86
+  },
+  "gps": {
+   "pagos_a_deuda_por_mes": {
+    "2026-11": "2300.0",
+    "2026-12": "2240.0",
+    "2027-01": "1395.0"
+   },
+   "deuda_cierre_mes_sin_interes": "16100.00",
+   "movs_mes": [
+    [
+     "11-26",
+     "obligation",
+     "Tarjeta de tienda",
+     2300.0
+    ]
+   ],
+   "faltantes": [
+    [
+     "12-03",
+     "Tarjeta Discover",
+     3500.0
+    ],
+    [
+     "12-04",
+     "Tarjeta Discover",
+     2335.0
+    ],
+    [
+     "12-05",
+     "Tarjeta Discover",
+     2335.0
+    ],
+    [
+     "12-06",
+     "Tarjeta Visa",
+     7200.0
+    ],
+    [
+     "12-07",
+     "Tarjeta Visa",
+     7200.0
+    ],
+    [
+     "12-08",
+     "Tarjeta Visa",
+     7200.0
+    ]
+   ],
+   "primer_ataque": null,
+   "caja_min": -685.0
+  },
+  "cierre_realista": "16178.69",
+  "safe_equity_panel": {
+   "safe": "615.00",
+   "reserved": "1735.00",
+   "msg": "Reserved $1,735.00 to protect against Seguro del auto on Dec 03"
+  }
+ },
+ {
+  "persona": "owner_invariantes",
+  "hoy": "2026-11-24",
+  "deuda_total": "26595.52",
+  "liquido": "1915.32",
+  "escudo": "1000.00",
+  "interes": {
+   "dia_motor": "18.3161",
+   "dia_manual": "18.3161",
+   "dia": "18.32",
+   "semana": "128.24",
+   "mes": "557.23",
+   "anio": "6686.80",
+   "anio_sin_redondear_dia": "6685.39"
+  },
+  "cashflow_summary": {
+   "income_monthly": "9000.00",
+   "expenses_monthly": "2525.18",
+   "subscriptions_monthly": "1096.10",
+   "debt_payments_monthly": "1190.31",
+   "outflow_monthly": "4811.59",
+   "surplus_monthly": "4188.41",
+   "balance_monthly": "4188.41",
+   "has_income": true
+  },
+  "aporte_mensual_plan": "4188.41",
+  "plan_minimum": {
+   "Upstart": "380.00",
+   "Fortiva": "35.00",
+   "Amex Gold": "99.96",
+   "Chase 2323": "34.23",
+   "Toyota": "641.12"
+  },
+  "mision": {
+   "reserva": "2447.70",
+   "ataque": "0",
+   "objetivo": "Upstart",
+   "mision": "Paga el estado de la Amex Gold ($1,679.27) antes del 7 de diciembre",
+   "faltante": "Te faltan $405.07 para cubrir el pago de la Toyota del 11 de diciembre",
+   "obligaciones": [
+    [
+     "estado",
+     "Amex Gold",
+     "1679.27",
+     "2026-12-07",
+     "2026-12-07"
+    ],
+    [
+     "prestamo",
+     "Toyota",
+     "641.12",
+     "2026-12-11",
+     "2026-12-11"
+    ],
+    [
+     "estado",
+     "Fortiva",
+     "93.08",
+     "2026-12-14",
+     "2026-12-14"
+    ],
+    [
+     "estado",
+     "Chase 2323",
+     "34.23",
+     "2026-12-18",
+     "2026-12-18"
+    ]
+   ],
+   "obligaciones_hasta_fin_de_mes": "0.00"
+  },
+  "calendario": {
+   "inicio_mes": 26595.52,
+   "cierre_mes": 21773.92,
+   "bajas": 4821.6,
+   "puntos_mes": [
+    [
+     "01",
+     26595.52
+    ],
+    [
+     "24",
+     23868.13
+    ],
+    [
+     "30",
+     21773.92
+    ]
+   ],
+   "fecha_libre": "2027-04-01",
+   "meses": 6,
+   "interes_total_plan": 1621.62,
+   "interes_mes0": 557.12,
+   "flujos_mes0": [
+    [
+     "Upstart",
+     "254.74",
+     "380.00",
+     "4188.41"
+    ],
+    [
+     "Fortiva",
+     "2.33",
+     "35.00",
+     "0"
+    ],
+    [
+     "Amex Gold",
+     "40.22",
+     "99.96",
+     "0"
+    ],
+    [
+     "Chase 2323",
+     "0.71",
+     "34.23",
+     "0"
+    ],
+    [
+     "Toyota",
+     "259.12",
+     "641.12",
+     "0"
+    ]
+   ]
+  },
+  "calendario_eventos": {
+   "total_mes_sale": "4831.31",
+   "total_mes_entra": "9000.00",
+   "sale_desde_hoy": "185.00",
+   "sale_ya_pasado": "4646.31",
+   "minimos_del_mes": "1190.31",
+   "deudas_sin_fecha": []
+  },
+  "compare": {
+   "deuda_hoy": "26595.52",
+   "estado": "ok",
+   "plan": {
+    "meses": "6",
+    "fecha_libre": "2027-04-01",
+    "interes_total": "1621.62",
+    "aporte_mensual": "4188.41"
+   },
+   "minimos": {
+    "meses": "280",
+    "fecha_libre": "2050-02-01",
+    "interes_total": "30504.32"
+   },
+   "ahorro": {
+    "intereses": "28882.70",
+    "meses": "274",
+    "anios": "22.8",
+    "es_minimo": "False"
+   },
+   "pagaras_plan": "28217.14",
+   "pagaras_minimos": "57099.84"
+  },
+  "projections": {
+   "total_debt": 26595.52,
+   "total_min_payments": 1190.31,
+   "velocity_power": 4188.41,
+   "velocity_debt_free_date": "2027-04-01",
+   "standard_debt_free_date": "2050-02-01",
+   "months_saved": 274,
+   "interest_saved": 28882.7,
+   "velocity_interest": 1621.62
+  },
+  "gps": {
+   "pagos_a_deuda_por_mes": {
+    "2026-12": "5965.02",
+    "2027-01": "4570.00"
+   },
+   "deuda_cierre_mes_sin_interes": "26595.52",
+   "movs_mes": [],
+   "faltantes": [],
+   "primer_ataque": [
+    "2026-12-16",
+    "Upstart",
+    2805.5
+   ],
+   "caja_min": 290.85
+  },
+  "cierre_realista": "26705.42",
+  "safe_equity_panel": {
+   "safe": "915.32",
+   "reserved": "0.00",
+   "msg": "Full Power Available"
+  }
+ },
+ {
+  "fantasma_caso_real": {
+   "aporte": "6946.06",
+   "dias_pago": [
+    1,
+    6,
+    13,
+    20,
+    27
+   ],
+   "excedente_dias_pasados": "5556.85",
+   "excedente_dias_futuros": "1389.21",
+   "minimos_ya_pagados": "1348.11",
+   "minimos_restantes": "117.99"
+  }
+ },
+ {
+  "sensibilidad_caso_real_por_dia": {
+   "2026-11-01": 7667.78,
+   "2026-11-15": 7667.78,
+   "2026-11-24": 7667.78,
+   "2026-11-30": 7667.78
+  }
+ }
+]
